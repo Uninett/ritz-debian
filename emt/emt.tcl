@@ -339,8 +339,7 @@ proc emt_report { ids } {
 	set subject [single_subject $ids]
     }
 
-    # FIXME, uncomment this when merged with original emt
-    # emt_mail $emt_to $subject $body
+    emt_mail $emt_to $subject $body
 	
     foreach id $ids {
 	set nagged($id) 1
