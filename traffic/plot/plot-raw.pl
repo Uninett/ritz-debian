@@ -80,20 +80,24 @@ sub plot_traffic_common {
     my($line, $fh, $dn, $d, $tm, $compute_val) = @_;
     my($i, $h, $val, $v, %then, $now, %add);
     my($started) = 0;
+    my(@vars);
+
+    $vars[0] = &octets_var("in");
+    $vars[1] = &octets_var("out");
     
-    foreach $v ("ifInOctets", "ifOutOctets") {
+    foreach $v (@vars) {
 	$add{$v} = 0;
     }
 
     foreach $i (0 .. $max_sample) {
 	if ($i == 0) {
-	    foreach $v ("ifInOctets", "ifOutOctets") {
+	    foreach $v (@vars) {
 		$then{$v} = $sample_time{$v,0};
 	    }
 	    next;
 	}
 	if (!$started) {
-	    if ($sample_time{"ifInOctets",$i} > 23) {
+	    if ($sample_time{$vars[0],$i} > 23) {
 		next;
 	    }
 	}
@@ -103,7 +107,7 @@ sub plot_traffic_common {
 	undef $in;
 	undef $out;
 
-	foreach $v ("ifInOctets", "ifOutOctets") {
+	foreach $v (@vars) {
 	    $now = $sample_time{$i};
 	    $time_delta = 3600.0 * ($now - $then{$v});
 	    if ($time_delta < 0) { # Ignore samples before midnight the 
@@ -116,7 +120,7 @@ sub plot_traffic_common {
 		&maxit($val = &$compute_val($count{$v,$i} + $add{$v},
 					    $time_delta));
 		$add{$v} = 0;
-		if ($v eq "ifInOctets") {
+		if ($v =~ /In/) {
 		    $in = $val;
 		} else {
 		    $out = $val;

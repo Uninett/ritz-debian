@@ -85,17 +85,21 @@ require 'utils.pl';
 sub get_file_data {
     my($d, $cat, $f, $name) = @_;
     my($h, $errpct, $inpkts, $outpk, $discpct);
+# Purposefully make $iov and $oov globals.
 
     open (IN, "$cat $d/$f |") || return undef;
     &read_log(IN);
     close(IN);
     
+    $iov = &octets_var("in");
+    $oov = &octets_var("out");
+
     $ifspeed{$name} = $ifspeed;
     $iftype{$name} = $iftype;
 
     foreach $i (0 .. 23) {
 	$h = sprintf("%02d", $i);
-	foreach $v ("ifInOctets", "ifOutOctets",
+	foreach $v ($iov, $oov,
 		    "ifInNUcastPkts", "ifInUcastPkts",
 		    "ifOutNUcastPkts", "ifOutUcastPkts",
 		    "ifInDiscards", "ifOutDiscards",
@@ -119,7 +123,7 @@ sub get_file_data {
 		}
 	    }
 	}
-	foreach $v ("ifInOctets", "ifOutOctets") {
+	foreach $v ($iov, $oov) {
 	    if (!defined($peak_r{$name,$v}) ||
 		$peak_r{$name,$v} < $max_rate{$v,$h})
 	    {
@@ -163,10 +167,8 @@ sub get_file_data {
 	    }
 	}
     }
-    $in_90perc_bps  = &percentile(90, &sample_val_ps(&octets_var("in")))
-	* 8.0;
-    $out_90perc_bps = &percentile(90, &sample_val_ps(&octets_var("out")))
-	* 8.0;
+    $in_90perc_bps  = &percentile(90, &sample_val_ps($iov)) * 8.0;
+    $out_90perc_bps = &percentile(90, &sample_val_ps($oov)) * 8.0;
 
     undef %max_rate;
     undef %count;
@@ -257,17 +259,17 @@ sub report_traffic {
     if ($ifspeed{$n} != 0) {
 	printf($out "%-20s %3d  %02d %3d  %02d",
 	       $n,
-	       $max_r{$n,"ifInOctets"}*8*100.0/3600/$ifspeed{$n},
-	       $max_h{$n,"ifInOctets"},
-	       $max_r{$n,"ifOutOctets"}*8*100.0/3600/$ifspeed{$n},
-	       $max_h{$n,"ifOutOctets"});
+	       $max_r{$n,$iov}*8*100.0/3600/$ifspeed{$n},
+	       $max_h{$n,$iov},
+	       $max_r{$n,$oov}*8*100.0/3600/$ifspeed{$n},
+	       $max_h{$n,$oov});
 	printf($out "  %3d  %02d %3d  %02d  %3d %3d  %6d  %6d  %3d  %3d\n",
-	       $peak_r{$n,"ifInOctets"}*8*100.0/$ifspeed{$n},
-	       $peak_h{$n,"ifInOctets"},
-	       $peak_r{$n,"ifOutOctets"}*8*100.0/$ifspeed{$n},
-	       $peak_h{$n,"ifOutOctets"},
-	       $total{$n,"ifInOctets"}*8*100.0/3600/24/$ifspeed{$n},
-	       $total{$n,"ifOutOctets"}*8*100.0/3600/24/$ifspeed{$n},
+	       $peak_r{$n,$iov}*8*100.0/$ifspeed{$n},
+	       $peak_h{$n,$iov},
+	       $peak_r{$n,$oov}*8*100.0/$ifspeed{$n},
+	       $peak_h{$n,$oov},
+	       $total{$n,$iov}*8*100.0/3600/24/$ifspeed{$n},
+	       $total{$n,$oov}*8*100.0/3600/24/$ifspeed{$n},
 	       $ifspeed{$n}/1000,
 	       $iftype{$n},
 	       $in_90perc_bps * 100.0 / $ifspeed{$n},
@@ -288,12 +290,12 @@ sub report_traffic_kbit {
     if ($ifspeed{$n} != 0) {
 	printf($out "%-20s %6d %6d  %6d %6d  %6d %6d %6d %6d %6d %6d\n",
 	       $n,
-	       $max_r{$n,"ifInOctets"}*8/1000/3600,
-	       $max_r{$n,"ifOutOctets"}*8/1000/3600,
-	       $peak_r{$n,"ifInOctets"}*8/1000,
-	       $peak_r{$n,"ifOutOctets"}*8/1000,
-	       $total{$n,"ifInOctets"}*8/1000/3600/24,
-	       $total{$n,"ifOutOctets"}*8/1000/3600/24,
+	       $max_r{$n,$iov}*8/1000/3600,
+	       $max_r{$n,$oov}*8/1000/3600,
+	       $peak_r{$n,$iov}*8/1000,
+	       $peak_r{$n,$oov}*8/1000,
+	       $total{$n,$iov}*8/1000/3600/24,
+	       $total{$n,$oov}*8/1000/3600/24,
 	       $ifspeed{$n}/1000,
 	       $iftype{$n},
 	       $in_90perc_bps / 1000,

@@ -78,7 +78,11 @@ require 'utils.pl';
 sub plot_traffic {
     my($line, $fh, $dn, $d, $tm) = @_;
     my($i, $h, $val);
-    
+    my($iv, $ov);
+
+    $iv = &octets_var("in");
+    $ov = &octets_var("out");
+
     foreach $i (0 .. 23) {
 	$h = sprintf("%02d", $i);
 
@@ -86,13 +90,13 @@ sub plot_traffic {
 
 	printf($fh "%d ", $i + ($d*24)); # X-axis
 	
-	&maxit($val = $count{"ifInOctets",$h}*8*100.0/3600/$ifspeed);
+	&maxit($val = $count{$iv,$h}*8*100.0/3600/$ifspeed);
 	printf($fh " %f", $val);
-	&maxit($val = $max_rate{"ifInOctets",$h}*8*100.0/$ifspeed);
+	&maxit($val = $max_rate{$iv,$h}*8*100.0/$ifspeed);
 	printf($fh " %f", $val);
-	&maxit($val = $count{"ifOutOctets",$h}*8*100.0/3600/$ifspeed);
+	&maxit($val = $count{$ov,$h}*8*100.0/3600/$ifspeed);
 	printf($fh " %f", $val);
-	&maxit($val = $max_rate{"ifOutOctets",$h}*8*100.0/$ifspeed);
+	&maxit($val = $max_rate{$ov,$h}*8*100.0/$ifspeed);
 	printf($fh " %f\n", $val);
     }
 }
@@ -126,6 +130,10 @@ sub decorate_traffic {
 sub plot_traffic_kbit {
     my($line, $fh, $dn, $d, $tm) = @_;
     my($i, $h, $val);
+    my($iv, $ov);
+
+    $iv = &octets_var("in");
+    $ov = &octets_var("out");
     
     foreach $i (0 .. 23) {
 	$h = sprintf("%02d", $i);
@@ -134,13 +142,13 @@ sub plot_traffic_kbit {
 
 	printf($fh "%d ", $i + ($d*24)); # X-axis
 	
-	&maxit($val = $count{"ifInOctets",$h}*8/1000/3600);
+	&maxit($val = $count{$iv,$h}*8/1000/3600);
 	printf(PLOTDATA " %f", $val);
-	&maxit($val = $max_rate{"ifInOctets",$h}*8/1000);
+	&maxit($val = $max_rate{$iv,$h}*8/1000);
 	printf(PLOTDATA " %f", $val);
-	&maxit($val = $count{"ifOutOctets",$h}*8/1000/3600);
+	&maxit($val = $count{$ov,$h}*8/1000/3600);
 	printf(PLOTDATA " %f", $val);
-	&maxit($val = $max_rate{"ifOutOctets",$h}*8/1000);
+	&maxit($val = $max_rate{$ov,$h}*8/1000);
 	printf(PLOTDATA " %f\n", $val);
     }
 }
