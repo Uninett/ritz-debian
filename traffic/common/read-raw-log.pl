@@ -88,7 +88,7 @@ sub read_log {
 	}
 	if ($h == 23 && !$h0_seen) {
 	    $now -= 24 * 3600;
-	} elsif ($h == < 23) {
+	} elsif ($h < 23) {
 	    $h0_seen = 1;
 	}
 	
