@@ -11,9 +11,11 @@ FILES= 	../common/util.tcl \
 	flaps.tcl events.tcl server.tcl auth.tcl \
 	zino-main.tcl
 
-all: zino zino.cf
+PROGS=	zino start-zino
 
-zino: $(FILES) Makefile
+all: ${PROGS} zino.cf
+
+zino: ${FILES} Makefile
 	rm -f zino
 	echo "#! "${SCOTTY} > zino
 	cat $(FILES) >> zino
@@ -25,7 +27,7 @@ zino.cf: zino.cf.tmpl ../subst
 start-zino: start-zino.sh ../subst
 	sed -f ../subst < start-zino.sh > start-zino
 
-install: zino
+install: ${PROGS} zino.cf
 	install -c -m 555 zino ${BINDIR}
 	install -c -m 555 start-zino ${BINDIR}
 	install -c -m 444 zino.cf ${ZINODIR}
