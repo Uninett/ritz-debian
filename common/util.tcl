@@ -11,7 +11,7 @@ namespace eval ::util {
 	upvar $from From
 	upvar $to To
 
-	unset To
+	catch { unset To }
 	foreach ix [array names From] {
 	    set To($ix) $From($ix)
 	}
