@@ -121,7 +121,7 @@ sub read_log {
 	# This allows for a single poll which will not be counted
 	# before 2400.  I do not think this script handles the situation
 	# well when there are multiple polls in hour 23 at the head of
-	# the log.
+	# the log. XXX
         if (!defined($base{$v})) {
             $base{$v} = $f[6];
             if ($h == 23) {
