@@ -34,15 +34,15 @@ ${PPROGS}: ${PSRCS} ../subst
 		b=`basename $$f .pl`; \
 		echo rm -f $$b; \
 		rm -f $$b; \
-		echo sed -f ../subst $$f '>' $$b; \
-		sed -f ../subst $$f > $$b; \
+		echo sed -f ${.CURDIR}/../subst ${.CURDIR}/$$f '>' $$b; \
+		sed -f ${.CURDIR}/../subst ${.CURDIR}/$$f > $$b; \
 	done
 
 vwatch: vwatch.tcl vwatch-main.tcl ../subst
 	rm -f vwatch
-	(sed -f ../subst vwatch-head.tcl; \
-	cat vwatch.tcl; \
-	sed -f ../subst vwatch-main.tcl) > vwatch
+	(sed -f ${.CURDIR}/../subst ${.CURDIR}/vwatch-head.tcl; \
+	cat ${.CURDIR}/vwatch.tcl; \
+	sed -f ${.CURDIR}/../subst ${.CURDIR}/vwatch-main.tcl) > vwatch
 
 install: ${PROGS} ${COMMON}
 	@for f in ${PROGS}; do \
@@ -62,4 +62,4 @@ clean:
 	rm -f ${PROGS}
 
 .include "../Makefile.inc"
-
+.include <bsd.prog.mk>
