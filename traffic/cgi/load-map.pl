@@ -842,7 +842,8 @@ sub load_color {
     return $load_color[$ix];
 }
 
-# Try to swap around the names:
+# Try to swap around the names, in sequence:
+# xx.yy -> yy.xx
 # xx-nn2 -> nn-xx2
 # xx-nn  -> nn-xx
 # and check if the result exists
@@ -852,6 +853,12 @@ sub rev_name {
     my($name) = @_;
     my($rn);
 
+    if      ($name =~ /([^.]+).([^.])/) {
+	$rn = $2 . "." . $1;
+    }
+    if (defined($in_load{$rn})) {
+	return $rn;
+    }
     if      ($name =~ /([^-]+)-([^-0-9]+)([0-9]+)/) {
 	$rn = "$2" . "-" . "$1" . "$3";
     } elsif ($name =~ /([^-]+)-([^-]+)/) {
@@ -1057,7 +1064,7 @@ sub imgmap {
 	@c = split(/ /, $coords[$e]);
 
 	if (defined($name[$e]) && $name[$e] ne "area") {
-	    $url = &get_url($name[$e]);
+	    $url = &get_url($name[$e], $select);
 	    $alt = &get_alt($name[$e]);
 	    $mc = sprintf("<area shape=poly coords=\"");
 
@@ -1073,7 +1080,7 @@ sub imgmap {
 		$mc .= sprintf("\"\n\thref=\"%s\"\n\talt=\"%s\">\n",
 			       $url, $alt);
 
-		$url = &get_url(&clean_rev_name($name[$e]));
+		$url = &get_url(&clean_rev_name($name[$e]), $select);
 		$alt = &get_alt(&clean_rev_name($name[$e]));
 
 		@lh = &last_half_polyline(@c);
@@ -1094,10 +1101,14 @@ sub imgmap {
 }
 
 sub get_url {
-    my($urlc) = @_;
+    my($urlc, $select) = @_;
+    my($ts) = "hr";
 
-    return sprintf("%splot-all/%s,%s,hr,%s",
-		   $pfx, $urlc, $datespec, $graph_type);
+    if ($select eq "peak") {
+	$ts = "raw";
+    }
+    return sprintf("%splot-all/%s,%s,%s,%s",
+		   $pfx, $urlc, $datespec, $ts, $graph_type);
 }
 
 sub get_alt {
