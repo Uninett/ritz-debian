@@ -166,7 +166,8 @@ sub get_line_names {
 	    $a[1] =~ s/ +$//;
 	    # replace remaining spaces with hyphen.
 	    # ...so that later use of default "split"
-	    # doesn't produce unexpected results.
+	    # doesn't produce mismatch, new entry and
+	    # eventual overflow for the DB(M) entry (!).
 	    $a[1] =~ s/ /-/g;
 	    $line_name{$dev . ":" . $1} = $a[1];
 	    if ($1 > $max_ix{$dev}) {
