@@ -7,7 +7,8 @@ catch { namespace delete ::notify }
 namespace eval ::notify {
     namespace export open close
 
-    variable acceptchan notifychan
+    variable acceptchan
+    variable notifychan
     variable h_notify
 
     unset acceptchan
@@ -41,7 +42,8 @@ namespace eval ::notify {
 
     proc close { } {
 	variable h_notify
-	variable notifychan acceptchan
+	variable notifychan
+	variable acceptchan
 
 	catch { unset h_notify }
 	foreach c "notify accept" {
