@@ -40,6 +40,11 @@ namespace eval ::config {
 	return $conf($dev,$attr)
     }
 
+    proc default { attr } {
+	variable defaults
+	return $defaults($attr)
+    }
+
 
     proc handleChangedConf { file } {
 	variable known_attrs
