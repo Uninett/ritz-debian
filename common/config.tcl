@@ -7,11 +7,12 @@ catch { namespace delete ::config }
 namespace eval ::config {
     namespace export handleChangedConf conf
 
-    namespace import util::copyArray
-    namespace import polljob::start polljob::restart polljob::stop
+    namespace import ::util::copyArray
+    namespace import ::polljob::start ::polljob::restart ::polljob::stop
 
     variable known_attrs
     variable conf
+    variable defaults
 
     # Initialize set of well-known keywords/attributes
     set known_attrs(name) 1
@@ -23,14 +24,20 @@ namespace eval ::config {
     set known_attrs(priority) 1
     set known_attrs(timeout) 1
     set known_attrs(retry) 1
-
     set known_attrs(domain) 1
-    set known_attrs(defaultpriority) 1
+
+    # Initialize defaults.  These are tweakable.
+    set defaults(priority) 100
+    set defaults(community) "public"
+    set defaults(interval) 15
+    set defaults(timeout) 5
+    set defaults(retry) 3
 
 
     proc handleChangedConf { file } {
 	variable known_attrs
 	variable conf
+	variable defaults
 
 	set newdevs [conffile::read $file newconfig defaults known_attrs 1]
 	fillinDefaults newconfig defaults $newdevs
@@ -39,9 +46,15 @@ namespace eval ::config {
 	    error [format "Config file %s contains errors" $file]
 	}
 
-	set changed_devs [changedDevs conf newconfig $newdevs]
-	set removed_devs [removedDevs conf $newdevs]
-	set new_devs [newDevs $conf $newdevs]
+	if [array exists conf] {
+	    set changed_devs [changedDevs conf newconfig $newdevs]
+	    set removed_devs [removedDevs conf $newdevs]
+	    set new_devs [newDevs conf $newdevs]
+	} else {
+	    set changed_devs ""
+	    set removed_devs ""
+	    set new_devs $newdevs
+	}
 
 	polljob::stop $removed_devs
 
@@ -88,7 +101,7 @@ namespace eval ::config {
 	    set l [split $ix ","]
 	    set d [lindex $l 0]
 	    set a [lindex $l 1]
-	    if { $d != $dev } { next; }
+	    if { $d != $dev } { continue; }
 	    if { ! [info exists Config($ix)] } { return 1; }
 	    if { $Config($ix) != $Newconfig($ix) } { return 1; }
 	}
@@ -96,7 +109,7 @@ namespace eval ::config {
 	    set l [split $ix ","]
 	    set d [lindex $l 0]
 	    set a [lindex $l 1]
-	    if { $d != $dev } { next; }
+	    if { $d != $dev } { continue; }
 	    if { ! [info exists Newconfig($ix)] } { return 1; }
 	}
 	return 0
@@ -106,6 +119,7 @@ namespace eval ::config {
 	upvar $config Config
 	upvar $newconfig Newconfig
 
+	set chdevs ""
 	foreach d $newdevs {
 	    if [changedDev $d Config Newconfig] {
 		lappend chdevs $d
@@ -117,13 +131,15 @@ namespace eval ::config {
     proc removedDevs { config newdevs } {
 	upvar $config Config
 
+	set removed ""
 	foreach d $newdevs {
 	    set Newdev($d) 1
 	}
 	foreach ix [array names Config] {
 	    set l [split $ix ","]
 	    set d [lindex $l 0]
-	    if { ! [info exists Newdev($d)] } {
+	    if { ![info exists Newdev($d)] && ![info exists rmd($d)] } {
+		set rmd($d) 1
 		lappend removed $d
 	    }
 	}
@@ -133,6 +149,7 @@ namespace eval ::config {
     proc newDevs { config newdevs } {
 	upvar $config Config
 
+	set new ""
 	foreach d $newdevs {
 	    if { ! [info exists Config($d,address)] } {
 		lappend new $d
@@ -142,28 +159,26 @@ namespace eval ::config {
     }
 
     # for debugging
-    proc printConf { config defaults } {
+    proc printConf { config } {
 	upvar $config Config
-	upvar $defaults Defaults
 
-	foreach ix [array names Defaults] {
-	    puts [format "default %s: $s" $ix $Defaults($ix)]
-	}
-	puts ""
 	foreach ix [array names Config] {
 	    set l [split $ix ","]
 	    set dev [lindex $l 0]
+
 	    if { ! [info exists seen($dev)] } {
 		set seen($dev) 1
 		puts [format "name: %s" $dev]
 		foreach ix2 [array names Config] {
-		    set l [split $ix ","]
+		    set l [split $ix2 ","]
 		    set d [lindex $l 0]
 		    if { $d != $dev } { continue; }
 		    set a [lindex $l 1]
 		    puts [format "%s: %s" $a $Config($d,$a)]
 		}
+		puts ""
 	    }
+
 	}
     }
 
