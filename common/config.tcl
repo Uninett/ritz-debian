@@ -34,6 +34,13 @@ namespace eval ::config {
     set defaults(retry) 3
 
 
+    # Variable access procedure
+    proc conf { dev attr } {
+	varaible conf
+	return $conf($dev,$attr)
+    }
+
+
     proc handleChangedConf { file } {
 	variable known_attrs
 	variable conf
