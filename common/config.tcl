@@ -98,18 +98,12 @@ namespace eval ::config {
 	    return 0
 	}
 	foreach ix [array names Newconfig] {
-	    set l [split $ix ","]
-	    set d [lindex $l 0]
-	    set a [lindex $l 1]
-	    if { $d != $dev } { continue; }
+	    if { ! [string match "$dev,*" $ix] } { continue; }
 	    if { ! [info exists Config($ix)] } { return 1; }
 	    if { $Config($ix) != $Newconfig($ix) } { return 1; }
 	}
 	foreach ix [array names Config] {
-	    set l [split $ix ","]
-	    set d [lindex $l 0]
-	    set a [lindex $l 1]
-	    if { $d != $dev } { continue; }
+	    if { ! [string match "$dev,*" $ix] } { continue; }
 	    if { ! [info exists Newconfig($ix)] } { return 1; }
 	}
 	return 0
