@@ -234,6 +234,7 @@ sub plotit {
 	if ($ret != 0) {
 	    print "<PRE>\n";
 	    open (ERR, $errfile);
+	    printf "$cmd\n";
 	    print while (<ERR>);
 	    close (ERR);
 	    print "</PRE>\n";
