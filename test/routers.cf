@@ -209,7 +209,7 @@ name: stavanger-gw
 address: 158.37.1.108
 
 name: pil52-gw
-address: 158.36.84.2
+address: 128.39.0.39
 ignorepat: Serial1/[01]:|Virtual-Access|Dialer
 
 name: uninett-gw
