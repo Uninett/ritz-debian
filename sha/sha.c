@@ -62,6 +62,8 @@
 #include <stdio.h>
 #include <memory.h>
 
+#include <sys/types.h>
+
 #define VERBOSE
 
 #define TRUE  1
@@ -82,14 +84,13 @@ static int byte_order;
 static void
 setup_byte_order()
 {
-    int i = 0;
-    char *pi = (char*) &i;
+    in_addr_t a;
 
-    *pi = 0xff;
-    if (i == 0xff)
-	byte_order = LITTLE_ENDIAN;
-    else
+    a = 0xff00ff00;
+    if (ntohl(a) == a)
 	byte_order = BIG_ENDIAN;
+    else
+	byte_order = LITTLE_ENDIAN;
 }
 
 /* The DEC Alpha is the only 64-bit "unsigned long" arch we support so far. */
@@ -108,7 +109,7 @@ typedef unsigned long UINT32;
 #define HASH_SIZE 5     /* Produces 160-bit digest of the message */
 
 
-
+int
 main(argc, argv)
 int argc;
 char **argv;
@@ -120,6 +121,8 @@ char **argv;
     int terse = TRUE;
 
 #ifdef MEMTEST
+    int fail = 0;
+
     sha_memory("abc", 3l, hbuf);         /* NIST test value from appendix A */
     printf("These two should compare equal:\n");
     printf("a9993e36 4706816a ba3e2571 7850c26c 9cd0d89d (expected)\n");
@@ -132,7 +135,7 @@ char **argv;
 	hbuf[3] != 0x7850c26c ||
 	hbuf[4] != 0x9cd0d89d) {
 	fprintf(stderr, "Test 1 failed!\n");
-	exit(1);
+	fail = 1;
     }
 
     sha_memory("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", 
@@ -148,6 +151,10 @@ char **argv;
 	hbuf[3] != 0xf95129e5 ||
 	hbuf[4] != 0xe54670f1) {
 	fprintf(stderr, "Test 2 failed!\n");
+	fail = 1;
+    }
+
+    if (fail) {
 	exit(1);
     }
 
@@ -210,7 +217,8 @@ char **argv;
    makes for very slow code, so we rely on the user to sort out endianness
    at compile time */
 
-static void byteReverse( buffer, byteCount )
+static void
+byteReverse( buffer, byteCount )
 	UINT32 *buffer;
 	int byteCount;
 {
@@ -234,6 +242,7 @@ union longbyte
     char B[320];                /* But read them as bytes for counting */
 };
 
+int
 sha_file(filename, buffer)      /* Hash a file */
 char *filename;
 UINT32 *buffer;
@@ -253,17 +262,19 @@ UINT32 *buffer;
     return SUCCESS;
 }
 
-void sha_memory(mem, length, buffer)    /* Hash a memory block */
-char *mem;
-unsigned long length;
-UINT32 *buffer;
+void
+sha_memory(mem, length, buffer)    /* Hash a memory block */
+     char *mem;
+     unsigned long length;
+     UINT32 *buffer;
 {
     nist_guts(FALSE, (FILE *) NULL, mem, length, buffer);
 }
 
-void sha_stream(stream, buffer)
-FILE *stream;
-UINT32 *buffer;
+void
+sha_stream(stream, buffer)
+     FILE *stream;
+     UINT32 *buffer;
 {
     nist_guts(TRUE, stream, (char *) NULL, 0l, buffer);
 }
@@ -308,12 +319,13 @@ UINT32 *buffer;
     A = temp
 #endif
 
-static void nist_guts(file_flag, stream, mem, length, buf)
-int file_flag;                  /* Input from memory, or from stream? */
-FILE *stream;
-char *mem;
-unsigned long length;
-UINT32 *buf;
+static void
+nist_guts(file_flag, stream, mem, length, buf)
+     int file_flag;		/* Input from memory, or from stream? */
+     FILE *stream;
+     char *mem;
+     unsigned long length;
+     UINT32 *buf;
 {
     int i, nread, nbits;
     union longbyte d;
