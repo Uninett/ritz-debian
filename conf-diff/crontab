@@ -1,0 +1,2 @@
+1,21,41 * * * * /archive/traffic/bin/checkin-configs >> /tftpboot/ci.log 2>&1
+10 0 * * * /archive/traffic/bin/post-diff
