@@ -49,10 +49,13 @@
 # on Cisco routers; briefly "bla bla, logical-port-name, bla bla"
 # where the ", " is the field delimiter.
 
-sub open_dbs {
+require 'getopts.pl';
 
-    dbmopen(%ftn, "%TOPDIR%/db/ftn", 0664);
-    dbmopen(%ntf, "%TOPDIR%/db/ntf", 0664);
+sub open_dbs {
+    my($dbdir) = @_;
+
+    dbmopen(%ftn, "$dbdir/ftn", 0664);
+    dbmopen(%ntf, "$dbdir/ntf", 0664);
 }
 
 sub close_dbs {
@@ -62,16 +65,18 @@ sub close_dbs {
 }
 
 sub read_config {
-    local($rtr_name);
-    local($poll_seen);
+    my($f) = @_;
+    my($rtr_name);
+    my($poll_seen);
 
-    while(<>) {
-	if (! /router\s+(\S+)/) { next; };
+    open(IN, $f) || die "Could not open $f: $!\n";
+    while(<IN>) {
+	if (! /^name:\s+(\S+)$/) { next; };
 	$rtr_name = $1;
 	$poll_seen = 0;
-	while (!$poll_seen && !/}/) {
-	    $_ = <>;
-	    if (/polladdr\s+([0-9].+);/) {
+	while (!$poll_seen && !/^$/) {
+	    $_ = <IN>;
+	    if (/^address:\s+([0-9].+)$/) {
 		$polladdr{$rtr_name} = $1;
 		$poll_seen = 1;
 	    }
@@ -80,10 +85,11 @@ sub read_config {
 	    printf (STDERR "Poll address for $rtr_name not found!\n");
 	}
     }
+    close(IN);
 }
 
 sub read_manuals {
-    local($fh) = @_;
+    my($fh) = @_;
 
     while (<$fh>) {
 	if (/^;/) { next; }
@@ -93,7 +99,7 @@ sub read_manuals {
 }
 
 sub alive {
-    local($address) = @_;
+    my($address) = @_;
 
     # XXX Name of command should go in a config file
     open(IN, "%PING% -s 56 -c 5 -i 2 $address 2>&1 |");
@@ -106,16 +112,16 @@ sub alive {
 }
 
 sub get_addrs {
-    local($router, $polladdr) = @_;
+    my($router, $polladdr) = @_;
 
     if ($dead{$polladdr} || ! &alive($polladdr)) {
 	$dead{$polladdr} = 1;
 	return undef;
     }
     # XXX Name of command should go in a config file
-    open(IN, "%SNMPNETSTAT% $polladdr -inh 2>&1|");
+    open(IN, "%SNMPNETSTAT% -inh $polladdr 2>&1|");
     while(<IN>) {
-	if (/SNMP timeout/) { close(IN); return undef; }
+	if (/noResponse/) { close(IN); return undef; }
 	chop;
 	@_ = split;
 	$as{$router . ":" . $_[0]} = $_[2];
@@ -129,19 +135,26 @@ sub get_addrs {
 }
 
 sub get_line_names {
-    local($router, $polladdr) = @_;
-    local(@a);
+    my($router, $polladdr) = @_;
+    my(@a);
 
     if ($dead{$polladdr} || ! &alive($polladdr)) {
 	$dead{$polladdr} = 1;
 	return undef;
     }
-    open(IN, "%SNMPNETSTAT% $polladdr -idnh 2>&1|");
+    open(IN, "%SNMPNETSTAT% -idnh $polladdr 2>&1|");
     while(<IN>) {
-	if (/SNMP timeout/) { close(IN); return undef; }
-	if (/^(\d+)\s+\S+\s+\d+ "(.*)"$/) {
+	if (/noResponse/) { close(IN); return undef; }
+	if (/^(\d+)\s+\S+\s+\S+ "(.*)"$/) {
 	    @a = split(/, /,$2);
 	    if ($#a < 1) { next; }
+	    # Trim leading and trailing spaces,
+	    $a[1] =~ s/^ +//;
+	    $a[1] =~ s/ +$//;
+	    # replace remaining spaces with hyphen.
+	    # ...so that later use of default "split"
+	    # doesn't produce unexpected results.
+	    $a[1] =~ s/ /-/g;
 	    $line_name{$router . ":" . $1} = $a[1];
 	    if ($1 > $max_ix{$router}) {
 		$max_ix{$router} = $1;
@@ -153,8 +166,8 @@ sub get_line_names {
 }
 
 sub get_current_state {
-    local($k);
-    local($fn);
+    my($k);
+    my($fn);
 
     foreach $r (keys %polladdr) {
 	if (defined($manual{$r})) { next; }
@@ -178,41 +191,51 @@ sub get_current_state {
 }
 
 sub update_dbs {
-    local($now);
-    local(@a,@b);
+    my($now);
+    my(@a,@b);
     
     $now = &get_today_str();
     foreach $ln (keys %file) {
 	if (!defined $file{$ln}) { next; }
 	if (defined $ntf{$ln}) {
+	    # separate entries in name-to-file database
 	    @a = split(/:/, $ntf{$ln});
+	    # split last entry on spaces
 	    @b = split(/ /, $a[$#a]);
 	    if ($b[0] eq $file{$ln}) {
+		# same as before
 		next;
 	    }
+	    # Tack on new entry at the end
 	    $ntf{$ln} .= $now . ":" . $file{$ln} . " " . $now . "-";
 	} else {
+	    # Add completely new entry
 	    $ntf{$ln} = $file{$ln} . " " . $now . "-";
 	}
     }
     foreach $fn (keys %line) {
 	if (!defined $line{$fn}) { next; }
 	if (defined $ftn{$fn}) {
+	    # separate entries in file-to-name database
 	    @a = split(/:/, $ftn{$fn});
+	    # split last entry on spaces
 	    @b = split(/ /, $a[$#a]);
 	    if ($b[0] eq $line{$fn}) {
+		# same as before
 		next;
 	    }
+	    # Tack on new entry at the end
 	    $ftn{$fn} .= $now . ":" . $line{$fn} . " " . $now . "-";
 	} else {
+	    # Add completely new entry
 	    $ftn{$fn} = $line{$fn} . " " . $now . "-";
 	}
     }
 }
 
 sub get_today_str {
-    local($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
-    local($today_str);
+    my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
+    my($today_str);
     
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
 	localtime(time);
@@ -220,18 +243,26 @@ sub get_today_str {
     $today_str = sprintf("%04d%02d%02d", $year+1900, $mon+1, $mday);
 }
 
+sub usage {
+    die "usage: $0 -t topdir\n";
+}
+
 
 # Main (test)
 
-&open_dbs ();
-&read_config ();
+&Getopts("t:");
 
-open(IN, "%TOPDIR%/db/manual-rtrs") ||
-    die "Could not open %TOPDIR%/db/manual-rtrs\n";
+if (!defined($opt_t)) { &usage(); }
+
+&open_dbs($opt_t . "/db");
+&read_config($opt_t . "/conf/polldevs.cf");
+
+open(IN, "$opt_t/db/manual-devs") ||
+    die "Could not open $opt_t/db/manual-devs\n";
 &read_manuals(IN);
 close(IN);
 
-&get_current_state ();
-&update_dbs ();
+&get_current_state();
+&update_dbs();
 reset;
-&close_dbs ();
+&close_dbs();
