@@ -146,7 +146,7 @@ sub read_log {
 	$sample_time{$v, $sno} = $now / 3600.0;
 
 	$base{$v} = $f[6];
-	if ($sample_no == 10) {
+	if ($sample_no == 10 && $h0_seen) {
 	    $date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
 	}
     }
