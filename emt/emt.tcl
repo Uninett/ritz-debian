@@ -410,17 +410,20 @@ proc emt_getlog { id } {
 proc emt_lastlogline { id } {
     global log
 
-    if [catch { set l $log($id) }] {
+    if [catch { set l $log($id) } msg] {
+	puts [format "Could not get log: %s" $msg]
 	return ""
     }
     # Chop off last newline
     set l [string range $l 0 [expr [string length $l] - 1]]
     set ix [string last "\n" $l]
     if { $ix == -1 } {
+	puts [format "Last log line: %s" $l]
 	return $l
     }
     # Skip newline of previous log line
     set l [string range $l [expr $ix + 1] end]
+    puts [format "Last log line(2): %s" $l]
     return $l
 }
 
@@ -437,12 +440,12 @@ proc emt_forget { id } {
 proc emt_open { server port user secret } {
     global errorInfo
 
-    while [catch {
+    while { [catch {
 	catch { ::net::close }
 	::net::open $server $port
 	::auth::login $user $secret
 	::notify::open emt_notify
-    } msg ] {
+    } msg ] } {
 	log [format "Error opening server %s port %s" $server $port]
 	log [format "Cause: %s" $msg]
 	log [format "Detailed info: %s" $errorInfo]
