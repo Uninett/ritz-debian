@@ -9,6 +9,10 @@
 namespace import ::polljob::name
 namespace import ::just::sparseTableWalk
 namespace import ::just::asyncSparseTableWalk
+namespace import ::config::conf*
+
+mib load rfc1213.mib
+mib load cisco.mib
 
 
 proc initDev { sh } {
@@ -20,11 +24,21 @@ proc destroyDev { sh } {
 }
 
 proc pollDev { sh } {
+    global errorInfo
 
-    catch {
+#    puts [format "polling %s" [name $sh]]
+    if [catch {
+	# determine reachability and whether it
+	# has rebooted/crashed since the last go-around
 	uptimeCheck $sh
+	# need to do this for each round
+	# since interfaces may have been turned
+	# on or cards can be hot-swapped
 	getConfig $sh
+	# do the walk...
 	pollIntfs $sh
+    } msg] {
+	puts $errorInfo
     }
 }
 
@@ -127,7 +141,7 @@ proc recordAddr { sh vbl } {
     if { ! [info exists cx($name,address,$ix)] } {
 	# only remember lowest address if interface
 	# has more than one
-	set cx($name,address,ix) $ad
+	set cx($name,address,$ix) $ad
     }
 }
 
@@ -165,23 +179,27 @@ proc recordIntf { sh vbl } {
 proc pollIntfs { sh } {
 
     set vl [getVarList $sh]
-    asyncSparseTableWalk $sh $vl x {
+    asyncSparseTableWalk $sh x $vl {
 	logVars %S $x
     } {
 	# no endscript
+#	puts [format "finished polling %s" [name %S]]
     } {
-	logerr [format "%s poll: %s" [name %S] %E
+	set msg [format "%s poll: %s" [name %S] %E
+	logerr $msg
+	error $msg
     }
 }
 
 proc getVarList { sh } {
     global cx
+
     set vl [list "ifInOctets" "ifInUcastPkts" \
 	    "ifInNUcastPkts" "ifInDiscards" \
 	    "ifInErrors" "ifOutOctets" \
 	    "ifOutUcastPkts" "ifOutNUcastPkts" \
 	    "ifOutDiscards" "ifOutErrors"]
-    if { [oidPfxMatch [mib oid cisco] $cx($sh,sysid)] } {
+    if { [oidPfxMatch [mib oid cisco] $cx([name $sh],sysid)] } {
 	lappend vl "locIfInRunts" "locIfInGiants" \
 		"locIfInCRC" "locIfInFrame" \
 		"locIfInOverrun" "locIfInIgnored" \
@@ -191,15 +209,34 @@ proc getVarList { sh } {
     return $vl
 }
 
+proc oidPfxMatch { a b } {
+    append a "."
+    set ix [string first $a $b]
+    return [expr $ix == 0]
+}
+
 proc logVars { sh vbl } {
     global cx
 
-    set ix [getInstance [lindex [lindex $vbl 0] 0]]
     set stamp [getNowStamp]
     set name [name $sh]
 
+    foreach vb $vbl {
+	set oid [lindex $vb 0]
+	if { $oid != {} } {
+	    set ix [getInstance $oid]
+	}
+    }
+    if { ! [info exists ix] } { return; }
+
+    if [confExists $name "ignorepat"] {
+	set ign [conf $name "ignorepat"]
+	# Ignore ports we've been instructed to ignore
+	if [regexp $ign $cx($name,descr,$ix)] { return; }
+    }
     # Ignore interfaces not turned on
     if { $cx($name,admin,$ix) != "up" } { return; }
+
     set fh [openFile $name $ix newfile]
     # Log files rotated daily, so log interface
     # information first and close to the end of the day
@@ -236,6 +273,7 @@ proc openFile { dev ix new } {
 	logerr [format "%s open error: %s" $fn $msg]
 	error $msg
     }
+    return $fh
 }
 
 proc getFileName { dev ix } {
@@ -302,6 +340,12 @@ proc getNowStamp {} {
 proc getStamp { secs } {
     return [clock format $secs \
 	    -format "%a %b %d %H:%M:%S %Y"]
+}
+
+proc logerr { msg } {
+
+    # Could / should be improved to do syslog (?)
+    puts stderr $msg
 }
 
 #
