@@ -263,6 +263,9 @@ sub plot_errors {
 		$tprinted = 1;
 	    }
 	}
+	if (!$tprinted) {
+	    printf($fh "%f", 0.0); # need something.  This is bogus. XXX
+	}
 
 	$pkts = ($count{"ifInUcastPkts",$i} +
 		 $count{"ifInNUcastPkts",$i} +
