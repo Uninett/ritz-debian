@@ -91,6 +91,11 @@ sub save_and_compress_files {
 	die "Could not save files in backup directory\n";
     }
 
+    # Clean up any gzipped files from last month
+    $cmd = "rm -f $backupdir/*.gz";
+    # ignore any error code returned
+    system($cmd);
+
     $cmd = "$gzip $backupdir/*";
     $ret = system($cmd) / 256;
     if ($ret != 0) {
