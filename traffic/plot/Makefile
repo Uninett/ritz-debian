@@ -2,7 +2,7 @@
 # $Id$
 #
 
-SCRIPTS=plot-day.pl plot-hr.pl plot-raw.pl plot-week.pl
+SCRIPTS=plot-5m.pl plot-day.pl plot-hr.pl plot-raw.pl plot-week.pl
 
 SUBST=	${.CURDIR}/../../subst
 
