@@ -9,24 +9,23 @@ source "../common/conffile.tcl"
 source "../common/polljob.tcl"
 source "../common/config.tcl"
 
-namespace import ::polljob::cx
+namespace import ::polljob::name
 
 proc initDev { sh } {
 
-    puts [format "initDev %s" [cx $sh name]]
+    puts [format "initDev %s" [name $sh]]
 }
 
 proc pollDev { sh } {
 
-    puts [format "pollDev %s" [cx $sh name]]
+    puts [format "pollDev %s" [name $sh]]
 }
 
 proc destroyDev { sh } {
 
-    puts [format "destroyDev %s" [cx $sh name]]
+    puts [format "destroyDev %s" [name $sh]]
 }
 
 set conffile "routers.cf"
 
-::conffile::setHandler ::config::handleChangedConf
 ::conffile::startCheckJob $conffile 30
