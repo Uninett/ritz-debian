@@ -520,7 +520,7 @@ sub first_half_polyline {
     while($tl < $pll / 2) {
 	push(@nc, @c[0..1]);
 	$l = &line_length(@c[0..3]);
-	if ($tl + $l > $pll / 2) {
+	if ($tl + $l >= $pll / 2) {
 	    push(@nc, &line_seg($pll / 2 - $tl, @c));
 	    return @nc;
 	}
