@@ -103,7 +103,7 @@ sub plot_traffic_common {
 	undef $out;
 
 	foreach $v ("ifInOctets", "ifOutOctets") {
-	    $now = $sample_time{$v,$i};
+	    $now = $sample_time{$i};
 	    $time_delta = 3600.0 * ($now - $then{$v});
 	    if ($time_delta < 0) { # Ignore samples before midnight the 
 		$add{$v} = 0;	# "previous" day (not sure this comes out
@@ -123,7 +123,7 @@ sub plot_traffic_common {
 	    }
 	}
 	if (defined($in) && defined($out)) {
-	    printf($fh " %f", $sample_time{"ifInOctets",$i} + ($d*24));
+	    printf($fh " %f", $sample_time{$i} + ($d*24));
 	    printf($fh " %f %f\n", $in, $out);
 	}
     }
@@ -191,13 +191,9 @@ sub plot_discards {
     my($line, $fh, $dn, $d, $tm) = @_;
     my($i, $has_ignores, $val, $pkts);
 
-    $has_ignores = 0;
-    foreach $i (0 .. 10) {
-	$has_ignores |= defined($count{"locIfInIgnored",$i});
-    }
-
+    $has_ignores = defined($base{"locIfInIgnored"});
     foreach $i (0 .. $max_sample) {
-	printf($fh "%f", $sample_time{"ifOutDiscards",$i} + ($d*24));
+	printf($fh "%f", $sample_time{$i} + ($d*24));
 
 	$pkts = ($count{"ifOutUcastPkts",$i} +
 		 $count{"ifOutNUcastPkts",$i} +
@@ -310,7 +306,7 @@ sub plot_resets {
     my($i, $val);
 
     foreach $i (0 .. $max_sample) {
-	printf($fh "%f", $sample_time{"locIfResets",$i} + ($d*24));
+	printf($fh "%f", $sample_time{$i} + ($d*24));
 	&maxit($val = $count{"locIfResets", $i});
 	printf($fh " %f\n", $val);
     }
@@ -338,13 +334,10 @@ sub plot_eerrs {
     my($line, $fh, $dn, $d, $tm) = @_;
     my($i, $ipkts, $opkts, $has_details);
 
-    $has_details = 0;
-    foreach $i (0 .. 10) {
-	$has_details |= defined($count{"locIfInCRC",$i});
-    }
+    $has_details = defined($base{"locIfInCRC"});
 
     foreach $i (0 .. $max_sample) {
-	printf($fh "%f", $sample_time{"locIfInCRC",$i} + ($d*24));
+	printf($fh "%f", $sample_time{$i} + ($d*24));
 
 	$ipkts = ($count{"ifInUcastPkts",$i} +
 		  $count{"ifInNUcastPkts",$i} +
