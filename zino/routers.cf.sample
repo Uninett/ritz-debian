@@ -6,9 +6,9 @@
 # Remember: only a single space between attribute name and value,
 # and no blank line before global defaults
 #
-interval: 15
-community: public
-domain: uninett.no
+default interval: 15
+default community: public
+default domain: uninett.no
 
 # highest-priority (backbone) routers first
 name: no-gw2
