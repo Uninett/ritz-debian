@@ -87,6 +87,7 @@ proc readCf { filename } {
 		    if {[info exists [set v]($name)]} {
 			if {[set [set v]($name)] != $val} {
 			    puts [format "Router %s changed config" $name]
+			    puts [format "Var %s value %s" $v $val]
 			    set ChangedRouter($name) 1
 			}
 		    }
