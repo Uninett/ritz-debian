@@ -541,14 +541,12 @@ sub save_position {
 }
 
 sub report_tail_stats {
-    my($b, $ofile) = @_;
+    my($rfile, $b, $ofile) = @_;
     our($fd, $opt_i);
     my($ikbps, $okbps, $n);
     my($sp) = $fd->{$b}->{"save_values"};
     my $ia = $sp->{"ikbps"};
     my $oa = $sp->{"okbps"};
-
-    open(OUT, ">" . "$ofile") || die "Could not open $ofile for write\n";
 
     $n = 0;
     foreach my $v (@{ $ia }) {
@@ -580,18 +578,17 @@ sub report_tail_stats {
 	$name = $b;
     }
     # Output: name   last-kbps-in last-kbps-out avg-kbps-in avg-kbps-out
-    printf(OUT "%-30s %8d %8d %8d %8d %8d\n",
+    printf($rfile "%-30s %8d %8d %8d %8d %8d\n",
 	   $name,
 	   $ia->[$#$ia],
 	   $oa->[$#$oa],
 	   $ikbps, $okbps,
 	   $fd->{$b}->{"ifspeed"} / 1000,
 	   );
-    close(OUT);
 }
 
 sub tail_process_file {
-    my($f) = @_;
+    my($rfile, $f) = @_;
     my($b) = basename($f);
     my($cat, $base) = &cat_and_base($f, &today());
     our($max_sample, $opt_r);
@@ -610,7 +607,7 @@ sub tail_process_file {
     &trim_data($b, &timelocal(localtime) - $retention_time);
     &save_vars($b);
     if (defined($opt_r)) {
-	&report_tail_stats($b, $opt_r);
+	&report_tail_stats($rfile, $b, $opt_r);
     }
 }
 
@@ -661,14 +658,20 @@ sub do_all_files {
     my($dir) = &find_data_dir(&today());
     my(@files) = &directory_files($dir);
     our($stat_report);
-    our($opt_m, $opt_M);
+    our($opt_m, $opt_M, $opt_r);
 
 #    select(STDOUT); $| = 1;	# unbuffer
     $stat_report = "";
+    if (defined($opt_r)) {
+	unlink($opt_r) || die "Could not unlink $opt_r";
+    }
+    open(REP, ">" . $opt_r) || die "Could not open $opt_r for write";
+
     foreach $f (@files) {
-	&tail_process_file($dir . "/" . $f);
+	&tail_process_file(\*REP, $dir . "/" . $f);
 #	printf(".");
     }
+    close(REP);
     if ($stat_report != "" && defined($opt_m) && defined($opt_M)) {
 	&mail_report($opt_M, $opt_m, $stat_report);
     }
