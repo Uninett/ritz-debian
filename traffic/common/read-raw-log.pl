@@ -42,6 +42,7 @@
 # Return data in globals:
 #   $count{$v, $i}	Delta for counter $v in interval $i
 #   $base{$v}		Convenient tester for existence of variable in log
+#			Also used to compute delta for each interval/sample
 #   $sample_time{$v, $i} Sample time in hrs for counter $v, end of sample $i
 #   $sample_time{$i}	Sample time in hrs for end of sample $i
 #   $date		Date string of log
