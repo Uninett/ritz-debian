@@ -60,7 +60,7 @@ proc authPass { chan user resp } {
     if { [info exists authSecret($user)] } {
 	# compute SHA(challenge+secret), compare to response
 	set s [format "%s %s" $authChallenge($chan) $authSecret($user)]
-	set r [exec sha -t <<$s]
+	set r [exec sha <<$s]
 	if { $r == $resp } {
 	    return
 	}
@@ -68,7 +68,7 @@ proc authPass { chan user resp } {
 	# compute SHA(response), compare to stored secret
 	# This is to handle clear-text passwords, and may be disabled.
 	if { $authClearTextPasswords } {
-	    set r [exec sha -t <<$resp]
+	    set r [exec sha <<$resp]
 	    if { $r == $authSecret($user) } {
 		return
 	    }
