@@ -40,7 +40,7 @@ initEvent $eventid_file $old_events
 initFlaps
 initStatus
 
-::conffile::startCheckJob $conffile $conf_check
+::conffile::startCheckJob $pollfile $conf_check
 
 ::persist::startPeriodicDump $persist_period
 
