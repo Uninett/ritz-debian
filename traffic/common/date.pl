@@ -342,7 +342,7 @@ sub decode_datespec {
 sub pretty_datespec {
     my($datespec) = @_;
     my($year, $month, $week, $day, $base_tm, $no_days);
-    my($s, $d);
+    my($s, $d, $min, $hour);
 
     if ($datespec eq "epoch") {
 	return(sprintf("epoch (since %s)", &pretty_date("%DATASTART%")));
@@ -351,11 +351,26 @@ sub pretty_datespec {
     ($year, $month, $week, $day) = split ('-', $datespec);
     $year = 1900 + $year if  ($year < 1900);
     if ($day) {
-	return ($year ."-" . $month . "-" . $day);
+	if (&is_today($datespec)) {
+	    ($s, $min, $hour, $d, $d, $d, $d, $d, $d, $d) = localtime(time);
+	    return sprintf("%s-%s-%s %s:%s",
+			   $year, $month, $day,
+			   $hour, $min);
+	} else {
+	    return ($year ."-" . $month . "-" . $day);
+	}
     } elsif ($week && $month) {
 	# Both week and month doesn't make sense, we'll assume
 	# that $week is really meant to be $day
-	return ($year ."-" . $month . "-" . $week);
+	$day = $week;
+	if (&is_today($datespec)) {
+	    ($s, $min, $hour, $d, $d, $d, $d, $d, $d, $d) = localtime(time);
+	    return sprintf("%s-%s-%s %s:%s",
+			   $year, $month, $day,
+			   $hour, $min);
+	} else {
+	    return ($year ."-" . $month . "-" . $day);
+	}
     } elsif ($week) {
 	return "week $week in $year";
     } elsif ($month) {
