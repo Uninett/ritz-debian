@@ -198,25 +198,25 @@ sub get_current_state {
     my($k);
     my($fn);
 
-    if (defined($opt_v)) {
+    if (defined($opt_d)) {
 	printf(STDERR "Getting current state\n");
     }
     foreach $r (keys %polladdr) {
 	if (defined($manual{$r})) {
-	    if (defined($opt_v)) {
+	    if (defined($opt_d)) {
 		printf(STDERR "Router %s - manual mapping\n", $r);
 	    }
 	    next;
 	}
-	if (defined($opt_v)) {
+	if (defined($opt_d)) {
 	    printf(STDERR "Checking %s for addresses...", $r);
 	}
 	&get_addrs ($r, $polladdr{$r});
-	if (defined($opt_v)) {
+	if (defined($opt_d)) {
 	    printf(STDERR "interface descs...");
 	}
 	&get_line_names ($r, $polladdr{$r});
-	if (defined($opt_v)) {
+	if (defined($opt_d)) {
 	    printf(STDERR "\n");
 	}
 
@@ -251,12 +251,12 @@ sub update_dbs {
     
     $now = &get_today_str();
 
-    if (defined($opt_v)) {
+    if (defined($opt_d)) {
 	printf(STDERR "Checking name -> file DB\n");
     }
     foreach $ln (keys %file) {
 	if (!defined $file{$ln}) { next; }
-	if (defined($opt_v)) {
+	if (defined($opt_d)) {
 	    printf(STDERR "Checking %s ...", $ln);
 	}
 	if (defined $ntf{$ln}) {
@@ -265,7 +265,7 @@ sub update_dbs {
 	    # split last entry on spaces
 	    @b = split(/ /, $a[$#a]);
 	    if ($b[0] eq $file{$ln}) {
-		if (defined($opt_v)) {
+		if (defined($opt_d)) {
 		    printf(STDERR "...same\n");
 		}
 		# same as before
@@ -274,24 +274,30 @@ sub update_dbs {
 	    # Tack on new entry at the end
 	    $ntf{$ln} .= $now . ":" . $file{$ln} . " " . $now . "-";
 	    if (defined($opt_v)) {
-		printf(STDERR "\nUpdated entry: %s -> %s\n",
+		printf(STDERR "\n");
+	    }
+	    if (defined($opt_v) || defined($opt_d)) {
+		printf(STDERR "Updated entry: %s -> %s\n",
 		       $ln, $file{$ln});
 	    }
 	} else {
 	    # Add completely new entry
 	    $ntf{$ln} = $file{$ln} . " " . $now . "-";
 	    if (defined($opt_v)) {
-		printf(STDERR "\nAdded new entry: %s -> %s\n",
+		printf(STDERR "\n");
+	    }
+	    if (defined($opt_v) || defined($opt_d)) {
+		printf(STDERR "Added new entry: %s -> %s\n",
 		       $ln, $file{$ln});
 	    }
 	}
     }
-    if (defined($opt_v)) {
+    if (defined($opt_d)) {
 	printf(STDERR "Checking file -> name DB\n");
     }
     foreach $fn (keys %line) {
 	if (!defined $line{$fn}) { next; }
-	if (defined($opt_v)) {
+	if (defined($opt_d)) {
 	    printf(STDERR "Checking %s ...", $fn);
 	}
 	if (defined $ftn{$fn}) {
@@ -300,7 +306,7 @@ sub update_dbs {
 	    # split last entry on spaces
 	    @b = split(/ /, $a[$#a]);
 	    if ($b[0] eq $line{$fn}) {
-		if (defined($opt_v)) {
+		if (defined($opt_d)) {
 		    printf(STDERR "...same\n");
 		}
 		# same as before
@@ -309,13 +315,19 @@ sub update_dbs {
 	    # Tack on new entry at the end
 	    $ftn{$fn} .= $now . ":" . $line{$fn} . " " . $now . "-";
 	    if (defined($opt_v)) {
-		printf(STDERR "\nUpdated entry: %s -> %s\n",
+		printf(STDERR "\n");
+	    }
+	    if (defined($opt_v) || defined($opt_d)) {
+		printf(STDERR "Updated entry: %s -> %s\n",
 		       $fn, $line{$fn});
 	    }
 	} else {
 	    # Add completely new entry
 	    $ftn{$fn} = $line{$fn} . " " . $now . "-";
 	    if (defined($opt_v)) {
+		printf(STDERR "\n");
+	    }
+	    if (defined($opt_v) || defined($opt_d)) {
 		printf(STDERR "\nAdded new entry: %s -> %s\n",
 		       $fn, $line{$fn});
 	    }
@@ -340,10 +352,10 @@ sub usage {
 
 # Main (test)
 
-&Getopts("nt:v");
+&Getopts("dnt:v");
 
 if (!defined($opt_t)) { &usage(); }
-if (defined($opt_v)) {
+if (defined($opt_v) || defined($opt_d)) {
     select(STDERR);
     $| = 1;
     select(STDOUT);
