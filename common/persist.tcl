@@ -101,6 +101,8 @@ namespace eval ::persist {
 	    puts $f $ghead
 	    puts -nonewline $f [format "set %s " $var]
 	    puts $f [externalize [set $var]]
+#	} else {
+#	    puts "persist variable $var nonexistent"
 	}
     }
 
