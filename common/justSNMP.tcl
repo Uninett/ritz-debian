@@ -36,7 +36,8 @@
 catch { namespace delete ::just }
 
 namespace eval ::just {
-    namespace export sparseTableWalk fetchTable mapNames
+    namespace export sparseTableWalk asyncSparseTableWalk
+    namespace export fetchTable mapNames
     namespace export vblPfxAssoc vblPfxAssosL getDNSCachedName
     namespace export getCachedServiceName
     namespace export setSparseWalkEHandler unsetSparseWalkEHandler
@@ -49,12 +50,23 @@ namespace eval ::just {
     #
     # A procedure imitating the scotty snmp walk primitive, but one
     # that will handle a sparsely populated table and still return
-    # whole rows to the caller.  This version does asynchronous
-    # operations and can be given a script to be called at the end of
-    # the operation.
+    # whole rows to the caller.  This version uses asynchronous
+    # operations but appears to be synchronous to the caller.
+    #
+    
+    proc sparseTableWalk { sh varName varList body } {
+
+	asyncSparseTableWalk $sh $varName $varList $body {
+	    set done 1
+	}
+	vwait done
+    }
+
+    #
+    # The async version used by the above.
     #
 
-    proc sparseTableWalk { sh varName varList body { endscript "" } } {
+    proc asyncSparseTableWalk { sh varName varList body { endscript "" } } {
 
 	foreach v $varList {
 	    set oid [mib oid $v]
