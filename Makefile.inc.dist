@@ -38,6 +38,7 @@ SCOTTY=/usr/pkg/bin/scotty
 SNMPNETSTAT=/local/bin/snmpnetstat
 TACHOST=betong.veidekke.no
 TCLSH=/usr/pkg/bin/tclsh8.0
+WISH=/usr/pkg/bin/tixwish
 #
 NOTIFY=he
 CHECKINTV=400
