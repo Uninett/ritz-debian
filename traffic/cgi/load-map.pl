@@ -162,6 +162,10 @@ sub tgif_attr {
 	    $load_color[$v] = $fill_color[$elt];
 	} elsif ($v eq "nosplit") {
 	    $nosplit[$elt] = 1;
+	} elsif ($n eq "mapref") {
+	    $mapref[$elt] = $v;
+	} elsif ($n eq "mapalt") {
+	    $mapalt[$elt] = $v;
 	} elsif ($n eq "lw") {
 	    $lw_seen = 1;
 	} else {
@@ -215,13 +219,17 @@ sub tgif_box {
 sub tgif_polygon {
     my($fh, $elt, @f) = @_;
     my($nvs) = $f[3];
+    my($c) = $f[1];
 
+    $c =~ s/\'//g;
+    $pen_color[$elt] = $c;
     $_ = <$fh>;
     $_ =~ s/^\s+//g;
     @f = split(/[,\]]+/);
     $coords[$elt] = join(' ', @f[0 .. ($nvs*2)-1]);
     $width[$elt] = $f[($nvs*2)+1];
     $type[$elt] = "polygon";
+    $fill[$elt] = $f[$nvs*2];
 
     $_ = <$fh>;
     $elt = &tgif_attrlist($fh, $elt);
@@ -626,7 +634,7 @@ sub draw_polygon {
     my(@c, $c, $b);
 
     @c = split(/ /, $coords[$e]);
-    $c = &draw_color($img, $e, "black");
+    $c = &draw_color($img, $e, $pen_color[$elt]);
 
     &draw_polygon_1($img, $c, @c);
 }
@@ -969,6 +977,8 @@ sub read_map {
 # HTML-related functions
 #
 
+# Translate, return ints
+
 sub xlci {
     my(@c) = @_;
     my(@nc, $n);
@@ -980,8 +990,58 @@ sub xlci {
     return @nc;
 }
 
+sub other_map_url {
+    my($elt, $dsp, $type, $select) = @_;
+    my($mr) = $mapref[$elt];
+
+    if (!defined($mr)) { return undef; }
+    if ($mr =~ /^http:\/\//) {
+	return sprintf("%s,%s,%s,%s", $mr, $dsp, $type, $select);
+    }
+    return &map_ref($mr, $dsp, $type, $select);
+}
+
+sub other_map_alt {
+    my($elt, $dsp, $type, $select) = @_;
+
+    return $mapalt[$elt];
+}
+
+sub other_map_coords {
+    my($elt) = @_;
+    my(@c) = split(/ /, $coords[$elt]);
+    my($x, $y, $w, $h);
+
+    if ($#c == 3) {		# probably rectangle/box; need to expand
+	$x = $c[0];
+	$y = $c[1];
+	$w = $c[2] - $x;
+	$h = $c[3] - $y;
+	return ($x, $y, ($x+$w), $y, ($x+$w), ($y+$h), $x, ($y+$h))
+    }
+    return @c;
+}
+
+sub other_map_ref {
+    my($elt, $dsp, $type, $select) = @_;
+    my($mc, $url, $alt);
+
+    $url = &other_map_url($elt, $dsp, $type, $select);
+    $alt = &other_map_alt($elt, $dsp, $type, $select);
+
+    if (!defined($url)) { return ""; }
+    $mc = "<area shape=poly coords=\"";
+    $mc .= join(',', &xlci(&other_map_coords($elt)));
+    $mc .= sprintf("\"\n\thref=\"%s\"", $url);
+    if (defined($alt)) {
+	$mc .= sprintf("\n\talt=\"%s\"", $alt);
+    }
+    $mc .= ">\n";
+    return $mc;
+}
+
 sub imgmap {
-    my($elts) = @_;
+    my($elts, $dsp, $type, $select) = @_;
     my($map) = "";
     my($e, $mc, @c, @ec, @fh, @lh, $url, $alt);
 
@@ -1016,6 +1076,10 @@ sub imgmap {
 		$mc .= sprintf("\"\n\thref=\"%s\"\n\talt=\"%s\">\n",
 			       $url, $alt);
 	    }
+	    $map .= $mc;
+	}
+	if (defined($mapref[$e])) {
+	    $mc = &other_map_ref($e, $dsp, $type, $select);
 	    $map .= $mc;
 	}
     }
@@ -1214,7 +1278,7 @@ sub produce_map {
     printf("\n\talt=\"[PNG image]\"\n\tusemap=\"#mymap\">\n</a>\n");
 
     printf("<map name=\"mymap\">\n");
-    printf("%s", &imgmap($elts));
+    printf("%s", &imgmap($elts, $dsp, $type, $select));
     &add_zoom_areas($map, $dsp, $type, $select);
     printf("</map>\n");
     &add_help_ptr();
