@@ -11,10 +11,10 @@ SUBST=	${.CURDIR}/../subst
 
 all: ${PROGS}
 
-tpoller: ${SRC}
+tpoller: ${SRC} Makefile
 	rm -f $@
 	echo "#! "${SCOTTY} > $@
-	cat ${SRC} >> $@
+	cat ${SRC} | sed -f ${SUBST} >> $@
 	chmod +x $@
 
 start-tpoll: start-tpoll.sh ${SUBST}
