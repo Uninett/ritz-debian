@@ -348,7 +348,7 @@ proc getStamp { secs } {
 proc logerr { msg } {
 
     # Could / should be improved to do syslog (?)
-    puts stderr $msg
+    puts stderr [format "%s: %s" [getNowStamp] $msg]
 }
 
 #
