@@ -283,7 +283,7 @@ sub accumulate_stats {
 sub flag_deviations {
     my($cv, $b, $fp, $dp) = @_;
     my($i);
-    our($opt_l, $opt_u);
+    our($opt_l, $opt_u, $opt_i);
     my($report) = "";
 
     my($aavg) = $fp->{"stats"}->{$cv}->{"accum_average"};
@@ -302,6 +302,10 @@ sub flag_deviations {
 
     my($up_thresh) = $opt_u * $astdd;
     my($down_tresh) = $opt_l * $astdd;
+    my($name) = &file_to_name($b, &today);
+    if (!defined($name) && defined($opt_i)) {
+	return "";
+    }
 
     for($i = 0; $i <= $#$vp; $i++) {
 	my $delta = abs($$vp[$i] - $aavg);
@@ -313,14 +317,16 @@ sub flag_deviations {
 	{
 	    if (!$dhp->{$cv}) {
 		$report .=
-		    sprintf("%s %s %5s dev: cur %d avg %d stdd %d * %4.2f\n",
+		    sprintf("%s %s %5s dev: cur %d avg %d stdd %d * %s\n",
 			    time2str("%d %h %T", $$tp[$i]),
 			    &file_to_name($b, &today),
 			    $cv,
 			    $$vp[$i],
 			    $aavg,
 			    $astdd,
-			    $delta / $astdd
+			    $astdd != 0 ?
+				sprintf("%4.2f", $delta / $astdd) :
+				"undef"
 			    );
 	    }
 	    $dhp->{$cv} = 1;
@@ -328,12 +334,12 @@ sub flag_deviations {
 	    if ($delta < $down_tresh) {
 		if ($dhp->{$cv}) {
 		    $report .=
-			printf("%s %s %5s clearing deviation\n",
+			sprintf("%s %s %5s clearing deviation\n",
 			       time2str("%d %h %T", $$tp[$i]),
 			       &file_to_name($b, &today),
 			       $cv);
 		    $report .=
-			printf("%s %s %5s values: cur %d avg %d stdd %d\n",
+			sprintf("%s %s %5s values: cur %d avg %d stdd %d\n",
 			       time2str("%d %h %T", $$tp[$i]),
 			       &file_to_name($b, &today),
 			       $cv,
@@ -354,7 +360,7 @@ sub mail_report {
     my $subj = "Stat deviations ";
     $subj .= time2str("%R", time);
     open(OUT, "| mail -s \"$subj\" $to");
-    printf(OUT, $report);
+    printf(OUT $report);
     close(OUT);
 }
 
@@ -366,7 +372,7 @@ sub mail_report {
 sub process_values {
     my($b, $d) = @_;
     my($i, $report);
-    our($fd, $opt_m);
+    our($fd, $opt_m, $stat_report);
 
     if (!defined($fd->{$b})) {
 	$fd->{$b} = {};
@@ -377,9 +383,9 @@ sub process_values {
 	$report = &flag_deviations($cv, $b, $fd->{$b}, $d);
 	if ($report ne "") {
 	    if (defined($opt_m)) {
-		&mail_report($opt_m, $report);
+		$stat_report .= $report;
 	    } else {
-		printf(STDOUT, $report);
+		printf(STDOUT $report);
 	    }
 	}
     }
@@ -570,7 +576,7 @@ sub report_tail_stats {
 	$name = $b;
     }
     # Output: name   last-kbps-in last-kbps-out avg-kbps-in avg-kbps-out
-    printf(OUT, "%-30s %8d %8d %8d %8d %8d\n",
+    printf(OUT "%-30s %8d %8d %8d %8d %8d\n",
 	   $name,
 	   $ia->[$#$ia],
 	   $oa->[$#$oa],
@@ -650,11 +656,16 @@ sub do_one_file {
 sub do_all_files {
     my($dir) = &find_data_dir(&today());
     my(@files) = &directory_files($dir);
+    our($stat_report);
 
 #    select(STDOUT); $| = 1;	# unbuffer
+    $stat_report = "";
     foreach $f (@files) {
 	&tail_process_file($dir . "/" . $f);
 #	printf(".");
+    }
+    if ($stat_report != "" && defined($opt_m)) {
+	&mail_report($opt_m, $stat_report);
     }
 #    printf("\n");
 }
