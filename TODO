@@ -43,3 +43,10 @@ $Id$		-*- Text -*-
    view to only the routers which are part of a region.
 
  o Tpoller & traffic scripts: support Counter64 measurements.
+
+ o Compute and report 90-percentile values in reports in preference
+   to peak samples.  While statistically/mathematically somewhat
+   dubious, could compute average 90-p values (over available
+   values) in week and month reports.
+
+ o Customized plots (select variables to plot)?
