@@ -28,6 +28,10 @@ subst: Makefile.inc Makefile mk-subst.awk
 		mv subst.new ${.CURDIR}/subst; \
 	fi
 
+new-vars: Makefile.inc Makefile.inc.dist
+	( awk -F= '/^#/{} /=/ { print $$1 }' Makefile.inc >/tmp/o.$$$$; \
+	  awk -F= '/^#/{} /=/ { print $$1 }' Makefile.inc.dist >/tmp/n.$$$$; \
+	  diff /tmp/o.$$$$ /tmp/n.$$$$; rm /tmp/o.$$$$ /tmp/n.$$$$ )
 
 install clean:
 
