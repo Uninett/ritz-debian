@@ -12,6 +12,7 @@ namespace eval ::cp {
     namespace export caseIds getAttrs pullCases
     namespace export getLog getCleanLog getHist addHist setState
     namespace export getCommunity pollRouter pollIntf clearFlap
+    namespace export getLogLines getCleanLogLines
 
     # community cache
     variable community
@@ -56,7 +57,7 @@ namespace eval ::cp {
     }
 
     proc cleanLog { log } {
-	set newlog ""
+
 	foreach le $log {
 	    regexp {^([0-9]+) (.*)$} $l whole stamp rest
 	    if { [regexp {changed state from.* on ([0-9]+)} \
@@ -64,8 +65,8 @@ namespace eval ::cp {
 		set when_str [clock format $when]
 		regsub {(on [0-9]+)} $rest [format "on %s" $when_str] rest
 	    }
-	    set line [format "%s: %s\n" [clock format $stamp] $rest]
-	    set newlog [format "%s%s" $newlog $line]
+	    set line [format "%s: %s" [clock format $stamp] $rest]
+	    lappend newlog $line
 	}
 	return $newlog
     }
@@ -77,17 +78,29 @@ namespace eval ::cp {
 	if { ! [regexp {^300} $l] } {
 	    error [format "protocol error in getLog: %s" $l]
 	}
-	set log ""
 	for { ::net::gets l } { $l != "." } { ::net::gets l } {
-	    set log [format "%s%s" $log $l]
+	    lappend log $l
 	}
 	return $log
     }
 
     proc getCleanLog { id } {
 
-	set log [getLog $id]
-	return [cleanLog $log]
+	return [cleanLog [getLog $id]]
+    }
+
+    proc getLogLines { id } {
+
+	set l [getLog $id]
+	set lines [format "%s\n" [join $l "\n"]]
+	return $lines
+    }
+
+    proc getCleanLogLines { id } {
+	
+	set cl [getCleanLog $id]
+	set lines [format "%s\n" [join $cl "\n"]]
+	return $lines
     }
 
     proc getHist { id } {
