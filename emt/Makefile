@@ -12,7 +12,9 @@ SRCS=	\
 	../common/sort.tcl \
 	emt.tcl
 
-all: emt
+PROGS=emt start-emt
+
+all: ${PROGS}
 
 emt: ${SRCS} Makefile ../subst
 	rm -f $@
@@ -29,11 +31,14 @@ emt: ${SRCS} Makefile ../subst
 	sed -f ../subst $@.new > $@
 	chmod +x $@
 
-install:
-	rm -f ${BINDIR}/emt
-	install -c -m 755 emt ${BINDIR}/emt
+start-emt: start-emt.sh ../subst
+	sed -f ../subst start-emt.sh > start-emt
+
+install: ${PROGS}
+	install -c -m 555 emt ${BINDIR}
+	install -c -m 555 start-emt ${BINDIR}
 
 clean:
-	rm -f emt
+	rm -f ${PROGS}
 
 .include "../Makefile.inc"
