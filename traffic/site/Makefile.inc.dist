@@ -4,7 +4,7 @@
 
 PICS=	ndn-map.gif
 
-MAPFS=	ndn-map.fig default.rng
+MAPFS=	ndn-map.obj ndn-map.fig default.rng
 HTMLFS=	index.html
 
 install: beforeinstall
