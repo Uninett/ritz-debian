@@ -8,6 +8,7 @@ SUBDIR= cgi common db html jobs mibs plot report
 
 DIRS=   ${BINDIR} ${CGIDIR} ${CONFDIR} ${HTMLDIR} ${IMGDIR} \
 	${LIBDIR} ${MIBDIR} ${DBDIR} ${REPDIR} ${DATADIR} \
+	${BACKUPDIR} \
 	${TODAYDIR} ${PLOTDIR} ${PLOTDATADIR} ${PLOTCACHE} \
 	${WREPDIR} ${MREPDIR} ${MAPDIR}
 
