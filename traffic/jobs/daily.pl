@@ -91,6 +91,12 @@ sub save_and_compress_files {
 	die "Could not save files in backup directory\n";
     }
 
+    $cmd = "$gzip $backupdir/*";
+    $ret = system($cmd) / 256;
+    if ($ret != 0) {
+	die "Could not compress backup files\n";
+    }
+
     $cmd = "%TOPDIR%/bin/fixup-data $savedir/*";
     $ret = system($cmd) / 256;
     if ($ret != 0) {
