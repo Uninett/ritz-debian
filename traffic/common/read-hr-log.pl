@@ -147,8 +147,12 @@ sub read_log {
 	}
 
 	$delta = ($f[6] - $base{$v});
-	if ($delta < 0) {
+	if ($delta < 0 && $v =~ /Octets/o && !($v =~ /ifHC/o)) {
 	    $delta += 0xffffffff;
+	}
+
+	if ($delta < 0) {	# could be that address moved
+	    $delta = 0;		# to another port
 	}
 
 #	printf(STDERR "var %s delta %f\n", $v, $delta);
