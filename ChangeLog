@@ -1,3 +1,45 @@
+2002-10-30  Havard Eidnes  <he@smistad.uninett.no>
+
+	* Makefile: Minor version bump to 0.6.1.
+
+2002-10-23  Havard Eidnes  <he@smistad.uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Anchor the matches when reversing the line name, so the entire
+	name gets included in the "reverse" version (!).
+
+2002-10-23  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Anchor the matches when reversing the line name, so the entire
+	name gets included in the "reverse" version (!).
+
+2002-10-22  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Try the "simple swap" before taking numerals into account.
+
+2002-09-13  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Fix a fencepost error which occurred when a two-segment line
+	was exactly divided in half.
+
+2002-08-22  Havard Eidnes  <he@uninett.no>
+
+	* TODO:
+	Should zero out old values in mappng tables right before inserting
+	new.
+
+2002-08-21  Havard Eidnes  <he@uninett.no>
+
+	* ChangeLog: Update for marking this as 0.6.
+
+	* Makefile: Bump to version 0.6.
+
+	* ChangeLog: Computed ChangeLog based on CVS log messages with emacs'
+	M-x vc-update-change-log.
+
 2002-08-21  Havard Eidnes  <he@uninett.no>
 
 	* Makefile: Bump to version 0.6.
@@ -25,7 +67,7 @@
 	for values below 1.
 
 	* traffic/report/report-day.pl:
-	Gi mer presisjon i resultater for prosentverdier < 10.
+	Provide more precision in results for percentage values < 10.
 
 	* traffic/cgi/load-map.pl:
 	Add support for user-specified limits in load scale.
