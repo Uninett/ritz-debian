@@ -305,7 +305,11 @@ proc uiSetServer { } {
     foreach v {Server Port User Secret} {
 	set u [format "ui%s" $v]
 	global $v $u
-	set [set u] [set [set v]]
+	if [info exists [set v]] {
+	    set [set u] [set [set v]]
+	} else {
+	    set [set u] ""
+	}
     }
 
     set f $w.server
