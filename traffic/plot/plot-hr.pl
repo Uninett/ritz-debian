@@ -80,10 +80,12 @@ sub plot_traffic {
     my($i, $h, $val);
     
     foreach $i (0 .. 23) {
-	printf($fh "%d ", $i + ($d*24)); # X-axis
-	
 	$h = sprintf("%02d", $i);
 
+	if (!defined($count{"ifInOctets", $h})) { next; }
+
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
 	&maxit($val = $count{"ifInOctets",$h}*8*100.0/3600/$ifspeed);
 	printf($fh " %f", $val);
 	&maxit($val = $max_rate{"ifInOctets",$h}*8*100.0/$ifspeed);
@@ -126,10 +128,14 @@ sub plot_traffic_kbit {
     my($i, $h, $val);
     
     foreach $i (0 .. 23) {
-	printf($fh "%d ", $i + ($d*24)); # X-axis
-	
 	$h = sprintf("%02d", $i);
 
+	if (! defined($count{"ifInOctets",$h})) {
+	    next;
+	}
+
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
 	&maxit($val = $count{"ifInOctets",$h}*8/1000/3600);
 	printf(PLOTDATA " %f", $val);
 	&maxit($val = $max_rate{"ifInOctets",$h}*8/1000);
@@ -153,10 +159,18 @@ sub plot_discards {
     my($base, $pkts);
 
     foreach $i (0 .. 23) {
-	printf($fh "%d ", $i + ($d*24)); # X-axis
-	
 	$h = sprintf("%02d", $i);
 
+	if (!defined($count{"ifOutUcastPkts",$h}) &&
+	    !defined($count{"ifOutNUcastPkts",$h}) &&
+	    !defined($count{"ifInUcastPkts",$h}) &&
+	    !defined($count{"ifInNUcastPkts",$h}))
+	{
+	    next;
+	}
+
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
 	$base = ($count{"ifOutUcastPkts",$h} +
 		 $count{"ifOutNUcastPkts",$h});
 	$pkts = $base + $count{"ifOutDiscards",$h};
@@ -210,10 +224,17 @@ sub plot_errors {
     $has_details = defined($count{"locIfInCRC","00"});
 
     foreach $i (0 .. 23) {
-	printf($fh "%d ", $i + ($d*24)); # X-axis
-	
 	$h = sprintf("%02d", $i);
 
+	if (!defined($count{"ifInUcastPkts",$h}) &&
+	    !defined($count{"ifInNUcastPkts",$h}) &&
+	    !defined($count{"ifInErrors",$h}))
+	{
+	    next;
+	}
+
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
 	$pkts = ($count{"ifInUcastPkts",$h} +
 		 $count{"ifInNUcastPkts",$h} +
 		 $count{"ifInErrors",$h});
@@ -267,10 +288,18 @@ sub plot_pps {
     my($i, $h, $ipkts, $opkts, $ipps, $opps, $dt);
 
     foreach $i (0 .. 23) {
-	printf($fh "%d ", $i + ($d*24)); # X-axis
-	
 	$h = sprintf("%02d", $i);
 
+	if (!defined($count{"ifInUcastPkts",$h}) &&
+	    !defined($count{"ifInNUcastPkts",$h}) &&
+	    !defined($count{"ifOutUcastPkts",$h}) &&
+	    !defined($count{"ifOutNUcastPkts",$h}))
+	{
+	    next;
+	}
+
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
 	$ipkts = ($count{"ifInUcastPkts",$h} +
 		  $count{"ifInNUcastPkts",$h});
 	$opkts = ($count{"ifOutUcastPkts",$h} +
@@ -305,10 +334,10 @@ sub plot_resets {
     my($i, $h, $val);
 
     foreach $i (0 .. 23) {
-	printf($fh "%d ", $i + ($d*24)); # X-axis
-	
 	$h = sprintf("%02d", $i);
 
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
 	&maxit($val = $count{"locIfResets",$h});
 	printf($fh "%f\n", $val);
     }
@@ -337,10 +366,20 @@ sub plot_eerrs {
     $has_details = defined($count{"locIfInCRC","00"});
 
     foreach $i (0 .. 23) {
-	printf($fh "%d ", $i + ($d*24)); # X-axis
-	
 	$h = sprintf("%02d", $i);
 
+	if (!defined($count{"ifInUcastPkts",$h}) &&
+	    !defined($count{"ifInNUcastPkts",$h}) &&
+	    !defined($count{"ifInErrors",$h}) &&
+	    !defined($count{"ifOutUcastPkts",$h}) &&
+	    !defined($count{"ifOutNUcastPkts",$h}) &&
+	    !defined($count{"ifOutErrors",$h}))
+	{
+	    next;
+	}
+
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
 	$ipkts = ($count{"ifInUcastPkts",$h} +
 		  $count{"ifInNUcastPkts",$h} +
 		  $count{"ifInErrors",$h});
