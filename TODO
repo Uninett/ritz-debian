@@ -1,9 +1,5 @@
 $Id$		-*- Text -*-
 
- o Create e-mail trigger client.
-
- o Compute accumulated downtime per event.
-
  o Add message window to main ritz window (at bottom?).  Warn if no
    events selected on edit/selected.
 
@@ -13,6 +9,3 @@ $Id$		-*- Text -*-
 
  o Zino should remove outdated mapping entries (entries for routers no
    longer in config file).
-
- o Ritz should have a "Help" / "About" pane showing version
-   information and a brief message about ritz/zino.
