@@ -456,7 +456,7 @@ sub make_plot_file  {
 	(&tm_in_datespec(&modtime($plotdatafile), $datespec) &&
 	 (
 	  # ...and we have a new day
-	  (! &same_day(&modtime($plotdatafile), time))
+	  (! &same_day(&modtime($plotdatafile), time)) ||
 	  # ...or we're plotting "today"
 	  (&is_today($datespec)))))
     {
