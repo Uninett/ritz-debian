@@ -59,6 +59,8 @@ proc dumpGlobalVar { f var } {
 	if { [info exists $var] } {
 	    puts -nonewline $f [format "set %s " $var]
 	    puts $f [ExternalVal [set $var]]
+	} else {
+	    noPersistVar $var
 	}
     }
 }
