@@ -56,7 +56,7 @@ proc emt_loop { server port user secret } {
     }
 }
 
-proc emt_notify { what id } {
+proc emt_notify { what { id 0 } } {
     global emt_continue
 
     log [format "notified on %s, type %s" $id $what]
@@ -100,13 +100,17 @@ proc emt_delay_check { id } {
 }
 
 proc emt_should_report { id } {
-    global state nagged nagstate
+    global state nagged hist_update
 
+    #
+    # Trigger on operational stuff
+    #
     set os [::attr::getOperState $id]
     if { [::attr::isUpState $os] && \
 	    [info exists nagged($id)] && \
 	    $state($id) != $os } {
 	set state($id) $os
+	log [format "Should report %s, nagged and up" $id]
 	return 1
     } elseif { [::attr::isDownState $os] } {
 	# State down and different from what was previously known
@@ -115,9 +119,13 @@ proc emt_should_report { id } {
 	    if { [expr [clock seconds] - \
 		    [::attr::get $id "updated"]] > 300 } {
 		set state($id) $os
+		log [format \
+			"Should report %s, stable different state" \
+			$id]
 		return 1
 	    } else {
 		# Not right now, but check again in a while
+		log [format "Delaying checking for %s" $id]
 		emt_delay_check $id
 	    }
 	}
@@ -125,6 +133,20 @@ proc emt_should_report { id } {
 	set state($id) $os
 	::persist::add state
     }
+
+    #
+    # Trigger on history updates (will include state changes)
+    #
+    if { [info exists hist_update($id)] && [info exists nagged($id)] } {
+	set state($id) $os;	# to prevent further
+				# operational-state-triggered messages
+				# in this state
+	unset hist_update($id);	# don't trigger again until a new
+				# update occurs
+	log [format "Should report %s, history update" $id]
+	return 1
+    }
+
     return 0
 }
 
@@ -154,8 +176,8 @@ proc report_compact_port { id } {
     set r  [::attr::get $id "router"]
     set p  [::attr::get $id "port"]
     set d  [::attr::get $id "descr"]
-    set s  [::attr::get $id "portstate"]
-    set as [::attr::get $id "state"
+    set s  [::attr::effectivePortState $id]
+    set as [::attr::get $id "state"]
 
     return [format "%9s: %-12s %-18s (%s) (%s)" $s $r $p $as $d]
 }
@@ -164,7 +186,7 @@ proc report_compact_reach { id } {
     
     set r  [::attr::get $id "router"]
     set rs [::attr::get $id "reachability"]
-    set as [::attr::get $id "state"
+    set as [::attr::get $id "state"]
 
     return [format "%11s (%s) %s" $rs $as $r]
 }
@@ -186,19 +208,30 @@ proc report_compact { id } {
     }
 }
 
+proc emt_hist { id } {
+    global history newhist
+
+    if [info exists newhist($id)] {
+	return $newhist($id)
+    }
+    if [info exists history($id)] {
+	return $history($id)
+    }
+    return [emt_newhist $id]
+}
+
 proc report_single_port { id } {
 
-    set ps [::attr::get $id "portstate"]
+    set ps [::attr::effectivePortState $id]
     set rs [format   "      router: %s\n"     [::attr::get $id "router"]]
     set rs [format "%s        port: %s\n" $rs [::attr::get $id "port"]]
     set rs [format "%s       descr: %s\n" $rs [::attr::get $id "descr"]]
-    set rs [format "%s   portstate: %s\n" $rs $ps]
+    set rs [format "%s       state: %s\n" $rs $ps]
+    set rs [format "%s   portstate: %s\n" $rs [::attr::get $id "portstate"]]
     set rs [format "%s  case-state: %s\n" $rs [::attr::get $id "state"]]
-    if [::attr::isDownState $ps] {
-	set rs [format "%s        down: %s\n" $rs [pdt [::attr::downtime $id]]]
-	set rs [format "%s      reason: %s\n" $rs [::attr::get $id "reason"]]
-    }
-    set rs [format "%s     history:\n%s\n" $rs [::attr::getHist $id]
+    set rs [format "%s        down: %s\n" $rs [pdt [::attr::downtime $id]]]
+    set rs [format "%s      reason: %s\n" $rs [::attr::get $id "reason"]]
+    set rs [format "%srecent event history:\n%s\n" $rs [emt_hist $id]]
 #    set rs [format "%s\n" $rs]
 
     return $rs
@@ -210,10 +243,8 @@ proc report_single_reach { id } {
     set r [::attr::get $id "reachability"]
     set rs [format "%sreachability: %s\n" $rs $r]
     set rs [format "%s  case-state: %s\n" $rs [::attr::get $id "state"]]
-    if [::attr::isDownState $r] {
-	set rs [format "%s        down: %s\n" $rs [pdt [::attr::downtime $id]]]
-    }
-    set rs [format "%s     history:\n%s\n" $rs [::attr::getHist $id]
+    set rs [format "%s        down: %s\n" $rs [pdt [::attr::downtime $id]]]
+    set rs [format "%srecent event history:\n%s\n" $rs [emt_hist $id]]
 #    set rs [format "%s\n" $rs]
 
     return $rs
@@ -331,12 +362,19 @@ proc emt_init {} {
 }
 
 proc emt_newhist { id } {
-    global history
+    global history newhist hist_update
     
     set new [::cp::getHist $id]
-    set ol [string length $history($id)]
+    set ol 0
+    catch { set ol [string length $history($id)] }
     set history($id) $new
-    return [string range $new $ol end]
+    set newhist($id) [string range $new $ol end]
+    set hist_update($id) 1
+
+    ::persist::add newhist
+    ::persist::add hist_update
+
+    return $newhist($id)
 }
 
 proc emt_gethist { id } {
@@ -379,8 +417,10 @@ proc emt_open { server port user secret } {
 	::auth::login $user $secret
 	::notify::open emt_notify
     } msg ] {
-	puts stderr [format "Error opening server %s: %s" $server $msg]
-	puts stderr [format "%s" $errorInfo]
+	log [format "Error opening server %s" $server]
+	log [format "Cause: %s" $msg]
+	log [format "Detailed info: %s" $errorInfo]
+	log [format "Retrying open in 60 seconds"]
 	after [expr 60 * 1000]
     }
 }
