@@ -40,56 +40,68 @@ namespace eval ::just {
     namespace export fetchTable mapNames
     namespace export vblPfxAssoc vblPfxAssosL getDNSCachedName
     namespace export getCachedServiceName
-    namespace export setSparseWalkEHandler unsetSparseWalkEHandler
-
-    variable ptrCache
-    variable serviceCache
-
-    variable eHandler
 
     #
     # A procedure imitating the scotty snmp walk primitive, but one
     # that will handle a sparsely populated table and still return
-    # whole rows to the caller.  This version uses asynchronous
-    # operations (so that other events can be processed) but appears
-    # to be synchronous to the caller.  May unwind with error.
+    # whole rows to the caller.
     #
-    
+
     proc sparseTableWalk { sh varName varList body } {
-	# Unfortunately we need global variables since the callback
-	# bodies will be evaluated in the global context
-	set err [format "%serr" $sh]
-	set done [format "%sdone" $sh]
-	global $err
-	global $done
-
-	set $err ""
-	asyncSparseTableWalk $sh $varName $varList $body {
-	    set sh "%S"
-	    set done [format "%sdone" $sh]
-	    global $done
-	    set $done 1
-	} {
-	    set sh "%S"
-	    set err [format "%serr" $sh]
-	    set done [format "%sdone" $sh]
-
-	    set $err "%E"
-	    set $done 0
+	upvar $varName var
+	foreach v $varList {
+	    set oid [mib oid $v]
+	    lappend oidList $oid
+	    # Record the length of each OID for later.
+	    lappend lenList [string length $oid]
 	}
-	vwait $done
-	if { [set $done] == 0 } {
-	    unset $done
-	    set errorval [set $err]
-	    unset $err
-	    error $errorval
+	
+	set thisRow $oidList
+	while 1 {
+	    set code [catch {$sh getnext $thisRow} vblList]
+	    if { $code } {
+		return -code $code $vblList
+	    }
+	    set ixList {}
+	    foreach len $lenList oid $oidList vbl $vblList {
+		set v [lindex $vbl 0]
+		if {[string compare $oid. [string range $v 0 $len]] == 0} {
+		    lappend ixList [string range $v $len end]
+		}
+	    }
+	    if {[llength $ixList] == 0} {
+		break
+	    }
+	    set min [lindex [lsort -dictionary $ixList] 0]
+	    set thisRow {}
+	    set myvar {}
+	    foreach oid $oidList vbl $vblList {
+		set v [lindex $vbl 0]
+		append oid $min
+		if {[string compare $oid $v] == 0} {
+		    lappend myvar $vbl
+		} else {
+		    lappend myvar {{} {} {}}
+		}
+		lappend thisRow $oid
+	    }
+	    set var $myvar
+	    uplevel $body
 	}
-	unset $done
-	unset $err
     }
 
     #
-    # The async version used by the above.
+    # An asyncronous version of the above.
+    #
+    # Note that body, endscript (if given) and errscript (if given)
+    # will all be evaluated in a procedure context of their own (but
+    # in this (i.e. ::just) namespace, and not in the stack context of
+    # the original caller of asyncSparseTableWalk, the reason being
+    # that the SNMP callback scripts are called from the global
+    # context, so the callers context is no longer available.
+    # Therefore, do substitution of "%S" and "%E" on the callback
+    # scripts before they are evaluated, to give some hooks back to
+    # these scripts.
     #
 
     proc asyncSparseTableWalk {
@@ -110,6 +122,19 @@ namespace eval ::just {
 	return
     }
 
+    # set up a new empty stack context
+    proc doBody { varname vbl body } {
+	set $varname $vbl
+	unset vbl
+	eval $body
+    }
+
+    # set up a new empty stack context
+    proc doScript { body } {
+	eval $body
+    }
+
+    # The async callback handler
     proc processRow {
 	sh err vblList thisRow oidList lenList \
 		varName body endscript errscript
@@ -120,7 +145,7 @@ namespace eval ::just {
 		# Simulate callback substitution for what we have
 		regsub -all "%E" $errscript "$err" errscript
 		regsub -all "%S" $errscript "$sh" errscript
-		uplevel $errscript
+		doScript $errscript
 		return
 	    } else {
 		error $err;
@@ -143,7 +168,7 @@ namespace eval ::just {
 		# Do callback substitution for what we have
 		regsub -all "%E" $endscript "$err" endscript
 		regsub -all "%S" $endscript "$sh" endscript
-		uplevel $endscript
+		doScript $endscript
 	    }
 	    return; # end of table
 	}
@@ -162,9 +187,7 @@ namespace eval ::just {
 	    lappend thisRow $oid
 	}
 
-	upvar $varName var
-	set var $myvarlist
-	uplevel $body
+	doBody $varName $myvarlist $body
 
 	$sh getnext $thisRow [list \
 		::just::processRow "%S" "%E" {{%V}} \
@@ -172,28 +195,13 @@ namespace eval ::just {
 		$varName $body $endscript $errscript]
     }
 
-    # the error handler should expect to be called as
-    # $eHandler $handle $error
-
-    proc setSparseWalkEHandler { handler } {
-	variable eHandler
-
-	set eHandler $handler
-    }
-
-    proc unsetSparseWalkEHandler { } {
-	variable eHandler
-
-	catch { unset eHandler }
-    }
-
     #
     # Fetch an SNMP table, synchronously and with one variable at a
     # time.  Stash the retrieved variables into the specified array
-    # and return the list of indexes to the caller.
+    # and return the sorted list of indexes to the caller.
     # Use the (stripped) index and the variable name given by the
     # caller (either a symbolic name or an OID) as the second part of
-    # the array key.
+    # the array key, separated with a comma.
     #
     proc fetchTable { sh tabName varList } {
 	upvar $tabName tab
@@ -244,6 +252,10 @@ namespace eval ::just {
 	    return [lindex $vbl $ix]
 	}
     }
+
+
+    variable ptrCache
+    variable serviceCache
 
     #
     # Don't do a DNS lookup for every IP-address.  Use a private cache.
