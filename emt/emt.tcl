@@ -198,6 +198,7 @@ proc report_single_port { id } {
 	set rs [format "%s        down: %s\n" $rs [pdt [::attr::downtime $id]]]
 	set rs [format "%s      reason: %s\n" $rs [::attr::get $id "reason"]]
     }
+    set rs [format "%s     history:\n%s\n" $rs [::attr::getHist $id]
 #    set rs [format "%s\n" $rs]
 
     return $rs
@@ -212,6 +213,7 @@ proc report_single_reach { id } {
     if [::attr::isDownState $r] {
 	set rs [format "%s        down: %s\n" $rs [pdt [::attr::downtime $id]]]
     }
+    set rs [format "%s     history:\n%s\n" $rs [::attr::getHist $id]
 #    set rs [format "%s\n" $rs]
 
     return $rs
