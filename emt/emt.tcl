@@ -11,7 +11,7 @@ package require Tnm
 
 mib load rfc1213.mib
 
-set emt_mail "/usr/sbin/sendmail -oi"
+set emt_mail "%RAWSENDMAIL%"
 
 proc emt_main {} {
     global emt_to emt_from
