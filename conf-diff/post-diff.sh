@@ -11,13 +11,13 @@ if [ ! -f $CF ]; then
     exit 1
 fi
 
-source $CF
+. $CF
 
 if test -s last-checked-diff ; then
     (
     echo "To: ${MAILTO}";
     echo "From: ${MAILFROM}";
-    echo "Subject: Device config changes `date +%y-%m-%d`";
+    echo "Subject: Device config changes `date +%Y-%m-%d`";
     echo "";
     cat last-checked-files last-checked-diff;
     ) | %RAWSENDMAIL% ${MAILTO}
