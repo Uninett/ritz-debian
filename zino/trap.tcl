@@ -18,14 +18,17 @@ proc initTrap { } {
 proc doTrap { a type args } {
     global AddrToRouter
     global RestartTime
+    global portToIfDescr
 
     if { ! [info exists AddrToRouter($a)] } {
 	puts [format "ignored trap from %s" $a]
 	return
     }
     set sh [handle $AddrToRouter($a)]
+    set r [name $sh]
 
-#    puts [format "%s: trap-type %s" [name $sh] $type]
+    puts [format "%s: trap-type %s" $r $type]
+
     foreach vb $args {
 	set oid [lindex $vb 0]
 	set val [lindex $vb 2]
@@ -33,8 +36,10 @@ proc doTrap { a type args } {
 	set var [lrange $ol 0 0]
 	set $var $val
 	set instance($var) [join [lrange $ol 1 end] "."]
-#	puts [format "%s: %s %s instance %s" \
-#		[name $sh] $var $val $instance($var)]
+
+	puts [format "%s: %s %s instance %s" \
+		[name $sh] $var $val $instance($var)]
+
     }
     if { [info exists sysUpTime] } {
 	set uptime [mib scan sysUpTime.0 $sysUpTime]
@@ -57,7 +62,11 @@ proc doTrap { a type args } {
 		set ifIndex -1
 	    }
 	    if { ! [info exists ifDescr] } {
-		set ifDescr "unknown"
+		if { [info exists portToIfDescr($r,$ifIndex)] } {
+		    set ifDescr $portToIfDescr($r,$ifIndex)
+		} else {
+		    set ifDescr "unknown"
+		}
 	    }
 	    if { ! [info exists locIfReason] } {
 		set locIfReason ""
@@ -70,7 +79,11 @@ proc doTrap { a type args } {
 		set ifIndex -1
 	    }
 	    if { ! [info exists ifDescr] } {
-		set ifDescr "unknown"
+		if { [info exists portToIfDescr($r,$ifIndex)] } {
+		    set ifDescr $portToIfDescr($r,$ifIndex)
+		} else {
+		    set ifDescr "unknown"
+		}
 	    }
 	    if { ! [info exists locIfReason] } {
 		set locIfReason ""
