@@ -9,11 +9,9 @@
 #      ::config::conf
 # (which cannot be imported due to circular dependency)
 #
-# Assumes global procedures
-#      initDev $s
-#      pollDev $s
-#      destroyDev $s
-# where $s is "snmp handle".
+# Needs to be initialized (::polljob::init) with fully qualified
+# procedures to call to do "initDev", "pollDev" and "destroyDev"
+# functions, all called with an snmp handle as the single argument.
 #
 # Provides
 #      handle $devname
@@ -24,11 +22,16 @@
 catch { namespace delete ::polljob }
 
 namespace eval ::polljob {
-    namespace export start restart stop
+    namespace export start restart stop init
     namespace export name handle
+
     namespace import ::util::mtoms
 
     variable cx
+    variable initDev
+    variable pollDev
+    variable destroyDev
+
 
     proc name { sh } {
 	variable cx
@@ -100,12 +103,13 @@ namespace eval ::polljob {
 
     proc startDev { dev } {
 	variable cx
+	variable pollDev
 	
 	set s $cx($dev,handle)
 	set intv $cx($s,interval)
 	set msintv [mtoms $intv]
 
-	set j [job create -interval $msintv -command [list ::pollDev $s]]
+	set j [job create -interval $msintv -command [list $pollDev $s]]
 
 	unset cx($s,interval); # done with use now
 
@@ -113,7 +117,8 @@ namespace eval ::polljob {
     }
 
     proc startDevAfter { dev delay } {
-	startCommonAfter $dev $delay ::initDev
+	variable initDev
+	startCommonAfter $dev $delay $initDev
     }
 
     proc restartDevAfter { dev delay } {
@@ -123,11 +128,22 @@ namespace eval ::polljob {
     }
 
     proc stopDev { dev } {
-	stopDevCommon $dev ::destroyDev
+	variable destroyDev
+	stopDevCommon $dev $destroyDev
     }
 
 
     # Exported procedures
+
+    proc init { init poll destroy } {
+	variable initDev
+	variable pollDev
+	variable destroyDev
+
+	set initDev $init
+	set pollDev $poll
+	set destroyDev $destroy
+    }
 
     proc start { devs } {
 
