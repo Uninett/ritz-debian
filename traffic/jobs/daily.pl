@@ -60,6 +60,7 @@ sub save_and_compress_files {
     $top = $DATATREE;
     $mdir = $top . "/" . $ym_str;
     $savedir = $mdir . "/" . $day_str;
+    $backupdir = $top . "/backup/" . $day_str;
     $today = $top . "/today";
 
     if ( ! -d $mdir ) {
@@ -72,6 +73,11 @@ sub save_and_compress_files {
 	    die "Could not create $savedir: $!\n";
 	}
     }
+    if (! -d $backupdir) {
+	if (mkdir ($backupdir, 0755) != 1) {
+	    die "Could not create $backupdir: $!\n";
+	}
+    }
 
     $cmd = "/bin/mv $today/* $savedir";
     $ret = system($cmd) / 256;
@@ -79,6 +85,12 @@ sub save_and_compress_files {
 	die "Could not move files\n";
     }
     
+    $cmd = "/bin/cp -p $savedir/* $backupdir";
+    $ret = system($cmd) / 256;
+    if ($ret != 0) {
+	die "Could not save files in backup directory\n";
+    }
+
     $cmd = "%TOPDIR%/bin/fixup-data $savedir/*";
     $ret = system($cmd) / 256;
     if ($ret != 0) {
