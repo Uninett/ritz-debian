@@ -1,5 +1,43 @@
 2004-03-11  Havard Eidnes  <he@uninett.no>
 
+	* Makefile, ChangeLog: Mark what we have now as version 0.8.
+
+2004-08-25  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/plot.pl:
+	Remove the "color" from the png device init string.
+	Newer gnuplot doesn't like it.
+
+2004-08-23  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Before dividing by stddev, ensure that stddev is > 1e-100, not just
+	different from 0, to avoid getting NaN as a result, leading to a panic
+	in perl (observed stddev was 9.9e-324).
+
+2004-07-21  Havard Eidnes  <he@uninett.no>
+
+	* conf-diff/checkin-configs.sh:
+	Use symbolic signal names, and add handling of HUP and TERM.
+
+2004-06-09  Havard Eidnes  <he@uninett.no>
+
+	* traffic/site/Makefile.inc.dist:
+	Move install / beforeinstall targets to Makefile.
+
+	* traffic/site/Makefile:
+	Only install changed files or files not present in target dir.
+
+2004-03-19  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
+	If there is a quiet period before the Reboot line is logged,
+	it would be discarded because $lasttime was too far into the
+	past.  Instead, compare to the actual timestamp of the Reboot
+	log message.
+
+2004-03-11  Havard Eidnes  <he@uninett.no>
+
 	* Makefile: Mark what we have now as version 0.7.
 
 2004-02-26  Havard Eidnes  <he@uninett.no>

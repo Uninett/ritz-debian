@@ -2,7 +2,7 @@
 # $Id$
 #
 
-VERSION=0.7
+VERSION=0.8
 
 SUBDIR=conf-diff emt mibs ritz tpoller traffic vwatch zino
 
