@@ -2,9 +2,6 @@
 # $Id$
 #
 
-WISH= 	/usr/pkg/bin/tixwish
-BINDIR=	/local/bin
-
 SRCS=	../version.tcl just/justSNMP.tcl just/prettySNMP.tcl \
 	just/mib2util.tcl \
 	attrs.tcl net.tcl notify.tcl sort.tcl summary.tcl ui.tcl \
@@ -34,3 +31,5 @@ install:
 
 clean:
 	rm -f ritz
+
+.include "../Makefile.inc"
