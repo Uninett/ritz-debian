@@ -458,7 +458,9 @@ proc closeEventsOnRouter { r msg } {
 
 proc isDown { id } {
 
-    set type [getEventAttr $id "type"]
+    if [catch { set type [getEventAttr $id "type"] }] {
+	return 0;		# New event, assume old state == "up"
+    }
     if { $type == "portstate" } {
 	set ps [getEventAttr $id "portstate"]
 	if { $ps == "down" } { return 1 }
@@ -475,7 +477,8 @@ proc isDown { id } {
 proc recordDowntime { id le } {
 
     set ts [eventTimeStamp $le]
-    if { [isLogUpState $le] && [isDown $id] } {
+    set down [isDown $id]
+    if { [isLogUpState $le] && $down } {
 	set dt [expr $ts - [getEventAttr $id "lasttrans"]]
 	# bogus, ignore
 	if { $dt <= 0 } { return }
@@ -484,7 +487,7 @@ proc recordDowntime { id le } {
 	set downtime [expr $downtime + $dt]
 	setEventAttr $id "ac-down" $downtime
 	setEventAttr $id "lasttrans" $ts
-    } elseif { [isLogDownState $le] && [isUp $id] } {
+    } elseif { [isLogDownState $le] && ! $down } {
 	setEventAttr $id "lasttrans" $ts
     }
 }
