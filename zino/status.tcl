@@ -245,21 +245,69 @@ proc swalkErrorHandler { sh err } {
     }
 }
 
-proc noResponse { sh } {
+proc delayedCheckResponse { sh } {
+    global responseCheckInProgress
+
+    if [checkResponse $sh] {
+	Response $sh
+
+	# cleanup any remaining check jobs
+	after cancel delayedCheckResponse $sh
+	after cancel lastDelayedCheckResponse $sh
+	unset responseCheckInProgress($sh)
+    }
+}
+
+proc lastDelayedCheckResponse { sh } {
+    global responseCheckInProgress
+
+    delayedCheckResponse $sh
+    unset responseCheckInProgress($sh)
+}
+
+proc delayedNoResponse { sh } {
     global cx
     global Address Priority
+    
+    if { ! [checkResponse $sh] } {
+	set r $cx($sh,name)
 
-    set r $cx($sh,name)
+	set doit 0
+	if [eventIxExists $r "reachability"] {
+	    set eid [eventId $r "reachability"]
+	    if { [getEventAttr $eid "reachability"] != "no-response" } {
+		set doit 1
+	    }
+	} else {
+	    set doit 1
+	}
+	if { $doit } {
+	    set eid [eventId $r "reachability"]
+	    setEventAttr $eid "router" $r
+	    setEventAttr $eid "reachability" "no-response"
+	    setEventAttr $eid "polladdr" $Address($r)
+	    setEventAttr $eid "priority" $Priority($r)
+	    set s [format "%s no-response" $r]
+	    eventLog $eid $s
+	    eventCommit $eid
+	    log $s
+	    after [60  * 1000] delayedCheckResponse $sh
+	    after [120 * 1000] delayedCheckResponse $sh
+	    after [240 * 1000] delayedCheckResponse $sh
+	    after [480 * 1000] delayedCheckResponse $sh
+	    after [960 * 1000] lastDelayedCheckResponse $sh
+	}
+    }
+}
 
-    set eid [eventId $r "reachability"]
-    setEventAttr $eid "router" $r
-    setEventAttr $eid "reachability" "no-response"
-    setEventAttr $eid "polladdr" $Address($r)
-    setEventAttr $eid "priority" $Priority($r)
-    set s [format "%s no-response" $r]
-    eventLog $eid $s
-    eventCommit $eid
-    log $s
+proc noResponse { sh } {
+    global responseCheckInProgress
+    
+    if [info exists responseCheckInProgress($sh)] {
+	return
+    }
+    after [expr 60 * 1000] delayedNoResponse $sh
+    set responseCheckInProgress($sh) 1
 }
 
 proc doResponse { router eid } {
@@ -301,9 +349,10 @@ proc checkResponse { sh } {
     if [catch { getUptime $sh } msg] {
 	log [format "%s: %s" $cx($sh,name) $msg]
 	if [regexp "noResponse" $msg] {
-	    noResponse $sh
+	    return 0
 	}
     }
+    return 1
 }
 
 proc checkConfigs { } {
