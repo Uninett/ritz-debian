@@ -700,6 +700,21 @@ sub is_today {
     return (&same_day($origin,time) && $nd == 1);
 }
 
+sub looking_at_today {
+    my($dsp, $res) = @_;
+    my($dsp_t);
+
+    $dsp_t = &datespec_type($dsp);
+
+    if ($dsp_t eq "day" && &is_today($dsp)) { return 1; }
+    if ($dsp_t eq "week" &&
+	&tm_in_datespec(time, $dsp) &&
+	($res eq "raw" || $res eq "hr")) { return 1; }
+
+    return undef;
+}
+
+
 sub same_day {
     my($tm1, $tm2) = @_;
 
@@ -754,6 +769,15 @@ sub secs_to_expiry {
 	    }
 	    if ($res eq "hr") {
 		return 1800;	# 30 minutes
+	    }
+	}
+	# Remaining option: week plot in raw/hr res
+	if (&looking_at_today($dsp, $res)) {
+	    if ($res eq "raw") {
+		return 1800;	# 30 minutes
+	    }
+	    if ($res eq "hr") {
+		return 7200;	# 2 hours
 	    }
 	}
     }
