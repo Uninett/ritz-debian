@@ -251,7 +251,7 @@ sub sprint_percent {
     } elsif ($val >= 1) {
 	return sprintf("%3.1f", $val);
     } elsif ($val < 1) {
-	return sprintf("%3.1f", $val);
+	return substr(sprintf("%4.2f", $val), 1);
     }
 
 }
