@@ -1,5 +1,8 @@
 $Id$		-*- Text -*-
 
+ o traffic: read-hr-log / read-raw-log: when the instance changes,
+   force delta to zero no matter what.
+
  o Add message window to main ritz window (at bottom?).  Warn if no
    events selected on edit/selected.
 
