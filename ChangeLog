@@ -1,0 +1,1996 @@
+2002-08-12  Havard Eidnes  <he@uninett.no>
+
+	* traffic/plot/Makefile:
+	Install plot-5m.pl too.
+
+	* traffic/report/get-perc.pl:
+	Bugfix -- zero totals for each go-around.
+	Use "usage()" instead of complaining for each problem.
+
+	* traffic/common/Makefile:
+	Install read-5m-sum.pl too.
+
+2002-08-06  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/report-day.pl:
+	Squeeze out some more precision by dropping a leading zero
+	for values below 1.
+
+	* traffic/report/report-day.pl:
+	Gi mer presisjon i resultater for prosentverdier < 10.
+
+	* traffic/cgi/load-map.pl:
+	Add support for user-specified limits in load scale.
+
+2002-08-05  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/date.pl:
+	Let make_datespec() also support the "yyyy-mm--dd" notation.
+
+2002-07-19  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl:
+	Fix the previous in a better way, now that we've actually
+	reproduced the problem.
+
+	* traffic/common/read-5m-sum.pl:
+	Protect against division by zero, as can happen when
+	you have a completely empty circuit (I think).
+
+2002-07-15  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/utils.pl:
+	Try a little harder to look for high-counters.
+
+2002-07-12  Havard Eidnes  <he@uninett.no>
+
+	* common/persist.tcl:
+	Also handle brackets, so as to avoid interpretation on re-sourcing.
+
+2002-04-26  Havard Eidnes  <he@uninett.no>
+
+	* TODO:
+	One more thing to do: knob to reduce alarms/e-mails, but otherwise
+	collect status.
+
+2002-04-19  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Add a hack to ignore data for a logical port if there has already
+	been seen higher value for this port earlier.
+
+	* traffic/cgi/load-map.pl:
+	Add support for circle-shaped mapref areas.
+
+	* traffic/cgi/load-map.pl:
+	Handle names with more than one hyphen; reverse only two first parts.
+
+2002-04-07  Havard Eidnes  <he@uninett.no>
+
+	* TODO:
+	Add comment on how temperature could be monitored.
+
+2002-03-15  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Mark this as 0.5.1.
+
+	* tpoller/tpoller.tcl:
+	Add support for using ifHighSpeed as the starting point for the speed
+	recording, so that interfaces with a speed of more than 2**32 can be
+	supported properly.
+
+2002-03-09  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/vw-day-report.pl:
+	Use the correct variable when reporting current software version.
+
+2002-03-01  Havard Eidnes  <he@uninett.no>
+
+	* Makefile:
+	Let's mark this as 0.5 and let it out the door.
+
+	* vwatch/vw-month-upgr.pl:
+	Also harvest upgrade info by polling the description files.
+
+	* vwatch/vw-day-report.pl:
+	Try to account for more than one software upgrade/downgrade per day.
+
+	* vwatch/vw-month-upgr.pl:
+	Change this so that it reports if there's more than one
+	upgrade/downgrade per day.
+
+2002-02-28  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl:
+	Zero a hash before starting, possibly from previous go-around.
+	Whitespace cleanup.
+
+	* traffic/report/Makefile:
+	Add script to compute percentile values based on 5-minute averages,
+	possibly for more than one port, as e.g. used in load-sharing.
+
+	* traffic/report/get-5m-perc.pl:
+	Add script to compute percentiles based on 5-minute averages,
+	possibly for more than one port.
+
+2002-02-26  Havard Eidnes  <he@uninett.no>
+
+	* traffic/plot/plot-5m.pl:
+	Script to produce a 5-minute average plot for one or more ports.
+	Useful for situations where load-sharing is done or where resilient
+	connections are used.
+
+	This is awfully close to plot-raw.pl, and the common code should be
+	factored out.
+
+	* traffic/common/read-raw-log.pl:
+	Document the single-index %sample_time variant.
+
+	* traffic/common/read-5m-sum.pl:
+	Routine to process 5-minute averages for one or more lines.
+	Useful for situations when one is doing load-sharing, or have
+	resilient connections.
+
+	* traffic/cgi/plot-all.pl:
+	Add required support to plot sum of two lines.
+
+	* traffic/common/date.pl:
+	Add 5-minute average plot type to %res_to_dsp_t.
+
+	* traffic/cgi/ex-png.pl:
+	Allow + in file names (used for sum of lines).
+	Output HTML header before error message.
+
+2002-02-16  Havard Eidnes  <he@uninett.no>
+
+	* ritz/Makefile:
+	Remove now-incorrect -e on sed command.
+
+	* ritz/net.tcl:
+	Make a substitutable %SHA%.
+
+	* ritz/Makefile:
+	Do substitutions on ritz.
+
+	* zino/status.tcl:
+	Improve handling of deleted devices.
+
+	* common/polljob.tcl:
+	Handle the "handle does not exist" case properly instead of falling over.
+
+2002-01-14  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/daily.pl:
+	Remove any leftover gzipped files from the previous month.
+
+2001-12-14  Havard Eidnes  <he@uninett.no>
+
+	* TODO: One more todo item.
+
+	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
+	Several changes related to 32-bit counter roll-over compensation:
+	 o Only compensate on Octet variables
+	 o Only compensate on non-high-counter (/ifHC/) variables
+	 o If delta is negative, force delta to zero
+
+	Problem found when an address was moved to another port on the same
+	router, and part of the log was
+
+	Wed Sep 19 08:11:21 2001 ifHCInOctets.5 1.79084887318e+13
+	Wed Sep 19 08:13:11 2001 ifHCInOctets.5 1.79088327289e+13
+	Wed Sep 19 08:29:21 2001 ifHCInOctets.9 1.63199387464e+13
+	Wed Sep 19 08:30:21 2001 ifHCInOctets.9 1.63202332168e+13
+
+2001-12-13  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/daily.pl:
+	Gzip the files in the backup directory to save space.
+
+2001-12-10  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-hr-log.pl:
+	Ignore reboot entries more than 15 minutes into the future.
+
+	* traffic/common/read-raw-log.pl:
+	Also ignore reboot log lines which are too far into the future relative
+	to the last seen timestamp (15 minutes given here as the limit).
+
+2001-12-08  Havard Eidnes  <he@uninett.no>
+
+	* mibs/Makefile:
+	Make sure MIBDIR is created as a directory before installing mibs.
+
+2001-12-04  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/dst-shift.pl:
+	Script to compensate for DST shift in the autumn.
+
+	* traffic/db/db-lookup.pl:
+	Get the starting date from the correct place.
+
+	* traffic/jobs/Makefile:
+	Add dst-shift.pl.
+
+2001-11-12  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/plot-all.pl:
+	Add more output in error case.
+
+	* zino/events.tcl:
+	Improve robustness of fixupEventState.
+
+	* zino/flaps.tcl:
+	Stopgap solution to increase robustness of flapAger code, so that the
+	job is not terminated.
+
+2001-11-02  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/plot-all.pl:
+	Don't round down origin of data when the period is "epoch".
+
+	* traffic/common/date.pl:
+	Permit calculations involving week 0; there's a difference
+	between being 0 and not being defined...
+
+	* traffic/jobs/daily.pl:
+	Save one month of uncompressed data files, for possible
+	re-postprocessing.
+
+	* traffic/Makefile:
+	Add BACKUPDIR creation.
+
+	* Makefile.inc.dist:
+	Add BACKUPDIR variable.
+
+	* traffic/jobs/fixup-data.pl:
+	Try to handle DST shifts.
+	Yes, this is a hack.
+
+	* traffic/common/read-hr-log.pl:
+	Move around setting of lasttime and last_day.
+
+2001-10-25  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/cur-vers.pl:
+	Do more intelligent sorting of Cisco software versions.
+
+2001-09-25  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/Makefile:
+	Add get-perc.pl.
+
+	* traffic/report/get-perc.pl:
+	Simple script to compute percentiles of traffic in kbit/s in/out
+	for a given port and a given time period.
+
+2001-09-02  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/report-month.pl:
+	Add dimentioning load (average of top three samples) to the
+	monthly report.
+
+2001-05-14  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Prefer pivoting on a '.' when trying to reverse a logical port name.
+
+	* Makefile:
+	Descend into the mibs directory too, please.
+
+	* traffic/cgi/load-map.pl:
+	Deal correctly with polygons with more than 8 vertices.
+	In those cases the vertices are spread across multiple lines by tgif.
+
+2001-05-05  Havard Eidnes  <he@uninett.no>
+
+	* traffic/site/ndn-map.obj:
+	Map as of May 5th 2001.
+
+	* traffic/site/ndn-map.obj:
+	Map as of Apr 27 2001.
+
+2001-05-04  Havard Eidnes  <he@uninett.no>
+
+	* TODO:
+	One more item: environment monitoring.
+
+2001-03-30  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Implement absolute and relative map references, via the attribute name
+	"mapref".  Absolute references start with http://, and should contain
+	the map name; the date spec, type and sample-type will be passed on.
+	Relative references just contain the map name, and should thus be
+	accessible on the same server.  If you want to, you can also
+	optionally add an "alt" to the reference, via the "mapalt" attribute.
+
+2001-03-22  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Add a local warn() function, and use it in preference to err()
+	in a couple of places where the error may not be fatal.
+
+2001-03-16  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/Makefile: Add "clean" target.
+
+	* Makefile: Bump version number.
+
+	* README: Cosmetics.
+
+	* README:
+	Extend a little with newer noteworthy items.
+
+	* TODO: ...and one more.
+
+	* TODO: One more to remember.
+
+	* TODO:
+	Scratch a few done items off the list.
+
+	* traffic/cgi/tbl-report.pl:
+	Minor correction: one more 6->7 field widening.
+
+	* traffic/cgi/tbl-report.pl:
+	Correct "Busy sample" -> "Peak sample".
+	Widen speed coloumn to 7, to acommodate 2.4G interfaces.
+
+	* traffic/common/utils.pl:
+	Use a variable which is usable in both "raw" and "hr" data.
+
+	* traffic/site/ndn-map.obj:
+	Update to example map.
+
+	* traffic/plot/plot-raw.pl, traffic/plot/plot-hr.pl, traffic/report/report-day.pl:
+	Support and prefer 64-bit octet counters.
+
+2001-03-15  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/report-month.pl:
+	Correct the ordering of "speed" and "iftype" in the "possible heading"
+	for the kbit/s report.
+
+2001-03-06  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-hr-log.pl:
+	Avoid division by zero.
+
+	* traffic/common/read-day-report.pl,
+	traffic/common/read-hr-log.pl, traffic/common/utils.pl,
+	traffic/report/report-day.pl, traffic/report/report-month.pl,
+	traffic/report/report-week.pl:
+	Add support for computing 90th percentile load in/out,
+	and medians of 90th percentiles for week and month reports.
+
+2001-02-26  Havard Eidnes  <he@uninett.no>
+
+	* traffic/site/ndn-map.obj:
+	Adorn with "last update" text.
+
+	* traffic/site/ndn-map.obj:
+	Tgif object file describing today's NORDUnet.
+
+	* traffic/site/Makefile.inc.dist:
+	Also install ndn-map.obj in the NORDUnet installation.
+
+	* traffic/site/default.rng:
+	Omit some text.
+
+	* traffic/cgi/Makefile:
+	In with the new load-map script, rename the old script;
+	still install both.
+
+	* traffic/cgi/xf-load-map.pl:
+	Rename the old load-map script, revision 1.3.
+	This one interprets stylished xfig files to produce a colored
+	load map.
+
+	* traffic/cgi/load-map.pl:
+	Replace by a script which interprets tgif object files,
+	and does more computation by itself:
+
+	 o figures out name of "other end of circuit", if available,
+	   otherwise reverts to name/i (input value).
+	 o calculates half-distance along circuit for coloring
+	 o calculates sensitive area around circuit
+
+	No reference to "submaps" yet, though (easy to add).
+
+2001-02-18  Havard Eidnes  <he@uninett.no>
+
+	* traffic/site/ndn-map.fig:
+	New map -- SRP-ring interface of sw-gw was not marked.
+
+2001-01-30  Havard Eidnes  <he@uninett.no>
+
+	* traffic/site/ndn-map.fig:
+	New NORDUnet map.
+
+	* traffic/site/ndn-map.fig: New map.
+
+2001-01-25  Havard Eidnes  <he@uninett.no>
+
+	* common/auth.tcl:
+	Make use of %SHA% instead of sha to get proper auth.
+
+2001-01-22  Havard Eidnes  <he@uninett.no>
+
+	* zino/Makefile, zino/auth.tcl, Makefile.inc.dist:
+	Make the which program to use to compute SHA-1 be configurable.
+	OpenSSL has both `sha' and `sha1' which return different results,
+	and it's the latter which is compatible with the locally maintained
+	`sha' program.
+
+2001-01-19  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/plot-all.pl:
+	Generalize to also handle weekly plots which can get data from
+	"today".
+
+	* traffic/common/date.pl:
+	Week plots can also look at data which covers "today".  Add handling
+	of that.
+
+	* traffic/plot/plot-hr.pl:
+	Solve the previous problem a little differently: don't plot values for
+	times beyond "now".
+
+	* tpoller/tpoller.tcl:
+	Use 64-bit byte counters (too) towards devices configured with the
+	"hcounters" attribute.  This means that we need to replace use of
+	MIB-II with the interface mib (RFC 2863), which is a little tricky,
+	but luckily Jarle figured that one out for me.
+
+	* common/polljob.tcl:
+	If a device is configured for "hcounters", use SNMPv2c to establish
+	the session.
+
+	* common/config.tcl:
+	Support the "hcounters" config variable; turns on use of 64-bit
+	counters for the InOctets and OutOctets values.
+
+	* traffic/common/read-hr-log.pl:
+	Also return the values which read-raw-log.pl returns.  Properly handle
+	multiple samples happening before hour 0, i.e. before the log wraps.
+	If the last hour in the log contains values for only parts of the
+	hour, compute a reasonable average value based on the time we have
+	data for.
+
+	* traffic/common/utils.pl:
+	Add &floor_int().
+
+	* traffic/plot/plot-hr.pl:
+	Do not output 0-values when the corresponding counters are not
+	defined.  This way today's hourly plot does not "cut to zero" at the
+	end of data.
+
+	* traffic/html/intf-load.html:
+	Change from method=post to method=get.
+
+	* traffic/common/date.pl:
+	In some of the date calculations, instead of beginning "today" two
+	hours into the day in the local time zone, start it one minute into
+	the day.
+
+	* traffic/common/date.pl:
+	Expand datespecs up until and including today.
+	This way we can "zoom in" to today's raw plot from the hr plot.
+
+2001-01-17  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/date.pl:
+	Make sure we print hh:mm with %02d.
+
+	* traffic/plot/plot-hr.pl:
+	Correct obvious typo (missing ||).
+
+	* traffic/cgi/plot-all.pl:
+	Drop the "no-cache" settings for the HTML document (just generates
+	additional load for very little benefit, especially as long as the PNG
+	file is still cacheable).
+
+	* traffic/common/date.pl:
+	Add hh:mm to "pretty datespec" when we're looking at today.
+
+	* traffic/html/tbl-report.html:
+	Convert to using method=get instead of method=post.
+
+	* traffic/common/search.pl:
+	Remove quotes here to allow quotes in Makefile.inc.
+	The latter are now required (I think) due to the recent mk-subst
+	change.
+
+	* traffic/common/search.pl, traffic/plot/plot-hr.pl,
+	traffic/plot/plot-raw.pl, traffic/cgi/plot-all.pl,
+	traffic/common/date.pl:
+	Add support for looking at today's plot.  Properly handle caching,
+	and regenerate today's plot on refresh.  Add an HTTP refresh header,
+	so that document refreshes automatically (raw plot: 5 min, hr plot:
+	30 min).
+
+2001-01-10  Havard Eidnes  <he@uninett.no>
+
+	* TODO: A couple of minor items.
+
+	* TODO:
+	Add some more text fleshing out what I've found out so far.
+
+	* TODO: Add a couple of more ideas.
+
+2000-12-08  Havard Eidnes  <he@uninett.no>
+
+	* ritz/sort.tcl:
+	Umm, correct serious bugs in the previous.
+
+	* ritz/sort.tcl:
+	Provide some more resilience against zino fuckups.
+	(Typeless events.)
+
+2000-11-27  Havard Eidnes  <he@uninett.no>
+
+	* zino/flaps.tcl:
+	Also fill in eventid and event type (eventId may be lying that
+	this is an active event!).
+	Obviolsy this is a kludge until this code is reworked.
+
+	* zino/events.tcl:
+	Do a kludge: also init to do persistent attrs
+	for "existing" events.
+
+2000-11-08  Havard Eidnes  <he@uninett.no>
+
+	* ritz/main.tcl:
+	Be more permissive -- allow clear-text passwords (tacacs)
+	by default.
+
+	* ritz/ui.tcl:
+	Tolerate non-initialized Server, Port, User and Secret
+	global varaibles (as might happen with nonexistent .ritz.tcl).
+
+2000-11-06  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Forget the right variables -- use the correct loop variable.
+	Add some commented-out debug info.
+
+2000-10-24  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/daily.sh:
+	Insert -v (verbose output) and -n (no ping-check) options to
+	update-dbs.
+
+	* traffic/db/update-dbs.pl:
+	Introduce new -d debugging option, to take over some of -v's role.
+	Let -v just print modified or new entries, -d enables the rest of the
+	debugging output.
+
+	* traffic/db/update-dbs.pl:
+	Oops, missing argument to printf format.
+
+2000-10-23  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/update-dbs.pl:
+	Fix a syntax error.
+	Remember if a router went non-responsive.
+	Add -n option to skip ping test (it causes unneccessary delay).
+
+	* traffic/db/update-dbs.pl:
+	Add -v option, put debugging printouts under checks for $opt_v.
+
+	* traffic/db/update-dbs.pl:
+	Make this a bit more talkative.
+
+	* traffic/db/update-dbs.pl:
+	Explain a bit better why we do the substitute song & dance
+	on the data we retreive from the net.
+
+2000-10-14  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Properly handle polylines with polygon primitive by drawing the points
+	in reverse order back to the starting point.
+
+	* traffic/site/ndn-map.fig:
+	Update to current reality.
+
+2000-10-09  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/fixup-data.pl:
+	Do a thorough rework of this; hopefully crushing a few bugs
+	in the process (yes, it's somewhat tested).
+
+	* traffic/cgi/tbl-report.pl:
+	Correct sorting by "Output discards".
+
+2000-10-06  Havard Eidnes  <he@uninett.no>
+
+	* TODO: Counter64 support item added.
+
+2000-10-05  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Correct rather blatant variable name error.
+
+	* zino/tacping.pl: Substitute %PERL%.
+
+	* zino/zino.cf.tmpl:
+	Use own installed tacping script.
+
+	* zino/Makefile: Add tacping.
+
+	* zino/zino.cf.tmpl: Add authTacacs.
+
+	* traffic/cgi/plot-all.pl:
+	Add the pps plot for raw and hr resolution.
+
+	* traffic/plot/plot-hr.pl, traffic/plot/plot-raw.pl:
+	Add packets per second plot.
+
+	* vwatch/cur-vers.pl:
+	Correct error -- missing $ to expand file handle variable.
+	Expand router name coloumn to 25 chars.
+
+	* vwatch/vw-month-upgr.pl, vwatch/vw-month-rst.pl,
+	vwatch/vw-day-report.pl, vwatch/unctime.pl, vwatch/pretty-ios.pl,
+	vwatch/cur-vers.pl:
+	Use my() instead of local().
+
+	* vwatch/cur-vers.pl, vwatch/vw-day-report.pl,
+	vwatch/vw-month-rst.pl, vwatch/vw-month-upgr.pl:
+	Add required push(@INC, ...) statements.
+
+2000-10-04  Havard Eidnes  <he@uninett.no>
+
+	* Makefile:
+	Add a target to detect changes in distributed variable settings.
+
+	* traffic/jobs/fixup-data.pl:
+	Save both first and last line with "same value", so we don't get
+	discontinuities in the "raw" plots.
+
+	* sha/sha.c:
+	Fix byte order detection logic.
+	Fix formatting (function name on new line, k&r argument decls
+	indented).
+	Run both tests, detect failure at end.
+
+	* sha/sha-test, sha/sha:
+	Remove binary.
+
+	* vwatch/Makefile:
+	Introduce dependency on Makefile too.
+
+	* vwatch/Makefile:
+	Can't do "source" in TCL script, so do the inclusion here instead.
+
+	* vwatch/vwatch-head.tcl:
+	Um, can't use "source", need to do this in the Makefile.
+
+	* traffic/jobs/startup.sh:
+	Add start-vwatch.
+
+	* vwatch/start-vwatch.sh:
+	Script to start version monitor.
+
+	* vwatch/Makefile: Add start-vwatch.
+	Use SUBST instead of literals.
+
+2000-10-03  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/Makefile:
+	Adapt to new location.
+
+	* tpoller/main.tcl:
+	Use correct substitution name.
+
+	* tpoller/Makefile:
+	Substitute in tpoller script.
+
+	* tpoller/Makefile:
+	Installed script with no .sh.
+
+	* tpoller/main.tcl:
+	Add config information here.
+
+	* traffic/jobs/nanny.pl, traffic/jobs/start-nanny.sh,
+	traffic/jobs/Makefile:
+	Exit nanny.
+
+	* tpoller/Makefile: Minor tweak.
+
+	* TODO:
+	Merge entries from other TODO files.
+
+	* traffic/site/default.rng, traffic/site/ndn-map.fig:
+	Updates to reflect reality.
+
+	* traffic/site/Makefile:
+	.include needs double quotes or <>.
+
+	* traffic/db/Makefile:
+	Adapt to new setup.
+
+	* traffic/TODO:
+	Contents now merged with main TODO file.
+
+	* zino/TODO:
+	Remove file now merged in with main TODO file.
+
+	* TODO: Remove some, add some.
+
+	* traffic/plot/Makefile:
+	Adapt to new setup.
+
+	* traffic/common/read-raw-log.pl:
+	Fix obvious syntactic mistake.
+
+	* traffic/common/Makefile:
+	Adapt to new setup.
+
+	* traffic/db/update-dbs.pl:
+	Be more careful about overriding 'line name' -> 'file name' mappings.
+
+	* traffic/jobs/Makefile:
+	Point to correct sed edit script.
+
+	* traffic/db/Makefile:
+	Point to the correct substitute sed script.
+
+	* traffic/site/Makefile:
+	Move rules out to separate Makefile.inc (.dist).
+
+	* traffic/site/Makefile.inc.dist:
+	Move rules here too.
+
+	* traffic/site/Makefile.inc.dist:
+	Distributed Makefile.inc.
+
+	* traffic/cgi/load-map.pl:
+	Omit linefeed from ranges file.
+
+	* traffic/cgi/Makefile:
+	Adapt to new setup.
+
+	* traffic/site/ndn-map.fig, traffic/site/ndn-map.fig.new:
+	Updated NORDUnet map (should perhaps not be distributed).
+	Removed old temporary file.
+
+	* traffic/site/ifs.cf:
+	This file no longer distributed (old format...).
+
+	* traffic/site/xfig.SAVE:
+	Remove auto-save file.
+
+	* zino/Makefile:
+	Clean all generated files.
+
+	* Makefile.inc.dist, emt/Makefile:
+	Introduce EMTDIR.
+
+	* zino/Makefile: Use ${} instead of $().
+	Create zino dir if it doesn't already exist.
+
+	* zino/auth.tcl:
+	Don't call "sha" with -t option anymore, it's no longer needed.
+
+	* emt/Makefile: Remove temporary file.
+
+	* emt/Makefile:
+	Make sure to install directory and empty emt-save.tcl if either
+	doesn't already exist.
+
+	* mibs/Makefile:
+	Install mibs in the "proper" place.
+	Some of these should most probably be removed (they're old cruft).
+	Then the remaining mibs should be installed in scotty's site dir
+	instead.
+
+	* zino/Makefile:
+	Make sure we build startup script too.
+
+	* conf-diff/post-diff.sh:
+	Uh, use . instead of source, and use century conversion.
+
+2000-10-02  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Add conf-diff, bump minor.
+
+	* conf-diff/crontab: Example crontab.
+
+	* conf-diff/post-diff.sh:
+	Change config file name.
+
+	* zino/test-status.tcl:
+	Use "more standard" scotty.
+
+	* zino/auth.tcl:
+	Omit ``-t'' from "sha" program, should no longer be needed.
+
+	* sha/sha.c:
+	Reverse sense of ``-t'' flag: default is now without spaces.
+
+	* ritz/net.tcl:
+	Omit use of ``-t'' option to sha, it should no longer be needed.
+
+	* ritz/Makefile: Adapt to config setup.
+
+	* Makefile.inc.dist: Add wish.
+
+	* common/auth.tcl:
+	Don't call sha with ``-t'' option; should no longer be needed.
+
+	* vwatch/Makefile:
+	Support objdirs under <bsd.prog.mk>.
+
+	* vwatch/Makefile: Silence.
+
+	* vwatch/Makefile:
+	Correct mistakes and typos.
+	Create log directory tree if it doesn't already exist.
+
+	* vwatch/vwatch.cf:
+	Remove now-stale file.
+
+	* vwatch/vwatch-old.tcl, vwatch/config.pl, vwatch/daily.pl,
+	vwatch/daily.sh, vwatch/month-rst.pl, vwatch/month-upgr.pl,
+	vwatch/pretty.pl, vwatch/report-day.pl, vwatch/startup.sh:
+	Remove now-stale files.
+
+	* vwatch/vw-month-upgr.pl, vwatch/vw-month-rst.pl,
+	vwatch/vw-day-report.pl, vwatch/vw-daily.pl:
+	Adapt to new setup.
+
+	* vwatch/unctime.pl:
+	Remove perl exec header.
+
+	* vwatch/pretty-ios.pl:
+	Procedure to pretty-print software version (geared towards Cisco IOS).
+
+	* vwatch/cur-vers.pl:
+	Adapt to new config setup.
+
+	* vwatch/Makefile:
+	Makefile for version watcher and support scripts.
+
+	* vwatch/vwatch-main.tcl:
+	Moved header out to separate file.
+
+	* vwatch/vwatch-head.tcl:
+	Head of version-watch script.
+
+	* vwatch/vwatch-main.tcl:
+	Complete last line.
+
+	* vwatch/vwatch-main.tcl:
+	Main script, containing config information.
+
+	* conf-diff/Makefile, conf-diff/checkin-configs.sh,
+	conf-diff/post-diff.sh:
+	Add scripts for mailing out config changes saved in /tftpboot,
+	typically used for Cisco routers and switches.
+
+2000-09-07  Havard Eidnes  <he@uninett.no>
+
+	* sha/Makefile:
+	Install executable 555, not 755.
+
+	* traffic/Makefile:
+	Substitution generalized and moved to parent directory.
+	Adapt to new location of Makefile.inc.
+
+	* emt/start-emt.sh: Script to start emt.
+
+	* traffic/jobs/startup.sh:
+	Start the three current component scripts.
+	The version-monitor will need to be added later.
+
+	* Makefile.inc.dist: A few additions.
+
+	* zino/Makefile:
+	Create and install startup script.
+
+	* Makefile:
+	Remove dist target (will need to be redone).
+	Add usage of bsd.subdir.mk, add "active" subdirs.
+
+	* tpoller/Makefile:
+	Build and install startup script.
+
+	* tpoller/start-tpoll.sh:
+	Script to start traffic poller.
+
+	* traffic/jobs/start-zino.sh:
+	Script moved to zino directory.
+
+	* zino/start-zino.sh:
+	Script to start zino.
+
+	* zino/Makefile:
+	Use variables from ../Makefile.inc.
+	Generate zino.cf and install it.
+	Also install required empty files if they don't already exist.
+
+	* emt/Makefile:
+	Create and install startup script for emt.
+
+	* traffic/jobs/start-zino.sh:
+	Uhm, actually make this start zino.
+
+	* traffic/jobs/start-zino.sh:
+	Script to start zino.
+
+	* emt/emt.tcl:
+	Insist on presence of ~/.ritz.tcl and ~/.emt.tcl, and complain
+	(and refuse to start) if either does not exist.
+
+	* emt/emt.tcl:
+	Don't encode absolute paths here; allow substitution.
+
+	* emt/Makefile:
+	Import settings from ../Makefile.inc.
+	Do substitutions on generated script.
+
+	* Makefile:
+	Also create SED substitution file.
+
+	* mk-subst.awk:
+	A script to construct sed substitutions from the Makefile settings
+	in Makefile.inc.  Handles one variable substitution (by a previously
+	defined variable) per line.
+
+	* mk-subst.awk:
+	Script to generate sed substitution patterns from Makefile settings.
+
+	* zino/zino.cf.tmpl:
+	Template file for zino configuration file / startup file generation.
+
+	* zino/tacping.pl:
+	Add tacping.pl from xtacacsd distribution, tacping.pl version 1.2.
+
+	* tpoller/Makefile:
+	Adapt for substitution mechanism.
+
+	* tpoller/tpoller.tcl:
+	Only fetch statistics from devices marked with "statistics: yes",
+	(which is the default).
+
+	* common/config.tcl:
+	Add "statistics" as a known keyword, in preparation of
+	tweaking traffic poller to ignore those with statistics != yes.
+
+	* traffic/Makefile.inc.dist:
+	Moved to parent directory.
+
+	* traffic/plot/Makefile, traffic/report/Makefile,
+	traffic/site/Makefile, traffic/db/Makefile, traffic/doc/Makefile,
+	traffic/html/Makefile, traffic/jobs/Makefile,
+	traffic/mibs/Makefile, traffic/common/Makefile,
+	traffic/cgi/Makefile:
+	Include new Makefile.inc.
+
+	* Makefile.inc:
+	This file should not be in repository, to ease upgrades.
+
+	* Makefile.inc.dist:
+	Hm, distribution version of this file.
+
+	* Makefile.inc:
+	New file, copied from traffic/Makefile.inc.
+
+	* TODO: A couple of additions.
+
+	* traffic/db/update-dbs.pl:
+	Correct handling of default community.
+	Chomp some input lines.
+
+2000-07-20  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl:
+	Add some debugging of emt_lastlogline.
+	Fix a longstanding bug in emt_open: it's important that the
+	while-condition not just be evaluated *once*!
+
+2000-07-19  Havard Eidnes  <he@uninett.no>
+
+	* zino/status.tcl:
+	Substitute a pollSingleIf which actually works...
+
+	* zino/flaps.tcl:
+	Fix long-standing bug causing flapping interfaces to have the wrong
+	state set in the portState array.  The symptom is events created by
+	interface flapping which don't revert to the normal state even when
+	the port comes back and is stable over a long period.
+
+	* zino/routers.cf.sample:
+	Set defaults explicitly (config file format changed).
+
+2000-07-17  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-raw-log.pl:
+	Now that we preserve %base between invocations, we will get a sample
+	in hour 23 of the "previous day" when we are called repeatedly (to
+	produce weekly info).  Compensate for this by subtracting 24h from
+	timestamps seen in hour 23 before we've seen any samples in hours less
+	than 23 (on the following day).
+
+	* traffic/common/read-raw-log.pl:
+	Redo sample number allocation, again, to adapt to the new
+	filtered logs where identical values are removed.
+
+	* traffic/common/read-raw-log.pl:
+	Export %base hash.
+
+	* traffic/plot/plot-raw.pl:
+	Correct typo.
+
+	* traffic/plot/plot-raw.pl:
+	More adaptation for filtered data files.
+
+	* traffic/plot/plot-raw.pl:
+	Better code to adapt to logs where non-changing variables are omitted.
+
+	* traffic/common/read-raw-log.pl:
+	Adapt to filtered logs where only changed variables
+	are logged.  This means that it's not necessary that the
+	first variable in the file is logged for every sample.
+
+	* traffic/plot/plot-raw.pl:
+	Hm, print a time stamp in all circumstances.
+
+	* traffic/plot/plot-raw.pl:
+	Handle missing ifInErrors a little better.
+
+	* traffic/common/read-hr-log.pl:
+	Mark bug comment with XXX.
+
+	* traffic/jobs/fixup-data.pl:
+	On a "recent" reboot log message, print all saved variables,
+	so that the order doesn't get jumbled.
+
+	* emt/emt.tcl:
+	Ignore possibly missing "reason" attribute.
+
+	* emt/emt.tcl:
+	Adapt to change in ::persist package.
+
+	* emt/Makefile:
+	Clean up some, adapt for VD installation using pkgsrc.
+
+2000-07-15  Havard Eidnes  <he@uninett.no>
+
+	* common/persist.tcl:
+	Comment out debugging code.
+
+	* zino/events.tcl:
+	Remember no longer to save attributes for an event
+	once it is closed.
+
+	* common/persist.tcl:
+	Don't output "global" headings for nonexistent variables.
+	Don't remove persistence for nonexistent variables.
+
+	* zino/status.tcl:
+	Fall back to ifAlias if locIfDescr isn't available.
+
+	* zino/load-mibs.tcl:
+	Use installed mibs from snmpnetstat.
+	(Should really install own required mibs, and this
+	list should be revised.)
+
+	* ritz/sort.tcl:
+	Return "warning" for non-open (handled) reachability events.
+
+	* ritz/sort.tcl:
+	Compare states before comparing downtime.
+
+	* zino/zino-main.tcl:
+	Rename zino.cf config variable.
+
+	* common/auth.tcl:
+	Declare "authenticated" as a variable.
+
+	* zino/events.tcl:
+	Also unset EventId on closeEvent.
+
+2000-07-14  Havard Eidnes  <he@uninett.no>
+
+	* ritz/Makefile:
+	Use tixwish and remove some cruft.
+
+	* ritz/main.tcl:
+	Rely on use of tixwish, so no "require Tix".
+
+	* mibs/Makefile:
+	Makefile to install mibs.
+
+	* common/persist.tcl:
+	Let startPeriodicDump take seconds as argument, not minutes.
+
+	* traffic/jobs/nanny.pl, traffic/jobs/startup.sh:
+	Modify to create and use ../tpoller.pid.
+	Nanny is currently unused.
+
+	* tpoller/main.tcl, tpoller/Makefile:
+	*** empty log message ***
+
+	* traffic/html/tbl-report.html:
+	Change to have the "day" checked instead of "month".
+
+	* traffic/Makefile:
+	Take out the old poller from what we install; we're
+	going to use the new version instead.
+
+	* traffic/db/update-dbs.pl:
+	Updte comments at top.
+	Change "router" to "dev".
+	Add handling of "community" and "default community" directives in
+	the config file, so that the correct community can be passed to
+	snmpnetstat.
+
+	* traffic/db/update-dbs.pl:
+	Use options to point to top directory (implicitly naming config file
+	and database directory).
+	Add more comments in a few places.
+	Adapt to Jarle's version of snmpnetstat.
+	Make more robust against whitespace goofs.
+	Replace local() with my().
+
+	* traffic/jobs/daily.sh:
+	Um, redo that decision...
+
+	* traffic/jobs/daily.sh:
+	Adapt to new required options to the update-dbs script.
+
+2000-07-05  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/Makefile, traffic/common/date.pl,
+	traffic/common/newtimelocal.pl, traffic/common/plot.pl,
+	traffic/common/read-day-report.pl, traffic/common/read-hr-log.pl,
+	traffic/common/read-raw-log.pl,
+	traffic/common/read-week-report.pl, traffic/common/scaling.pl,
+	traffic/common/search.pl, traffic/common/timelocal.pl,
+	traffic/common/tmpfiles.pl, traffic/common/utils.pl,
+	traffic/db/Makefile, traffic/db/db-lookup.pl,
+	traffic/db/dbm-dump.pl, traffic/db/dbm-edit,
+	traffic/db/dbm-load.pl, traffic/db/update-dbs.pl,
+	traffic/doc/Makefile, traffic/doc/basic-inst.html,
+	traffic/doc/changes.html, traffic/doc/common-pl.html,
+	traffic/doc/conf-conv.html, traffic/doc/features.html,
+	traffic/doc/impl.html, traffic/doc/index.html,
+	traffic/doc/install.html, traffic/doc/load-map.html,
+	traffic/doc/plots.html, traffic/doc/poller.html,
+	traffic/doc/tbl-report.html, traffic/doc/todo.html,
+	traffic/doc/tools.html, traffic/doc/use-lm.html,
+	traffic/jobs/Makefile, traffic/jobs/config.pl,
+	traffic/jobs/daily-clean.sh, traffic/jobs/daily.pl,
+	traffic/jobs/daily.sh, traffic/jobs/extract-value.pl,
+	traffic/jobs/fixup-data.pl, traffic/jobs/fixup-data.sh,
+	traffic/jobs/nanny.pl, traffic/jobs/showdelta.pl,
+	traffic/jobs/start-nanny.sh, traffic/jobs/startup.sh,
+	traffic/mibs/CISCO-SMI.my, traffic/mibs/Makefile,
+	traffic/mibs/OLD-CISCO-INTERFACES-MIB.my, traffic/plot/Makefile,
+	traffic/plot/plot-day.pl, traffic/plot/plot-hr.pl,
+	traffic/plot/plot-raw.pl, traffic/plot/plot-week.pl,
+	traffic/site/Makefile, traffic/site/default.rng,
+	traffic/site/ifs.cf, traffic/site/index.html,
+	traffic/site/ndn-map.coords, traffic/site/ndn-map.fig,
+	traffic/site/ndn-map.fig-19970626, traffic/site/ndn-map.fig.new,
+	traffic/site/ndn-map.gif, traffic/site/ndn-map.ps,
+	traffic/site/xfig.SAVE:
+	NORDstat version 0.29
+
+	* traffic/common/Makefile, traffic/common/date.pl,
+	traffic/common/newtimelocal.pl, traffic/common/plot.pl,
+	traffic/common/read-day-report.pl, traffic/common/read-hr-log.pl,
+	traffic/common/read-raw-log.pl,
+	traffic/common/read-week-report.pl, traffic/common/scaling.pl,
+	traffic/common/search.pl, traffic/common/timelocal.pl,
+	traffic/common/tmpfiles.pl, traffic/common/utils.pl,
+	traffic/db/Makefile, traffic/db/db-lookup.pl,
+	traffic/db/dbm-dump.pl, traffic/db/dbm-edit,
+	traffic/db/dbm-load.pl, traffic/db/update-dbs.pl,
+	traffic/doc/Makefile, traffic/doc/basic-inst.html,
+	traffic/doc/changes.html, traffic/doc/common-pl.html,
+	traffic/doc/conf-conv.html, traffic/doc/features.html,
+	traffic/doc/impl.html, traffic/doc/index.html,
+	traffic/doc/install.html, traffic/doc/load-map.html,
+	traffic/doc/plots.html, traffic/doc/poller.html,
+	traffic/doc/tbl-report.html, traffic/doc/todo.html,
+	traffic/doc/tools.html, traffic/doc/use-lm.html,
+	traffic/jobs/Makefile, traffic/jobs/config.pl,
+	traffic/jobs/daily-clean.sh, traffic/jobs/daily.pl,
+	traffic/jobs/daily.sh, traffic/jobs/extract-value.pl,
+	traffic/jobs/fixup-data.pl, traffic/jobs/fixup-data.sh,
+	traffic/jobs/nanny.pl, traffic/jobs/showdelta.pl,
+	traffic/jobs/start-nanny.sh, traffic/jobs/startup.sh,
+	traffic/mibs/CISCO-SMI.my, traffic/mibs/Makefile,
+	traffic/mibs/OLD-CISCO-INTERFACES-MIB.my, traffic/plot/Makefile,
+	traffic/plot/plot-day.pl, traffic/plot/plot-hr.pl,
+	traffic/plot/plot-raw.pl, traffic/plot/plot-week.pl,
+	traffic/site/Makefile, traffic/site/default.rng,
+	traffic/site/ifs.cf, traffic/site/index.html,
+	traffic/site/ndn-map.coords, traffic/site/ndn-map.fig,
+	traffic/site/ndn-map.fig-19970626, traffic/site/ndn-map.fig.new,
+	traffic/site/ndn-map.gif, traffic/site/ndn-map.ps,
+	traffic/site/xfig.SAVE:
+	New file.
+
+	* traffic/Makefile, traffic/Makefile.inc.dist, traffic/README,
+	traffic/TODO, traffic/cgi/Makefile, traffic/cgi/emit-map.pl,
+	traffic/cgi/ex-png.pl, traffic/cgi/intf-load.pl,
+	traffic/cgi/list-ports.pl, traffic/cgi/load-map.pl,
+	traffic/cgi/plot-all.pl, traffic/cgi/tbl-report.pl,
+	traffic/html/Makefile, traffic/html/dsp.html,
+	traffic/html/img-doc.html, traffic/html/intf-load.html,
+	traffic/html/map-base.gif, traffic/html/map-doc.html,
+	traffic/html/map-large.gif, traffic/html/map-zoom.fig,
+	traffic/html/map-zoom.gif, traffic/html/tbl-report.html,
+	traffic/html/zoom-base.gif, traffic/html/zoom-large.fig,
+	traffic/html/zoom-large.gif, traffic/html/zoom.gif,
+	traffic/report/Makefile, traffic/report/re-report-day.pl,
+	traffic/report/report-day.pl, traffic/report/report-mon-sp.pl,
+	traffic/report/report-month.pl, traffic/report/report-week.pl,
+	traffic/report/sel-report.pl:
+	NORDstat version 0.29
+
+	* traffic/Makefile, traffic/Makefile.inc.dist, traffic/README,
+	traffic/TODO, traffic/cgi/Makefile, traffic/cgi/emit-map.pl,
+	traffic/cgi/ex-png.pl, traffic/cgi/intf-load.pl,
+	traffic/cgi/list-ports.pl, traffic/cgi/load-map.pl,
+	traffic/cgi/plot-all.pl, traffic/cgi/tbl-report.pl,
+	traffic/html/Makefile, traffic/html/dsp.html,
+	traffic/html/img-doc.html, traffic/html/intf-load.html,
+	traffic/html/map-base.gif, traffic/html/map-doc.html,
+	traffic/html/map-large.gif, traffic/html/map-zoom.fig,
+	traffic/html/map-zoom.gif, traffic/html/tbl-report.html,
+	traffic/html/zoom-base.gif, traffic/html/zoom-large.fig,
+	traffic/html/zoom-large.gif, traffic/html/zoom.gif,
+	traffic/report/Makefile, traffic/report/re-report-day.pl,
+	traffic/report/report-day.pl, traffic/report/report-mon-sp.pl,
+	traffic/report/report-month.pl, traffic/report/report-week.pl,
+	traffic/report/sel-report.pl:
+	New file.
+
+2000-06-27  Havard Eidnes  <he@uninett.no>
+
+	* TODO: Add a few more.
+
+	* README: Update my e-mail address.
+
+	* zino/zino-main.tcl:
+	(Almost) top-level function for zino.
+	Ties into the component packages and starts things in their right
+	order.
+	Uses config file zino.cf from current directory.
+
+	* zino/trap.tcl:
+	Adapt to replacement of $cx and various other config info.
+	Comment out a few of the handled traps (a better mechanism
+	is needed).
+
+	* zino/status.tcl:
+	Adapt to new persist package.
+	Adapt to replacement of $cx and various other config info.
+	Tweak response/no-response handling (which badly needs a rewrite).
+	Delete poll job handling procedures, since they're replaced
+	by common routines these days.
+
+	* zino/server.tcl:
+	Adapt to the replacement of $cx.
+	Fix an error (missing format argument).
+
+	* zino/read-cf.tcl:
+	Move cleanupDBvars out of this file, since it's slated
+	for eventual removal.
+
+	* zino/flaps.tcl:
+	Adapt to new persist package, and the replacement of $cx.
+
+	* zino/events.tcl:
+	Adapt to new persist package.
+	Add a cleanupDBvars proc.
+
+	* zino/TODO: Strike one off the list.
+
+	* zino/NOTES:
+	One more possible TODO thing.
+
+	* zino/Makefile: Reorganize file list.
+
+	* test/test-tpoll.tcl:
+	Add one more required file.
+
+	* test/routers.cf:
+	A few updates in the direction of reality (for UNINETT).
+
+	* common/config.tcl: Add confExists.
+	Set up default config file handler.
+
+2000-03-15  Havard Eidnes  <he@uninett.no>
+
+	* common/polljob.tcl:
+	Correct implementation of "handle" function.
+	Factor out/rename to get "setup" and "teardown" functions,
+	and convert to use them.
+
+	* zino/Makefile:
+	First attempt at a minimal makefile for zino.
+
+2000-03-14  Havard Eidnes  <he@uninett.no>
+
+	* common/conffile.tcl:
+	Newline-terminate file.
+
+	* ritz/sort.tcl:
+	Don't error out if the "type" attribute is missing.
+	This may happen when we stop polling a router, in which case
+	a new case may be created by zino (really a bug there, but we'll
+	let it slide for now).
+
+1999-11-02  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl:
+	Go to new ::persist routine name.
+	More robustness & diagnostic (attempt, anyway) for open-routine.
+
+	* common/attrs.tcl:
+	Make "adminDown" also be reported as a "down" event.
+
+1999-09-14  Havard Eidnes  <he@uninett.no>
+
+	* common/conffile.tcl:
+	Slight change to warning message for previous.
+
+	* common/conffile.tcl:
+	Warn about multiple occurrances of configuration for
+	the same device name.
+
+1999-09-13  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Wrap sparseTableWalk with catch, and augment the error message if it
+	fails.
+	A few other minor fixups.
+
+	* tpoller/tpoller.tcl:
+	Timestamp error messages.
+
+	* tpoller/tpoller.tcl:
+	Well, I forgot, some errors should be fatal.
+	Make "normal" error returns contain the "FAILED" string,
+	and check for it at the toplevel; omit printing errorInfo
+	output in those cases (most usual reason: no response from agent).
+
+1999-09-12  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Fix a syntax error (missing bracket).
+	Make some errors "non-fatal", i.e. just log and don't error.
+
+1999-09-11  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Import ::config::conf to access ignore-patterns.
+	Load required mibs.
+	Output error message if an error was caught.
+	Minor bugfixing and typo corrections to make this work.
+
+	* test/test-tpoll.tcl:
+	Test traffic-poller.
+
+	* test/routers.cf:
+	Use loopback0 address, not serial link (now down).
+
+	* test/test-vw.tcl:
+	Test version-watcher.
+
+	* test/test-chi.tcl:
+	A few routines/settings to test sparse-walk (or simple table walk).
+
+	* test/test-sw.tcl:
+	Adapt to changes in sparse-walk module:
+	 o Drop error handler, add "error script"
+	 o Add in a test of the synchronous/parallel
+	   getnext version of sparseTableWalk.
+	Say where tests were run.
+
+	* test/test-poll.tcl:
+	Use "name" command instead of "cx".
+	Simplify now that we have more defaults.
+
+	* tpoller/tpoller.tcl:
+	Initial revision of reimplemented traffic statistics poller.
+
+1999-09-09  Havard Eidnes  <he@uninett.no>
+
+	* common/polljob.tcl:
+	Provide default values for the initDev / pollDev / destroyDev
+	upcall procedure variables.
+
+1999-09-07  Havard Eidnes  <he@uninett.no>
+
+	* common/justSNMP.tcl:
+	Hm, well, it turns out that the synchronous version built on top
+	of the asynchronous version of sparseTableWalk will have problems
+	if two sparseTableWalk calls are active at the same time, something
+	which can happen if the second call was triggered from a timer event.
+	Thus, re-import the old synchronous version of sparseTableWalk.
+
+	Remove the error handler for async events, use an optional body to
+	evaluate instead.
+
+	Don't use "uplevel" and "upvar" from the callback script to reference
+	the parent context; since we're in an SNMP callback script, the parent
+	context is the global context (!).  In order to not conflict with the
+	local variables in the callback handler, call down a level to have the
+	callback scripts evaluated.
+
+1999-09-06  Havard Eidnes  <he@uninett.no>
+
+	* test/test-sw.tcl:
+	Sparse-walk file changed name.
+	Adapt to sparseTableWalk now being synchronous again.
+
+	* common/justSNMP.tcl:
+	Fix "synchronous" shell around asyncSparseTableWalk -- the upcalls
+	will be done in the global context, so care needs to be taken to
+	use/set the correct variables.
+	Add an error script, and substitution of %E and %S for both the
+	"done" and "error" callback scripts.
+
+	* common/justSNMP.tcl:
+	Hm, make the sparseTableWalk proc appear to be synchronous again,
+	but using asynchronous primitives below, allowing other events to
+	be processed at the same time.
+
+	* common/polljob.tcl:
+	Don't reference global procedures anymore, instead, use
+	an init procedure to set up callbacks.
+
+	* common/justSNMP.tcl:
+	Fix copyright date.
+
+	* common/justSNMP.tcl:
+	Uh, need to use "variable" inside procedures.
+
+	* common/config.tcl, common/justSNMP.tcl, common/swalk.tcl:
+	Rename swalk.tcl to justSNMP.tcl.
+	Fix a typo in config.tcl.
+
+	* common/swalk.tcl:
+	Bring in stuff from justSNMP version 0.0.
+	Bump minor version to 0.1.
+
+	* test/test-sw.tcl:
+	Make this a real test script.
+
+	* common/swalk.tcl:
+	Async version of sparse-walk routines.
+	Should really import entire JUST package.
+
+	* test/test-sw.tcl:
+	Add error handler upcall.
+	Add optional "end of table" script parameter.
+
+1999-09-05  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/vwatch.tcl:
+	Return "unexpected uptime" initially when $lastpoll($sh) isn't set.
+	Substitute the CRs in device description fields before saving.
+
+1999-09-04  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/vwatch.tcl:
+	Separate out inclusion of other files and
+	configuration info setting + the "main" program.
+
+	* common/polljob.tcl:
+	No longer export "variable access procedure" ``cx'', but rather
+	export ``handle'' and ``name'' to translate from name to handle and
+	from handle to name respectively.
+	Also, no longer access variables in other modules directly.
+
+	* vwatch/vwatch.tcl:
+	Adapt to change in polljob, no longer exports 'cx' procedure.
+
+1999-08-31  Havard Eidnes  <he@uninett.no>
+
+	* test/test-sw.tcl:
+	Asynchronous sparse-walk implementation.
+	Error handling and recovery missing.
+
+	* vwatch/vwatch.tcl:
+	Remove some useless variable settings (since they're not used).
+
+	* vwatch/vwatch.tcl:
+	...and closer still.
+	I think what remains now is testing and
+	better configuration support for where files should be stashed etc.
+
+	* test/test-poll.tcl:
+	Use the new variable access procedure instead of
+	accessing variables in another namespace directly.
+
+	* vwatch/vwatch.tcl:
+	Bring this closer to something which might work.
+
+	* common/polljob.tcl:
+	Convert to using variable access procedure
+	instead of trying to export/import variables (which doesn't work,
+	only commands can be exported/imported).
+
+	* common/config.tcl:
+	Can probably not use "default" as name.  Export
+	variable access procedure.
+
+	* common/config.tcl: One more.
+
+	* common/config.tcl:
+	Add a variable access procedure to access 'conf'.
+
+	* test/test-poll.tcl:
+	Test the polljob module, that the right jobs are started etc.
+
+1999-08-29  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/vwatch-old.tcl, vwatch/vwatch.tcl:
+	Checkpoint.
+
+1999-08-25  Havard Eidnes  <he@uninett.no>
+
+	* common/polljob.tcl:
+	Don't make a "restart" action trigger upcalls to ::deleteDev
+	and then ::initDev; instead let it pass without any upcall.
+
+1999-08-24  Havard Eidnes  <he@uninett.no>
+
+	* common/polljob.tcl:
+	A typo correction and a minor bugfix.
+
+	* common/polljob.tcl:
+	Initial cut at generic poll job handling.
+
+	* common/util.tcl:
+	Add "minutes-to-milliseconds" as mtoms.
+
+	* test/routers.cf, test/test-conf.tcl:
+	Test harness for config reading/handling.
+
+1999-08-20  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/config.pl, vwatch/cur-vers.pl, vwatch/daily.pl,
+	vwatch/daily.sh, vwatch/month-rst.pl, vwatch/month-upgr.pl,
+	vwatch/pretty.pl, vwatch/report-day.pl, vwatch/startup.sh,
+	vwatch/unctime.pl, vwatch/vwatch.cf, vwatch/vwatch.tcl:
+	Add baseline "version watch" sources.
+
+1999-08-18  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl:
+	Adjust to name change in ::persist.
+
+	* common/notify.tcl:
+	Protect initial "unset acceptchan".
+
+1999-08-11  Havard Eidnes  <he@uninett.no>
+
+	* common/config.tcl:
+	Simplify changedDev.
+
+	* common/util.tcl:
+	Protect the "unset" of the "to" array (may not exist).
+
+	* common/notify.tcl:
+	The "variable" command really takes only one variable.
+
+	* common/config.tcl:
+	Reinstate printing of defaults.
+
+	* common/config.tcl:
+	Do "namespace import" correctly.
+	Add defaults variable.
+	Fixes so that handleCchangedConf can be used the first time too.
+
+	* common/conffile.tcl:
+	Close file after reading.
+	"variable" only takes one variable.
+	Various minor bugfixes found by testing.
+
+	* common/config.tcl: Added printConf.
+
+	* common/config.tcl:
+	Corrected a few variable naming errors.
+
+	* common/config.tcl:
+	Common post-processing after reading new config file.
+	Interfaces to various polljob:: procs.
+
+	* common/util.tcl:
+	Common utility routines.
+
+	* common/conffile.tcl:
+	Add generalized package for reading configuration files.
+	Returns data which needs "post-processing" and some setup.
+
+	* common/persist.tcl:
+	Rename "dump" to "checkpoint" in various procs.
+
+1999-05-11  Havard Eidnes  <he@uninett.no>
+
+	* zino/status.tcl:
+	Only do cleanup if really required.
+
+	* zino/status.tcl:
+	Protect an unset, the variable may not exist.
+
+1999-05-07  Havard Eidnes  <he@uninett.no>
+
+	* zino/auth.tcl:
+	Actually make this work as intended...
+
+	* zino/auth.tcl:
+	Actually make it possible to authenticate users
+	even though they're not in the local user database,
+	but only exist in the tacacs database.
+
+1999-04-29  Havard Eidnes  <he@uninett.no>
+
+	* zino/status.tcl:
+	Oops, need access to $r.
+
+	* common/cp.tcl: Typo correction.
+
+	* zino/status.tcl:
+	Add more cleanup of "delayed lack-of-response checking",
+	apparently some of that could be forgotten, and a router's
+	state would be stuck in "doing delayed checking" when in fact
+	no such checking was scheduled, causing lack of "no-response"
+	alarm generation.
+	This code badly needs to be redone.
+
+1999-04-07  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl:
+	Use new function to get "cleaned" log lines.
+
+	* common/cp.tcl:
+	getLog now returns a list, getLogLines ++ new functions.
+
+1999-03-24  Havard Eidnes  <he@uninett.no>
+
+	* emt/TODO: TODO list for emt.
+
+	* ritz/net.tcl: Fix a pair of bugs:
+	 o typo in variable name
+	 o use of list instead of string
+
+1999-03-09  Havard Eidnes  <he@uninett.no>
+
+	* common/sort.tcl: Typo correction.
+
+1999-02-28  Havard Eidnes  <he@uninett.no>
+
+	* zino/status.tcl:
+	Instead of giving up (and possibly leaving event in a half-cooked
+	state), fake sysUpTime setting if it could not be fetched.
+	Also, record "noResponse" if getting sysUpTime failed.
+
+	Re-verify port state change after 2 minutes.
+
+	* emt/emt.tcl:
+	Add code to also report last line in event log.
+
+	* zino/NOTES:
+	Add one idea for extension.
+
+	* zino/flaps.tcl:
+	Add a 2-minute delayed poll after trap-initiated state change.
+
+	* zino/status.tcl:
+	Reshuffle "stop*Deleted*" contents, so that restartPolLChangedRouters
+	can have a chance at working.
+
+1999-02-27  Havard Eidnes  <he@uninett.no>
+
+	* zino/read-cf.tcl:
+	Even more debugging output.
+
+	* zino/read-cf.tcl:
+	Don't unset Address -- that way we won't detect changes in router
+	addresses (!).  Instead, the code in oldRouterNames should suffice
+	to pick up the old names.  At another place where Address was being
+	used, use seenRouter instead.
+
+	* zino/read-cf.tcl:
+	Add debugging output.
+
+	* zino/status.tcl:
+	Add debugging output, apparently needed...
+	Fix a syntax error or two...
+
+	* emt/emt.tcl:
+	Log success opening server connection.
+
+	* zino/trap.tcl:
+	Do the checking of reachability after trap reception correct according
+	to new function of checkResponse.
+
+	* zino/status.tcl:
+	Improve the handling of "noResponse" events:
+	 o Reduce trigger-happiness (re-check for response after 1 minute
+	   before opening event)
+	 o Increase frequency of reachability checking after a "noResponse"
+	   event happens.
+	 o Only log reachability status changes, not every "noResponse"
+	   event.
+	 o Make checkResponse useful.
+
+	* emt/emt.tcl: Minor simplification.
+
+	* emt/emt.tcl:
+	Don't call emt_newhist unless notification received.
+
+1999-02-26  Havard Eidnes  <he@uninett.no>
+
+	* ritz/Makefile:
+	Add rule to make ../version.tcl if missing or outdated.
+
+	* Makefile:
+	Separate out rule to make version.tcl.
+	Makefile needs improvement to handle subdirectories.
+
+	* ritz/notify.tcl:
+	Move some code around, should be no functional change.
+
+	* ritz/net.tcl:
+	Clean up getLog -- separate the cleaning of the log to a separate proc.
+
+	* TODO: Remove a few items now covered.
+
+	* emt/emt.tcl:
+	Default second argument to emt_notify so that "LostConn" event works.
+	Trigger sending e-mail also if state/history changes for an event we
+	have already sent a note about.  Add some more debugging output.
+	Remove a few syntax errors...
+	Make long reports a little more verbose + include parts of history.
+
+	* zino/flaps.tcl:
+	Tweak flap computation values so that "flapping" doesn't happen
+	so quickly, and it takes shorter stable-time to come out of "flapping".
+
+	* common/attrs.tcl:
+	Let getOperState return "effectivePortState" for portstate events,
+	so that "flapping" is caught.
+
+	* emt/emt.tcl:
+	Add history to verbose mail messages.
+
+	* emt/emt.tcl:
+	Make sure state($id) is defined for all cases, also for new ones...
+	Refine emt_should_report, set state variables at appropriate times etc.
+	Reshuffle subject/one-line reports.
+
+1999-02-25  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl:
+	Adapt to procedure name changes.
+	Add some debugging output via new "log" procedure.
+	Add a periodic "keepalive" job to check that server is up and alive.
+	Don't get event logs -- we don't handle them yet.
+	Make emt_newlog and emt_forget more robust.
+
+	* emt/Makefile:
+	SRCS not FILES, and use tclsh and not wish.
+
+	* common/attrs.tcl, common/cp.tcl, common/net.tcl,
+	common/notify.tcl, common/sort.tcl:
+	Add missing newlines at end of file.
+
+	* common/notify.tcl:
+	Add required qualification.
+
+	* common/persist.tcl:
+	Id string correction.
+
+	* common/persist.tcl:
+	Rename a few procedures.
+
+	* common/cp.tcl:
+	Minor typo (unbalanced paren).
+
+	* common/sort.tcl:
+	Finish conversion to new procedure names.
+
+	* common/persist.tcl: Typo correction.
+	Add qualification where needed.
+	Finish conversion of old routine names.
+
+	* common/notify.tcl:
+	Make sure "acceptchan" is unset when it needs to be.
+	Add qualification where required.
+
+	* common/net.tcl:
+	Move setting of "chan" in ::net::open, so that the following
+	::net::gets works.
+	Add robustness in close routine.
+	Add some (commented-out) trace output for "puts" and "gets".
+
+	* common/auth.tcl:
+	Add a forgotten ::net::gets.
+	Be more robust when resetting.
+
+	* common/attrs.tcl:
+	Add isUpState (as it was apparently used...).
+
+	* emt/test-emt.tcl:
+	Script to set up test environment for emt.
+
+	* emt/emt.tcl:
+	Reshuffle includes (remove -- move to test-emt.tcl).
+	Rename main -> emt_main.
+	Remove emt_close -- emt_open closes at first for robustness.
+	Use appropriately qualified names.
+	Various other minor bugfixes.
+
+	* emt/Makefile:
+	Update to create an "emt" executable, taken from ritz.
+
+	* common/persist.tcl, common/sort.tcl, common/attrs.tcl,
+	common/cp.tcl:
+	New modules extracted and tweaked from old code.
+
+	* common/notify.tcl:
+	Simplify how notification handler is set up and used.
+
+	* common/net.tcl:
+	Improve so that gets can take "-channel $chan" arguments and act
+	on them.
+
+	* emt/emt.tcl:
+	First cut that is testable.
+
+1999-02-22  Havard Eidnes  <he@uninett.no>
+
+	* emt/Makefile, emt/emt.tcl:
+	Initial commit of e-mail trigger.  Far from done.
+
+	* common/notify.tcl, common/auth.tcl, common/net.tcl:
+	More generalized routines, using namespace packaging.
+
+1999-02-19  Havard Eidnes  <he@uninett.no>
+
+	* ritz/Makefile, ritz/test-client.tcl, Makefile:
+	Create version.tcl, and use in ritz.
+
+	* ritz/ui.tcl:
+	Added "Help/About" menu and version display.
+
+	* zino/events.tcl:
+	Don't call nonexistent procedure.
+	Make robust for setting "lasttrans" for new events.
+
+	* zino/events.tcl:
+	Can't compare a not-yet-committed attribute value.
+
+1999-02-18  Havard Eidnes  <he@uninett.no>
+
+	* zino/events.tcl:
+	Uhm, do setEventAttr calls before actually setting things in
+	eventCommit.
+
+	* zino/events.tcl:
+	Fix bug in eventCommit.
+	Fix regexp syntax bug.
+	Port state "adminDown" counts as "up" wrt. downtime calculation.
+	Robustness improvement for events with no log.
+	Set "lasttrans" also at start of downtime period (doh!).
+
+	* ritz/ritz:
+	Removing generated "binary".
+
+	* ritz/ritz: Updated.
+
+	* ritz/attrs.tcl:
+	Protect getDowntime against missing attributes.
+
+	* ritz/ui.tcl:
+	Another minor geometry adjustment.
+
+	* ritz/ritz, ritz/ui.tcl:
+	Adjust geometry.
+
+	* ritz/ritz, ritz/sort.tcl, ritz/summary.tcl, ritz/ui.tcl,
+	ritz/attrs.tcl:
+	Implement client side of "downtime" display/recording.
+
+	* zino/events.tcl:
+	Change setEventAttr to set a temporary value, delay actual setting
+	of attribute until eventCommit.  Add new code in eventCommit to
+	support.
+	Implement calculation of "accumulated (known) downtime" in the
+	server.
+	Triggers off log entries, i.e. based on conventions for how log
+	lines appear.
+	Implement fixupDowntime to add "ac-down" and "lasttrans" to active
+	events.
+
+	* zino/flaps.tcl:
+	More explanatory message when polling stops.
+
+	* zino/persist.tcl:
+	Stop saving nonexistent variables.
+
+1999-02-16  Havard Eidnes  <he@uninett.no>
+
+	* scotty.diff:
+	Add non-blocking patch to scotty diff.
+
+1999-02-15  Havard Eidnes  <he@uninett.no>
+
+	* mibs/CISCO-CDP-MIB.my, mibs/CISCO-CONFIG-MAN-MIB.my,
+	mibs/CISCO-TC.my:
+	Initial zino import
+
+	* mibs/CISCO-CDP-MIB.my, mibs/CISCO-CONFIG-MAN-MIB.my,
+	mibs/CISCO-TC.my:
+	New file.
+
+	* mibs/BGP4-MIB.my, mibs/CISCO-PRODUCTS-MIB.my, mibs/CISCO-SMI.my,
+	mibs/OLD-CISCO-INTERFACES-MIB.my, mibs/OLD-CISCO-TCP-MIB.my,
+	mibs/OLD-CISCO-TS-MIB.my, mibs/cisco-10-mib.my, mibs/mib.traps,
+	ritz/just/justSNMP.tcl, ritz/just/mib2util.tcl,
+	ritz/just/pkgIndex.tcl, ritz/just/prettySNMP.tcl, ritz/net.tcl,
+	sha/Makefile, sha/Readme, sha/sha, sha/sha-test, sha/sha.1,
+	sha/sha.c, sha/sha_file.3:
+	Initial zino import
+
+	* mibs/BGP4-MIB.my, mibs/CISCO-PRODUCTS-MIB.my, mibs/CISCO-SMI.my,
+	mibs/OLD-CISCO-INTERFACES-MIB.my, mibs/OLD-CISCO-TCP-MIB.my,
+	mibs/OLD-CISCO-TS-MIB.my, mibs/cisco-10-mib.my, mibs/mib.traps,
+	ritz/just/justSNMP.tcl, ritz/just/mib2util.tcl,
+	ritz/just/pkgIndex.tcl, ritz/just/prettySNMP.tcl, ritz/net.tcl,
+	sha/Makefile, sha/Readme, sha/sha, sha/sha-test, sha/sha.1,
+	sha/sha.c, sha/sha_file.3:
+	New file.
+
+	* ritz/ChangeLog, ritz/Makefile, ritz/TODO, ritz/attrs.tcl,
+	ritz/bgerror.tcl, ritz/main.tcl, ritz/notify.tcl, ritz/ritz,
+	ritz/sort.tcl, ritz/summary.tcl, ritz/test-client.tcl,
+	ritz/ui.tcl, ritz/utils.tcl:
+	Initial zino import
+
+	* ritz/ChangeLog, ritz/Makefile, ritz/TODO, ritz/attrs.tcl,
+	ritz/bgerror.tcl, ritz/main.tcl, ritz/notify.tcl, ritz/ritz,
+	ritz/sort.tcl, ritz/summary.tcl, ritz/test-client.tcl,
+	ritz/ui.tcl, ritz/utils.tcl:
+	New file.
+
+	* zino/NOTES, zino/TODO, zino/auth.tcl, zino/dumpvars.tcl,
+	zino/events.tcl, zino/flaps.tcl, zino/load-mibs.tcl, zino/log.tcl,
+	zino/read-cf.tcl, zino/swalk.tcl, zino/test-status.tcl,
+	zino/test-traps.tcl, zino/utils.tcl:
+	Initial zino import
+
+	* zino/NOTES, zino/TODO, zino/auth.tcl, zino/dumpvars.tcl,
+	zino/events.tcl, zino/flaps.tcl, zino/load-mibs.tcl, zino/log.tcl,
+	zino/read-cf.tcl, zino/swalk.tcl, zino/test-status.tcl,
+	zino/test-traps.tcl, zino/utils.tcl:
+	New file.
+
+	* zino/trap.tcl: Initial zino import
+
+	* zino/trap.tcl: New file.
+
+	* zino/ChangeLog, zino/persist.tcl, zino/routers.cf.sample,
+	zino/server.tcl, zino/status.tcl:
+	Initial zino import
+
+	* zino/ChangeLog, zino/persist.tcl, zino/routers.cf.sample,
+	zino/server.tcl, zino/status.tcl:
+	New file.
+
+	* Makefile, README, TODO, scotty.diff:
+	Initial zino import
+
+	* Makefile, README, TODO, scotty.diff:
+	New file.
