@@ -250,7 +250,7 @@ sub plot_errors {
 
     foreach $i (0 .. $max_sample) {
 	$tprinted = 0;
-	printf($fh, "%f", $sample_time{$i} + ($d * 24));
+	printf($fh "%f", $sample_time{$i} + ($d * 24));
 
 	$pkts = ($count{"ifInUcastPkts",$i} +
 		 $count{"ifInNUcastPkts",$i} +
