@@ -59,6 +59,7 @@
 #	errors
 #	resets
 #	eerrs
+#	pps
 #   -r 			unconditionally regenerate plot
 #
 
@@ -301,6 +302,46 @@ sub decorate_errors {
     printf($fh "      \"$df\" using 1:5 title \"Abort\" with lines\n");
 }
 
+sub plot_pps {
+    my($line, $fh, $dn, $d, $tm) = @_;
+    my($i, $val, $inpkts, $outpkts, $inpps, $outpps, $dt);
+    
+    foreach $i (0 .. $max_sample) {
+	if ($i == 0) { next; }
+	printf($fh "%f", $sample_time{$i} + ($d * 24));
+	$inpkts = ($count{"ifInUcastPkts",$i} +
+		   $count{"ifInNUcastPkts",$i});
+	$outpkts= ($count{"ifOutUcastPkts",$i} +
+		   $count{"ifOutNUcastPkts",$i});
+	$dt = ($sample_time{$i} - $sample_time{$i-1}) * 3600;
+	$inpps = $inpkts / $dt;
+	$outpps= $outpkts / $dt;
+	&maxit($inpps);
+	&maxit($outpps);
+	printf($fh " %d %d", $inpps, $outpps);
+	printf($fh "\n");
+    }
+}
+
+sub decorate_pps {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    printf($fh
+	   &plot_title(sprintf("%s %s (samples) on %s",
+			       $name,
+			       "packets per second",
+			       &pretty_datespec($dsp))));
+    printf($fh &plot_xlabel("Time"));
+    printf($fh "%s", &plot_ylabel("pps"));
+
+    # Try to manage without this (?)
+    printf($fh &plot_yrange("0:$maxy"));
+    
+    # NB This should be generalized and put into plot.pl
+    printf($fh "plot  \"$df\" using 1:2 title \"input\" with lines,");
+    printf($fh "      \"$df\" using 1:3 title \"output\" with lines\n");
+}
+    
 sub plot_resets {
     my($line, $fh, $dn, $d, $tm) = @_;
     my($i, $val);
@@ -418,6 +459,7 @@ sub decorate_eerrs {
 	         "errors"	=> \&plot_errors,
 		 "resets"	=> \&plot_resets,
 		 "eerrs"	=> \&plot_eerrs,
+		 "pps"		=> \&plot_pps,
 		 );
 
 %decorator = (
@@ -427,6 +469,7 @@ sub decorate_eerrs {
 	      "errors"		=> \&decorate_errors,
 	      "resets"		=> \&decorate_resets,
 	      "eerrs"		=> \&decorate_eerrs,
+	      "pps"		=> \&decorate_pps,
 	      );
 
 #

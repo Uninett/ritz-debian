@@ -59,6 +59,7 @@
 #	errors
 #	resets
 #	eerrs
+#	pps
 #   -r 			unconditionally regenerate plot
 #
 
@@ -261,6 +262,44 @@ sub decorate_errors {
     printf($fh "      \"$df\" using 1:5 title \"Abort\" with lines\n");
 }
 
+sub plot_pps {
+    my($line, $fh, $dn, $d, $tm) = @_;
+    my($i, $h, $ipkts, $opkts, $ipps, $opps, $dt);
+
+    foreach $i (0 .. 23) {
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
+	$h = sprintf("%02d", $i);
+
+	$ipkts = ($count{"ifInUcastPkts",$h} +
+		  $count{"ifInNUcastPkts",$h});
+	$opkts = ($count{"ifOutUcastPkts",$h} +
+		  $count{"ifOutNUcastPkts",$h});
+	$dt = 3600;
+	$ipps = $ipkts / $dt;
+	$opps = $opkts / $dt;
+	&maxit($ipps);
+	&maxit($opps);
+	printf($fh "%d %d\n", $ipps, $opps);
+    }
+}
+
+sub decorate_pps {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    printf($fh &plot_title(sprintf("$name hourly packets per second on %s",
+				   &pretty_datespec($dsp))));
+    printf($fh "%s", &plot_xlabel("Time"));
+    printf($fh "%s", &plot_ylabel("pps"));
+
+    # Try to manage without this (?)
+    printf($fh &plot_yrange("0:$maxy"));
+    
+    # NB This should be generalized and put into plot.pl
+    printf($fh "plot  \"$df\" using 1:2 title \"input\" with lines,");
+    printf($fh "      \"$df\" using 1:3 title \"output\" with lines\n");
+}
+
 sub plot_resets {
     my($line, $fh, $dn, $d, $tm) = @_;
     my($i, $h, $val);
@@ -376,6 +415,7 @@ sub decorate_eerrs {
 	         "errors"	=> \&plot_errors,
 		 "resets"	=> \&plot_resets,
 		 "eerrs"	=> \&plot_eerrs,
+		 "pps"		=> \&plot_pps,
 		 );
 
 %decorator = (
@@ -385,6 +425,7 @@ sub decorate_eerrs {
 	      "errors"		=> \&decorate_errors,
 	      "resets"		=> \&decorate_resets,
 	      "eerrs"		=> \&decorate_eerrs,
+	      "pps"		=> \&decorate_pps,
 	      );
 
 #
