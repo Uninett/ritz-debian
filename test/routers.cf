@@ -1,0 +1,346 @@
+#
+# $Id$
+#
+# List of routers to monitor
+# Comments start in coloumn zero
+# Remember: only a single space between attribute name and value,
+# and no blank line before global defaults
+#
+default interval: 15
+default community: public
+default domain: uninett.no
+
+# highest-priority (backbone) routers first
+name: no-gw2
+address: 128.39.0.85
+domain: nordu.net
+priority: 500
+
+name: osloS-gw
+address: 128.39.0.193
+priority: 500
+
+name: trdS-gw
+address: 128.39.0.81
+priority: 500
+
+name: bergenS-gw
+address: 128.39.0.221
+priority: 500
+
+name: tromsoS-gw
+address: 128.39.0.4
+priority: 500
+
+# regional central routers
+name: tromso-gw
+address: 158.39.0.13
+priority: 200
+
+name: trd-gw4
+address: 128.39.0.243
+priority: 200
+
+name: oslo-gw6
+address: 128.39.0.242
+priority: 200
+
+name: oslo-gw7
+address: 128.39.0.8
+priority: 200
+
+name: bergen-gw2
+address: 128.39.0.11
+priority: 200
+
+# test router
+name: trd-gw5
+address: 128.39.0.28
+priority: 50
+
+# Let's try to monitor our ATM switches:
+name: kjeller-atm
+address: 128.39.12.195
+priority: 200
+
+name: tromso-atm
+address: 129.242.1.5
+priority: 200
+
+name: oslo-atm
+address: 128.39.2.18
+priority: 200
+
+name: bergen-atm
+address: 158.37.8.3
+priority: 200
+
+name: trd-atm
+address: 158.38.64.14
+priority: 200
+
+# "normal" routers, no specific priority
+name: bodo-gw
+address: 128.39.0.29
+
+name: trd-gw2
+address: 158.38.0.49
+
+name: grimstad-gw
+address: 128.39.0.1
+ignorepat: Serial2/0:
+
+name: arendal-gw
+address: 128.39.0.3
+
+name: halden-gw
+address: 128.39.0.12
+
+name: remmen-gw
+address: 128.39.8.5
+ignorepat: BRI|Dialer|Virtual-Access
+
+name: elverum-gw
+address: 128.39.0.15
+
+name: rena-gw
+address: 158.36.19.6
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: evenstad-gw
+address: 158.36.19.10
+
+name: hamar-gw
+address: 158.36.19.14
+
+name: fredrikstad-gw
+address: 128.39.8.9
+
+name: krsand-gw
+address: 128.39.0.2
+
+name: narvik-gw
+address: 158.39.104.2
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: tromso-gw2
+address: 158.39.0.5
+ignorepat: Serial0:[0-9]+
+
+name: oslo-gw5
+address: 128.39.0.25
+ignorepat: Serial0:[0-9]+
+
+name: harstad-gw
+address: 158.39.104.6
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: supergw
+address: 128.39.0.6
+domain: nta.no
+
+name: kongsberg-gw
+address: 193.156.92.54
+
+name: drammen-gw
+address: 158.36.19.74
+
+name: honefoss-gw
+address: 158.36.19.66
+
+name: molde-gw
+address: 158.38.0.100
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: stabekk-gw
+address: 193.156.92.122
+
+name: lillehammer-gw
+address: 128.39.0.241
+ignorepat: BRI|Virtual-Access|Dialer|Serial3/0:
+
+name: mo-gw
+address: 128.39.0.240
+
+name: steinkjer-gw
+address: 158.38.0.53
+
+name: levanger-gw
+address: 158.38.0.57
+
+name: alesund-gw
+address: 128.39.0.14
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: sogndal-gw
+address: 158.37.1.101
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: gjovik-gw
+address: 193.156.92.110
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: bo-gw
+address: 128.39.3.2
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: porsgrunn-gw
+address: 128.39.3.4
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: bergen-gw5
+address: 158.37.1.97
+ignorepat: Serial0:[0-9]+
+
+name: nygardsgt-gw
+address: 158.37.1.136
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: landas-gw
+address: 158.37.160.134
+
+name: mollendal-gw
+address: 158.37.160.146
+
+name: kongsgard-gw
+address: 128.39.3.1
+
+name: stavanger-gw
+address: 158.37.1.108
+
+name: pil52-gw
+address: 158.36.84.2
+ignorepat: Serial1/[01]:|Virtual-Access|Dialer
+
+name: uninett-gw
+address: 158.38.0.82
+ignorepat: Serial1/0:[0-9]+|Virtual-Access|Dialer
+
+name: borre-gw
+address: 193.156.92.170
+ignorepat: BRI|Dialer|Virtual-Access
+
+name: bibsys-gw
+address: 129.241.181.17
+
+name: eik-gw
+address: 128.39.3.138
+
+name: alta-gw
+address: 158.39.0.21
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: forde-gw
+address: 158.37.1.138
+
+name: firdav6-gw
+address: 158.37.1.66
+
+name: fossetunet-gw
+address: 158.37.1.14
+
+name: christiesgt-gw2
+address: 158.37.160.162
+
+name: stord-gw
+address: 158.37.1.139
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: sarpsborg-gw
+address: 158.36.84.198
+
+name: gangsto-gw
+address: 158.38.0.42
+
+name: volda-gw
+address: 158.38.0.34
+ignorepat: BRI|Dialer|Virtual-Access
+
+name: hovedbygget-gw
+address: 158.38.0.56
+
+name: grid-gw
+address: 128.39.0.10
+domain: grida.no
+
+name: uvv5-gw
+address: 158.36.10.97
+
+name: trd-gw3
+address: 158.38.0.73
+ignorepat: Serial0:[0-9]+
+
+name: kalvskinnet-gw
+address: 158.38.0.134
+ignorepat: BRI|Dialer|Virtual-Access
+
+name: teknologiv10-gw
+address: 158.39.101.2
+
+name: breivika-gw
+address: 158.39.104.18
+
+name: bjerkaker-gw
+address: 158.39.101.98
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: bleivik-gw
+address: 158.37.1.49
+
+name: haugesund-gw
+address: 158.37.1.42
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: lorenskog-gw
+address: 158.36.19.38
+
+name: kjeller-gw
+address: 128.39.0.13
+
+name: tonsberg-gw
+address: 128.39.3.142
+
+name: uninett-ipv6-gw
+address: 158.38.60.66
+
+name: ronvik-gw
+address: 158.39.101.66
+
+name: hokbygget-gw
+address: 128.39.8.20
+
+name: notodden-gw
+address: 128.39.3.3
+ignorepat: BRI|Virtual-Access|Dialer
+
+name: nlh-gw
+address: 128.39.8.1
+ignorepat: Serial1/0:
+
+name: ulleval-gw
+address: 158.36.84.42
+
+name: wergeland27-gw
+address: 158.36.142.1
+
+name: welhaven9-gw
+address: 158.36.84.14
+
+name: stolav32-gw
+address: 158.36.84.114
+
+name: stranden3-gw
+address: 158.36.84.118
+
+name: nhh-gw
+address: 158.37.1.34
+
+name: moholt-gw
+address: 158.38.0.44
+
+name: radmannbygget-gw
+address: 158.38.0.45
+
+name: tunga-gw
+interval: 12
+address: 158.38.0.46
