@@ -2,98 +2,72 @@
 # $Id$
 #
 
-# Asynchronous sparse-walk routines
+# Test asynchronous sparse-walk routines, compare
+# to synchronous version
 
-namespace eval ::just {
-    namespace export sparseTableWalk
-    namespace export setSparseWalkEHandler unsetSparseWalkEHandler
+source "../common/swalk.tcl"
 
-    variable eHandler
+namespace import ::just::*
 
-    # the error handler should expect to be called as
-    # $eHandler $handle $error
+set s [snmp session -address trdS-gw.uninett.no]
 
-    proc setSparseWalkEHandler { handler } {
-	variable eHandler
+proc eHandler { sh err } {
 
-	set eHandler $handler
-    }
-
-    proc unsetSparseWalkEHandler { } {
-	variable eHandler
-
-	catch { unset eHandler }
-    }
-
-    proc sparseTableWalk { sh varName varList body { endscript "" } } {
-
-	foreach v $varList {
-	    set oid [mib oid $v]
-	    lappend oidList $oid
-	    # Record the length of each OID for later.
-	    lappend lenList [string length $oid]
-	}
-	
-	$sh getnext $oidList [list \
-		::just::processRow "%S" "%E" {{%V}} \
-		$oidList $oidList $lenList \
-		$varName $body $endscript ]
-	return
-    }
-
-    proc processRow {
-	sh err vblList thisRow oidList lenList varName body endscript
-    } {
-	variable eHandler
-
-	if { $err != "noError" } {
-	    if [info exists eHandler] {
-		$eHandler $sh $err
-	    } else {
-		error $err;
-	    }
-	}
-
-	set ixlist {}
-
-	# Unpack one level of list nesting
-	eval set upl $vblList
-
-	foreach len $lenList oid $oidList vbl $upl {
-	    set v [lindex $vbl 0]
-	    if {[string compare $oid. [string range $v 0 $len]] == 0} {
-		lappend ixList [string range $v $len end]
-	    }
-	}
-	if {! [info exists ixList]} {
-	    if { $endscript != "" } {
-		uplevel $endscript
-	    }
-	    return; # end of table
-	}
-
-	set min [lindex [lsort -dictionary $ixList] 0]
-	set thisRow {}
-	set myvarlist {}
-	foreach oid $oidList vbl $upl {
-	    set v [lindex $vbl 0]
-	    append oid $min
-	    if {[string compare $oid $v] == 0} {
-		lappend myvarlist $vbl
-	    } else {
-		lappend myvarlist {{} {} {}}
-	    }
-	    lappend thisRow $oid
-	}
-
-	upvar $varName var
-	set var $myvarlist
-	uplevel $body
-
-	$sh getnext $thisRow [list \
-		::just::processRow "%S" "%E" {{%V}} \
-		$thisRow $oidList $lenList \
-		$varName $body]
-    }
-
+    puts [format "%s: %s" $sh $err]
 }
+
+setSparseWalkEHandler ::eHandler
+
+proc doAsTest {} {
+    global s
+
+    sparseTableWalk $s x \
+	    "ifDescr ifType ifSpeed ifAdminStatus ifOperStatus" {
+	set desc [lindex [lindex $x 0] 2]
+	set type [lindex [lindex $x 1] 2]
+	set spd  [lindex [lindex $x 2] 2]
+	set adm  [lindex [lindex $x 3] 2]
+	set ops  [lindex [lindex $x 4] 2]
+	puts [format "%s %s %s %s %s" $desc $type $spd $adm $ops]
+    } {
+	set done 1
+    }
+    vwait done
+}
+
+proc doSyTest {} {
+    global s
+
+    set ixes [fetchTable $s table \
+	    "ifDescr ifType ifSpeed ifAdminStatus ifOperStatus"]
+    foreach ix $ixes {
+	puts [format "%s %s %s %s %s" \
+		$table($ix,ifDescr) \
+		$table($ix,ifType) \
+		$table($ix,ifSpeed) \
+		$table($ix,ifAdminStatus) \
+		$table($ix,ifOperStatus)]
+    }
+}
+
+# 0 iterations:
+# 1.418u 0.459s 0:01.90 97.8% 0+0k 0+24io 15pf+0w
+
+#puts [time doAsTest 100]
+# 10 iterations:
+# 3.602u 0.564s 0:04.77 87.2% 0+0k 0+24io 15pf+0w
+# 100 iterations:
+# 22.257u 2.471s 0:32.90 75.1% 0+0k 0+23io 15pf+0w
+
+#puts [time doSyTest 100]
+# 10 iterations:
+# 4.294u 0.642s 0:23.39 21.0% 0+0k 67+24io 15pf+0w
+# 100 iterations:
+# 26.375u 5.570s 0:59.96 53.2% 0+0k 0+24io 15pf+0w
+
+# So... the "parallel sparse table walk" is more efficient than the
+# "synchronous table walk fetching one variable at a time" operation.
+
+
+# Needed to have the script terminate:
+$s destroy
