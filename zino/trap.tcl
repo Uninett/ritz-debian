@@ -32,13 +32,13 @@ proc doTrap { a type args } {
     foreach vb $args {
 	set oid [lindex $vb 0]
 	set val [lindex $vb 2]
+	set fn [mib name $oid]
 	set ol [split [mib name $oid] "."]
 	set var [lrange $ol 0 0]
 	set $var $val
 	set instance($var) [join [lrange $ol 1 end] "."]
 
-	puts [format "%s: %s %s instance %s" \
-		[name $sh] $var $val $instance($var)]
+	puts [format "%s: var %s value %s" $r $fn $val]
 
     }
     if { [info exists sysUpTime] } {
