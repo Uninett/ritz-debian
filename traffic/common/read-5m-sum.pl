@@ -101,10 +101,14 @@ sub read_5m_sum {
 		    $mycount{$v,$tick} = 0;
 		}
 		# First include remainder of last sample in this tick
-		if ($tt > $sample_time{$sno}) {
-		    $f1 = ($sample_time{$sno} - $ltt) /
-			($sample_time{$sno} - $lasttime{$v});
-		    $mycount{$v,$tick} += $count{$v,$sno} * $f1;
+		if (defined($sample_time{$sno}) && defined($lasttime{$v}) &&
+		    ($sample_time{$sno} != $lasttime{$v}))
+		{
+		    if ($tt > $sample_time{$sno}) {
+			$f1 = ($sample_time{$sno} - $ltt) /
+			    ($sample_time{$sno} - $lasttime{$v});
+			$mycount{$v,$tick} += $count{$v,$sno} * $f1;
+		    }
 		}
 		# ...then include any full samples in this tick
 		while ($tt > $sample_time{$sno} && $sno <= $max_sample) {
@@ -114,7 +118,9 @@ sub read_5m_sum {
 			$mycount{$v,$tick} += $count{$v,$sno};
 		    }
 		}
-		if ($sample_time{$sno} > $lasttime{$v}) {
+		if (defined($sample_time{$sno}) && defined($lasttime{$v}) &&
+		    ($sample_time{$sno} != $lasttime{$v}))
+		{
 		    # ...and add any remaining partial sample in this tick
 		    $f1 = ($tt - &max($ltt, $lasttime{$v})) /
 			($sample_time{$sno} - $lasttime{$v});
