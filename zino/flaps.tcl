@@ -447,7 +447,7 @@ proc forgetFlaps { r msg } {
 	if { [lindex $l 0] == $r } {
 	    set ifIndex [lindex $l 1]
 
-	    clearFlapInternal $r $ifIndex "monitor" $msg
+	    clearFlapInternal $r $ifIndex "no more polling by monitor" $msg
 	}
     }
 }
