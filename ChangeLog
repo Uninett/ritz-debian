@@ -1,3 +1,11 @@
+2002-08-21  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Bump to version 0.6.
+
+	* ChangeLog:
+	Computed ChangeLog based on CVS log messages with emacs'
+	M-x vc-update-change-log.
+
 2002-08-12  Havard Eidnes  <he@uninett.no>
 
 	* traffic/plot/Makefile:
