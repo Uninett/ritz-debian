@@ -800,15 +800,23 @@ sub warn {
 
 sub read_data {
     my($fh) = @_;
-    my(@f, $nr);
+    my(@f, $nr, $n);
 
     $nr = 0;
     while(<$fh>) {
 	chop;
 	@f = split;
-	$in_load{$f[0]} = $f[1];
-	$out_load{$f[0]} = $f[2];
-	$speed{$f[0]} = $f[3];
+	$n = $f[0];
+	if (defined($in_load{$n}) &&
+	    $f[1] <= $in_load{$n} &&
+	    $f[2] <= $out_load{$n})
+	{
+	    # Hack to ignore e.g. aal5 interfaces with no data
+	    next;
+	}
+	$in_load{$n} = $f[1];
+	$out_load{$n} = $f[2];
+	$speed{$n} = $f[3];
 	$nr++;
     }
     return $nr;
