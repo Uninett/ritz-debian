@@ -11,7 +11,7 @@ namespace eval ::notify {
     variable notifychan
     variable h_notify
 
-    unset acceptchan
+    catch { unset acceptchan }
 
     # Open notify connection and set up handlers.
     # Precondition: server channel must already be open.
