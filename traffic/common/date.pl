@@ -654,7 +654,7 @@ sub expand_datespec {
     } elsif ($dsp_t eq "day") {
 	$tm = $base_tm;
 	while ($tm < $base_tm + $ndays*$seconds_per_day &&
-	       $tm < (time - $seconds_per_day))	# stop on yesterday
+	       $tm < time)	# stop on today
 	{
 	    push(@arr, sprintf("%04d-%02d-%02d",
 			       unpack("a4a2a2",
@@ -673,7 +673,7 @@ sub expand_datespec {
 sub tm_in_the_future {
     my($tm) = @_;
     my($start_of_today) = &date_to_tm(&today());
-    return (($tm - $start_of_today) >= 24*3600);
+    return (($tm - $start_of_today) >= $seconds_per_day);
 }
 
 sub tm_in_datespec {
