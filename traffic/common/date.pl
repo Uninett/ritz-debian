@@ -440,7 +440,8 @@ sub make_datespec {
 	$year = 1900 + (localtime(time))[5] unless $year;
 	# This will break at the turn of the century
 	$year += 1900 if ($year < 1900);
-	($week, $year) = &date_to_previous_week(&today()) unless $week;
+	($week, $year) = &date_to_previous_week(&today())
+	    unless defined($week);
 	return (sprintf("%04d--%02d", $year, $week));
 
     } elsif ($type eq "day") {
