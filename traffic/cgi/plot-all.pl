@@ -63,6 +63,7 @@ require 'plot.pl';
 	       "resets",	"interface resets",
 	       "eerrs",		"ethernet errors",
 	       "error-hrs",	"error hours above thresholds",
+	       "pps",		"packets per second",
 	       );
 
 %resolution_plots = (
@@ -73,6 +74,7 @@ require 'plot.pl';
 			 "errors" => 1,
 			 "resets" => 1,
 			 "eerrs" => 1,
+			 "pps" => 1,
 		     },
 		     "hr" => {
 			 "traffic" => 1,
@@ -81,6 +83,7 @@ require 'plot.pl';
 			 "errors" => 1,
 			 "resets" => 1,
 			 "eerrs" => 1,
+			 "pps" => 1,
 		     },
 		     "day" => {
 			 "traffic" => 1,
