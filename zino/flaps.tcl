@@ -185,30 +185,53 @@ proc flapAger { } {
 		    set el [eventId $ix portstate]
 		}
 
-		foreach eid $el {
-		    eventLog $eid $s
+		if [catch {	# Ignore possible errors
+				# may be during startup phase
+		    foreach eid $el {
 
-		    if [info exists portToIfDescr($ix)] {
+			# If we lack information, revisit later
+			if { ! [::config::confExists $router address] } {
+			    continue;
+			}
+			if { ! [::config::confExists $router priority] } {
+			    continue;
+			}
+			if { ! [info exists portToLocIfDescr($ix)] } {
+			    continue;
+			}
+			if { ! [info exists portToIfDescr($ix)] } {
+			    continue;
+			}
+			# Hm, if this is a new event, we need to set
+			# "state" and "opened".
+
+			setEventAttr $eid "id" $eid
+			setEventAttr $eid "type" "portstate"
+			setEventAttr $eid "flapstate" "stable"
 			setEventAttr $eid "port" $portToIfDescr($ix)
+			setEventAttr $eid "portstate" $portState($router,$i)
+			setEventAttr $eid "router" $router
+			setEventAttr $eid "polladdr" \
+				[::config::conf $router address]
+			setEventAttr $eid "priority" \
+				[::config::conf $router priority]
+			setEventAttr $eid "ifindex" $i
+			setEventAttr $eid "descr" $portToLocIfDescr($ix)
+
+			eventLog $eid $s
+
+			eventCommit $eid
 		    }
-
-		    setEventAttr $eid "id" $eid
-		    setEventAttr $eid "type" "portstate"
-		    setEventAttr $eid "flapstate" "stable"
-		    setEventAttr $eid "portstate" $portState($router,$i)
-		    setEventAttr $eid "router" $router
-		    setEventAttr $eid "polladdr" \
-			    [::config::conf $router address]
-		    setEventAttr $eid "priority" \
-			    [::config::conf $router priority]
-		    setEventAttr $eid "ifindex" $i
-		    catch { setEventAttr $eid "descr" $portToLocIfDescr($ix) }
-
-		    eventCommit $eid
+		} msg] {
+		    log [format "flapAger error: %s" $msg]
 		}
-
+	    
+		set oldstate $portState($router,$i)
 		set portState($router,$i) "flapping"
-		pollSingleIf [handle $router] $i
+		if [catch { pollSingleIf [handle $router] $i }] {
+		    set portState($router,$i) $oldstate
+		}
+		
 	    }
 	    unFlap $ix
 	}
