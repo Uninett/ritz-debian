@@ -89,7 +89,7 @@ namespace eval ::attr {
 	
 	::set type [get $id "type"]
 	if { $type == "portstate" } {
-	    return [get $id "portstate"]
+	    return [effectivePortState $id]
 	} elseif { $type == "reachability" } {
 	    return [get $id "reachability"]
 	} else {
