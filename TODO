@@ -53,3 +53,5 @@ $Id$		-*- Text -*-
  o Extend the tabular web reports to display the 90th percentile values.
 
  o Clip sample values at max data rate (?).
+
+ o Add environment monitoring module; check at least temperatures.
