@@ -82,6 +82,10 @@ namespace eval ::conffile {
 		    if { $attr == "name"} {
 			set nameseen 1
 			set name $val
+			if [info exists seen($name)] {
+			    warn [format "object %s already seen" $name]
+			}
+			set seen($name) 1
 			lappend names $name
 		    } else {
 			warn [format \
