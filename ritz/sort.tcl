@@ -237,7 +237,11 @@ proc caseSeverity { id } {
     } elseif { $type == "reachability" } {
 	set reach [Attr $id "reachability"]
 	if { $reach == "no-response" } {
-	    return "alarm"
+	    if { $state == "open" } {
+		return "alarm"
+	    } else {
+		return "warning"
+	    }
 	} else {
 	    return "normal"
 	}
