@@ -5,7 +5,8 @@
 catch { namespace delete ::config }
 
 namespace eval ::config {
-    namespace export handleChangedConf conf
+    namespace export handleChangedConf
+    namespace export conf defaults
 
     namespace import ::util::copyArray
     namespace import ::polljob::start ::polljob::restart ::polljob::stop
@@ -40,7 +41,7 @@ namespace eval ::config {
 	return $conf($dev,$attr)
     }
 
-    proc default { attr } {
+    proc defaults { attr } {
 	variable defaults
 	return $defaults($attr)
     }
