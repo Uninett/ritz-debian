@@ -256,10 +256,12 @@ proc cleanupDelayedResponse { sh } {
     set r $cx($sh,name)
 
     # cleanup any remaining check jobs
-    after cancel delayedCheckResponse $sh
-    after cancel lastDelayedCheckResponse $sh
-    catch { unset responseCheckInProgress($sh) }
-    log [format "cleaned up after response from %s" $r]
+    if [info exists responseCheckInProgress($sh)] {
+	after cancel delayedCheckResponse $sh
+	after cancel lastDelayedCheckResponse $sh
+	unset responseCheckInProgress($sh)
+	log [format "cleaned up after response from %s" $r]
+    }
 }
 
 proc delayedCheckResponse { sh } {
