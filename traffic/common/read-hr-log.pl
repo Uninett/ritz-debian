@@ -45,6 +45,9 @@
 #   $max_rate{$v, $h}	Max rate per interval per hour for variable $v
 #   $date		Date string of log
 #   $ifspeed, $iftype, $ifdescr		As picked from log
+#   $sample_vals{$v, $sno}   Delta for counter $v in sample $sno
+#   $sample_time{$v, $sno}   Timestamp for counter $v, sample $sno
+#   $max_sample		Maximum sample number for $sample_vals etc.
 
 
 # Read a single daily log, suck in data.
@@ -57,8 +60,9 @@ sub read_log {
     my($lasttime, $day, $reboot_day, $reboot_time, $last_day);
     my($now, %base, %lasttime);
     my($f1, $f2, $f3, $prev_h, $then_h, $hh);
-    my($sample_no);
+    my($sample_no, $sno, %sample_no);
     my(@f);
+    my($h0_seen) = 0;
 
     $sample_no = 0;
     while (<$fh>) {
@@ -80,6 +84,8 @@ sub read_log {
             next;
         }
 
+#	print STDERR $_ . "\n";
+
         ($h, $m, $s) = split(/:/, $f[3]);
         $now = $h * 3600 + $m * 60 + $s;
 
@@ -88,6 +94,12 @@ sub read_log {
 	# covering most of the log here...
 	if ($h < 23) {
 	    $day = $f[0] . " " . $f[1] . " " . $f[2] . " " . $f[4];
+	}
+	if ($h == 23 && !$h0_seen) {
+	    $now -= 24 * 3600;
+	    $h -= 24;
+	} elsif ($h < 23) {
+	    $h0_seen = 1;
 	}
 	
 	# Be careful not to zero counters needlessly.  Check timetamp of
@@ -100,8 +112,8 @@ sub read_log {
 	    if (! defined($lasttime)) { next; } # use next sample as base
 	    $reboot_day = $f[7] . " " . $f[8] . " " . $f[9] . " " . $f[11];
 	    if ($day ne $reboot_day) { next; } # ignore, reboot too long ago
-	    ($h, $m, $s) = split(/:/, $f[10]);
-	    $reboot_time = $h * 3600 + $m * 60 + $s;
+	    my($hr, $mr, $sr) = split(/:/, $f[10]);
+	    $reboot_time = $hr * 3600 + $mr * 60 + $sr;
 	    if ($reboot_time < $lasttime &&
 		$last_day eq $day)
 	    {
@@ -113,79 +125,99 @@ sub read_log {
             next;
         }
 
+        ($v, $dummy) = split(/\./, $f[5]);
+
+        if (!defined($base{$v})) {
+            $base{$v} = $f[6];
+	    $lasttime{$v} = $now;
+	    next;
+	}
+
+	if (defined($sample_no{$now})) {
+	    $sno = $sample_no{$now};
+	} else {
+	    $sample_no++;
+	    $sample_time{$sample_no} = $now / 3600.0;
+	    $sample_no{$now} = $sample_no;
+	    $sno = $sample_no;
+	}
+
 	$lasttime = $now;
 	$last_day = $day;
 
-        ($v, $dummy) = split(/\./, $f[5]);
+	$delta = ($f[6] - $base{$v});
+	if ($delta < 0) {
+	    $delta += 0xffffffff;
+	}
 
-	# This allows for a single poll which will not be counted
-	# before 2400.  I do not think this script handles the situation
-	# well when there are multiple polls in hour 23 at the head of
-	# the log. XXX
-        if (!defined($base{$v})) {
-            $base{$v} = $f[6];
-            if ($h == 23) {
-                $lasttime{$v} = $now - (24*3600);
-            } else {
-                $lasttime{$v} = $now;
-            }
-        } else {
-            $delta = ($f[6] - $base{$v});
-            if ($delta < 0) {
-                $delta += 0xffffffff;
-            }
-		
-            $delta_time = $now - $lasttime{$v};
-            if (/Octets/) {
-		if ($delta_time > 30) {	# Skip too small intervals (inaccurate)
-		    $delta_rate = $delta / $delta_time;
-		    if (!defined($max_rate{$v, $h}) ||
-			$delta_rate > $max_rate{$v, $h})
-		    {
-			$max_rate{$v, $h} = $delta_rate;
-		    }
-		}
-            }
-	    if (!defined($count{$v,$h})) {
-		$count{$v,$h} = 0;
-	    }
-	    $then_h = int($lasttime{$v} / 3600);
-	    if ($lasttime{$v} < 0 && $now > 0) { # previous day, discard part
-		$count{$v, $h} += $delta * $now / $delta_time;
-	    } elsif ($h == $then_h) { # Normal, both in same hour
-		$count{$v, $h} += $delta;
-	    } elsif ($h == ($then_h + 1)) { # contiguous log, distribute
-		$f1 = (3600 - ($lasttime{$v} - $then_h * 3600)) / $delta_time;
-		$f2 = 1.0 - $f1;
-		$prev_h = sprintf("%02d", $h-1);
-		if (!defined($count{$v, $prev_h})) {
-		    $count{$v, $prev_h} = 0;
-		}
-		$count{$v, $prev_h} += $delta * $f1;
-		$count{$v, $h} += $delta * $f2;
-	    } else {		# Non-contiguous log, distribute
-		$f1 = (3600 - ($lasttime{$v} - $then_h * 3600)) / $delta_time;
-		$f3 = ($now - $h * 3600) / $delta_time;
-		$hh = sprintf("%02d", $then_h);
-		$count{$v, $hh} += $delta * $f1;
-		$count{$v, $h} += $delta * $f3;
-		for ($i = $then_h + 1; $i < $h; $i++) {
-		    $hh = sprintf("%02d", $i);
-		    if (!defined($count{$v, $hh})) {
-			$count{$v, $hh} = 0;
-		    }
-		    $count{$v, $hh} += $delta * 3600 / $delta_time;
-				# Fake peak values...
-		    $max_rate{$v, $hh} = $delta / $delta_time;
+#	printf(STDERR "var %s delta %f\n", $v, $delta);
+
+	$sample_vals{$v, $sno} = $delta;
+	$sample_time{$v, $sno} = $now / 3600.0;
+
+	$delta_time = $now - $lasttime{$v};
+	if (/Octets/) {
+	    if ($delta_time > 30) {	# Skip too small intervals (inaccurate)
+		$delta_rate = $delta / $delta_time;
+		if (!defined($max_rate{$v, $h}) ||
+		    $delta_rate > $max_rate{$v, $h})
+		{
+		    $max_rate{$v, $h} = $delta_rate;
 		}
 	    }
+	}
+	if (!defined($count{$v,$h})) {
+	    $count{$v,$h} = 0;
+	}
 
-            $base{$v} = $f[6];
-            $lasttime{$v} = $now;
-            if ($sample_no++ == 10) {
-                $date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
-            }
-        }
+	$then_h = &floor_int($lasttime{$v} / 3600);
+	if ($lasttime{$v} < 0 && $now > 0) { # previous day, store some in h -1
+	    $f1 = ($delta_time - $now) / $delta_time;
+	    $count{$v, $then_h} += $delta * $f1;
+	    $count{$v, $h} += $delta * $now / $delta_time;
+#	    print STDERR "day rollover\n";
+	} elsif ($h == $then_h) { # Normal, both in same hour
+#	    print STDERR "both in same hour\n";
+	    $count{$v, $h} += $delta;
+	} elsif ($h == ($then_h + 1)) { # contiguous log, distribute
+#	    print STDERR "hour rollover $then_h -> $h\n";
+	    $f1 = (3600 - ($lasttime{$v} - $then_h * 3600)) / $delta_time;
+	    $f2 = 1.0 - $f1;
+	    $prev_h = sprintf("%02d", $h-1);
+	    if (!defined($count{$v, $prev_h})) {
+		$count{$v, $prev_h} = 0;
+	    }
+	    $count{$v, $prev_h} += $delta * $f1;
+	    $count{$v, $h} += $delta * $f2;
+	} else {		# Non-contiguous log, distribute
+#	    print STDERR "non-contiguous hour rollover $then_h -> $h\n";
+	    $f1 = (3600 - ($lasttime{$v} - $then_h * 3600)) / $delta_time;
+	    $f3 = ($now - $h * 3600) / $delta_time;
+	    $hh = sprintf("%02d", $then_h);
+	    $count{$v, $hh} += $delta * $f1;
+	    $count{$v, $h} += $delta * $f3;
+	    for ($i = $then_h + 1; $i < $h; $i++) {
+		$hh = sprintf("%02d", $i);
+		if (!defined($count{$v, $hh})) {
+		    $count{$v, $hh} = 0;
+		}
+		$count{$v, $hh} += $delta * 3600 / $delta_time;
+		# Fake peak values...
+		$max_rate{$v, $hh} = $delta / $delta_time;
+	    }
+	}
+
+	$base{$v} = $f[6];
+	$lasttime{$v} = $now;
+	if ($sample_no == 10) {
+	    $date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
+	}
+    }
+    # Do averaging for the last hour
+    if ($m <= 60 - &min(10, ($delta_time * 5))) {
+	foreach $v (keys %base) {
+	    $count{$v, $h} = $count{$v, $h} * 3600.0 / ($m * 60 + $s);
+	}
     }
 
     undef %base;
@@ -194,6 +226,7 @@ sub read_log {
     if (!defined($date)) {
 	$date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
     }
+    $max_sample = $sample_no;
 }
 
 1;
