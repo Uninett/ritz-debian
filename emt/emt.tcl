@@ -235,7 +235,9 @@ proc report_single_port { id } {
     set rs [format "%s   portstate: %s\n" $rs [::attr::get $id "portstate"]]
     set rs [format "%s  case-state: %s\n" $rs [::attr::get $id "state"]]
     set rs [format "%s        down: %s\n" $rs [pdt [::attr::downtime $id]]]
-    set rs [format "%s      reason: %s\n" $rs [::attr::get $id "reason"]]
+    catch {
+	set rs [format "%s      reason: %s\n" $rs [::attr::get $id "reason"]]
+    }
     set rs [format "%slast log entry:\n%s\n" $rs [emt_lastlogline $id]]
     set rs [format "%srecent event history:\n%s\n" $rs [emt_hist $id]]
 #    set rs [format "%s\n" $rs]
