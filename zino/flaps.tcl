@@ -12,14 +12,14 @@ set flapDecrIntv 300
 
 
 proc initFlaps { } {
-    persistVar flapHistVal
-    persistVar firstFlap
-    persistVar lastFlap
-    persistVar flaps
-    persistVar lastAge
-    persistVar flappedAboveThreshold
+    ::persist::add ::flapHistVal
+    ::persist::add ::firstFlap
+    ::persist::add ::lastFlap
+    ::persist::add ::flaps
+    ::persist::add ::lastAge
+    ::persist::add ::flappedAboveThreshold
 
-    persistVar flapping
+    ::persist::add ::flapping
 }
 
 proc flapVal { ix } {
@@ -145,8 +145,8 @@ proc flapAger { } {
     global flapThreshold flapMin flapCeiling
     global flapDecrIntv flapDecr flapMult
     global flappedAboveThreshold
-    global portToIfDescr portToLocIfDescr Address Priority
-    global cx portState
+    global portToIfDescr portToLocIfDescr
+    global portState
     
 #    puts [format "%s: %s" [getStamp] "flapAger running"]
 
@@ -195,8 +195,10 @@ proc flapAger { } {
 		    setEventAttr $eid "flapstate" "stable"
 		    setEventAttr $eid "portstate" $portState($router,$i)
 		    setEventAttr $eid "router" $router
-		    setEventAttr $eid "polladdr" $Address($router)
-		    setEventAttr $eid "priority" $Priority($router)
+		    setEventAttr $eid "polladdr" \
+			    [::config::conf $router address]
+		    setEventAttr $eid "priority" \
+			    [::config::conf $router priority]
 		    setEventAttr $eid "ifindex" $i
 		    catch { setEventAttr $eid "descr" $portToLocIfDescr($ix) }
 
@@ -204,7 +206,7 @@ proc flapAger { } {
 		}
 
 		set portState($router,$i) "flapping"
-		pollSingleIf $cx($router,handle) $i
+		pollSingleIf [handle $router] $i
 	    }
 	    unFlap $ix
 	}
@@ -277,13 +279,13 @@ proc ignoreTrap { r ifIndex updown } {
 
 proc linkTrans { router ifIndex descr updown reason } {
     global flapping
-    global IgnorePat portToLocIfDescr rtrPortToDescr cx
-    global Address Priority portState
+    global portToLocIfDescr rtrPortToDescr
+    global portState
     
     set ix [format "%s,%s" $router $ifIndex]
 
-    if { [info exists IgnorePat($router)] } {
-	if { [regexp $IgnorePat($router) $descr] } {
+    if { [::config::confExists $router ignorepat] } {
+	if { [regexp [::config::conf $router ignorepat] $descr] } {
 #	    log [format "%s intf \"%s\" link%s ignored" $router $descr $updown]
 	    return 0
 	}
@@ -319,8 +321,8 @@ proc linkTrans { router ifIndex descr updown reason } {
 	    set portState($router,$ix) [string tolower $updown]
 	    setEventAttr $eid "ifindex" $ifIndex
 	    setEventAttr $eid "flapstate" "flapping"
-	    setEventAttr $eid "polladdr" $Address($router)
-	    setEventAttr $eid "priority" $Priority($router)
+	    setEventAttr $eid "polladdr" [::config::conf $router address]
+	    setEventAttr $eid "priority" [::config::conf $router priority]
 	    if { $ldescr != "" } {
 		setEventAttr $eid "descr" $ldescr
 	    }
@@ -358,8 +360,8 @@ proc linkTrans { router ifIndex descr updown reason } {
 	setEventAttr $eid "portstate" [string tolower $updown]
 	set portState($ix) [string tolower $updown]
 	setEventAttr $eid "ifindex" $ifIndex
-	setEventAttr $eid "polladdr" $Address($router)
-	setEventAttr $eid "priority" $Priority($router)
+	setEventAttr $eid "polladdr" [::config::conf $router address]
+	setEventAttr $eid "priority" [::config::conf $router priority]
 	if { $ldescr != "" } {
 	    setEventAttr $eid "descr" $ldescr
 	}
@@ -388,9 +390,9 @@ proc linkTrans { router ifIndex descr updown reason } {
 	
 	eventCommit $eid
 	# Poll immediately just to be certain of interface state change
-	pollSingleIf $cx($router,handle) $ifIndex
+	pollSingleIf [handle $router] $ifIndex
 	# Check again in two minutes
-	after [expr 120 * 1000] pollSingleIf $cx($router,handle) $ifIndex
+	after [expr 120 * 1000] pollSingleIf [handle $router] $ifIndex
     }
 }
 
@@ -431,13 +433,12 @@ proc clearFlapInternal { router ifIndex user reason } {
 }
 
 proc clearFlap { router ifIndex user } {
-    global cx
 
     clearFlapInternal $router $ifIndex $user "Flapstate manually cleared"
 
     set ix [format "%s,%s" $router $ifIndex]
     set portState($ix) "flapping";# to get logged state change
-    pollSingleIf $cx($router,handle) $ifIndex
+    pollSingleIf [handle $router] $ifIndex
 }
 
 # Forget any flapstate and close any cases
