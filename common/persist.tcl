@@ -5,8 +5,8 @@
 catch { namespace delete ::persist }
 
 namespace eval ::persist {
-    namespace export setup add remove checkpoint restore
-    namespace export startPeriodicCheckpoint
+    namespace export setup add remove dump restore
+    namespace export startPeriodicDump
 
     variable persistFile
     variable persistVar
@@ -39,13 +39,13 @@ namespace eval ::persist {
 	}
     }
 
-    proc checkpoint { { secs 0 } } {
+    proc dump { { secs 0 } } {
 
 	after cancel [namespace current]::dumpAll
 	after [expr $secs * 1000] [namespace current]::dumpAll
     }
 
-    proc startPeriodicCheckpoint { intv } {
+    proc startPeriodicDump { intv } {
 	variable persistJob
 
 	if [info exists persistJob] {
@@ -54,11 +54,6 @@ namespace eval ::persist {
 	set persistJob [job create \
 		-interval [expr $intv * 1000 * 60] \
 		-command [namespace current]::dumpAll]
-    }
-
-    proc startPeriodicDump { intv } {
-
-	startPeriodicCheckpoint $intv
     }
 
     proc dumpGlobals { f } {
@@ -110,7 +105,5 @@ namespace eval ::persist {
 	    }
 	}
     }
-
-    
 
 }
