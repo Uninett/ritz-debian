@@ -37,6 +37,8 @@ require "getopts.pl";
 push(@INC, "/archive/traffic/lib");
 push(@INC, "/archive/traffic/conf");
 
+require 'getopts.pl';
+
 require "date.pl";
 require "search.pl";
 require "db-lookup.pl";
@@ -48,6 +50,8 @@ require "config.pl";
 use Data::Dumper;
 use File::Basename;
 use Fcntl qw(:seek);
+use Date::Parse;
+use Date::Format;
 
 use strict;
 no strict "vars";
@@ -80,7 +84,6 @@ sub restore_vars {
     }
 
     if (defined($p)) {
-
 	# Set up to read tail of log
 	foreach my $v (keys %{ $p->{"base"} }) {
 	    $base{$v} = $p->{"base"}->{$v};
@@ -125,18 +128,29 @@ sub save_vars {
     undef $max_sample;
 }
 
+sub convert_time {
+    my($t, $ss) = @_;
+
+    if (!defined($ss)) {
+	$ss = &date_to_tm(&today());
+    }
+    return $ss + 3600.0 * $t;
+}
+
 sub convert_times {
-    my($times) = @_;
+    my($times, $start, $end) = @_;
     my($s, $i);
     our(%sample_time, %base);
-    our(%sample_secs);
+    our(%sample_secs, $max_sample);
+    our($opt_d);
+    my($start_secs);
 
     # Handle the stupidity that the time scale is in hours
     # for the "current day", and handle rollover at midnight
-    if(defined($sample_time{-1})) {
-	$s = -1;
+    if(defined($sample_time{$start-1})) {
+	$s = $start-1;
     } else {
-	$s = 0;
+	$s = $start;
     }
     for($i = $s; $sample_time{$i} > $sample_time{$max_sample}; $i++) {
 	$sample_time{$i} -= 24;
@@ -144,9 +158,15 @@ sub convert_times {
 	    $sample_time{$k,$i} -= 24;
 	}
     }
-    my $start_secs = &date_to_tm(&today());
-    for($i = $s; $i <= $max_sample; $i++) {
-	my $secs = $start_secs + 3600.0 * $sample_time{$i};
+
+    if(defined($opt_d)) {
+	$start_secs = str2time($opt_d);
+    } else {
+	$start_secs = &date_to_tm(&today());
+    }
+
+    for($i = $s; $i <= $end; $i++) {
+	my $secs = &convert_time($sample_time{$i}, $start_secs);
 	if ($i != $s) {
 	    push(@$times, $secs);
 	}
@@ -155,12 +175,12 @@ sub convert_times {
 }
 
 sub compute_basic_values {
-    my($b, $d) = @_;
+    my($b, $d, $start, $end) = @_;
     my($i);
     our($max_sample, %count);
     our(%sample_secs);
 
-    for ($i = 0; $i <= $max_sample; $i++) {
+    for ($i = $start; $i <= $end; $i++) {
 	if (!defined($sample_secs{$i-1})) {
 	    next;
 	}
@@ -181,32 +201,175 @@ sub compute_basic_values {
     }
 }
 
+sub average {
+    my($ap) = @_;
+    my($n) = 0;
+    my($sum) = 0;
+
+    foreach my $val (@$ap) {
+	$n++;
+	$sum += $val;
+    }
+
+    if ($n == 0) { return undef; }
+
+    return $sum / $n;
+}
+
+sub variance {
+    my($ap) = @_;
+    my($sumsq) = 0;
+    my($avg);
+    my($n) = 0;
+
+    $avg = &average($ap);
+    foreach my $val (@$ap) {
+	$n++;
+	$sumsq += $val * $val;
+    }
+    if ($n <= 1) { return undef; }
+
+    return ($sumsq - ($n * $avg * $avg)) / ($n - 1);
+}
+
+sub stddev {
+    my($ap) = @_;
+    
+    if ($#$ap == 0) { return undef; }
+
+    return sqrt(&variance($ap));
+}
+
+sub exp_decay {
+    my($accum, $new, $perc) = @_;
+
+    # This is slightly dubious, since it'll give more initial weight
+    # to the first samples.
+    if ($accum == 0) {
+	return $new;
+    } else {
+	return ($accum * (100 - $perc) + $new * $perc) / 100.0;
+    }
+}
+
+sub accumulate_stats {
+    my($cv, $fp) = @_;
+    my($stp, $asp);
+    our($opt_p);
+
+    if(!defined($fp->{"stats"})) {
+	$fp->{"stats"} = {};
+    }
+    $stp = $fp->{"stats"};
+    if(!defined($stp->{$cv})) {
+	$stp->{$cv} = {};
+    }
+    $asp = $stp->{$cv};
+
+    my $ap = $fp->{"save_values"}->{$cv};
+    if (!defined($ap)) {
+	return;
+    }
+
+    $asp->{"average"} = &average($ap);
+    $asp->{"stddev"} = &stddev($ap);
+
+    $asp->{"accum_average"} =
+	&exp_decay($asp->{"accum_average"}, $asp->{"average"}, $opt_p);
+    $asp->{"accum_stddev"} =
+	&exp_decay($asp->{"accum_stddev"}, $asp->{"stddev"}, $opt_p);
+}
+
+sub flag_deviations {
+    my($cv, $b, $fp, $dp) = @_;
+    my($i);
+    our($opt_l, $opt_u);
+
+    my($aavg) = $fp->{"stats"}->{$cv}->{"accum_average"};
+    my($astdd)= $fp->{"stats"}->{$cv}->{"accum_stddev"};
+
+    if (!defined($aavg) || !defined($astdd)) {
+	return;
+    }
+    my($vp) = $dp->{$cv}->{"values"};
+    my($tp) = $dp->{"sample_times"}->{"values"};
+    my($dhp) = $fp->{"deviations"};
+    if (!defined($dhp)) {
+	$fp->{"deviations"} = {};
+    }
+    $dhp = $fp->{"deviations"};
+
+    my($up_thresh) = $opt_u * $astdd;
+    my($down_tresh) = $opt_l * $astdd;
+
+    for($i = 0; $i <= $#$vp; $i++) {
+	my $delta = abs($$vp[$i] - $aavg);
+	# Test needs to be improved
+	if ($delta > $up_thresh &&
+	    $aavg > 1000 &&
+	    $$vp[$i] != 0
+	    )
+	{
+	    if (!$dhp->{$cv}) {
+		printf("%s %s %5s dev: cur %d avg %d stdd %d * %4.2f\n",
+		       time2str("%d %h $Y %T", $$tp[$i]),
+		       &file_to_name($b, &today),
+		       $cv,
+		       $$vp[$i],
+		       $aavg,
+		       $astdd,
+		       $delta / $astdd
+		       );
+	    }
+	    $dhp->{$cv} = 1;
+	} else {
+	    if ($delta < $down_tresh) {
+		if ($dhp->{$cv}) {
+		    printf("%s %s %5s clearing deviation\n",
+			   time2str("%d %h $Y %T", $$tp[$i]),
+			   &file_to_name($b, &today),
+			   $cv);
+		    printf("%s %s %5s values: cur %d avg %d stdd %d\n",
+			   time2str("%d %h $Y %T", $$tp[$i]),
+			   &file_to_name($b, &today),
+			   $cv,
+			   $$vp[$i],
+			   $aavg,
+			   $astdd);
+		}
+		$dhp->{$cv} = 0;
+	    }
+	}
+    }
+}
+
+
+# At this point, saved values are somewhere below $fd, and the current
+# set of samples is in $d.  The last values have not yet been
+# incorporated in the saved values.
+
 sub process_values {
     my($b, $d) = @_;
     my($i);
     our($fd);
 
-    # We could do statistical processing on the values here,
-    # or we could just write another script which uses the
-    # state from the saved files.
+    if (!defined($fd->{$b})) {
+	$fd->{$b} = {};
+    }
 
-    if (0) {
-	foreach my $k (keys %$d) {
-	    my $a = $d->{$k}->{"values"};
-	    printf("%s #values: %d\n", $k, $#$a);
-	    }
-	printf("max_sample: $max_sample\n");
-	printf("done\n");
+    foreach $cv ("okbps", "ikbps", "ipps", "opps", "obpp", "ibpp") {
+	&accumulate_stats($cv, $fd->{$b});
+	&flag_deviations($cv, $b, $fd->{$b}, $d);
     }
 }
 
-sub save_and_trim {
+sub save_data {
     my($b, $d) = @_;
     our($fd);
-    my($sp) = $fd->{$b}->{"save_values"};
     my($stp) = $d->{"sample_times"}->{"values"};
     my($save_ap, $ap);
 
+    my($sp) = $fd->{$b}->{"save_values"};
     if (!defined($sp)) {
 	$fd->{$b}->{"save_values"} = {};
 	$sp = $fd->{$b}->{"save_values"};
@@ -225,20 +388,28 @@ sub save_and_trim {
 	    shift(@$ap);
 	}
     }
+}
 
-    # Trim out samples older than $retention_time
-    my $now = &timelocal(localtime);
+sub trim_data {
+    my($b, $time_threshold) = @_;
+    our($fd);
+
+    my($sp) = $fd->{$b}->{"save_values"};
+    if (!defined($sp)) { return; }
+
+    # Trim out samples older than $time_treshold
     $stp = $sp->{"sample_times"};
-    while (defined($$stp[0]) && $$stp[0] < $now - $retention_time) {
-	foreach my $k (keys %$d) {
+    while (defined($$stp[0]) && $$stp[0] < $time_threshold) {
+	foreach my $k (keys %$sp) {
 	    my($ap) = $sp->{$k};
 	    shift(@$ap);
 	}
     }
 }
 
+
 sub process_data {
-    my($b) = @_;
+    my($b, $start, $end) = @_;
     my($i);
     my(@in_kbps, @out_kbps, @in_pps, @out_pps);
     my(@ibpp, @obpp, @times);
@@ -255,7 +426,7 @@ sub process_data {
 	$oov = "ifOutOctets";
     }
 
-    &convert_times(\@times);
+    &convert_times(\@times, $start, $end);
 
     my($desc) = {
 	"ikbps" => {
@@ -280,10 +451,14 @@ sub process_data {
 	},
     };
 
-    &compute_basic_values($b, $desc);
+    &compute_basic_values($b, $desc, $start, $end);
 
-    # bytes per packet derived from values computed above
-    for ($i = 0; $i <= $max_sample; $i++) {
+    # bytes per packet derived from values computed above.
+
+    my($delta) = $end - $start;
+    my($eoa) = $#{ $desc->{"ipps"}->{"values"} };
+
+    for ($i = $eoa - $delta; $i <= $eoa; $i++) {
 	my($ipps) = $desc->{"ipps"}->{"values"}[$i];
 	my($opps) = $desc->{"opps"}->{"values"}[$i];
 	if (!defined($ipps) || $ipps == 0) {
@@ -305,7 +480,7 @@ sub process_data {
     $desc->{"sample_times"}->{"values"} = \@times;
 
     &process_values($b, $desc);
-    &save_and_trim($b, $desc);
+    &save_data($b, $desc);
     undef %sample_secs;
 }
 
@@ -333,7 +508,7 @@ sub save_position {
     $fd->{$b}->{"position"} = $pos;
 }
 
-sub report {
+sub report_tail_stats {
     my($b) = @_;
     our($fd);
     my($ikbps, $okbps, $n);
@@ -362,7 +537,6 @@ sub report {
     } else {
 	$okbps = 0;
     }
-    
 
     my $name = &file_to_name($b, &today);
     if (!defined($name)) {
@@ -383,6 +557,7 @@ sub tail_process_file {
     my($f) = @_;
     my($b) = basename($f);
     my($cat, $base) = &cat_and_base($f, &today());
+    our($max_sample);
 
     if ($cat ne "cat") { return undef; }
 
@@ -394,9 +569,53 @@ sub tail_process_file {
     &save_position(\*IN, $b);
     close(IN);
 
-    &process_data($b);
+    &process_data($b, 0, $max_sample);
+    &trim_data($b, &timelocal(localtime) - $retention_time);
     &save_vars($b);
-    &report($b);
+    &report_tail_stats($b);
+}
+
+# Read in data for one logical port and portion it up for the
+# processing routines elsewhere in this file.
+
+sub do_one_file {
+    my($dsp, $name) = @_;
+    my($i);
+    our($max_sample, %sample_time, $fd, %base, $date);
+    my($d) = &get_date($dsp);
+
+    my($b) = &name_to_file($name, $d);
+    if (! defined($b)) {
+	die "Could not find file name for $name / $d\n";
+    }
+
+    my($cat, $f) = &find_cat_and_file($b, $d);
+    if (! defined($f)) {
+	die "Could not find data file for $base / $d\n";
+    }
+
+    open(DAYLOG, "$cat $f |") ||
+	die "Could not open \"$cat $f\": $!\n";
+    &read_log(\*DAYLOG);
+    close(DAYLOG);
+    
+    # for type of octet counter detection in process_data()
+    foreach my $v (keys %base) {
+	$fd->{$b}->{"base"}->{$v} = $base{$v};
+    }
+
+    my($t0) = str2time($date);
+
+    # set up to process 1/2 hour at a time
+    my($samples_per_go) = int($max_sample / (24 * 2));
+
+    for($i = 0; $i < $max_sample; $i += $samples_per_go) {
+	my $top = &min($i + $samples_per_go - 1, $max_sample);
+
+	&process_data($b, $i, $top);
+	&trim_data($b, (&convert_time($sample_time{$top}, $t0) -
+			$retention_time));
+    }
 }
 
 sub do_all_files {
@@ -415,4 +634,26 @@ sub do_all_files {
 # Main
 #
 
-&do_all_files();
+&Getopts("d:l:n:p:u:");
+
+if (defined($opt_n) && !defined($opt_d)) {
+    die "Must specify both -n and -d value\n";
+}
+if (defined($opt_d) && !defined($opt_n)) {
+    die "Must specify both -n and -d value\n";
+}
+if (!defined($opt_u)) {
+    $opt_u = 18;
+}
+if (!defined($opt_l)) {
+    $opt_l = 5;
+}
+if (!defined($opt_p)) {
+    $opt_p = 20;
+}
+
+if (defined($opt_d) && defined($opt_n)) {
+    &do_one_file($opt_d, $opt_n);
+} else {
+    &do_all_files();
+}
