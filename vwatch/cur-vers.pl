@@ -48,7 +48,7 @@ sub read_day_data {
 	$rtr = $_[5];
 	if (/software: (.*)/) {
 	    if (/\#$/) {
-		while(<in>) {
+		while(<$in>) {
 		    if (/^\#$/) {
 			$desc =~ s/\r//g;
 			last;
@@ -69,7 +69,7 @@ sub report {
 
     open(out, "|sort -b +1 -2");
     foreach $rtr (keys %software) {
-	printf(out "%-15s %s\n", $rtr, &pretty_desc($software{$rtr}));
+	printf(out "%-25s %s\n", $rtr, &pretty_desc($software{$rtr}));
     }
     close(out);
 }
