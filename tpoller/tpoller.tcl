@@ -11,7 +11,23 @@ namespace import ::just::sparseTableWalk
 namespace import ::just::asyncSparseTableWalk
 namespace import ::config::conf*
 
-mib load rfc1213.mib
+#
+# This is _really_ ugly.  Ensure that rfc2863.mib is loaded prior to
+# rfc1213.mib, and likewise ensure that IANAifType.tc is loaded as early as
+# possible.
+#
+set x [lsearch -exact $tnm(mibs:core) rfc1213.mib]
+if { $x >= 0 } {
+    set tnm(mibs:core) [linsert $tnm(mibs:core) $x rfc2863.mib]
+}
+
+set x [lsearch -exact $tnm(mibs:core) compat.tc]
+if { $x >= 0 } {
+    set tnm(mibs:core) [lreplace $tnm(mibs:core) $x $x compat.tc IANAifType.tc]
+}
+
+mib load rfc2863.mib
+mib load IANAifType.tc
 mib load cisco.mib
 
 
@@ -216,11 +232,18 @@ proc pollIntfs { sh } {
 proc getVarList { sh } {
     global cx
 
-    set vl [list "ifInOctets" "ifInUcastPkts" \
-	    "ifInNUcastPkts" "ifInDiscards" \
-	    "ifInErrors" "ifOutOctets" \
-	    "ifOutUcastPkts" "ifOutNUcastPkts" \
+    set name [::polljob::name $sh]
+
+    set vl [list "ifInUcastPkts" "ifInNUcastPkts" "ifInDiscards" \
+	    "ifInErrors" "ifOutUcastPkts" "ifOutNUcastPkts" \
 	    "ifOutDiscards" "ifOutErrors"]
+
+    if { [::config::conf $name "hcounters"] != "no" } {
+	lappend vl "ifHCInOctets" "ifHCOutOctets" "ifInOctets" "ifOutOctets"
+    } else {
+	lappend vl "ifInOctets" "ifOutOctets"
+    }
+
     if { [oidPfxMatch [mib oid cisco] $cx([name $sh],sysid)] } {
 	lappend vl "locIfInRunts" "locIfInGiants" \
 		"locIfInCRC" "locIfInFrame" \
