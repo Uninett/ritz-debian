@@ -49,3 +49,5 @@ $Id$		-*- Text -*-
    can be created to report sudden PPS increases (DoS indication), for
    feeding data into rrdtool, for creating a map which paints based on
    data from current values, etc.
+
+ o Extend the tabular web reports to display the 90th percentile values.
