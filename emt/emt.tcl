@@ -14,7 +14,7 @@ mib load rfc1213.mib
 set emt_mail "%RAWSENDMAIL%"
 
 proc emt_main {} {
-    global emt_to emt_from
+    global emt_to emt_from emt_alarm_to emt_alarm_subject
 
     foreach f "~/.ritz.tcl ~/.emt.tcl" {
 	if { [file exists $f] } {
@@ -295,29 +295,40 @@ proc single_subject { id } {
     return $str
 }
 
-proc emt_format_mail { subject body } {
-    global emt_to emt_from emt_mail
+proc emt_format_mail { to subject body } {
+    global emt_from
 
-    set m   [format "To: %s\n" $emt_to]
+    set m [format "To: %s\n" $to]
     set m [format "%sFrom: %s\n" $m $emt_from]
     set m [format "%sSubject: %s\n\n" $m $subject]
     set m [format "%s%s\n" $m $body]
     return $m
 }
 
-proc emt_mail { subject body } {
-    global emt_to emt_mail
+proc emt_mail { to subject body } {
+    global emt_mail
 
-    set fd [open [format "|%s %s" $emt_mail $emt_to] "w"]
-    set mail [emt_format_mail $subject $body]
+    set fd [open [format "|%s %s" $emt_mail $to] "w"]
+    set mail [emt_format_mail $to $subject $body]
     puts $fd $mail
     close $fd
 
     log [format "Sent message:\n%s" $mail]
 }
 
+proc emt_send_alarm { body } {
+    global emt_to emt_mail emt_alarm_to emt_alarm_subject
+
+    set fd [open [format "|%s %s" $emt_mail $emt_alarm_to] "w"]
+    set mail [emt_format_mail $emt_alarm_to $emt_alarm_subject $body]
+    puts $fd $mail
+    close $fd
+
+    log [format "Sent alarm message:\n%s" $mail]
+}
+
 proc emt_report { ids } {
-    global nagged
+    global nagged emt_to
 
     if { [llength $ids] > 1 } {
 	set sids [::sort::sortCases $ids]
@@ -327,15 +338,64 @@ proc emt_report { ids } {
 	set body [report_single $ids]
 	set subject [single_subject $ids]
     }
-    emt_mail $subject $body
+
+    # FIXME, uncomment this when merged with original emt
+    # emt_mail $emt_to $subject $body
+	
     foreach id $ids {
 	set nagged($id) 1
     }
     ::persist::add nagged
 }
 
+proc emt_alarm { ids } {
+    global nagged
+    
+    set sids [::sort::sortCases $ids]
+    set clockhour [scan [clock format [clock seconds] -format "%H"] "%d"]
+    set weekday   [scan [clock format [clock seconds] -format "%w"] "%d"]
+    set prilimit 100
+
+    # FIXME check weekday as well
+    if { $clockhour >= 7 && $clockhour < 16 } {
+	# FIXME remove this
+	#return		# Don't trigger alarm during working hours
+	set prilimit 0
+    } elseif { $clockhour >= 23 || $clockhour < 7 } {
+	# Nighttime, better be important !
+	set prilimit 200
+    } else {
+	# After work, but awake
+	set prilimit 99
+    }
+    set body ""
+
+    foreach id $sids {
+	set p [::attr::priority $id]
+	set type [::attr::get $id "type"]
+	log [format "Possible alarm for id: %s, type: %s, pri: %s ?" $id $type $p]
+	if { $p >= $prilimit } {
+	    if { $type == "portstate" } {
+		set s [::attr::effectivePortState $id]
+# FIXME		if { $s == "down" } {
+		    append body [single_subject $id] "\n"
+# FIXME		}
+	    } else {
+		append body [single_subject $id] "\n"
+	    }
+	} else {
+	    log [format "Nope, not important enough, priority threshold : %s" $prilimit]
+	}
+    }
+    if { $body != "" } {
+	log [format "Calling alarm function..."]
+	emt_send_alarm $body
+    } 
+}
+
+    
 proc emt_check_all {} {
-    global state
+    global state emt_alarm_to
 
     log [format "Checking all events"]
 
@@ -347,6 +407,9 @@ proc emt_check_all {} {
     }
     if { [llength $rids] != 0 } {
 	emt_report $rids
+	if { [info exists emt_alarm_to] } {
+	    emt_alarm $rids
+	}
     }
 }
 
