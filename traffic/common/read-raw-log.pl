@@ -55,6 +55,7 @@ sub read_log {
     my($now);
     my($starter);
     my(@f);
+    my($h0_seen) = 0;
 
     $sample_no = -1;
     while (<$fh>) {
@@ -85,6 +86,11 @@ sub read_log {
 	if ($h < 23) {
 	    $day = $f[0] . " " . $f[1] . " " . $f[2];
 	}
+	if ($h == 23 && !$h0_seen) {
+	    $now -= 24 * 3600;
+	} elsif ($h == < 23) {
+	    $h0_seen = 1;
+	}
 	
 	# Be careful not to zero counters needlessly.  Check timetamp of
 	# reboot more carefully.  This is to work around a bug in Cisco IOS
@@ -107,6 +113,11 @@ sub read_log {
 
         ($v, $dummy) = split(/\./, $f[5]);
 
+	if (!defined($base{$v})) {
+	    $base{$v} = $f[6];
+	    next;
+	}
+
 	if (defined($sample_no{$now})) {
 	    $sno = $sample_no{$now};
 	} else {
@@ -118,22 +129,18 @@ sub read_log {
 
 	$lasttime = $now;
 
-        if (!defined($base{$v})) {
-            $base{$v} = $f[6];
-        } else {
-            $delta = ($f[6] - $base{$v});
-            if ($delta < 0) {
-                $delta += 0xffffffff;
-            }
+	$delta = ($f[6] - $base{$v});
+	if ($delta < 0) {
+	    $delta += 0xffffffff;
+	}
 
-            $count{$v, $sno} = $delta;
-	    $sample_time{$v, $sno} = $now / 3600.0;
+	$count{$v, $sno} = $delta;
+	$sample_time{$v, $sno} = $now / 3600.0;
 
-            $base{$v} = $f[6];
-            if ($sample_no == 10) {
-                $date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
-            }
-        }
+	$base{$v} = $f[6];
+	if ($sample_no == 10) {
+	    $date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
+	}
     }
     if (!defined $date) {
 	$date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
