@@ -178,12 +178,31 @@ sub get_all_data {
     }
 }
 
+# Return "dimentioning load"; average of topmost three samples
+
+sub dim_load {
+    my(@values) = @_;
+    my(@sv) = sort { $a <=> $b } @values;
+    my($i, $n, $s);
+
+    $s = 0;
+    $n = $#sv - &max(0, $#sv - 3);
+    for ($i = &max(0, $#sv - 2); $i <= $#sv; $i++) {
+	$s += $sv[$i];
+    }
+    if ($n) {
+	return $s / $n;
+    }
+    return 0;
+}
+
+
 sub report_traffic {
     my($out, $nd) = @_;
 
     foreach $intf (keys %counts) {
 	printf($out "%-25.25s %3d %3d  %3d %3d  %3d %3d  %3d %3d  %s %d" .
-	       "  %3d %3d\n",
+	       "  %3d %3d  %3d %3d\n",
 	       $intf,
 	       $peak_in{$intf},
 	       $peak_out{$intf},
@@ -197,6 +216,8 @@ sub report_traffic {
 	       $type{$intf},
 	       &percentile(50, @{ $in_90percs{$intf} }),
 	       &percentile(50, @{ $out_90percs{$intf}}),
+	       &dim_load(@{ $in_90percs{$intf} }),
+	       &dim_load(@{ $out_90percs{$intf} }),
 	       );
     }
 }
@@ -206,7 +227,7 @@ sub report_traffic_kbit {
 
     foreach $intf (keys %counts_kbit) {
 	printf($out "%-25.25s %6d %6d  %6d %3d %6d %3d  %6d %6d  %s %d" .
-	       "  %6d %6d\n",
+	       "  %6d %6d  %6d %6d\n",
 	       $intf,
 	       $peak_kbit_in{$intf},
 	       $peak_kbit_out{$intf},
@@ -220,6 +241,8 @@ sub report_traffic_kbit {
 	       $type{$intf},
 	       &percentile(50, @{ $in_90p_kbit{$intf} }),
 	       &percentile(50, @{ $out_90p_kbit{$intf}}),
+	       &dim_load(@{ $in_90p_kbit{$intf} }),
+	       &dim_load(@{ $out_90p_kbit{$intf} }),
 	       );
     }
 }
