@@ -1,0 +1,38 @@
+$Id$   -*- Text -*-
+
+
+	RITZ is "Remote Interface to ZINO"
+	ZINO is "Zino is not OpenView"
+
+Ok, so we ran out of good ideas for a name...
+
+
+Together these two make up a prototype of a simple network management
+system, entirely written in Tcl.  Features:
+
+ o Trap-driven polling; receives and interprets traps.
+ o Periodic status polling (by default low frequency).
+ o A simplistic event handling system.
+ o A simple SMTP-like client/server protocol.
+ o A TK-based user interface.
+
+all in a little under 5000 lines of Tcl.
+
+
+So far, RITZ is the only part ready for a test release, ZINO will
+hopefully follow later.
+
+To install and use zino/ritz, you need:
+
+ o Tcl and TK version 8.0 (we used 8.0p2)
+ o A version of Tix compatible with the above (we used 4.1.0p6)
+ o A version of Scotty compatible with the above (we used 2.1.7 with
+   the patch in scotty.diff applied; the latter is essential for this
+   version of scotty to have the straps program work as intended).
+
+User authentication is implemented with a simple challenge/response
+scheme which uses the Secure Hash Algorithm implemented by the program
+in the sha/ subdirectory.  Compile and install it in a directory in
+the users PATH to use it.
+
+Comments to Havard.Eidnes@runit.sintef.no

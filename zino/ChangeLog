@@ -1,0 +1,129 @@
+Mon Jan 18 12:23:35 1999  Havard Eidnes  <he@stasi.uninett.no>
+
+	* flaps.tcl: Factor out would-be common code in clearFlapInternal.
+	Add forgetFlaps, to be called from cleanup code when a device
+	is no longer being monitored.
+
+	* test-status.tcl: Reorder initialization a bit.
+	Read saved state as the first thing that's done.
+
+	* read-cf.tcl: Improve detection of "old" routers.
+	Add code to clean up DB for information related to routers which
+	we no longer monitor.
+
+	* events.tcl: Add closeEventsOnRouter procedure.
+
+	* routers.cf: Fjernet grimstad-gw2.
+
+Wed Jan 13 13:56:49 1999  Havard Eidnes  <he@stasi.uninett.no>
+
+	* routers.cf: Update, sync with last traffic poller update.
+
+Fri Dec 11 14:52:11 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* routers.cf: Added a lot of "ignore Virtual-Access" patterns.
+
+	* routers.cf: lots of changes.
+
+Mon Oct 19 08:02:51 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* status.tcl: Improve robustness of stopRouterPolling procedure.
+
+	* trap.tcl:
+	Protect the first trap bind statement with catch, so that the
+	second may work if the first one fails (straps slow to start?).
+
+	* flaps.tcl:
+	Finish clearFlap procedure -- get port descriptions from global
+	variables.
+
+Thu Oct 15 07:35:21 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* events.tcl:
+	It's now an error to unset EventId in the closeEvent procedure,
+	that's already taken care of in preCloseEvent.
+
+Tue Oct 13 16:30:34 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* flaps.tcl: Forgot one substitute ix -> ifIndex.
+
+	* trap.tcl:
+	Only check reachability if there's an open "reachability" case
+	for the router when receiving a trap message.
+
+	* status.tcl:
+	Move getting sysUpTime until it's really needed, avoid it for each
+	polled port.
+
+	Extend checkResponse so that errors are caught and dealt with.
+
+Mon Oct 12 17:18:36 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* flaps.tcl: Oops, add an extra return from "flapping" procedure.
+
+	* trap.tcl: Changed user name...
+
+Mon Oct 12 14:17:14 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* flaps.tcl: Add a required global declaration of flapCeiling.
+
+Sun Oct 11 17:40:15 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* load-mibs.tcl:
+	Change references to be relative (this really ought to be
+	done in a better way).
+
+	* server.tcl: Add required "global cx" to doPollIntfCmd.
+
+Sun Oct 11 17:30:09 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* trap.tcl: Check reachability on reception of trap message.
+
+	* server.tcl: Add "pollrtr" and "pollintf" commands.
+
+Sat Aug  8 18:03:50 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* status.tcl: Fix detection of reachability after factoring out
+	doResponse procedure.
+
+	* trap.tcl: Record restart time of router in incoming trap
+ 	messages, use for determining whether a trap message should be
+ 	ignored.
+
+	* flaps.tcl: don't let all trap messages open up a new case.  Trap
+ 	messages received right after a router reload and trap messages
+ 	reporting the same state as already recorded is generally ignored.
+  	The exception is if more than one trap message is received within
+	a 5 minute interval reporting the same state as what was recorded,
+	and of course, trap messages where there's already an open case
+	are not ignored.
+
+Wed Jul 22 14:38:43 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* status.tcl, swalk.tcl: Handle noResponse events, create events
+	based on this.
+
+	* read-cf.tcl: improve configuration file handling, so that
+	router-specific options can be removed and will then revert back
+	to the global defaults.
+	
+Tue Jul 14 16:08:48 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* status.tcl, read-cf.tcl, flaps.tcl: implement router priority
+	setting via config file and export via client/server protocol as
+	attribute to portstate events.
+	
+Wed Jun 24 17:17:21 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* auth.tcl: Implement optional support for clear-text passwords.
+
+Mon Jun 22 19:08:02 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* events.tcl: Added detection of various changes in state, history
+	or log, to the benifit of the notification submodule.
+	Also made closed events linger for an expiry period initially set
+	to 8 hours.  (New events on the "same" port will get a new event
+	ID assigned while the old event lingers.)
+
+	* server.tcl: Added notification submodule.
+

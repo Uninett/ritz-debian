@@ -1,0 +1,19 @@
+diff -ru2 src-2.1.7/tnm/snmp/straps.c src-2.1.7-local/tnm/snmp/straps.c
+--- src-2.1.7/tnm/snmp/straps.c	Fri Sep 13 19:57:46 1996
++++ src-2.1.7-local/tnm/snmp/straps.c	Sat Mar 14 22:31:39 1998
+@@ -127,4 +127,15 @@
+ 
+     /*
++     * Close any "leftover" FDs from the parent.  There is a relatively
++     * high probability that the parent will be scotty, and that the client
++     * side of the scotty-straps connection is among the open FDs.  This
++     * is bad news if the parent scotty goes away, since this will eventually
++     * cause straps to "block against itself" in the "forward data to client"
++     * write() calls below, since straps itself is not consuming data from
++     * the client side of the leftover open socket.
++     */
++    for (i = 3; i < FD_SETSIZE; i++) (void) close(i);
++
++    /*
+      * Open and bind the normal trap socket:
+      */

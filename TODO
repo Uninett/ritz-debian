@@ -1,0 +1,18 @@
+$Id$		-*- Text -*-
+
+ o Create e-mail trigger client.
+
+ o Compute accumulated downtime per event.
+
+ o Add message window to main ritz window (at bottom?).  Warn if no
+   events selected on edit/selected.
+
+ o fixupEventId needs to do even more: fixup portState ao.
+   In all, the robustness in the face of internal errors needs to
+   be improved considerably.
+
+ o Zino should remove outdated mapping entries (entries for routers no
+   longer in config file).
+
+ o Ritz should have a "Help" / "About" pane showing version
+   information and a brief message about ritz/zino.

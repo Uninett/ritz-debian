@@ -1,0 +1,29 @@
+Ideas / design / etc.				-*- Text -*-
+
+$Id$
+
+ o Keep an on-disk state dump so that the status poller can be
+   restarted.
+
+ o The monitor itself should be as small as possible.
+
+ o It should be possible to assign a priority to "ports where the
+   cisco description field contains a given pattern", so that if you
+   use the "description field" on Cisco routers to name the circuits
+   you can indicate that circuit so-and-so has priority X when it
+   comes to sort active faults in the user interface.
+
+ o The "dns:" and "domain:" settings can be used by the poller to
+   verify that the specified host still exists and that the IP address
+   given as the poll address is among the registered IP addresses for
+   the router.
+
+
+Possible extensions:
+
+ o Monitor CPU load (on cisco routers)
+ o Monitor free memory (on cisco routers)
+ o Monitor error counters, trigger alarm on crossing of
+   (configurable?) threshold value
+ o Check for crashed routers (on cisco), report restarted routers.
+

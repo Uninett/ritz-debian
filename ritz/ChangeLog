@@ -1,0 +1,117 @@
+Mon Oct 19 08:01:40 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* test-client.tcl:
+	Simplify -- use the main procedure from main.tcl instead of
+	duplicating the code.
+	Also a few other minor changes.
+
+	* ui.tcl: Correct a couple of typos.
+
+Sun Oct 11 17:43:32 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* TODO: More to do.
+
+Sun Oct 11 17:36:07 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* ui.tcl: Typo correction.
+
+Sun Oct 11 17:23:49 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* sort.tcl: Add filterIsEmpty check.
+
+	* main.tcl: Added _Secret etc. as global variables.
+
+	* ui.tcl: Restructure "Edit" menu entries.
+	Implement ability to handle multiple settings in .ritz.tcl.
+	Add "poll" and "clearflap" entries to various menus, and add
+	the code to implement these functions.
+	Change "Set server" pane so that variables are not edited directly,
+	but rather only changed when "Apply" is pressed.
+	Change the title to include server name.
+	Add "clear selection" entry to "Edit" menu.
+	Implement "Edit selected" so that one doesn't have to set a filter
+	to edit the selected cases.
+
+	* net.tcl: Add clearFlap.
+
+	* net.tcl: Added pollRouter & pollIntf.
+
+Wed Oct  7 10:44:41 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* notify.tcl:
+	Change to postpone more work in conjunction with updates...
+
+Mon Oct  5 19:37:13 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* ui.tcl:
+	Make Delete work as BackSpace for sanity. (Yes, I know this breaks with
+	Motif and Windows tradition.  So what?)
+	Also get rid of old tk_menubar command, as it's not there in tcl 8.0.3.
+
+	* summary.tcl:
+	Make opstate and admstate coloumns blend into each other if there's
+	room.
+
+Mon Sep  7 08:36:11 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* notify.tcl: Do not put up errorInfo as the error message text.
+
+	* notify.tcl: Be a bit more robust when removing a case.
+
+Thu Sep  3 11:41:47 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* notify.tcl: Remove unneeded (and bogus) code.
+
+Mon Aug 31 14:07:48 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* Makefile:
+	Moved a copy of utils.tcl here to make client self-contained.
+
+	* main.tcl:
+	Add reading of .ritz.tcl init file (as well as .smon.tcl for
+	compatibility).
+	Move the initialization of the user interface.
+
+	* notify.tcl:
+	Delay display updating after notification, push 5 seconds into
+	the future on each notification to prevent a rush of notifications
+	to cause indigestion.
+
+	* attrs.tcl: Added AttrForgetAll procedure to be called when we close
+	the server connection.
+
+	* sort.tcl: Add support for sorting on "updated" attribute.
+
+	* ui.tcl: Add support for viewing "udpated" column.
+
+	* summary.tcl: Add support for viewing "updated" column.
+
+	* ui.tcl: Do clock formatting for "updated" attribute as well.
+
+	* ui.tcl: Change title of application.
+
+	* net.tcl: Unset NotifyHandler in closeServer, to allow re-open
+	of server connection.
+
+	* notify.tcl:
+	Call uiCloseServer before reporting the error, as "error" will
+	unwind the stack and not execute the following code.
+
+Sun Aug 30 19:28:47 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* Makefile: Initial revision
+
+Sat Aug 29 19:18:55 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* bgerror.tcl: Re-add TK's default bgerror handler.
+	For some reason by default we get an error handler which outputs
+	to stderr, which isn't very useful (maybe it comes from Tnm?).
+
+Sat Aug  8 17:56:58 1998  Havard Eidnes  <he@stasi.uninett.no>
+
+	* ui.tcl: Sort attribute names in display window.
+
+	* Various: Fixed detection of "reachability" after a
+ 	non-reach. event.
+
+	* Various: Do actually add in new cases received via notification.
