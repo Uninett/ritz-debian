@@ -55,9 +55,9 @@
 # Possible heading for traffic.kbit:
 #
 # Intf.
-#        Peak sample        Busy day        Month average       speeds
-#       input output  input day output day   input output  ift  kbit/s  
-#xxxxx xxxxxx xxxxxx xxxxxx  xx xxxxxx  xx  xxxxxx xxxxxx  xxx  xxxxxx
+#        Peak sample        Busy day        Month average  speeds
+#       input output  input day output day   input output  kbit/s  ift
+#xxxxx xxxxxx xxxxxx xxxxxx  xx xxxxxx  xx  xxxxxx xxxxxx  xxxxxx  xxx
 #
 # plus
 #        Median 90%
