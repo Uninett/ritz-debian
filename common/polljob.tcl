@@ -94,6 +94,8 @@ namespace eval ::polljob {
 
 	if [info exists cx($dev,handle)] {
 	    set s $cx($dev,handle)
+	} else {
+	    return 0
 	}
 
 	if [info exists cx($s,job)] {
