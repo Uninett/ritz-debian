@@ -41,7 +41,7 @@ namespace eval ::polljob {
 
     proc handle { dev } {
 	variable cx
-	return $cx($dev,name)
+	return $cx($dev,handle)
     }
 
     # spread poll scheduling of devices over default interval
@@ -55,34 +55,29 @@ namespace eval ::polljob {
 	return [expr ( $intv + 0.0 ) / $ndevs]
     }
 
-    proc startCommonAfter { dev delay { upcall "" } } {
+    proc setup { dev } {
 	variable cx
 
-	set ip [::config::conf $dev address]
+	set ip	      [::config::conf $dev address]
 	set community [::config::conf $dev community]
-	set intv [::config::conf $dev interval]
+	set intv      [::config::conf $dev interval]
 
-	set code [catch {snmp session -address $ip -community $community} s]
-	if $code {
-	    puts stderr "snmp session failed for device $dev: $s"
+	if [catch {
+	    set s [snmp session -address $ip -community $community]
+	} msg] {
+	    puts stderr "snmp session failed for device $dev: $msg"
 	    return
 	}
 
 	set cx($dev,handle) $s
 	set cx($s,name) $dev
 	set cx($s,interval) $intv
-
-	if { $upcall != "" } {
-	    $upcall $s
-	}
-
-	after [mtoms $delay] "::polljob::startDev $dev"
     }
 
-    proc stopDevCommon { dev { upcall "" } } {
+    proc teardown { dev { upcall "" } } {
 	variable cx
 	
-	after cancel "::polljob::startDev $dev"
+	after cancel [format "%s::startDev %s" [namespace current] $dev]
 
 	if [info exists cx($dev,handle)] {
 	    set s $cx($dev,handle)
@@ -102,35 +97,56 @@ namespace eval ::polljob {
 	unset cx($dev,handle)
     }
 
+    proc startCommonAfter { dev delay { upcall "" } } {
+	variable cx
+
+	setup $dev
+	set s $cx($dev,handle)
+
+	if { $upcall != "" } {
+	    $upcall $s
+	}
+
+	after [mtoms $delay] \
+		[format "%s::startDev %s" [namespace current] $dev]
+    }
+
     proc startDev { dev } {
 	variable cx
 	variable pollDev
 	
+	puts [format "starting %s" $dev]
+
 	set s $cx($dev,handle)
 	set intv $cx($s,interval)
 	set msintv [mtoms $intv]
 
 	set j [job create -interval $msintv -command [list $pollDev $s]]
 
-	unset cx($s,interval); # done with use now
+	unset cx($s,interval); # done with use now, no need to keep
 
 	set cx($s,job) $j
     }
 
     proc startDevAfter { dev delay } {
 	variable initDev
+
 	startCommonAfter $dev $delay $initDev
     }
 
     proc restartDevAfter { dev delay } {
+
 	# stop and start without upcalls
-	stopDevCommon $dev
+	teardown $dev
+	setup $dev
 	startCommonAfter $dev $delay
     }
 
     proc stopDev { dev } {
 	variable destroyDev
-	stopDevCommon $dev $destroyDev
+
+	puts [format "stopping %s" $dev]
+	teardown $dev $destroyDev
     }
 
 
