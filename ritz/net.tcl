@@ -144,7 +144,7 @@ proc cleanLog { log } {
 
     set newlog ""
     foreach le $log {
-	regexp {^([0-9]+) (.*)$} $l whole stamp rest
+	regexp {^([0-9]+) (.*)$} $le whole stamp rest
 	if { [regexp {changed state from.* on ([0-9]+)} $rest whole when] } {
 	    set when_str [clock format $when]
 	    regsub {(on [0-9]+)} $rest [format "on %s" $when_str] rest
@@ -167,7 +167,7 @@ proc getLog { id } {
     }
     set log ""
     for { safeGets $chan l } { $l != "." } { safeGets $chan l } {
-	set log [format "%s%s" $log $l]
+	lappend log $l
     }
     return [cleanLog $log]
 }
