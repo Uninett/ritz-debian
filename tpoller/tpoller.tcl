@@ -26,6 +26,10 @@ proc destroyDev { sh } {
 proc pollDev { sh } {
     global errorInfo
 
+    set dev [name $sh]
+    # First check if we're to collect stats from this box
+    if { [conf $name "statistics"] != "yes" } {	return; }
+
 #    puts [format "polling %s" [name $sh]]
     if [catch {
 	# determine reachability and whether it
