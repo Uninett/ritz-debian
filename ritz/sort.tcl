@@ -44,6 +44,9 @@ proc comparePortStates { a b } {
 
 proc compareTypes { a b } {
 
+    if { ! [AttrExists $a "type"] } { return 1; }
+    if { ! [AttrExists $b "type"] } { return -1; }
+
     set a [Attr $a "type"]
     set b [Attr $b "type"]
     
