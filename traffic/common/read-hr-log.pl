@@ -133,6 +133,9 @@ sub read_log {
 	    next;
 	}
 
+	$lasttime = $now;
+	$last_day = $day;
+
 	if (defined($sample_no{$now})) {
 	    $sno = $sample_no{$now};
 	} else {
@@ -141,9 +144,6 @@ sub read_log {
 	    $sample_no{$now} = $sample_no;
 	    $sno = $sample_no;
 	}
-
-	$lasttime = $now;
-	$last_day = $day;
 
 	$delta = ($f[6] - $base{$v});
 	if ($delta < 0) {
