@@ -174,12 +174,16 @@ proc recordAddr { sh vbl } {
 }
 
 proc getIfList { sh } {
-    
+
+    set name [name $sh]
+
+    set vl "ifIndex ifType ifSpeed ifAdminStatus ifDescr"
+    if { [::config::conf $name "hcounters"] != "no" } {
+	lappend vl "ifHighSpeed"
+    }
     if [catch {
 	# This table may be sparsely populated
-	sparseTableWalk $sh x \
-		"ifIndex ifType ifSpeed ifAdminStatus ifDescr" \
-		{ recordIntf $sh $x }
+	sparseTableWalk $sh x $vl { recordIntf $sh $x }
     } msg] {
 	set msg [format "getIfList FAILED for %s: %s" [name $sh] $msg]
 	logerr $msg
@@ -196,6 +200,11 @@ proc recordIntf { sh vbl } {
     set admin	[lindex [lindex $vbl 3] 2]
     set descr	[lindex [lindex $vbl 4] 2]
     set type [mib scan [lindex [lindex $vbl 1] 0] $type]; # undo TC coding
+    set hs	[lindex [lindex $vbl 5] 2]
+
+    if { $hs != "" && $hs != 0 } {
+	set speed [expr $hs * 1000000.0]
+    }
 
     set name [name $sh]
 
