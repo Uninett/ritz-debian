@@ -318,7 +318,7 @@ proc linkTrans { router ifIndex descr updown reason } {
 	    setEventAttr $eid "router" $router
 	    setEventAttr $eid "port" $descr
 	    setEventAttr $eid "portstate" [string tolower $updown]
-	    set portState($router,$ix) [string tolower $updown]
+	    set portState($ix) [string tolower $updown]
 	    setEventAttr $eid "ifindex" $ifIndex
 	    setEventAttr $eid "flapstate" "flapping"
 	    setEventAttr $eid "polladdr" [::config::conf $router address]
