@@ -13,17 +13,17 @@ namespace import ::polljob::cx
 
 proc initDev { sh } {
 
-    puts "initDev $::polljob::cx($sh,name)"
+    puts [format "initDev %s" [cx $sh name]]
 }
 
 proc pollDev { sh } {
 
-    puts "pollDev $::polljob::cx($sh,name)"
+    puts [format "pollDev %s" [cx $sh name]]
 }
 
 proc destroyDev { sh } {
 
-    puts "destroyDev $::polljob::cx($sh,name)"
+    puts [format "destroyDev %s" [cx $sh name]]
 }
 
 set conffile "routers.cf"
