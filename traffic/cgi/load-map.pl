@@ -305,6 +305,7 @@ sub tgif_group {
 	   "script_frac" => 1,
 	   "fg_bg_colors" => 1,
 	   "page" => 1,
+	   "dont_reencode" => 1,
        );
 
 sub tgif_obj {
