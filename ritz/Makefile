@@ -12,6 +12,9 @@ SRCS=	../version.tcl just/justSNMP.tcl just/prettySNMP.tcl \
 
 all: ritz
 
+../version.tcl: ../Makefile
+	(cd ..; make version.tcl)
+
 ritz: ${SRCS} Makefile
 	rm -f $@
 	echo "#!"${WISH} > $@
