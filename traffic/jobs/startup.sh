@@ -3,9 +3,10 @@
 # $Id$
 #
 
-cd %TOPDIR%/conf
+cd %TOPDIR%/bin
 
-../bin/tpoller >>../tp.err 2>&1 &
-echo $! > ../tpoller.pid
+./start-tpoll
+./start-zino
+./start-emt
 
 exit 0
