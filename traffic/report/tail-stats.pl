@@ -361,7 +361,7 @@ sub mail_report {
     printf(OUT "To: %s\n", $to);
     printf(OUT "Subject: %s\n", $subj);
     printf(OUT "\n");
-    printf(OUT, "%s", $report);
+    printf(OUT "%s\n", $report);
     close(OUT);
 }
 
