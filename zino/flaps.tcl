@@ -2,12 +2,14 @@
 # $Id$
 #
 
-set flapThreshold 20
+set flapThreshold 35
 set flapCeiling 256
 set flapMin 1.5
-set flapMult 4
-set flapDecr 0.8
+set flapMult 2
+set flapInitVal 2
+set flapDecr 0.5
 set flapDecrIntv 300
+
 
 proc initFlaps { } {
     persistVar flapHistVal
@@ -118,12 +120,12 @@ proc wasFlapping { ix } {
 }
 
 proc firstFlap { ix } {
-    global flapHistVal firstFlap lastFlap flaps
+    global flapInitVal flapHistVal firstFlap lastFlap flaps
 
 #    puts [format "%s: firstFlap %s" [getStamp] $ix]
     set now [clock seconds]
     set firstFlap($ix) $now
-    set flapHistVal($ix) 1
+    set flapHistVal($ix) $flapInitVal
     set flaps($ix) 1
     set lastFlap($ix) $now
 }
