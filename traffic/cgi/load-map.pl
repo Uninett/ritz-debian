@@ -275,8 +275,8 @@ sub tgif_oval {
     $cy = $lty + $ry;
 
     $type[$elt] = "ellipsis";
-    $x[$elt] = $cx;
-    $y[$elt] = $cy;
+    $cx[$elt] = $cx;
+    $cy[$elt] = $cy;
     $radius_x[$elt] = $rx;
     $radius_y[$elt] = $ry;
     $width[$elt] = $f[8];
@@ -652,7 +652,7 @@ sub draw_ellipsis {
 
     $c = &draw_color($img, $e, "black");
 
-    $img->arc(&xlc($x[$e], $y[$e]),
+    $img->arc(&xlc($cx[$e], $cy[$e]),
 	      &scale($radius_x[$e]*2,
 		     $radius_y[$e]*2),
 	      0, 360, $c);
@@ -1027,12 +1027,12 @@ sub other_map_coords {
     my(@c) = split(/ /, $coords[$elt]);
     my($x, $y, $w, $h);
 
-    if ($#c == 3) {		# probably rectangle/box; need to expand
+    if ($type[$elt] eq "rectangle") { # convert to polygon
 	$x = $c[0];
 	$y = $c[1];
 	$w = $c[2] - $x;
 	$h = $c[3] - $y;
-	return ($x, $y, ($x+$w), $y, ($x+$w), ($y+$h), $x, ($y+$h))
+	return ($x, $y, ($x+$w), $y, ($x+$w), ($y+$h), $x, ($y+$h));
     }
     return @c;
 }
@@ -1045,8 +1045,19 @@ sub other_map_ref {
     $alt = &other_map_alt($elt, $dsp, $type, $select);
 
     if (!defined($url)) { return ""; }
-    $mc = "<area shape=poly coords=\"";
-    $mc .= join(',', &xlci(&other_map_coords($elt)));
+    if ($type[$elt] eq "rectangle" ||
+	$type[$elt] eq "polygon" ||
+	$type[$elt] eq "polyline")
+    {
+	$mc = "<area shape=poly coords=\"";
+	$mc .= join(',', &xlci(&other_map_coords($elt)));
+    } elsif ($type[$elt] = "ellipsis") {
+	$mc = "<area shape=circle coords=\"";
+	$mc .= join(',', &xlci($cx[$elt], $cy[$elt]), # center-x, center-y
+		    &scale(&min($radius_x[$elt], $radius_y[$elt])));
+    } else {
+	return "";
+    }
     $mc .= sprintf("\"\n\thref=\"%s\"", $url);
     if (defined($alt)) {
 	$mc .= sprintf("\n\talt=\"%s\"", $alt);
