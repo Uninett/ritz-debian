@@ -50,7 +50,7 @@
 #   $max_sample		Max number of samples
 
 sub read_log {
-    my($fh) = @_;
+    my($fh, $disable_23_handling) = @_;
     my($h, $m, $s, $sample_no, %sample_no, $sno);
     my($v, $dummy);
     my($delta, $lasttime, $day, $reboot_day, $reboot_time);
@@ -82,16 +82,18 @@ sub read_log {
         ($h, $m, $s) = split(/:/, $f[3]);
         $now = $h * 3600 + $m * 60 + $s;
 
-	# log turnover happens late in hour 23 so that some records can be
-	# logged in hour 23 of the previous day.  We need to see the date
-	# covering most of the log here...
-	if ($h < 23) {
-	    $day = $f[0] . " " . $f[1] . " " . $f[2];
-	}
-	if ($h == 23 && !$h0_seen) {
-	    $now -= 24 * 3600;
-	} elsif ($h < 23) {
-	    $h0_seen = 1;
+	if (!defined($disable_23_handling)) {
+	    # log turnover happens late in hour 23 so that some records can be
+	    # logged in hour 23 of the previous day.  We need to see the date
+	    # covering most of the log here...
+	    if ($h < 23) {
+		$day = $f[0] . " " . $f[1] . " " . $f[2];
+	    }
+	    if ($h == 23 && !$h0_seen) {
+		$now -= 24 * 3600;
+	    } elsif ($h < 23) {
+		$h0_seen = 1;
+	    }
 	}
 	
 	# Be careful not to zero counters needlessly.  Check timetamp of
