@@ -1,5 +1,5 @@
 #
-# $Id
+# $Id$
 #
 
 catch { namespace delete ::persist }
