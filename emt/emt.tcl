@@ -28,7 +28,7 @@ proc emt_main {} {
 
     ::persist::setup "emt-save.tcl"
     ::persist::restore
-    ::persist::startPeriodicCheckpoint 5;# minutes
+    ::persist::startPeriodicDump 5;# minutes
 
     ::persist::add state
     ::persist::add nagged
