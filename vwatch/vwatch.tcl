@@ -13,7 +13,7 @@ source "../common/conffile.tcl"
 source "../common/polljob.tcl"
 source "../common/config.tcl"
 
-namespace import ::polljob::cx
+namespace import ::polljob::name
 
 #
 # Polljob upcalls
@@ -50,7 +50,7 @@ proc getDate { secs } {
 proc dev_descr_file sh {
     global dev_descr_dir
 
-    return [format "%s/%s" $dev_descr_dir [cx $sh name]]
+    return [format "%s/%s" $dev_descr_dir [name $sh]]
 }
 
 #
@@ -90,9 +90,9 @@ proc whyReload { sh {err "unknown error"} {reason "no idea"}} {
 
     if { $err == "noError" } {
 	set res [lindex $reason 2]
-	logMsg [format "%s restart reason" [cx $sh name]] $res
+	logMsg [format "%s restart reason" [name $sh]] $res
     } else {
-	logMsg [cx $sh name] "whyReload poll returned $err"
+	logMsg [name $sh] "whyReload poll returned $err"
     }
 }
 
@@ -101,7 +101,7 @@ proc pollCisco { sh } {
 
     set code [catch {$sh get $ciscoList [list whyReload %S %E %V]} res]
     if ($code) {
-	logMsg [cx $sh name] $res
+	logMsg [name $sh] $res
     }
 }
 
@@ -110,14 +110,14 @@ proc devDescr { sh {err "unknown error"} {objid ""} {descr ""}} {
 
     if { $err == "noError" } {
 	set descr [lindex $descr 2]
-	logMsg [format "%s software" [cx $sh name]] $descr
+	logMsg [format "%s software" [name $sh]] $descr
 
 	set oid [mib oid [lindex $objid 2]]
 	if {[string first $ciscoOidPrefix $oid] == 0} { # A cisco?
 	    pollCisco $sh
 	}
     } else {
-	logMsg [cx $sh name] "poll returned $err"
+	logMsg [name $sh] "poll returned $err"
     }
 }
 
@@ -126,7 +126,7 @@ proc pollOidDescr { sh } {
 
     set code [catch {$sh get $oidDescrList [list devDescr %S %E %V]} res]
     if ($code) {
-	logMsg [cx $sh name] $res
+	logMsg [name $sh] $res
     }
 }
 
@@ -135,7 +135,7 @@ proc saveDescr { sh {err "unknown error"} {objid ""} {descr ""}} {
     if { [string compare $err "noError"] == 0 } {
 	set f [dev_descr_file $sh]
 	if { [catch { set fh [open $f "w"] } err] == 1 } {
-	    logMsg [cx $sh name] "desc-file open: $err"
+	    logMsg [name $sh] "desc-file open: $err"
 	    return
 	}
 	set descr [lindex $descr 2]
@@ -170,8 +170,8 @@ proc devUpTime { sh {err "unknown error"} {upt ""}} {
 	set up [lindex $upt 2]
 	set newUpTime [mib scan [lindex $upt 0] $up]
 	if { ! [expectedUptime $sh $newUpTime] } {
-	    logMsg [format "%s reloaded" [cx $sh name]] [whenReload $newUpTime]
-	    logMsg [format "%s uptime" [cx $sh name]] $up
+	    logMsg [format "%s reloaded" [name $sh]] [whenReload $newUpTime]
+	    logMsg [format "%s uptime" [name $sh]] $up
 	    pollOidDescr $sh
 	}
 	set uptime($sh) $newUpTime
@@ -179,7 +179,7 @@ proc devUpTime { sh {err "unknown error"} {upt ""}} {
 
 	maybeSaveDescr $sh
     } else {
-	logMsg [cx $sh name] "uptime poll returned $err"
+	logMsg [name $sh] "uptime poll returned $err"
     }
 }
 
