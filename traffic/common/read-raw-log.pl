@@ -49,7 +49,7 @@
 
 sub read_log {
     my($fh) = @_;
-    my($h, $m, $s, $sample_no);
+    my($h, $m, $s, $sample_no, %sample_no, $sno);
     my($v, $dummy);
     my($delta, $lasttime, $day, $reboot_day, $reboot_time);
     my($now);
@@ -107,9 +107,13 @@ sub read_log {
 
         ($v, $dummy) = split(/\./, $f[5]);
 
-	if ($lasttime != $now || defined($count{$v, $sample_no})) {
+	if (defined($sample_no{$now})) {
+	    $sno = $sample_no{$now};
+	} else {
 	    $sample_no++;
 	    $sample_time{$sample_no} = $now / 3600.0;
+	    $sample_no{$now} = $sample_no;
+	    $sno = $sample_no;
 	}
 
 	$lasttime = $now;
@@ -122,8 +126,8 @@ sub read_log {
                 $delta += 0xffffffff;
             }
 
-            $count{$v, $sample_no} = $delta;
-	    $sample_time{$v, $sample_no} = $now / 3600.0;
+            $count{$v, $sno} = $delta;
+	    $sample_time{$v, $sno} = $now / 3600.0;
 
             $base{$v} = $f[6];
             if ($sample_no == 10) {
