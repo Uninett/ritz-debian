@@ -186,9 +186,11 @@ proc eventCommit { id } {
     set Attrs EventAttrs_$id
     global $Attrs
 
-    if { [getEventAttr $id state] == "embryonic" } {
-	setEventAttr $id opened [clock seconds]
-	setEventAttr $id state "open"
+    if { [info exists [set NewAttrs](state)] } {
+	if { [set [set NewAttrs](state)] == "embryonic" } {
+	    setEventAttr $id opened [clock seconds]
+	    setEventAttr $id state "open"
+	}
     }
 
     # Commit values
