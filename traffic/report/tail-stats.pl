@@ -312,7 +312,7 @@ sub flag_deviations {
 	{
 	    if (!$dhp->{$cv}) {
 		printf("%s %s %5s dev: cur %d avg %d stdd %d * %4.2f\n",
-		       time2str("%d %h $Y %T", $$tp[$i]),
+		       time2str("%d %h %T", $$tp[$i]),
 		       &file_to_name($b, &today),
 		       $cv,
 		       $$vp[$i],
@@ -326,11 +326,11 @@ sub flag_deviations {
 	    if ($delta < $down_tresh) {
 		if ($dhp->{$cv}) {
 		    printf("%s %s %5s clearing deviation\n",
-			   time2str("%d %h $Y %T", $$tp[$i]),
+			   time2str("%d %h %T", $$tp[$i]),
 			   &file_to_name($b, &today),
 			   $cv);
 		    printf("%s %s %5s values: cur %d avg %d stdd %d\n",
-			   time2str("%d %h $Y %T", $$tp[$i]),
+			   time2str("%d %h %T", $$tp[$i]),
 			   &file_to_name($b, &today),
 			   $cv,
 			   $$vp[$i],
