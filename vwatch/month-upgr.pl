@@ -1,0 +1,188 @@
+#!/usr/bin/perl
+
+# $Id$
+
+# Produce a report of this month's upgrades
+
+require 'config.pl';
+require 'unctime.pl';
+require 'pretty.pl';
+
+
+# Is the two time strings (form "Mon Jul 29 12:40:53 1996") close
+# within X seconds?
+
+sub close_times {
+    local($a, $b, $x) = @_;
+    local($a_t, $b_t);
+    
+    $a_t = &unctime($a);
+    $b_t = &unctime($b);
+
+    if ($a_t > $b_t) {
+	return ( ($a_t - $b_t) <= $x );
+    } else {
+	return ( ($b_t - $a_t) <= $x );
+    }
+}
+
+sub get_start_software {
+    local($daydir) = @_;
+    local($dn, $f, $fn, $desc);
+    
+    $dn = $daydir . "/descs";
+    opendir (dir, $dn) || die "Could not opendir $dn: $!";
+    while ($f = readdir(dir)) {
+	if ($f eq "." || $f eq "..") { next; }
+	$fn = $dn . "/" . $f;
+	open(in, $fn) || die "Could not open $fn: $!";
+	while(<in>) {
+	    $desc .= $_;
+	}
+	close(in);
+	$desc =~ s/\r//g;
+	$software{$f} = $desc;
+	$old_software{$f} = $desc;
+	undef $desc;
+    }
+    closedir (dir);
+}
+
+# Read a day's worth of data, store results in the globals
+#
+# $restarts{$rtr}	number of restarts
+# $reload_date{$rtr}	remember last reload time
+# $upgraded{$rtr}	upgraded?
+# $software{$rtr}	current software version
+# $reason{$rtr}		reason for last restart
+# 
+# Return date of last entry seen a'la "Oct 08".
+
+sub read_day_data {
+    local($in) = @_;
+    local($rtr, $desc, @a, $day);
+
+    while(<$in>) {
+	chop; split;
+	$rtr = $_[5];
+	$day = $_[1] . " " . $_[2]; # "prettyprinted" date a'la "Oct 08"
+	if (/reloaded: (.*)/) {
+	    @a = split(/[ \t\n]+/, $1);
+	    if ($_[0] eq $a[0] &&
+		$_[1] eq $a[1] &&
+		$_[2] eq $a[2])	# same date
+	    {
+		$recent_restart{$rtr} = 1;
+		if (! defined $restarts{$rtr}) {
+		    $restarts{$rtr} = 1;
+		} else {
+		    if (defined $reload_date{$rtr} &&
+			! &close_times($1, $reload_date{$rtr}, 5))
+		    {
+			$restarts{$rtr}++;
+		    }
+		}
+	    }
+	    $reload_date{$rtr} = $1;
+	} elsif (/uptime: (.*)/) {
+	    $uptime{$rtr} = $1;
+	} elsif (/software: (.*)/) {
+	    if (/\#$/) {
+		while(<in>) {
+		    if (/^\#$/) {
+			$desc =~ s/\r//g;
+			last;
+		    }
+		    $desc .= $_;
+		}
+	    } else {
+		$desc = sprintf("%s\n", $1);
+	    }
+	    if (defined $software{$rtr} &&
+		$software{$rtr} ne $desc)
+	    {
+		$upgraded{$rtr} = 1;
+	    }
+	    $software{$rtr} = $desc;
+	    undef $desc;
+	} elsif (/restart reason: (.*)/) {
+	    $reason{$rtr} = $1;
+	}
+    }
+    return $day;
+}
+
+sub report_day {
+    local($day) = @_;
+    local(@report, $rtr);
+    
+    foreach $rtr (keys %upgraded) {
+	push(@report,
+	     sprintf("%-6s %-15s from %-23s to %-23s\n",
+		     $day,
+		     $rtr,
+		     &pretty_desc($old_software{$rtr}),
+		     &pretty_desc($software{$rtr})
+		     ));
+	$restarts{$rtr} = 0;
+    }
+    foreach $rtr (keys %software) {
+	$old_software{$rtr} = $software{$rtr};
+    }
+    undef %upgraded;
+    return @report;
+}
+
+
+sub process_day {
+    local($daydir) = @_;
+    local($lf, $day);
+
+    $lf = $daydir . "/ver-watch.log";
+
+    open(in, $lf) || die "Could not open $lf: $!\n";
+    $day = &read_day_data(in);
+    close(in);
+    return $day;
+}
+
+sub process_month {
+    local($month) = @_;
+    local(@report, $day, $daydir, $d);
+    
+    $daydir = $LOGTREE . "/" . $month . "/01";
+    
+    &get_start_software($daydir); # first day in month
+    
+    opendir(d, $LOGTREE . "/" . $month) ||
+	die "Could not open month directory for $month: $!";
+    while ($d = readdir(d))
+    {
+	if ($d eq "." || $d eq "..") { next; }
+	$daydir = $LOGTREE . "/" . $month . "/" . $d;
+	$day = &process_day($daydir);
+	push (@report, &report_day($day));
+    }
+    return @report;
+}
+
+sub usage {
+    printf(STDERR "usage: $0 yyyy-mm\n");
+    exit(1);
+}
+
+
+#
+# Main
+#
+
+if ($#ARGV != 0) {
+    &usage();
+}
+$month = $ARGV[0];
+
+@report = &process_month($month);
+
+while($line = shift(@report)) {
+    printf("%s", $line);
+}
