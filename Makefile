@@ -9,7 +9,9 @@ RITZDIST=	ritz-${VERSION}.tar.gz
 ZINOFILES=	README TODO zino sha mibs scotty.diff Makefile
 ZINODIST=	zino-${VERSION}.tar.gz
 
-all: Makefile
+all: version.tcl
+
+version.tcl: Makefile
 	rm -f version.tcl
 	echo "set Version \"${VERSION}\"" > version.tcl
 
