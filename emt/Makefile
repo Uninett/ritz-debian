@@ -2,9 +2,6 @@
 # $Id$
 #
 
-TCLSH=	/usr/pkg/bin/tclsh8.0
-BINDIR=	/local/bin
-
 SRCS=	\
 	../common/attrs.tcl \
 	../common/auth.tcl \
@@ -17,7 +14,7 @@ SRCS=	\
 
 all: emt
 
-emt: ${SRCS} Makefile
+emt: ${SRCS} Makefile ../subst
 	rm -f $@
 	echo "#! "${TCLSH} > $@
 	echo "# -*- Tcl -*- " >> $@
@@ -28,6 +25,8 @@ emt: ${SRCS} Makefile
 		cat $$f >> $@; \
 	done
 	echo "emt_main" >> $@
+	mv $@ $@.new
+	sed -f ../subst $@.new > $@
 	chmod +x $@
 
 install:
@@ -36,3 +35,5 @@ install:
 
 clean:
 	rm -f emt
+
+.include "../Makefile.inc"
