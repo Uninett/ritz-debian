@@ -52,6 +52,42 @@ sub get_start_software {
     closedir (dir);
 }
 
+# Also harvest daily description files for upgrades 
+
+sub check_descs {
+    my($daydir) = @_;
+
+    my($dn, $f, $fn, $desc);
+    
+    $dn = $daydir . "/descs";
+    opendir (dir, $dn) || die "Could not opendir $dn: $!";
+    while ($f = readdir(dir)) {
+	if ($f eq "." || $f eq "..") { next; }
+	$fn = $dn . "/" . $f;
+	open(in, $fn) || die "Could not open $fn: $!";
+	while(<in>) {
+	    $desc .= $_;
+	}
+	close(in);
+	$desc =~ s/\r//g;
+
+	if (defined $cur_software{$f} &&
+	    $cur_software{$f} ne $desc)
+	{
+	    if (defined($upgraded{$f})) {
+		$software{$f} .= "" . $desc;
+	    } else {
+		$software{$f} = $desc;
+	    }
+	    $upgraded{$f} = 1;
+	}
+	$cur_software{$f} = $desc;
+
+	undef $desc;
+    }
+    closedir (dir);
+}
+
 # Read a day's worth of data, store results in the globals
 #
 # $restarts{$rtr}	number of restarts
@@ -111,8 +147,8 @@ sub read_day_data {
 		    $software{$rtr} = $desc;
 		}
 		$upgraded{$rtr} = 1;
-		$cur_software{$rtr} = $desc;
 	    }
+	    $cur_software{$rtr} = $desc;
 	    undef $desc;
 	} elsif (/restart reason: (.*)/) {
 	    $reason{$rtr} = $1;
@@ -140,7 +176,6 @@ sub report_day {
 	    $old = $sw;
 	    $restarts{$rtr} = 0;
 	}
-	$old_software{$rtr} = $sw[$#sw];
     }
     undef %upgraded;
     return @report;
@@ -150,12 +185,16 @@ sub report_day {
 sub process_day {
     my($daydir) = @_;
     my($lf, $day);
+    my($r);
+
+    &check_descs($daydir);
 
     $lf = $daydir . "/ver-watch.log";
 
     open(in, $lf) || die "Could not open $lf: $!\n";
     $day = &read_day_data(in);
     close(in);
+
     return $day;
 }
 
@@ -175,6 +214,10 @@ sub process_month {
 	$daydir = $LOGTREE . "/" . $month . "/" . $d;
 	$day = &process_day($daydir);
 	push (@report, &report_day($day));
+
+	foreach $r (keys %cur_software) {
+	    $old_software{$r} = $cur_software{$r};
+	}
     }
     return @report;
 }
