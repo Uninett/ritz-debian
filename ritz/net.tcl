@@ -140,6 +140,21 @@ proc getAttrs { id } {
     }
 }
 
+proc cleanLog { log } {
+
+    set newlog ""
+    foreach le $log {
+	regexp {^([0-9]+) (.*)$} $l whole stamp rest
+	if { [regexp {changed state from.* on ([0-9]+)} $rest whole when] } {
+	    set when_str [clock format $when]
+	    regsub {(on [0-9]+)} $rest [format "on %s" $when_str] rest
+	}
+	set line [format "%s: %s\n" [clock format $stamp] $rest]
+	set newlog [format "%s%s" $newlog $line]
+    }
+    return $newlog
+}
+
 proc getLog { id } {
     global ServerChan
 
@@ -152,15 +167,9 @@ proc getLog { id } {
     }
     set log ""
     for { safeGets $chan l } { $l != "." } { safeGets $chan l } {
-	regexp {^([0-9]+) (.*)$} $l whole stamp rest
-	if { [regexp {changed state from.* on ([0-9]+)} $rest whole when] } {
-	    set when_str [clock format $when]
-	    regsub {(on [0-9]+)} $rest [format "on %s" $when_str] rest
-	}
-	set line [format "%s: %s\n" [clock format $stamp] $rest]
-	set log [format "%s%s" $log $line]
+	set log [format "%s%s" $log $l]
     }
-    return $log
+    return [cleanLog $log]
 }
 
 proc getHist { id } {
