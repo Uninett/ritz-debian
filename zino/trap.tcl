@@ -27,7 +27,7 @@ proc doTrap { a type args } {
     set sh [handle $AddrToRouter($a)]
     set r [name $sh]
 
-    puts [format "%s: trap-type %s" $r $type]
+#    puts [format "%s: trap-type %s" $r $type]
 
     foreach vb $args {
 	set oid [lindex $vb 0]
@@ -38,7 +38,7 @@ proc doTrap { a type args } {
 	set $var $val
 	set instance($var) [join [lrange $ol 1 end] "."]
 
-	puts [format "%s: var %s value %s" $r $fn $val]
+#	puts [format "%s: var %s value %s" $r $fn $val]
 
     }
     if { [info exists sysUpTime] } {
