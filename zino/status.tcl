@@ -450,29 +450,28 @@ proc setupHandles { } {
 }
 
 proc stopRouterPolling { r } {
-    global pollJob Address cx
+    global pollJob cx
 
     catch { $pollJob($r) destroy }
+    catch { unset pollJob($r) }
     after cancel startRouterPollJob $r
 
     catch {
 	set h $cx($r,handle)
 	$h destroy
+	unset cx($r,handle)
     }
-
-    catch { unset pollJob($r) }
-    catch { unset Address($r) }
-    catch { unset cx($r,handle) }
-    catch { unset cx($h,name) }
 }
 
 proc stopPollDeletedRouters { } {
-    global DeletedRouter
+    global DeletedRouter Address cx
 
     foreach r [array names DeletedRouter] {
 	stopRouterPolling $r
 
 	unset DeletedRouter($r)
+	catch { unset Address($r) }
+	catch { unset cx($h,name) }
     }
 }
 
