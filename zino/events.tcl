@@ -139,7 +139,9 @@ proc eventId { ix type } {
     global EventId EventIdToIx
 
     if { [info exists EventId($ix,$type)] } {
-	return $EventId($ix,$type)
+	set id $EventId($ix,$type)
+	initEventAttrs $id
+	return $id
     }
     set id [newEvent]
     set EventId($ix,$type) $id
