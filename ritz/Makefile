@@ -12,7 +12,7 @@ all: ritz
 ../version.tcl: ../Makefile
 	(cd ..; make version.tcl)
 
-ritz: ${SRCS} Makefile
+ritz: ${SRCS} Makefile ../subst
 	rm -f $@
 	echo "#! "${WISH} > $@
 	echo "#" >> $@
@@ -23,6 +23,8 @@ ritz: ${SRCS} Makefile
 		cat $$f >> $@; \
 	done
 	echo "main" >> $@
+	sed -e -f ../subst $@ > $@.new
+	mv $@.new $@
 	chmod +x $@
 
 install:
