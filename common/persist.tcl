@@ -52,7 +52,7 @@ namespace eval ::persist {
 	    catch { $persistJob destroy }
 	}
 	set persistJob [job create \
-		-interval [expr $intv * 1000 * 60] \
+		-interval [expr $intv * 1000] \
 		-command [namespace current]::dumpAll]
     }
 
