@@ -18,4 +18,6 @@ install:
 		install -c $$f ${MIBDIR}; \
 	done
 
+clean:
+
 .include "../Makefile.inc"
