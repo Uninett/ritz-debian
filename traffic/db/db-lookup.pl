@@ -126,7 +126,7 @@ sub main'data_origin {
     }
     @a = split(/:/, $entry);	# "value date-date:value date-date..."
     @b = split(/ /, $a[0]);	# "value date-date" or "value date-"
-    @c = split(/-/, $b[0]);	# get the date(s)
+    @c = split(/-/, $b[1]);	# get the date(s)
     return $c[0];
 }
 
