@@ -21,6 +21,7 @@ namespace eval ::auth {
 	set s [format "%s %s" $challenge $secret]
 	set r [exec sha -t <<$s]
 	::net::puts [format "user %s %s" $user $r]
+	::net::gets l
 	if {! [regexp "^200" $l] } {
 	    if { $AllowClearTextAuth } {
 		::net::puts [format "user %s %s" $user $secret]
@@ -37,8 +38,8 @@ namespace eval ::auth {
     proc reset { } {
 	variable challenge
 
-	unset challenge
-	unset authenticated
+	catch { unset challenge }
+	catch { unset authenticated }
     }
 
 }
