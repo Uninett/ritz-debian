@@ -636,6 +636,13 @@ sub do_all_files {
 
 &Getopts("d:l:n:p:u:");
 
+# -n name	logical name of port to be analyzed
+# -d datestr	date which should be analyzed
+# -u up-limit	factor on an up-transition when flagging a deviation
+# -l low-limit	factor to pass when de-flagging a deviation
+# -p percent	how many percent should data from new interval
+#		influence averaged statistical values (avg, stddev)
+
 if (defined($opt_n) && !defined($opt_d)) {
     die "Must specify both -n and -d value\n";
 }
