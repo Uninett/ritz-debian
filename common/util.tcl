@@ -5,7 +5,7 @@
 catch { namespace delete ::util }
 
 namespace eval ::util {
-    namespace export copyArray
+    namespace export copyArray mtoms
 
     proc copyArray { from to } {
 	upvar $from From
@@ -15,6 +15,11 @@ namespace eval ::util {
 	foreach ix [array names From] {
 	    set To($ix) $From($ix)
 	}
+    }
+
+    proc mtoms { mins } {
+
+	return [expr int( $mins * 60 * 1000 )]
     }
 
 }
