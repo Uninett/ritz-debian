@@ -8,6 +8,11 @@ PSRCS=	cur-vers.pl \
 	vw-month-rst.pl \
 	vw-month-upgr.pl
 
+INCSRCS=../common/util.tcl \
+	../common/conffile.tcl \
+	../common/polljob.tcl \
+	../common/config.tcl
+
 TSRCS=	vwatch.tcl \
 	vwatch-head.tcl \
 	vwatch-main.tcl
@@ -47,6 +52,7 @@ ${PPROGS}: ${PSRCS} ${SUBST}
 vwatch: vwatch.tcl vwatch-main.tcl ${SUBST}
 	rm -f vwatch
 	(sed -f ${SUBST} ${.CURDIR}/vwatch-head.tcl; \
+	cat ${INCSRCS}; \
 	cat ${.CURDIR}/vwatch.tcl; \
 	sed -f ${SUBST} ${.CURDIR}/vwatch-main.tcl) > vwatch
 
