@@ -16,3 +16,7 @@ $Id$		-*- Text -*-
  o Zino's trap handling machinery badly needs to be reimplemented.
 
  o Zino's response/no-response badly needs to be reimplemented.
+
+ o Ritz needs to sort "open" events before "waiting" events.
+
+ o Ritz should use different color coding for non-open events.
