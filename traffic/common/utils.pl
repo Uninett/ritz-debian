@@ -76,6 +76,18 @@ sub min {
     return $min;
 }
 
+# Return closest lower integer value
+# (rounds to lower value when negative, so that -0.5 returns -1)
+
+sub floor_int {
+    my($v) = @_;
+
+    if ($v < 0) {
+	$v--;
+    }
+    return int($v);
+}
+
 # Return list of files in a directory
 
 sub directory_files {
