@@ -160,7 +160,7 @@ sub report {
 	printf("%-15s (%d total) current version %s\n",
 	       $rtr,
 	       $restarts{$rtr},
-	       &pretty_desc($software{$rtr}));
+	       &pretty_desc($cur_software{$rtr}));
 	printf("%-15s last restart %s",
 	       $rtr,
 	       $reload_date{$rtr});
