@@ -251,6 +251,9 @@ proc swalkErrorHandler { sh err } {
 
 proc cleanupDelayedResponse { sh } {
     global responseCheckInProgress
+    global cx
+
+    set r $cx($sh,name)
 
     # cleanup any remaining check jobs
     after cancel delayedCheckResponse $sh
