@@ -141,5 +141,30 @@ namespace eval ::config {
 	return $new
     }
 
+    # for debugging
+    proc printConf { config defaults } {
+	upvar $config Config
+	upvar $defaults Defaults
+
+	foreach ix [array names Defaults] {
+	    puts [format "default %s: $s" $ix $Defaults($ix)]
+	}
+	puts ""
+	foreach ix [array names Config] {
+	    set l [split $ix ","]
+	    set dev [lindex $l 0]
+	    if { ! [info exists seen($dev)] } {
+		set seen($dev) 1
+		puts [format "name: %s" $dev]
+		foreach ix2 [array names Config] {
+		    set l [split $ix ","]
+		    set d [lindex $l 0]
+		    if { $d != $dev } { continue; }
+		    set a [lindex $l 1]
+		    puts [format "%s: %s" $a $Config($d,$a)]
+		}
+	    }
+	}
+    }
 
 }
