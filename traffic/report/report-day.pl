@@ -191,18 +191,6 @@ sub undef_file_data {
     undef %peak_disc_pct;
 }
 
-sub cat_and_base {
-    my($f) = @_;
-
-    if ($f =~ /^(.*).gz$/) {
-	return("%GZCAT%", $1);
-    } elsif ($f =~ /^(.*).Z$/) {
-	return("%ZCAT%", $1);
-    } else {
-	return("/bin/cat", $f);
-    }
-}
-
 
 sub report_one_port {
     my($n) = @_;
