@@ -58,3 +58,4 @@ $Id$		-*- Text -*-
  o Clip sample values at max data rate (?).
 
  o Add environment monitoring module; check at least temperatures.
+   Should trigger alarm also on sudden temperature increases.
