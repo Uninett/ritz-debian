@@ -7,6 +7,8 @@ SRC=	../common/util.tcl ../common/conffile.tcl ../common/polljob.tcl \
 
 PROGS=	tpoller start-tpoll.sh
 
+SUBST=	${.CURDIR}/../subst
+
 all: ${PROGS}
 
 tpoller: ${SRC}
@@ -15,8 +17,8 @@ tpoller: ${SRC}
 	cat ${SRC} >> $@
 	chmod +x $@
 
-start-tpoll: start-tpoll.sh ../subst
-	sed -f ../subst start-tpoll.sh > $@
+start-tpoll: start-tpoll.sh ${SUBST}
+	sed -f ${SUBST} start-tpoll.sh > $@
 
 install: ${PROGS}
 	install -c -m 555 tpoller ${BINDIR}
