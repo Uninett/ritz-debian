@@ -175,9 +175,10 @@ proc report_compact_port { id } {
 
     set r  [::attr::get $id "router"]
     set p  [::attr::get $id "port"]
-    set d  [::attr::get $id "descr"]
     set s  [::attr::effectivePortState $id]
     set as [::attr::get $id "state"]
+    set d ""
+    catch { set d  [::attr::get $id "descr"] }
 
     return [format "%9s: %-12s %-18s (%s) (%s)" $s $r $p $as $d]
 }
@@ -222,10 +223,14 @@ proc emt_hist { id } {
 
 proc report_single_port { id } {
 
+    set desc ""
+    catch { set desc [::attr::get $id "descr"] }
     set ps [::attr::effectivePortState $id]
     set rs [format   "      router: %s\n"     [::attr::get $id "router"]]
     set rs [format "%s        port: %s\n" $rs [::attr::get $id "port"]]
-    set rs [format "%s       descr: %s\n" $rs [::attr::get $id "descr"]]
+    if {$desc != ""} {
+	set rs [format "%s       descr: %s\n" $rs $desc]
+    }
     set rs [format "%s       state: %s\n" $rs $ps]
     set rs [format "%s   portstate: %s\n" $rs [::attr::get $id "portstate"]]
     set rs [format "%s  case-state: %s\n" $rs [::attr::get $id "state"]]
@@ -397,7 +402,7 @@ proc emt_newlog { id } {
 proc emt_getlog { id } {
     global log
 
-    set log($id) [::cp::getLog $id]
+    set log($id) [::cp::getCleanLogLines $id]
 }
 
 proc emt_lastlogline { id } {
