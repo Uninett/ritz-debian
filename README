@@ -35,6 +35,7 @@ scheme which uses the Secure Hash Algorithm implemented by the program
 in the sha/ subdirectory.  Compile and install it in a directory in
 the users PATH to use it.
 
+			 - oo -
 
 Since the above was written, the NORDstat package has been integrated
 into this package, and zino, the traffic statistics collector and the
