@@ -292,7 +292,7 @@ sub update_dbs {
     foreach $fn (keys %line) {
 	if (!defined $line{$fn}) { next; }
 	if (defined($opt_v)) {
-	    printf(STDERR "Checking %s ...");
+	    printf(STDERR "Checking %s ...", $fn);
 	}
 	if (defined $ftn{$fn}) {
 	    # separate entries in file-to-name database
