@@ -368,6 +368,7 @@ sub report {
     if (!defined($name)) {
 	$name = $b;
     }
+    # Output: name   last-kbps-in last-kbps-out avg-kbps-in avg-kbps-out
     printf("%-30s %8d %8d %8d %8d %8d\n",
 	   $name,
 	   $ia->[$#$ia],
