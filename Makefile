@@ -4,10 +4,7 @@
 
 VERSION=0.3a
 
-RITZFILES=	README TODO ritz sha scotty.diff Makefile
-RITZDIST=	ritz-${VERSION}.tar.gz
-ZINOFILES=	README TODO zino sha mibs scotty.diff Makefile
-ZINODIST=	zino-${VERSION}.tar.gz
+SUBDIR=emt ritz sha tpoller traffic vwatch zino
 
 all: version.tcl subst
 
@@ -34,24 +31,7 @@ subst: Makefile.inc Makefile mk-subst.awk
 
 install clean:
 
-dist: ${RITZDIST} ${ZINODIST}
+dist:
 
-
-${RITZDIST}: ${RITZFILES}
-	rm -f ${RITZDIST}
-	tar -cvzf ${RITZDIST} \
-		--exclude RCS \
-		${RITZFILES}
-
-${ZINODIST}: ${ZINOFILES}
-	rm -f ${ZINODIST}
-	tar -cvzf ${ZINODIST} \
-		--exclude save-state.tcl \
-		--exclude secrets \
-		--exclude status.err \
-		--exclude save-state.save \
-		--exclude routers.cf \
-		--exclude eventid \
-		--exclude zino.err \
-		--exclude ktrace.out \
-		${ZINOFILES}
+.include <bsd.subdir.mk>
+.include <bsd.prog.mk>
