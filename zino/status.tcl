@@ -177,8 +177,9 @@ proc recordIntf { sh vbl } {
 
 	    if { [catch {set sysUpTime [getUptime $sh]} msg] } {
 		log [format "%s: %s" $r $msg]
-		# give it up
-		return
+		noResponse $sh
+		# Fake it
+		set sysUpTime [mib scan ifLastChange $ifLastChange]
 	    }
 
 	    set fmt "%s: port \"%s\" ix %s"
@@ -200,6 +201,9 @@ proc recordIntf { sh vbl } {
 	    eventLog $eid $s
 
 	    eventCommit $eid
+
+	    # Re-verify state change after 2 minutes
+	    after [expr 120 * 1000] pollSingleIf $sh $ifIndex
 	}
     }
     set portState($ix) $state
