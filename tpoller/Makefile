@@ -5,7 +5,7 @@
 SRC=	../common/util.tcl ../common/conffile.tcl ../common/polljob.tcl \
 	../common/config.tcl ../common/justSNMP.tcl tpoller.tcl main.tcl
 
-PROGS=	tpoller start-tpoll.sh
+PROGS=	tpoller start-tpoll
 
 SUBST=	${.CURDIR}/../subst
 
@@ -18,6 +18,7 @@ tpoller: ${SRC}
 	chmod +x $@
 
 start-tpoll: start-tpoll.sh ${SUBST}
+	rm -f $@
 	sed -f ${SUBST} start-tpoll.sh > $@
 
 install: ${PROGS}
