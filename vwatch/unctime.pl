@@ -1,7 +1,6 @@
-#!/usr/bin/perl
-
+#
 # $Id$
-
+#
 # Convert a string of type "Mon Jul 29 12:40:53 1996"
 # or "Mon Jul 19 12:40:53 MET DST 1996" to seconds since
 # the epoch using timelocal().
