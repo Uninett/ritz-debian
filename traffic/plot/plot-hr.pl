@@ -255,7 +255,7 @@ sub plot_errors {
 		printf($fh "0 0 0\n", $i, 0);
 	    }
 	} else {
-	    printf($fh "? ? ?\n");
+	    printf($fh "0 0 0\n");
 	}
     }
 }

@@ -279,7 +279,7 @@ sub plot_errors {
 		printf($fh " 0 0 0"); 
 	    }
 	} else {
-	    printf($fh " ? ? ?");
+	    printf($fh " 0 0 0");
 	}
 	printf($fh "\n");
     }
