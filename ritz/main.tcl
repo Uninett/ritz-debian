@@ -3,7 +3,7 @@
 #
 
 package require Tnm
-package require Tix
+# package require Tix
 
 mib load rfc1213.mib
 
