@@ -64,7 +64,7 @@ sub day_traffic_header {
 sub day_traffic_line {
     my($dsp, @l) = @_;
 
-    printf("%-25.25s %3s  %2d %3s  %2d  %3s  %2d %3s  %2d  %3s %3s  %6d\n",
+    printf("%-25.25s %3s  %2d %3s  %2d  %3s  %2d %3s  %2d  %3s %3s  %7d\n",
 	   $l[0],
 	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic\">%3d</a>",
 		   $l[0], $dsp, $l[1]),
