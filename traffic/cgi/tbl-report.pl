@@ -481,7 +481,7 @@ sub day_eerrs_line {
 		     "Abort errors"	=> "-n -r +7 +4 +5 +6 +8",
 		     "Ignored packets"	=> "-n -r +8 +4 +5 +6 +7",
 		     "Interface resets" => "-n -r +9 +4 +5 +6 +7 +8",
-		     "Output discards"	=> "-n -r +9 +10 +4",
+		     "Output discards"	=> "-n -r +10 +9 +4",
 		     "Peak out discards"=> "-n -r +10 +9 +4",
 		     "Name"		=> "",
 		 },
