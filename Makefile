@@ -2,7 +2,7 @@
 # $Id$
 #
 
-VERSION=0.3b
+VERSION=0.4
 
 SUBDIR=conf-diff emt ritz sha tpoller traffic vwatch zino
 
@@ -33,9 +33,18 @@ new-vars: Makefile.inc Makefile.inc.dist
 	  awk -F= '/^#/{} /=/ { print $$1 }' Makefile.inc.dist >/tmp/n.$$$$; \
 	  diff /tmp/o.$$$$ /tmp/n.$$$$; rm /tmp/o.$$$$ /tmp/n.$$$$ )
 
-install clean:
+beforeinstall:
+	@for d in ${TOPDIR} ${TOPDIR}/bin; do \
+		if [ ! -d $$d ]; then \
+			echo mkdir $$d; \
+			mkdir $$d; \
+		fi; \
+	done
+
+clean:
 
 dist:
 
 .include <bsd.subdir.mk>
 .include <bsd.prog.mk>
+.include "Makefile.inc"
