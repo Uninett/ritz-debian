@@ -53,7 +53,7 @@ install: ${PROGS} ${COMMON}
 		echo install -c -m 444 $$f ${LIBDIR}; \
 		install -c -m 444 $$f ${LIBDIR}; \
 	done
-	if [ ! -d ${TOPDIR}/ver-watch/logs/today/descs ]; then \
+	@if [ ! -d ${TOPDIR}/ver-watch/logs/today/descs ]; then \
 		echo mkdir -p ${TOPDIR}/ver-watch/logs/today/descs; \
 		mkdir -p ${TOPDIR}/ver-watch/logs/today/descs; \
 	fi
