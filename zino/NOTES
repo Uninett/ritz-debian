@@ -26,4 +26,4 @@ Possible extensions:
  o Monitor error counters, trigger alarm on crossing of
    (configurable?) threshold value
  o Check for crashed routers (on cisco), report restarted routers.
-
+ o Monitor OSPF neighbor state, report changes.
