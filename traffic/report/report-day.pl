@@ -243,6 +243,18 @@ sub do_all_files {
     }
 }
 
+sub sprint_percent {
+    my($val) = @_;
+
+    if ($val >= 10) {
+	return sprintf("%3d", $val);
+    } elsif ($val >= 1) {
+	return sprintf("%3.1f", $val);
+    } elsif ($val < 1) {
+	return sprintf("%3.1f", $val);
+    }
+
+}
 
 sub report_traffic {
     my($out, $n) = @_;
@@ -257,23 +269,23 @@ sub report_traffic {
 #    printf("\n");
 
     if ($ifspeed{$n} != 0) {
-	printf($out "%-20s %3d  %02d %3d  %02d",
+	printf($out "%-20s %3s  %02d %3s  %02d",
 	       $n,
-	       $max_r{$n,$iov}*8*100.0/3600/$ifspeed{$n},
+	       &sprint_percent($max_r{$n,$iov}*8*100.0/3600/$ifspeed{$n}),
 	       $max_h{$n,$iov},
-	       $max_r{$n,$oov}*8*100.0/3600/$ifspeed{$n},
+	       &sprint_percent($max_r{$n,$oov}*8*100.0/3600/$ifspeed{$n}),
 	       $max_h{$n,$oov});
-	printf($out "  %3d  %02d %3d  %02d  %3d %3d  %6d  %6d  %3d  %3d\n",
-	       $peak_r{$n,$iov}*8*100.0/$ifspeed{$n},
+	printf($out "  %3s  %02d %3s  %02d  %3s %3s  %6d  %6d  %3s  %3s\n",
+	       &sprint_percent($peak_r{$n,$iov}*8*100.0/$ifspeed{$n}),
 	       $peak_h{$n,$iov},
-	       $peak_r{$n,$oov}*8*100.0/$ifspeed{$n},
+	       &sprint_percent($peak_r{$n,$oov}*8*100.0/$ifspeed{$n}),
 	       $peak_h{$n,$oov},
-	       $total{$n,$iov}*8*100.0/3600/24/$ifspeed{$n},
-	       $total{$n,$oov}*8*100.0/3600/24/$ifspeed{$n},
+	       &sprint_percent($total{$n,$iov}*8*100.0/3600/24/$ifspeed{$n}),
+	       &sprint_percent($total{$n,$oov}*8*100.0/3600/24/$ifspeed{$n}),
 	       $ifspeed{$n}/1000,
 	       $iftype{$n},
-	       $in_90perc_bps * 100.0 / $ifspeed{$n},
-	       $out_90perc_bps * 100.0 / $ifspeed{$n}
+	       &sprint_percent($in_90perc_bps * 100.0 / $ifspeed{$n}),
+	       &sprint_percent($out_90perc_bps * 100.0 / $ifspeed{$n})
 	       );
     }
 }
