@@ -75,7 +75,7 @@ proc getUptime { sh } {
 
     if { [catch {set vbl [$sh get "sysUpTime.0"]} msg] } {
 	logerr [format "Uptime poll FAILED for %s: %s" [name $sh] $msg]
-	error [format "%s: %s" [name $sh] $msg]
+#	error [format "%s: %s" [name $sh] $msg]
     }
     set name [lindex [lindex $vbl 0] 0]
     set value [lindex [lindex $vbl 0] 2]
@@ -102,7 +102,7 @@ proc getConfig { sh } {
 proc getSysObjID { sh } {
     if [catch {set vbl [$sh get "sysObjectID.0"]} msg] {
 	logerr [format "sysObjectID poll FAILED for %s: %s" [name $sh] $msg]
-	error [format "%s: %s" [name $sh] $msg]
+#	error [format "%s: %s" [name $sh] $msg]
     }
     set name  [lindex [lindex $vbl 0] 0]
     set value [lindex [lindex $vbl 0] 2]
@@ -185,9 +185,9 @@ proc pollIntfs { sh } {
 	# no endscript
 #	puts [format "finished polling %s" [name %S]]
     } {
-	set msg [format "%s poll: %s" [name %S] %E
+	set msg [format "%s poll: %s" [name %S] %E]
 	logerr $msg
-	error $msg
+#	error $msg
     }
 }
 
