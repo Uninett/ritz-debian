@@ -70,8 +70,9 @@ sub read_config {
 
     open(IN, $f) || die "Could not open $f: $!\n";
     while(<IN>) {
+	chomp;
 	if (/^\#/) { next; }
-	if (/^default community:\s(\S)$/) {
+	if (/^default community:\s(\S+)$/) {
 	    $def_community = $1;
 	    next;
 	}
@@ -81,6 +82,7 @@ sub read_config {
 	$poll_seen = 0;
 	while (!/^$/) {
 	    $_ = <IN>;
+	    chomp;
 	    if (/^address:\s+([0-9].+)$/) {
 		$polladdr{$dev} = $1;
 		$poll_seen = 1;
