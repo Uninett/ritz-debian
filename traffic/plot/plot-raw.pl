@@ -248,7 +248,7 @@ sub decorate_discards {
 
 sub plot_errors {
     my($line, $fh, $dn, $d, $tm) = @_;
-    my($i, $has_details, $val, $pkts);
+    my($i, $has_details, $val, $pkts, $v, $tprinted);
 
     $has_details = 0;
     foreach $i (0 .. 10) {
@@ -256,7 +256,13 @@ sub plot_errors {
     }
 
     foreach $i (0 .. $max_sample) {
-	printf($fh "%f", $sample_time{"ifInErrors",$i} + ($d*24));
+	$tprinted = 0;
+	foreach $v ("ifInUcastPkts" "ifInNUcastPkts" "ifInErrors") {
+	    if (!$tprinted && defined($sample_time{$v,$i})) {
+		printf($fh "%f", $sample_time{$v,$i} + ($d*24));
+		$tprinted = 1;
+	    }
+	}
 
 	$pkts = ($count{"ifInUcastPkts",$i} +
 		 $count{"ifInNUcastPkts",$i} +
@@ -277,10 +283,10 @@ sub plot_errors {
 		&maxit($val = $count{"locIfInAbort",$i} * 100.0 / $pkts);
 		printf($fh " %f", $val);
 	    } else {
-		printf($fh "0 0 0"); 
+		printf($fh " 0 0 0"); 
 	    }
 	} else {
-	    printf($fh "? ? ?");
+	    printf($fh " ? ? ?");
 	}
 	printf($fh "\n");
     }
