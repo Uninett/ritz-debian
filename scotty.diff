@@ -1,3 +1,4 @@
+Only in src-2.1.7-local: Makefile
 diff -ru2 src-2.1.7/tnm/snmp/straps.c src-2.1.7-local/tnm/snmp/straps.c
 --- src-2.1.7/tnm/snmp/straps.c	Fri Sep 13 19:57:46 1996
 +++ src-2.1.7-local/tnm/snmp/straps.c	Sat Mar 14 22:31:39 1998
@@ -17,3 +18,26 @@ diff -ru2 src-2.1.7/tnm/snmp/straps.c src-2.1.7-local/tnm/snmp/straps.c
 +    /*
       * Open and bind the normal trap socket:
       */
+diff -ru2 src-2.1.7/unix/tnmUnixSocket.c src-2.1.7-local/unix/tnmUnixSocket.c
+--- src-2.1.7/unix/tnmUnixSocket.c	Wed Sep 18 23:37:21 1996
++++ src-2.1.7-local/unix/tnmUnixSocket.c	Mon Feb  1 22:21:40 1999
+@@ -14,4 +14,6 @@
+ #include "tnmPort.h"
+ 
++#include <fcntl.h>
++
+ int
+ TnmSocket(domain, type, protocol)
+@@ -21,5 +23,11 @@
+ {
+     int s = socket(domain, type, protocol);
+-    return (s < 0) ? TNM_SOCKET_ERROR : s;
++    if (s < 0) {
++	return TNM_SOCKET_ERROR;
++    }
++#ifdef O_NONBLOCK
++    fcntl(s, F_SETFL, O_NONBLOCK);
++#endif
++    return s;
+ }
+ 
