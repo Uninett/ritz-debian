@@ -214,7 +214,8 @@ sub read_log {
 	}
     }
     # Do averaging for the last hour
-    if ($m <= 60 - &min(10, ($delta_time * 5))) {
+    if ($m <= 60 - &min(10, ($delta_time * 5)) &&
+	$m * 60 + $s != 0) {
 	foreach $v (keys %base) {
 	    $count{$v, $h} = $count{$v, $h} * 3600.0 / ($m * 60 + $s);
 	}
