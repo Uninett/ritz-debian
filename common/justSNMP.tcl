@@ -33,8 +33,7 @@
 # $Id$
 #
 
-
-
+catch { namespace delete ::just }
 
 namespace eval ::just {
     namespace export sparseTableWalk fetchTable mapNames

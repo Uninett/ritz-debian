@@ -37,7 +37,7 @@ namespace eval ::config {
 
     # Variable access procedure
     proc conf { dev attr } {
-	varaible conf
+	variable conf
 	return $conf($dev,$attr)
     }
 
