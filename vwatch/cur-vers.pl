@@ -64,14 +64,71 @@ sub read_day_data {
     }
 }
 
-sub report {
-    my($rtr);
+sub dissect_cisco_version {
+    my($v) = @_;
+    my(%v);
 
-    open(out, "|sort -b +1 -2");
-    foreach $rtr (keys %software) {
-	printf(out "%-25s %s\n", $rtr, &pretty_desc($software{$rtr}));
+    if ($v =~ /(\d+)\.(\d+)\(([^\)]+)\)([A-Z]*)(\d*)/o) {
+	$v{"major"} = $1;
+	$v{"minor"} = $2;
+	$v{"rev"} = $3;
+	$v{"train"} = $4;
+	$v{"trainrev"} = $5;
+	return %v;
     }
-    close(out);
+    return undef;
+}
+
+sub cmp_versions {
+    my($a, $b) = @_;
+    my(%a, %b);
+
+    %a = &dissect_cisco_version($a);
+    %b = &dissect_cisco_version($b);
+    if (!defined(%a) || !defined(%b)) {
+	return $a <=> $b;
+    }
+    if ($a{"major"} == $b{"major"}) {
+	if ($a{"minor"} == $b{"minor"}) {
+	    if ($a{"train"} eq $b{"train"}) {
+		if ($a{"rev"} == $b{"rev"}) {
+		    return $a{"trainrev"} <=> $b{"trainrev"};
+		} else {
+		    return $a{"rev"} <=> $b{"rev"};
+		}
+	    } else {
+		return $a{"train"} cmp $b{"train"};
+	    }
+	} else {
+	    return $a{"minor"} <=> $b{"minor"};
+	}
+    } else {
+	return $a{"major"} <=> $b{"major"};
+    }
+    return 0;
+}
+
+sub cmp_lines {
+    my($one, $two) = @_;
+    my(@a, @b);
+
+    @a = split(/\s+/, $one);
+    @b = split(/\s+/, $two);
+
+    return &cmp_versions($a[1], $b[1]);
+}
+
+sub report {
+    my($rtr, $l);
+    my(@ll, @sl);
+
+    foreach $rtr (keys %software) {
+	push(@ll, sprintf("%-25s %s\n", $rtr, &pretty_desc($software{$rtr})));
+    }
+    @sl = sort { &cmp_lines($a, $b) } @ll;
+    foreach $l (@sl) {
+	print $l;
+    }
 }
 
 #
