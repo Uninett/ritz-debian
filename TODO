@@ -41,3 +41,5 @@ $Id$		-*- Text -*-
 
  o Zino: Add "region" tags to routers, so that a UI can restrict its
    view to only the routers which are part of a region.
+
+ o Tpoller & traffic scripts: support Counter64 measurements.
