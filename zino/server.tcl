@@ -253,7 +253,6 @@ proc doSetstateCmd { chan l } {
 
 proc doCommunityCmd { chan l } {
     global User
-    global cx
 
     if { ! [info exists User($chan)] } {
 	errResponse $chan "Not authenticated"
@@ -265,12 +264,11 @@ proc doCommunityCmd { chan l } {
 	return
     }
     set router [lindex $l 1]
-    ClientResponse $chan [format "201 %s" $cx($router,community)]
+    ClientResponse $chan [format "201 %s" [::config::conf $router community]]
 }
 
 proc doPollIntfCmd { chan l } {
     global User
-    global cx
 
     if { ! [info exists User($chan)] } {
 	errResponse $chan "Not authenticated"
@@ -287,7 +285,7 @@ proc doPollIntfCmd { chan l } {
 	errResponse $chan [format "Router %s unknown"]
 	return
     }
-    pollSingleIf $cx($router,handle) $intf
+    pollSingleIf [handle $router] $intf
     okResponse $chan
 }
 
@@ -305,7 +303,7 @@ proc doPollRtrCmd { chan l } {
     }
     set router [lindex $l 1]
     if { ! [knownRouter $router] } {
-	errResponse $chan [format "Router %s unknown"]
+	errResponse $chan [format "Router %s unknown" $router]
 	return
     }
     pollRouter $router
