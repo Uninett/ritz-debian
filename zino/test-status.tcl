@@ -1,4 +1,4 @@
-#!/store/bin/scotty
+#!/usr/pkg/bin/scotty
 #
 # $Id$
 #
