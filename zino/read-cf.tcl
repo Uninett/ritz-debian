@@ -5,7 +5,7 @@
 #
 
 proc readCf { filename } {
-    global Interval Address Dns IgnorePat Priority Timeout Retry
+    global Interval Address Dns IgnorePat WatchPat Priority Timeout Retry
     global DefaultCommunity DefaultDomain DefaultInterval
     global DefaultPriority DefaultTimeout DefaultRetry
     global DeletedRouter
@@ -68,6 +68,9 @@ proc readCf { filename } {
 		    }
 		    ignorepat: {
 			set vars {cf_IgnorePat}
+		    }
+		    watchpat: {
+			set vars {cf_WatchPat}
 		    }
 		    priority: {
 			set vars {cf_Priority}
@@ -172,6 +175,12 @@ proc readCf { filename } {
 	    catch {unset IgnorePat($r)}
 	} else {
 	    set IgnorePat($r) $cf_IgnorePat($r)
+	}
+
+	if {! [info exists cf_WatchPat($r)] } {
+	    catch {unset WatchPat($r)}
+	} else {
+	    set WatchPat($r) $cf_WatchPat($r)
 	}
     }
 }

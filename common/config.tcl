@@ -22,6 +22,7 @@ namespace eval ::config {
     set known_attrs(dns) 1
     set known_attrs(interval) 1
     set known_attrs(ignorepat) 1
+    set known_attrs(watchpat) 1
     set known_attrs(priority) 1
     set known_attrs(timeout) 1
     set known_attrs(retry) 1

@@ -135,7 +135,18 @@ proc recordIntf { sh vbl } {
     }
 
     # Check if interface state changes should be ignored,
-    # could e.g. be ISDN or dialup interface
+    # could e.g. be ISDN or dialup interfaces
+
+    # If watch pattern exists, only watch matching interfaces
+    if { [::config::confExists $r watchpat] } {
+	set wp [::config:conf $r watchpat]
+	if { ! [regexp $wp $ifDescr] } {
+#	    log [format "%s intf \"%s\" not watched" $r $ifDescr]
+	    return
+	}
+    }
+
+    # If ignore pattern exists, ignore matching interfaces
     if { [::config::confExists $r ignorepat] } {
 	if { [regexp [::config::conf $r ignorepat] $ifDescr] } {
 #	    log [format "%s intf \"%s\" ignored" $r $ifDescr]

@@ -309,6 +309,16 @@ proc linkTrans { router ifIndex descr updown reason } {
     
     set ix [format "%s,%s" $router $ifIndex]
 
+    # Only watch matching port if config exists
+    if { [::config::confExists $router watchpat] } {
+	set wp [::config::conf $router watchpat]
+	if { ! [regexp $wp $descr] } {
+#	    log [format "%s intf \"%s\" link%s not watched" $router $descr $updown]
+	    return 0
+	}
+    }
+
+    # Ignore matching port if ignore-pattern exists and matches
     if { [::config::confExists $router ignorepat] } {
 	if { [regexp [::config::conf $router ignorepat] $descr] } {
 #	    log [format "%s intf \"%s\" link%s ignored" $router $descr $updown]

@@ -283,6 +283,11 @@ proc logVars { sh vbl } {
     }
     if { ! [info exists ix] } { return; }
 
+    if [confExists $name "watchpat"] {
+	set wp [conf $name "watchpat"]
+	# Only poll ports matching pattern
+	if { ! [regexp $wp $cx($name,descr,$ix)] } { return; }
+    }
     if [confExists $name "ignorepat"] {
 	set ign [conf $name "ignorepat"]
 	# Ignore ports we've been instructed to ignore
