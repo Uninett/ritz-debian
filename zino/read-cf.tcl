@@ -206,37 +206,6 @@ proc startCfCheckJob { name interval } {
 	    -command [list checkCfFile $name]
 }
 
-proc cleanupDBvars { r } {
-    global AddrToRouter
-    global portToIfDescr
-    global portToLocIfDescr
-    global portState
-    global isCisco
-
-    puts [format "Router %s removed, cleaning up" $r]
-
-    set msg [format "Router %s no longer monitored" $r]
-
-    catch { closeEventsOnRouter $r $msg }
-    catch { forgetFlaps $r $msg }
-
-    # Clean up in internal "databases"
-    foreach a [array names AddrToRouter] {
-	if { $AddrToRouter($a) == $r } {
-	    unset AddrToRouter($a)
-	}
-    }
-    foreach a "portToIfDescr portToLocIfDescr portState" {
-	foreach ix [array names $a] {
-	    set l [split $ix ","]
-	    if { [lindex $l 0] == $r } {
-		unset [set a]($ix)
-	    }
-	}
-    }
-    catch { unset isCisco($r) }
-}
-
 # Collect names of previously known routers from various sources
 
 proc oldRouterNames { } {
