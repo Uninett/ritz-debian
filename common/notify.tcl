@@ -8,23 +8,20 @@ namespace eval ::notify {
     namespace export open close
 
     variable acceptchan notifychan
-    variable h_State h_Attr h_History h_Log h_Scavenged
+    variable h_notify
 
     # Open notify connection and set up handlers.
     # Precondition: server channel must already be open.
 
-    proc open { handleState handleAttr \
-	    handleHistory handleLog \
-	    handleScavenged handleLostConn } {
-	variable h_State h_Attr h_History h_Log h_Scavenged h_LostConn
+    proc open { handleNotify } {
+	variable h_notify
 	varaible acceptchan
 
-	foreach s "State Attr History Log Scavenged LostConn" {
-	    if [info exists h_$s] {
-		error "notify connection already open"
-	    }
-	    set h_$s [set handle$s]
+	if [info exists h_notify] {
+	    error "notify connection already open"
 	}
+	set h_notify $handleNotify
+
 	if [info exists acceptchan] {
 	    error "another notify connection open already in progress"
 	}
@@ -41,12 +38,10 @@ namespace eval ::notify {
     # Close notify connection, reset variables etc.
 
     proc close { } {
-	variable h_State h_Attr h_History h_Log h_Scavenged h_LostConn
+	variable h_notify
 	variable notifychan acceptchan
 
-	foreach s "State Attr History Log Scavenged LostConn" {
-	    catch { unset h_$s }
-	}
+	catch { unset h_notify }
 	foreach c "notify accept" {
 	    set v [format "%schan" $c]
 	    catch { close [set $v] }
@@ -72,11 +67,11 @@ namespace eval ::notify {
 
     proc handle { chan } {
 	global errorInfo
-	variable h_LostConn
+	variable h_notify
 
 	if { [catch { doHandle $chan } msg] } {
 	    if { [regexp "lost connection" $msg] } {
-		$h_LostConn
+		$h_notify LostConn
 		error [format "%s.  Lost server connection." $msg]
 	    } else {
 		error [format "error in notify::doHandle: %s" $msg]
@@ -87,28 +82,28 @@ namespace eval ::notify {
     # Actually call notification handlers.
 
     proc doHandle { chan } {
-	variable h_State h_Attr h_History h_Log h_Scavenged
+	variable h_notify
 	
-	::net::gets l
+	::net::gets -channel $chan l
 
 	set id [lindex $l 0]
 	set what [lindex $l 1]
 
 	switch -exact $what {
 	    state {
-		$h_State $id
+		$h_notify State $id
 	    }
 	    attr {
-		$h_Attr $id
+		$h_notify Attr $id
 	    }
 	    history {
-		$h_History $id
+		$h_notify History $id
 	    }
 	    log {
-		$h_Log $id
+		$h_notify Log $id
 	    }
 	    scavenged {
-		$h_Scavenged $id
+		$h_notify Scavenged $id
 	    }
 	    default {
 		error [format "unknown notify entry: %s for id %s" $what $id]
