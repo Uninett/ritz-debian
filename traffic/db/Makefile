@@ -31,6 +31,10 @@ install:
 		echo rm -f $$tmp; \
 		rm -f $$tmp; \
 	done
+	@if [ ! -f ${DBDIR}/manual-devs ]; then \
+		echo touch ${DBDIR}/manual-devs; \
+		touch ${DBDIR}/manual-devs; \
+	fi
 
 obj:
 clean:
