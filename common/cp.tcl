@@ -75,7 +75,7 @@ namespace eval ::cp {
 	::net::puts "getlog $id"
 	::net::gets l
 	if { ! [regexp {^300} $l] } {
-	    error [format "protocol error in getLog: %s" $l
+	    error [format "protocol error in getLog: %s" $l]
 	}
 	set log ""
 	for { ::net::gets l } { $l != "." } { ::net::gets l } {
