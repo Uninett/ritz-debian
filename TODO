@@ -1,5 +1,8 @@
 $Id$		-*- Text -*-
 
+ o Should zero out portToIfDescr etc. for a router right before
+   storing new values.
+
  o Should have knob to not send alarms/e-mails about certain ports,
    but still collect status and traffic stats.
 
