@@ -38,13 +38,13 @@ start-emt: start-emt.sh ../subst
 install: ${PROGS}
 	install -c -m 555 emt ${BINDIR}
 	install -c -m 555 start-emt ${BINDIR}
-	@if [ ! -d ${BINDIR}/../emt ]; then \
-		echo mkdir ${BINDIR}/../emt; \
-		mkdir ${BINDIR}/../emt; \
+	@if [ ! -d ${EMTDIR} ]; then \
+		echo mkdir ${EMTDIR}; \
+		mkdir ${EMTDIR}; \
 	fi
-	@if [ ! -f ${BINDIR}/../emt/emt-save.tcl ]; then \
-		echo touch ${BINDIR}/../emt/emt-save.tcl; \
-		touch ${BINDIR}/../emt/emt-save.tcl; \
+	@if [ ! -f ${EMTDIR}/emt-save.tcl ]; then \
+		echo touch ${EMTDIR}/emt-save.tcl; \
+		touch ${EMTDIR}/emt-save.tcl; \
 	fi
 
 clean:
