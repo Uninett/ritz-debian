@@ -68,7 +68,7 @@ proc getAddrList { sh } {
 proc basePollList { sh } {
     global isCisco
 
-    set bl "ifIndex ifDescr ifAdminStatus ifOperStatus ifLastChange"
+    set bl "ifIndex ifDescr ifAdminStatus ifOperStatus ifLastChange ifAlias"
     if { [info exists isCisco([name $sh])] } {
 	if { $isCisco([name $sh]) } {
 	    lappend bl "locIfDescr" "locIfReason"
@@ -138,6 +138,10 @@ proc recordIntf { sh vbl } {
 	if { $locIfDescr != "" } {
 	    set portToLocIfDescr($ix) $locIfDescr
 	}
+    } elseif [info exists ifAlias] {
+	if { $ifAlias != "" } {
+	    set portToLocIfDescr($ix) $ifAlias
+	}
     }
 
     foreach v "ifAdminStatus ifOperStatus" {
@@ -181,6 +185,9 @@ proc recordIntf { sh vbl } {
 	    if { [info exists locIfDescr] } {
 		setEventAttr $eid "descr" $locIfDescr
 		set fmt [format "%s (%s)" $fmt $locIfDescr]
+	    } elseif [info exists ifAlias] {
+		setEventAttr $eid "descr" $ifAlias
+		set fmt [format "%s (%s)" $fmt $ifAlias]
 	    }
 	    set fmt [format "%s %s" $fmt \
 		    "changed state from %s to %s on %s" ]
