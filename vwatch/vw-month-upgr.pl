@@ -45,7 +45,7 @@ sub get_start_software {
 	}
 	close(in);
 	$desc =~ s/\r//g;
-	$software{$f} = $desc;
+	$cur_software{$f} = $desc;
 	$old_software{$f} = $desc;
 	undef $desc;
     }
@@ -57,7 +57,7 @@ sub get_start_software {
 # $restarts{$rtr}	number of restarts
 # $reload_date{$rtr}	remember last reload time
 # $upgraded{$rtr}	upgraded?
-# $software{$rtr}	current software version
+# $software{$rtr}	string of versions run on this day; separator: ^Q
 # $reason{$rtr}		reason for last restart
 # 
 # Return date of last entry seen a'la "Oct 08".
@@ -102,12 +102,17 @@ sub read_day_data {
 	    } else {
 		$desc = sprintf("%s\n", $1);
 	    }
-	    if (defined $software{$rtr} &&
-		$software{$rtr} ne $desc)
+	    if (defined $cur_software{$rtr} &&
+		$cur_software{$rtr} ne $desc)
 	    {
+		if (defined($upgraded{$rtr})) {
+		    $software{$rtr} .= "" . $desc;
+		} else {
+		    $software{$rtr} = $desc;
+		}
 		$upgraded{$rtr} = 1;
+		$cur_software{$rtr} = $desc;
 	    }
-	    $software{$rtr} = $desc;
 	    undef $desc;
 	} elsif (/restart reason: (.*)/) {
 	    $reason{$rtr} = $1;
@@ -119,19 +124,23 @@ sub read_day_data {
 sub report_day {
     my($day) = @_;
     my(@report, $rtr);
+    my($old, $sw, @sw);
     
     foreach $rtr (keys %upgraded) {
-	push(@report,
-	     sprintf("%-6s %-15s from %-23s to %-23s\n",
-		     $day,
-		     $rtr,
-		     &pretty_desc($old_software{$rtr}),
-		     &pretty_desc($software{$rtr})
-		     ));
-	$restarts{$rtr} = 0;
-    }
-    foreach $rtr (keys %software) {
-	$old_software{$rtr} = $software{$rtr};
+	$old = $old_software{$rtr};
+	@sw = split(//, $software{$rtr});
+	foreach $sw (@sw) {
+	    push(@report,
+		 sprintf("%-6s %-15s from %-23s to %-23s\n",
+			 $day,
+			 $rtr,
+			 &pretty_desc($old),
+			 &pretty_desc($sw)
+			 ));
+	    $old = $sw;
+	    $restarts{$rtr} = 0;
+	}
+	$old_software{$rtr} = $sw[$#sw];
     }
     undef %upgraded;
     return @report;
