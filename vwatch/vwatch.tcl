@@ -157,6 +157,12 @@ proc maybeSaveDescr { sh } {
     }
 }
 
+proc whenReload {uptime} {
+    set now [clock seconds]
+    set then [expr $now - $uptime / 100]
+    return [getDate $then]
+}
+
 proc devUpTime { sh {err "unknown error"} {upt ""}} {
     global uptime lastpoll
 
@@ -191,9 +197,11 @@ proc initPoller {} {
     set ciscoList [mib oid whyReload.0]
 }
 
-set conffile "../test/routers.cf"
-set dev_descr_dir "dsc"; # Needs better configuration
+set conffile "../test/routers.cf"; # Needs to be "externally settable"
+set dev_descr_dir "dsc"; # Ditto
+set logFIle "log"; # Ditto
+
 initPoller
 ::conffile::setHandler ::config::handleChangedConf
-# Start the show
+# Start the show (Should use larger file check interval)
 ::conffile::startCheckJob $conffile 30
