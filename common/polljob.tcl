@@ -33,7 +33,7 @@ namespace eval ::polljob {
 	variable ::config::defaults
 
 	set ndevs [llength $devs]
-	if { $ndevs = 0 } { return 0; }
+	if { $ndevs == 0 } { return 0; }
 
 	set intv $::config::defaults(interval)
 	return [expr ( $intv + 0.0 ) / $ndevs]
@@ -86,7 +86,7 @@ namespace eval ::polljob {
 	}
 
 	if [info exists cx($s,job)] {
-	    $j destroy
+	    $cx($s,job) destroy
 	    unset cx($s,job)
 	}
 
