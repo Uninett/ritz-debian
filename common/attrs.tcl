@@ -101,7 +101,8 @@ namespace eval ::attr {
 
 	if {    $state == "down" || \
 		$state == "flapping" || \
-		$state == "no-response" } {
+		$state == "no-response" || \
+		$state == "adminDown" } {
 	    return 1
 	}
 	return 0
