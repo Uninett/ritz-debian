@@ -48,7 +48,7 @@
 sub poller_pid {
     my($l, @a);
 
-    if (defined(open(F, "%TOPDIR%/poller.pid"))) {
+    if (defined(open(F, "%TOPDIR%/tpoller.pid"))) {
 	$l = <F>;
 	close(F);
     } else {

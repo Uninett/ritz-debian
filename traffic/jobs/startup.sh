@@ -3,9 +3,9 @@
 # $Id$
 #
 
-cd %TOPDIR%/bin
+cd %TOPDIR%/conf
 
-%SCOTTY% ./poller >>../poller.errs 2>&1 &
-echo $! > ../poller.pid
+../bin/tpoller >>../tp.err 2>&1 &
+echo $! > ../tpoller.pid
 
 exit 0
