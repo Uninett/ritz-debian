@@ -32,15 +32,17 @@ all: ${PROGS}
 ${PPROGS}: ${PSRCS} ../subst
 	@for f in ${PSRCS}; do \
 		b=`basename $$f .pl`; \
-		echo sed -e -f ../subst $$f > $$b; \
-		sed -e -f ../subst $$f > $$b; \
+		echo rm -f $$b; \
+		rm -f $$b; \
+		echo sed -f ../subst $$f '>' $$b; \
+		sed -f ../subst $$f > $$b; \
 	done
 
 vwatch: vwatch.tcl vwatch-main.tcl ../subst
 	rm -f vwatch
-	(sed -e -f ../subst vwatch-head.tcl; \
+	(sed -f ../subst vwatch-head.tcl; \
 	cat vwatch.tcl; \
-	sed -e -f ../subst vwatch-main.tcl) > vwatch
+	sed -f ../subst vwatch-main.tcl) > vwatch
 
 install: ${PROGS} ${COMMON}
 	@for f in ${PROGS}; do \
@@ -51,8 +53,13 @@ install: ${PROGS} ${COMMON}
 		echo install -c -m 444 $$f ${LIBDIR}; \
 		install -c -m 444 $$f ${LIBDIR}; \
 	done
+	if [ ! -d ${TOPDIR}/ver-watch/logs/today/descs ]; then \
+		echo mkdir -p ${TOPDIR}/ver-watch/logs/today/descs; \
+		mkdir -p ${TOPDIR}/ver-watch/logs/today/descs; \
+	fi
 
 clean:
 	rm -f ${PROGS}
 
 .include "../Makefile.inc"
+
