@@ -82,7 +82,7 @@ sub plot_traffic {
     foreach $i (0 .. 23) {
 	$h = sprintf("%02d", $i);
 
-	if (!defined($count{"ifInOctets", $h})) { next; }
+	if ($tm + $i * 3600 > time) { next; }
 
 	printf($fh "%d ", $i + ($d*24)); # X-axis
 	
@@ -130,9 +130,7 @@ sub plot_traffic_kbit {
     foreach $i (0 .. 23) {
 	$h = sprintf("%02d", $i);
 
-	if (! defined($count{"ifInOctets",$h})) {
-	    next;
-	}
+	if ($tm + $i * 3600 > time) { next; }
 
 	printf($fh "%d ", $i + ($d*24)); # X-axis
 	
@@ -161,13 +159,7 @@ sub plot_discards {
     foreach $i (0 .. 23) {
 	$h = sprintf("%02d", $i);
 
-	if (!defined($count{"ifOutUcastPkts",$h}) &&
-	    !defined($count{"ifOutNUcastPkts",$h}) &&
-	    !defined($count{"ifInUcastPkts",$h}) &&
-	    !defined($count{"ifInNUcastPkts",$h}))
-	{
-	    next;
-	}
+	if ($tm + $i * 3600 > time) { next; }
 
 	printf($fh "%d ", $i + ($d*24)); # X-axis
 	
@@ -226,12 +218,7 @@ sub plot_errors {
     foreach $i (0 .. 23) {
 	$h = sprintf("%02d", $i);
 
-	if (!defined($count{"ifInUcastPkts",$h}) &&
-	    !defined($count{"ifInNUcastPkts",$h}) &&
-	    !defined($count{"ifInErrors",$h}))
-	{
-	    next;
-	}
+	if ($tm + $i * 3600 > time) { next; }
 
 	printf($fh "%d ", $i + ($d*24)); # X-axis
 	
@@ -290,13 +277,7 @@ sub plot_pps {
     foreach $i (0 .. 23) {
 	$h = sprintf("%02d", $i);
 
-	if (!defined($count{"ifInUcastPkts",$h}) &&
-	    !defined($count{"ifInNUcastPkts",$h}) &&
-	    !defined($count{"ifOutUcastPkts",$h}) &&
-	    !defined($count{"ifOutNUcastPkts",$h}))
-	{
-	    next;
-	}
+	if ($tm + $i * 3600 > time) { next; }
 
 	printf($fh "%d ", $i + ($d*24)); # X-axis
 	
@@ -368,15 +349,7 @@ sub plot_eerrs {
     foreach $i (0 .. 23) {
 	$h = sprintf("%02d", $i);
 
-	if (!defined($count{"ifInUcastPkts",$h}) &&
-	    !defined($count{"ifInNUcastPkts",$h}) &&
-	    !defined($count{"ifInErrors",$h}) &&
-	    !defined($count{"ifOutUcastPkts",$h}) &&
-	    !defined($count{"ifOutNUcastPkts",$h}) &&
-	    !defined($count{"ifOutErrors",$h}))
-	{
-	    next;
-	}
+	if ($tm + $i * 3600 > time) { next; }
 
 	printf($fh "%d ", $i + ($d*24)); # X-axis
 	
@@ -534,7 +507,7 @@ sub make_plot_file  {
 	    if (!defined($plotit = $data_plotter{$plot})) {
 		die "Could not find data plotter routine for $plot\n";
 	    }
-	    &$plotit($line, PLOTDATA, $dn, $d, $save_tm);
+	    &$plotit($line, PLOTDATA, $dn, $d, $tm);
 
 	    undef(%count);
 	    undef(%max_rate);
