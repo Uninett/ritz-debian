@@ -39,7 +39,7 @@ proc pollDev { sh } {
 	pollIntfs $sh
     } msg] {
 	if [regexp "FAILED" $msg] { return; }
-	puts $errorInfo
+	puts stderr $errorInfo
     }
 }
 
@@ -150,10 +150,16 @@ proc recordAddr { sh vbl } {
 
 proc getIfList { sh } {
     
-    # This table may be sparsely populated
-    sparseTableWalk $sh x \
-	    "ifIndex ifType ifSpeed ifAdminStatus ifDescr" \
-	    { recordIntf $sh $x }
+    if [catch {
+	# This table may be sparsely populated
+	sparseTableWalk $sh x \
+		"ifIndex ifType ifSpeed ifAdminStatus ifDescr" \
+		{ recordIntf $sh $x }
+    } msg] {
+	set msg [format "getIfList FAILED for %s: %s" [name $sh] $msg]
+	logerr $msg
+	error $msg
+    }
 }
 
 proc recordIntf { sh vbl } {
@@ -188,7 +194,7 @@ proc pollIntfs { sh } {
 	# no endscript
 #	puts [format "finished polling %s" [name %S]]
     } {
-	set msg [format "%s poll: %s" [name %S] %E]
+	set msg [format "%s poll FAILED: %s" [name %S] %E]
 	logerr $msg
 #	error $msg
     }
