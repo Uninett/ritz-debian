@@ -59,7 +59,7 @@ namespace eval ::notify {
 
 	set notifychan $chan
 	fconfigure $chan -buffering line
-	fileevent $chan readable [list handle $chan]
+	fileevent $chan readable [list [namespace current]::handle $chan]
 
 	::close $acceptchan
 	unset acceptchan
