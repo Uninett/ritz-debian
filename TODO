@@ -1,5 +1,10 @@
 $Id$		-*- Text -*-
 
+ o Add a DoS-detection facility, triggering on large swings in
+   traffic, pps, or bytes-per-packet.  To implement this, need
+   to have a process which continually computes these values for
+   the various device ports being monitored.
+
  o Should zero out portToIfDescr etc. for a router right before
    storing new values.
 
