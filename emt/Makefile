@@ -37,6 +37,14 @@ start-emt: start-emt.sh ../subst
 install: ${PROGS}
 	install -c -m 555 emt ${BINDIR}
 	install -c -m 555 start-emt ${BINDIR}
+	@if [ ! -d ${BINDIR}/../emt ]; then \
+		echo mkdir ${BINDIR}/../emt; \
+		mkdir ${BINDIR}/../emt; \
+	fi
+	@if [ ! -f ${BINDIR}/../emt/emt-save.tcl ]; then \
+		echo touch ${BINDIR}/../emt/emt-save.tcl; \
+		touch ${BINDIR}/../emt/emt-save.tcl; \
+	fi
 
 clean:
 	rm -f ${PROGS}
