@@ -6,8 +6,26 @@
 
 namespace eval ::just {
     namespace export sparseTableWalk
+    namespace export setSparseWalkEHandler unsetSparseWalkEHandler
 
-    proc sparseTableWalk { sh varName varList body } {
+    variable eHandler
+
+    # the error handler should expect to be called as
+    # $eHandler $handle $error
+
+    proc setSparseWalkEHandler { handler } {
+	variable eHandler
+
+	set eHandler $handler
+    }
+
+    proc unsetSparseWalkEHandler { } {
+	variable eHandler
+
+	catch { unset eHandler }
+    }
+
+    proc sparseTableWalk { sh varName varList body { endscript "" } } {
 
 	foreach v $varList {
 	    set oid [mib oid $v]
@@ -19,13 +37,22 @@ namespace eval ::just {
 	$sh getnext $oidList [list \
 		::just::processRow "%S" "%E" {{%V}} \
 		$oidList $oidList $lenList \
-		$varName $body ]
+		$varName $body $endscript ]
 	return
     }
 
-    proc processRow { sh err vblList thisRow oidList lenList varName body } {
+    proc processRow {
+	sh err vblList thisRow oidList lenList varName body endscript
+    } {
+	variable eHandler
 
-	if { $err != "noError" } { error $err; }
+	if { $err != "noError" } {
+	    if [info exists eHandler] {
+		$eHandler $sh $err
+	    } else {
+		error $err;
+	    }
+	}
 
 	set ixlist {}
 
@@ -39,6 +66,9 @@ namespace eval ::just {
 	    }
 	}
 	if {! [info exists ixList]} {
+	    if { $endscript != "" } {
+		uplevel $endscript
+	    }
 	    return; # end of table
 	}
 
