@@ -78,12 +78,15 @@ namespace eval ::persist {
     # o substitute the two-char sequence \\ for a single backslash
     # o substitute the two-char sequence \" for a single double-quote
     # o substitute the two-char sequence \n for newline
+    # o quote []'s, so as to avoid attempt at evaluation when sourcing
     # o enclose with double quotes
 
     proc externalize { val } {
 	regsub -all "\\\\" $val "\\\\\\\\" val
 	regsub -all "\"" $val "\\\"" val
 	regsub -all "\n" $val "\\n" val
+	regsub -all "\\\[" $val "\\\[" val
+	regsub -all "\\\]" $val "\\\]" val
 	return [format "\"%s\"" $val]
     }
 
