@@ -275,9 +275,10 @@ sub forward_refs {
     }
     $origin = &date_to_tm($date);
     $dsp_t = &datespec_type($dsp);
-    # Round down to start of "enclosing" period.
-    ($origin, $dummy) = &decode_datespec(&tm_to_datespec($origin, $dsp_t));
-
+    # Round down to start of "enclosing" period, except for epoch.
+    if ($dsp ne "epoch") {
+	($origin, $dummy) = &decode_datespec(&tm_to_datespec($origin, $dsp_t));
+    }
 
     # Simultaneously construct a client-side image map.
 
