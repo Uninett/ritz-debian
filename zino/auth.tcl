@@ -53,7 +53,7 @@ proc authPass { chan user resp } {
 #puts [format "authPass %s %s %s" $chan $user $resp]
     
     authReadUsers $authFile
-    if { ! [info exists authSecret($user)] } {
+    if { ! [info exists authSecret($user)] && ! $authTacacs } {
 	error "Authentication failure (no such user)"
     }
 
