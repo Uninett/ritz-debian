@@ -27,6 +27,7 @@ namespace eval ::config {
     set known_attrs(retry) 1
     set known_attrs(domain) 1
     set known_attrs(statistics) 1
+    set known_attrs(hcounters) 1
 
     # Initialize defaults.  These are tweakable.
     set defaults(priority) 100
@@ -35,6 +36,7 @@ namespace eval ::config {
     set defaults(timeout) 5
     set defaults(retry) 3
     set defaults(statistics) "yes"
+    set defaults(hcounters) "no"
 
 
     # Variable access procedure
