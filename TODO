@@ -51,3 +51,5 @@ $Id$		-*- Text -*-
    data from current values, etc.
 
  o Extend the tabular web reports to display the 90th percentile values.
+
+ o Clip sample values at max data rate (?).
