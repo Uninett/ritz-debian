@@ -108,7 +108,8 @@ proc getDowntime { id } {
     if { $lt == 0 } {
 	set lt $now
     }
-    set ad [Attr $id "ac-down"]
+    set ad 0
+    catch { set ad [Attr $id "ac-down"] }
     if [isDown $id] {
 	set ad [expr $ad + $now - $lt]
     }
