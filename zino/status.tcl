@@ -266,7 +266,9 @@ proc swalkErrorHandler { sh err } {
 proc cleanupDelayedResponse { sh } {
     global responseCheckInProgress
 
-    set r [name $sh]
+    if [catch { set r [name $sh] }] {
+	set r "(deleted)"
+    }
 
     # cleanup any remaining check jobs
     if [info exists responseCheckInProgress($sh)] {
@@ -279,7 +281,10 @@ proc cleanupDelayedResponse { sh } {
 
 proc delayedCheckResponse { sh } {
 
-    set r [name $sh]
+    if [catch { set r [name $sh] }] {
+	cleanupDelayedResponse $sh
+	return 0
+    }
 
     log [format "checking reachability of %s" $r]
     if [checkResponse $sh] {
