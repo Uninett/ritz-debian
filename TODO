@@ -18,3 +18,26 @@ $Id$		-*- Text -*-
  o Zino's response/no-response badly needs to be reimplemented.
 
  o Add a "packets per second" plot
+
+ o Make sure reboot time is logged when it needs to; currently in some
+   cases it may be omitted, apparently.
+
+ o Make it possible to view today's traffic.
+
+ o Create an "animated" GIF of the load map, showing the sample loads?
+   (Yep, that's more for amusement value than for anything else...)
+
+ o Zino: Make sure the Attrs_NN variables are being flushed to disk
+   even after a restart -- extend eventInit?
+
+ o Zino: Improve robustness when we run out of file descriptors.  Two
+   possible cases currently:
+    - when notify socket is being set up
+    - when user is being authenticated (pipe needed for catching
+      output from "exec sha -t")
+
+ o Zino: Add "user database", and ability to query it from the
+   clients.
+
+ o Zino: Add "region" tags to routers, so that a UI can restrict its
+   view to only the routers which are part of a region.
