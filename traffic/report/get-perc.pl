@@ -108,6 +108,9 @@ sub addup_values {
     }
     undef %count;
     undef %max_rate;
+    undef $max_sample;
+    undef %sample_delta;
+    undef %sample_time;
 }
 
 
@@ -141,6 +144,10 @@ sub get_percentile {
     return ($in, $out, $no_days);
 }
 
+sub usage {
+    die "$0: usage: $0 -d datespec -n portname -p percentile";
+}
+
 
 #
 # Main
@@ -148,9 +155,9 @@ sub get_percentile {
 
 &Getopts("d:n:p:");
 
-if (!defined($opt_d)) { die "Must specify datespec (-d option)\n"; }
-if (!defined($opt_n)) { die "Must specify port name (-n option)\n"; }
-if (!defined($opt_p)) { die "Must specify percentile (-p option)\n"; }
+if (!defined($opt_d)) { &usage(); }
+if (!defined($opt_n)) { &usage(); }
+if (!defined($opt_p)) { &usage(); }
 
 ($in, $out, $nd) = &get_percentile($opt_d, $opt_n, $opt_p);
 
