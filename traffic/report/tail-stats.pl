@@ -233,8 +233,11 @@ sub stddev {
     my($ap) = @_;
     
     if ($#$ap == 0) { return undef; }
+    my($var) = &variance($ap);
 
-    return sqrt(&variance($ap));
+    if ($var < 0) { return undef; }
+
+    return sqrt($var);
 }
 
 sub exp_decay {
