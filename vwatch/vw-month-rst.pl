@@ -17,8 +17,8 @@ require 'pretty-ios.pl';
 # within X seconds?
 
 sub close_times {
-    local($a, $b, $x) = @_;
-    local($a_t, $b_t);
+    my($a, $b, $x) = @_;
+    my($a_t, $b_t);
     
     $a_t = &unctime($a);
     $b_t = &unctime($b);
@@ -41,9 +41,9 @@ sub close_times {
 # Return array containing report of all reload events incl. reason
 
 sub process_log {
-    local($in) = @_;
-    local($rtr, $desc, @a, $day);
-    local($new_reload, @report);
+    my($in) = @_;
+    my($rtr, $desc, @a, $day);
+    my($new_reload, @report);
 
     while(<$in>) {
 	chop; split;
@@ -106,8 +106,8 @@ sub process_log {
 }
 
 sub process_day {
-    local($daydir) = @_;
-    local($lf, @report);
+    my($daydir) = @_;
+    my($lf, @report);
 
     $lf = $daydir . "/ver-watch.log";
 
@@ -118,8 +118,8 @@ sub process_day {
 }
 
 sub process_month {
-    local($month) = @_;
-    local(@report, $day, $daydir, $d);
+    my($month) = @_;
+    my(@report, $day, $daydir, $d);
     
     $daydir = $LOGTREE . "/" . $month . "/01";
     

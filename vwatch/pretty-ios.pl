@@ -7,7 +7,7 @@
 # we have been tought to condense.
 
 sub pretty_desc {
-    local($desc) = @_;
+    my($desc) = @_;
 
     if ($desc =~ /IOS.*\(([^\)]+)\), Version ([^,]+),/) {
 	$desc = "$2 $1";

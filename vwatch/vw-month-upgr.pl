@@ -17,8 +17,8 @@ require 'pretty-ios.pl';
 # within X seconds?
 
 sub close_times {
-    local($a, $b, $x) = @_;
-    local($a_t, $b_t);
+    my($a, $b, $x) = @_;
+    my($a_t, $b_t);
     
     $a_t = &unctime($a);
     $b_t = &unctime($b);
@@ -31,8 +31,8 @@ sub close_times {
 }
 
 sub get_start_software {
-    local($daydir) = @_;
-    local($dn, $f, $fn, $desc);
+    my($daydir) = @_;
+    my($dn, $f, $fn, $desc);
     
     $dn = $daydir . "/descs";
     opendir (dir, $dn) || die "Could not opendir $dn: $!";
@@ -63,8 +63,8 @@ sub get_start_software {
 # Return date of last entry seen a'la "Oct 08".
 
 sub read_day_data {
-    local($in) = @_;
-    local($rtr, $desc, @a, $day);
+    my($in) = @_;
+    my($rtr, $desc, @a, $day);
 
     while(<$in>) {
 	chop; split;
@@ -117,8 +117,8 @@ sub read_day_data {
 }
 
 sub report_day {
-    local($day) = @_;
-    local(@report, $rtr);
+    my($day) = @_;
+    my(@report, $rtr);
     
     foreach $rtr (keys %upgraded) {
 	push(@report,
@@ -139,8 +139,8 @@ sub report_day {
 
 
 sub process_day {
-    local($daydir) = @_;
-    local($lf, $day);
+    my($daydir) = @_;
+    my($lf, $day);
 
     $lf = $daydir . "/ver-watch.log";
 
@@ -151,8 +151,8 @@ sub process_day {
 }
 
 sub process_month {
-    local($month) = @_;
-    local(@report, $day, $daydir, $d);
+    my($month) = @_;
+    my(@report, $day, $daydir, $d);
     
     $daydir = $LOGTREE . "/" . $month . "/01";
     

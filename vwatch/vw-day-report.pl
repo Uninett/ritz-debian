@@ -17,8 +17,8 @@ require 'pretty-ios.pl';
 # within X seconds?
 
 sub close_times {
-    local($a, $b, $x) = @_;
-    local($a_t, $b_t);
+    my($a, $b, $x) = @_;
+    my($a_t, $b_t);
     
     $a_t = &unctime($a);
     $b_t = &unctime($b);
@@ -32,8 +32,8 @@ sub close_times {
 
 
 sub get_start_software {
-    local($daydir) = @_;
-    local($dn, $f, $fn, $desc);
+    my($daydir) = @_;
+    my($dn, $f, $fn, $desc);
     
     $dn = $daydir . "/descs";
     opendir (dir, $dn) || die "Could not opendir $dn: $!";
@@ -56,8 +56,8 @@ sub get_start_software {
 
 
 sub process {
-    local($daydir) = @_;
-    local($lf, $rtr, $desc, @a);
+    my($daydir) = @_;
+    my($lf, $rtr, $desc, @a);
     
     &get_start_software($daydir);
 
@@ -115,7 +115,7 @@ sub process {
 }
 
 sub report {
-    local($n, $rtr);
+    my($n, $rtr);
 
     $n = 0;
     foreach $rtr (keys %upgraded) {

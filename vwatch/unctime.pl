@@ -26,8 +26,8 @@ $month{'Nov'} = 10;
 $month{'Dec'} = 11;
 
 sub main'unctime {
-    local($date) = @_;
-    local(@a, @b);
+    my($date) = @_;
+    my(@a, @b);
     
     @a = split(/ /, $date);
     @b = split(/:/, $a[3]);

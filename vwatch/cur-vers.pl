@@ -14,8 +14,8 @@ require 'config.pl';
 require 'pretty-ios.pl';
 
 sub get_start_software {
-    local($daydir) = @_;
-    local($dn, $f, $fn, $desc);
+    my($daydir) = @_;
+    my($dn, $f, $fn, $desc);
     
     $dn = $daydir . "/descs";
     opendir (dir, $dn) || die "Could not opendir $dn: $!";
@@ -40,8 +40,8 @@ sub get_start_software {
 # $software{$rtr}	current software version
 
 sub read_day_data {
-    local($in) = @_;
-    local($rtr, $desc);
+    my($in) = @_;
+    my($rtr, $desc);
 
     while(<$in>) {
 	chop; split;
@@ -65,7 +65,7 @@ sub read_day_data {
 }
 
 sub report {
-    local($rtr);
+    my($rtr);
 
     open(out, "|sort -b +1 -2");
     foreach $rtr (keys %software) {
