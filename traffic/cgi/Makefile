@@ -8,7 +8,8 @@ SCRIPTS=	emit-map.pl \
 		intf-load.pl \
 		list-ports.pl \
 		load-map.pl \
-		tbl-report.pl
+		tbl-report.pl \
+		xf-load-map.pl
 
 SUBST=	${.CURDIR}/../../subst
 
