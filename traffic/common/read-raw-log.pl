@@ -132,7 +132,7 @@ sub read_log {
 	$lasttime = $now;
 
 	$delta = ($f[6] - $base{$v});
-	if ($delta < 0 && $v =~ /Octets/o && !($v =~ /ifHC/o)) {
+	if ($delta < 0 && !($v =~ /ifHC/o)) {
 	    $delta += 0xffffffff;
 	}
 	if ($delta < 0) {	# could be that address moved
