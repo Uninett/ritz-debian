@@ -89,6 +89,22 @@ sub find_cat_and_file {
     return undef;
 }
 
+# Return which program to use to "cat" the log file, and the name
+# of the file without the compression suffix.  Returns "cat"
+# for plain uncompressed files.
+
+sub cat_and_base {
+    my($f) = @_;
+
+    if ($f =~ /^(.*).gz$/) {
+	return("%GZCAT%", $1);
+    } elsif ($f =~ /^(.*).Z$/) {
+	return("%ZCAT%", $1);
+    } else {
+	return("cat", $f);
+    }
+}
+
 # Find data directory for a given date (form yyyymmdd)
 
 sub find_data_dir {
