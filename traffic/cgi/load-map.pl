@@ -385,9 +385,11 @@ sub get_lw_brush {
 
 sub draw_polyline {
     my($img, $e) = @_;
-    my(@c, $parent, $c, $b, $poly, $mapcomp, $url, $alt);
+    my(@oc, @c, $parent, $c, $b, $poly, $mapcomp, $url, $alt);
+    my($xs, $ys);
     
     @c = split(/ /, $coords[$e]);
+    @oc = @c;
     if (defined($parent = $parent[$e])) {
 	if (defined($name[$parent])) {
 	    $b = &get_name_brush($name[$parent]);
@@ -428,6 +430,17 @@ sub draw_polyline {
 	$x = shift(@c);
 	$y = shift(@c);
 	$poly->addPt(&xlc($x,$y));
+    }
+    $xs = $oc[0];
+    $ys = $oc[1];
+    if ($xs != $x && $ys != $y) {
+	# trace back to emulate polyline (not polygon...)
+	pop(@oc); pop(@oc);
+	while($#oc > 0) {
+	    $y = pop(@oc);
+	    $x = pop(@oc);
+	    $poly->addPt(&xlc($x,$y));
+	}
     }
     $img->polygon($poly, $c);
     return undef;
