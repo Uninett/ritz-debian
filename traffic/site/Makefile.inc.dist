@@ -1,0 +1,4 @@
+PICS=	ndn-map.gif
+
+MAPFS=	ndn-map.fig default.rng
+HTMLFS=	index.html
