@@ -47,7 +47,7 @@ sub get_start_software {
 	close(in);
 	$desc =~ s/\r//g;
 	chop($desc);		# remove last newline
-	$software{$f} = $desc;
+	$cur_software{$f} = $desc;
 	$old_software{$f} = $desc;
 	undef $desc;
     }
@@ -100,12 +100,17 @@ sub process {
 	    } else {
 		$desc = $1;
 	    }
-	    if (defined $software{$rtr} &&
-		$software{$rtr} ne $desc)
+	    if (defined $cur_software{$rtr} &&
+		$cur_software{$rtr} ne $desc)
 	    {
+		if (defined($upgraded{$rtr})) {
+		    $software{$rtr} .= "" . $desc;
+		} else {
+		    $software{$rtr} = $desc;
+		}
 		$upgraded{$rtr} = 1;
+		$cur_software{$rtr} = $desc;
 	    }
-	    $software{$rtr} = $desc;
 	    undef $desc;
 	} elsif (/restart reason: (.*)/) {
 	    $reason{$rtr} = $1;
@@ -116,6 +121,7 @@ sub process {
 
 sub report {
     my($n, $rtr);
+    my(@sw, $sw, $old);
 
     $n = 0;
     foreach $rtr (keys %upgraded) {
@@ -123,12 +129,19 @@ sub report {
 	if ($n == 1) {
 	    printf("Upgraded routers:\n\n");
 	}
-	printf("%-15s from %15s to %15s (%d restarts)\n",
-	       $rtr,
-	       &pretty_desc($old_software{$rtr}),
-	       &pretty_desc($software{$rtr}),
-	       $restarts{$rtr}
-	       );
+
+	$old = $old_software{$rtr};
+	@sw = split(//, $software{$rtr});
+	foreach $sw (@sw) {
+	    printf("%-15s from %15s to %15s (%d restarts)\n",
+		   $rtr,
+		   &pretty_desc($old),
+		   &pretty_desc($sw),
+		   $restarts{$rtr}
+		   );
+	    $old = $sw;
+	}
+	$old_software{$rtr} = $sw[$#sw];
     }
     if ($n != 0) { printf("\n"); };
 
