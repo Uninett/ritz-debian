@@ -358,6 +358,7 @@ proc closeEvent { id } {
     set Attrs EventAttrs_$id
     global $Attrs
 
+    ::persist::remove $Attrs
     catch { unset PreClosedEventId($ix) }
     catch { unset EventState($id) }
     catch { unset EventIdToIx($id) }
