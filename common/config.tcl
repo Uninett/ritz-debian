@@ -28,7 +28,7 @@ namespace eval ::config {
     set known_attrs(defaultpriority) 1
 
 
-    proc handleChangedConf { name } {
+    proc handleChangedConf { file } {
 	variable known_attrs
 	variable conf
 
@@ -36,12 +36,12 @@ namespace eval ::config {
 	fillinDefaults newconfig defaults $newdevs
 
 	if [checkConfig newconfig $newdevs] {
-	    error [format "Config file %s contains errors" $name]
+	    error [format "Config file %s contains errors" $file]
 	}
 
 	set changed_devs [changedDevs conf newconfig $newdevs]
 	set removed_devs [removedDevs conf $newdevs]
-	set new_devs [newDevs $config $newdevs]
+	set new_devs [newDevs $conf $newdevs]
 
 	polljob::stop $removed_devs
 
