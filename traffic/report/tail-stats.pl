@@ -664,14 +664,16 @@ sub do_all_files {
     $stat_report = "";
     if (defined($opt_r)) {
 	unlink($opt_r) || die "Could not unlink $opt_r";
+	open(REP, ">" . $opt_r) || die "Could not open $opt_r for write";
     }
-    open(REP, ">" . $opt_r) || die "Could not open $opt_r for write";
 
     foreach $f (@files) {
 	&tail_process_file(\*REP, $dir . "/" . $f);
 #	printf(".");
     }
-    close(REP);
+    if (defined($opt_r)) {
+	close(REP);
+    }
     if ($stat_report != "" && defined($opt_m) && defined($opt_M)) {
 	&mail_report($opt_M, $opt_m, $stat_report);
     }
