@@ -18,7 +18,7 @@ all: ${PROGS} zino.cf
 zino: ${FILES} Makefile
 	rm -f zino
 	echo "#! "${SCOTTY} > zino
-	cat $(FILES) >> zino
+	cat ${FILES} >> zino
 	chmod +x zino
 
 zino.cf: zino.cf.tmpl ../subst
@@ -28,6 +28,10 @@ start-zino: start-zino.sh ../subst
 	sed -f ../subst < start-zino.sh > start-zino
 
 install: ${PROGS} zino.cf
+	@if [ ! -d ${ZINODIR} ]; then \
+		echo mkdir -p ${ZINODIR}; \
+		mkdir -p ${ZINODIR}; \
+	fi
 	install -c -m 555 zino ${BINDIR}
 	install -c -m 555 start-zino ${BINDIR}
 	install -c -m 444 zino.cf ${ZINODIR}
