@@ -1,4 +1,3 @@
-#!/store/bin/tclsh
 #
 # $Id$
 #
@@ -27,9 +26,9 @@ proc emt_main {} {
 	set ::auth::AllowClearTextAuth $AllowClearTextAuth
     }
 
-    ::persist::setFile "emt-save.tcl"
-    ::persist::readDump
-    ::persist::startPeriodicDump 5;# minutes
+    ::persist::setup "emt-save.tcl"
+    ::persist::restore
+    ::persist::startPeriodicCheckpoint 5;# minutes
 
     ::persist::add state
     ::persist::add nagged
@@ -46,12 +45,21 @@ proc emt_loop { server port user secret } {
 	emt_open $server $port $user $secret
 	emt_init
 	emt_check_all
+	if [info exists emk_job] {
+	    catch { $emk_job destroy }
+	}
+	set emk_job [job create \
+		-interval [expr 5 * 60 * 1000] \
+		-command emt_keepalive]
+
 	vwait emt_continue
     }
 }
 
 proc emt_notify { what id } {
     global emt_continue
+
+    log [format "notified on %s, type %s" $id $what]
 
     switch -exact $what {
 	State {
@@ -241,9 +249,8 @@ proc emt_mail { subject body } {
     set mail [emt_format_mail $subject $body]
     puts $fd $mail
     close $fd
-    puts [format "Sent message on %s:\n%s" \
-	    [clock format [clock seconds]] \
-	    $mail]
+
+    log [format "Sent message:\n%s" $mail]
 }
 
 proc emt_report { ids } {
@@ -267,6 +274,8 @@ proc emt_report { ids } {
 proc emt_check_all {} {
     global state
 
+    log [format "Checking all events"]
+
     set rids ""
     foreach id [array names state] {
 	if [emt_should_report $id] {
@@ -288,10 +297,10 @@ proc emt_init {} {
 	    set state($id) "unknown"
 	}
 	emt_gethist $id
-	emt_getlog $id
+#	emt_getlog $id
     }
     ::persist::add history
-    ::persist::add log
+#    ::persist::add log
 
     foreach id [array names state] {
 	if { ! [info exists sid($id)] } {
@@ -318,10 +327,10 @@ proc emt_gethist { id } {
 proc emt_newlog { id } {
     global log
 
-    set new [::cp::getLog $id]
-    set ol [string length $log($id)]
-    set log($id) $new
-    return [string length $new $ol end]
+    set ol 0
+    catch { set ol [string length $log($id)] }
+    set new [emt_getlog $id]
+    return [string range $new $ol end]
 }
 
 proc emt_getlog { id } {
@@ -334,7 +343,7 @@ proc emt_forget { id } {
 
     foreach a "log history state nagged" {
 	global $a
-	unset [set a]($id)
+	catch { unset [set a]($id) }
     }
 }
 
@@ -353,4 +362,33 @@ proc emt_open { server port user secret } {
 	puts stderr [format "%s" $errorInfo]
 	after [expr 60 * 1000]
     }
+}
+
+# Periodically "ping" the other end to see that we get a response
+
+proc emt_keepalive {} {
+    global emt_continue
+    global state
+
+    log [format "Keepalive running"]
+
+    set ids [array names state]
+    if {[llength $ids] > 0} {
+	set id [lindex $ids 0]
+    } else {
+	set id 1;		# dummy ID, don't care about response,
+				# just that we get one.
+    }
+
+    if [catch { ::cp::getAttrs $id } msg] {
+	if [regexp "lost connection" $msg] {
+	    log [format "Keepalive failed, reopening: %s" $msg]
+	    set emt_continue 1
+	}
+    }
+}
+
+proc log { str } {
+
+    puts [format "%s: %s" [clock format [clock seconds]] $str]
 }
