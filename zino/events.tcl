@@ -349,7 +349,7 @@ proc scavengeClosedEvents { } {
 
 proc closeEvent { id } {
     global EventState
-    global EventIdToIx
+    global EventIdToIx EventId
     global PreClosedEventId
 
     set EventState($id) "closed"
@@ -361,6 +361,7 @@ proc closeEvent { id } {
     catch { unset PreClosedEventId($ix) }
     catch { unset EventState($id) }
     catch { unset EventIdToIx($id) }
+    catch { unset EventId($ix) }
     unset $Attrs
 }
 
