@@ -258,7 +258,7 @@ proc cleanupDelayedResponse { sh } {
     # cleanup any remaining check jobs
     after cancel delayedCheckResponse $sh
     after cancel lastDelayedCheckResponse $sh
-    unset responseCheckInProgress($sh)
+    catch { unset responseCheckInProgress($sh) }
     log [format "cleaned up after response from %s" $r]
 }
 
