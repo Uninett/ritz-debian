@@ -1,0 +1,3 @@
+$Id$	-*- Text -*-
+
+ o Fix getLog etc. usage of strings / lists.
