@@ -98,6 +98,31 @@ sub process {
 	    printf("%s\n", $_);
             next;
         }
+
+	# Make an attempt at compensating for shifts in DST, either
+	# when it comes or when it goes away.  Yes, this is lame
+	# (should have used UTC), but we have too much collected data
+	# in the local time zone to ignore this problem, and I want to
+	# get rid of the spikes and stretches which otherwise occur
+	# around these events.  This will lead to these days either
+	# being 23 og 25 hours.
+
+	if (defined($lasttime) && ($dst_comp == 0)) {
+	    $td = $now - $lasttime;
+	    if ($td < 0 &&
+		abs($td) > (43 * 60) &&	# tolerate up to 15 min poll intv.
+		abs($td) < (62 * 60)) # plus some slop
+	    {
+		$dst_comp = 3600;
+	    }
+	    if ($td > (43 * 60) &&
+		$td < (62 * 60))
+	    {
+		$dst_comp = -3600;
+	    }
+	    $now += $dst_comp;
+	}
+
 	$lasttime = $now;
 
 	($v, $dummy) = split(/\./, $f[5]);
