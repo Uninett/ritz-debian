@@ -474,9 +474,7 @@ if (&tm_in_datespec(time, $datespec)) {
 if (&is_today($datespec)) {
     print $doc->header(-type => "text/html",
 		       -expires => sprintf("+%ds", $exp),
-		       -Refresh => &secs_to_expiry($res, $datespec),
-		       -Pragma => "no-cache",
-		       -'Cache-Control' => "no-cache",
+		       -Refresh => &secs_to_expiry($res, $datespec)
 		       );
 } else {
     print $doc->header(-type => "text/html",
