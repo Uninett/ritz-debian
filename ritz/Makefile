@@ -5,9 +5,10 @@
 WISH=/store/bin/wish
 BINDIR=/local/bin
 
-SRCS=	just/justSNMP.tcl just/prettySNMP.tcl just/mib2util.tcl \
-	attrs.tcl net.tcl notify.tcl sort.tcl summary.tcl ui.tcl utils.tcl \
-	main.tcl bgerror.tcl
+SRCS=	../version.tcl just/justSNMP.tcl just/prettySNMP.tcl \
+	just/mib2util.tcl \
+	attrs.tcl net.tcl notify.tcl sort.tcl summary.tcl ui.tcl \
+	utils.tcl main.tcl bgerror.tcl
 
 all: ritz
 

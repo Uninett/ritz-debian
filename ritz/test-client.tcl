@@ -20,6 +20,8 @@ source just/justSNMP.tcl
 source just/prettySNMP.tcl
 source just/mib2util.tcl
 
+source ../version.tcl
+
 package require Tnm
 package require Tix
 
