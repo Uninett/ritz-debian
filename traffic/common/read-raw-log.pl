@@ -105,6 +105,7 @@ sub read_log {
 	    ($h, $m, $s) = split(/:/, $f[10]);
 	    $reboot_time = $h * 3600 + $m * 60 + $s;
 	    if ($reboot_time < $lasttime) { next; } # ignore, too long ago
+	    if ($reboot_time > $lasttime + 15*60) { next; } # in the future?
             foreach $k (keys %base) {
                 $base{$k} = 0;
             }
