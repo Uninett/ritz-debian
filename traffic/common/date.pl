@@ -751,6 +751,7 @@ sub tm_to_datespec {
 # Expiry headers in HTTP.
 
 %res_to_dsp_t = ("raw" => "day",
+		 "5m" => "day",
 		 "hr"  => "day",
 		 "day" => "day",
 		 "week" => "week",
