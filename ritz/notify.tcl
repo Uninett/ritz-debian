@@ -71,22 +71,6 @@ proc handleNotify { chan } {
     }
 }
 
-proc unknownCase { id } {
-    global knownCase
-
-    return [expr ! [info exists knownCase($id)]]
-}
-
-proc addCase { id } {
-    global allCases filteredCases sortedCases
-    global knownCase
-
-    getAttrs $id
-    set knownCase($id) 1
-    lappend allCases $id
-    scheduleUpdateDisplay 5
-}
-
 proc removeFromList { id listname } {
     upvar $listname list
 
@@ -97,6 +81,17 @@ proc removeFromList { id listname } {
 	}
     }
     set list $new
+}
+
+proc pullCases { } {
+    global knownCase
+
+    set ids [pullCaseIds]
+    foreach id $ids {
+	getAttrs $id
+	set knownCase($id) 1
+    }
+    return $ids
 }
 
 # Update the display, consider changes caused by notification.
@@ -132,14 +127,18 @@ proc removeCase { id } {
     uiScheduleSummaryUpdate 5
 }
 
-proc pullCases { } {
-    global allCases
+proc unknownCase { id } {
     global knownCase
 
-    set ids [pullCaseIds]
-    foreach id $ids {
-	getAttrs $id
-	set knownCase($id) 1
-    }
-    return $ids
+    return [expr ! [info exists knownCase($id)]]
+}
+
+proc addCase { id } {
+    global allCases filteredCases sortedCases
+    global knownCase
+
+    getAttrs $id
+    set knownCase($id) 1
+    lappend allCases $id
+    scheduleUpdateDisplay 5
 }
