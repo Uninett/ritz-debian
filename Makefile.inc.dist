@@ -35,6 +35,7 @@ ZCAT=/usr/bin/zcat
 PING=/sbin/ping
 RAWSENDMAIL=/usr/sbin/sendmail -oi
 SCOTTY=/usr/pkg/bin/scotty
+SHA=/usr/pkg/bin/sha1
 SNMPNETSTAT=/local/bin/snmpnetstat
 TACHOST=betong.veidekke.no
 TCLSH=/usr/pkg/bin/tclsh8.0

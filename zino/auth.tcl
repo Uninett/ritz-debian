@@ -25,7 +25,7 @@ proc initAuth { fn } {
 proc authChallenge { chan } {
     global authChallenge
     
-    set ch [exec date | sha]
+    set ch [exec date | %SHA%]
     set authChallenge($chan) $ch
     return $ch
 }
@@ -60,7 +60,7 @@ proc authPass { chan user resp } {
     if { [info exists authSecret($user)] } {
 	# compute SHA(challenge+secret), compare to response
 	set s [format "%s %s" $authChallenge($chan) $authSecret($user)]
-	set r [exec sha <<$s]
+	set r [exec %SHA% <<$s]
 	if { $r == $resp } {
 	    return
 	}
@@ -68,7 +68,7 @@ proc authPass { chan user resp } {
 	# compute SHA(response), compare to stored secret
 	# This is to handle clear-text passwords, and may be disabled.
 	if { $authClearTextPasswords } {
-	    set r [exec sha <<$resp]
+	    set r [exec %SHA% <<$resp]
 	    if { $r == $authSecret($user) } {
 		return
 	    }

@@ -19,6 +19,8 @@ zino: ${FILES} Makefile
 	rm -f zino
 	echo "#! "${SCOTTY} > zino
 	cat ${FILES} >> zino
+	sed -f ../subst < zino > zino.new
+	mv zino.new zino
 	chmod +x zino
 
 zino.cf: zino.cf.tmpl ../subst
