@@ -90,19 +90,17 @@ namespace eval ::persist {
     proc dumpGlobalVar { f var } {
 	global $var
 
-	puts $f [format "global %s" $var]
-	if { [array exists $var] } {
+	set ghead [format "global %s" $var]
+	if [array exists $var] {
+	    puts $f $ghead
 	    foreach l_ix [lsort [array names $var]] {
 		puts -nonewline $f [format "set %s(%s) " $var $l_ix]
 		puts $f [externalize [set [set var]($l_ix)]]
 	    }
-	} else {
-	    if { [info exists $var] } {
-		puts -nonewline $f [format "set %s " $var]
-		puts $f [externalize [set $var]]
-	    } else {
-		remove $var
-	    }
+	} elseif [info exists $var] {
+	    puts $f $ghead
+	    puts -nonewline $f [format "set %s " $var]
+	    puts $f [externalize [set $var]]
 	}
     }
 
