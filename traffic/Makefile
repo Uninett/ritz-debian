@@ -4,7 +4,7 @@
 
 VERSION=0.29
 
-SUBDIR= cgi common db html jobs mibs plot poller report
+SUBDIR= cgi common db html jobs mibs plot report
 
 DIRS=   ${BINDIR} ${CGIDIR} ${CONFDIR} ${HTMLDIR} ${IMGDIR} \
 	${LIBDIR} ${MIBDIR} ${DBDIR} ${REPDIR} ${DATADIR} \
