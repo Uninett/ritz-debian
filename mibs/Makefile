@@ -12,6 +12,7 @@ MIBDIR=	${TOPDIR}/mibs
 all:
 
 install:
+	-mkdir ${MIBDIR}
 	@for f in ${FILES}; do \
 		echo install -c $$f ${MIBDIR}; \
 		install -c $$f ${MIBDIR}; \
