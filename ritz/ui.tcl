@@ -15,6 +15,7 @@ proc initUi { } {
     set View(admstate) 1
     set View(priority) 0
     set View(age) 1
+    set View(downtime) 1
     set View(updated) 0
     set View(router) 1
     set View(port) 1
@@ -25,6 +26,7 @@ proc initUi { } {
     set uiLabelFilter(portstate)	"Port state"
     set uiLabelFilter(reachability)	"Reachability"
     set uiLabelFilter(state)		"Admin state"
+    set uiLabelFilter(downtime)		"Downtime (seconds)"
     set uiLabelFilter(router)		"Router name"
     set uiLabelFilter(port)		"Port name"
     set uiLabelFilter(descr)		"Port description" 
@@ -55,7 +57,7 @@ proc uiInitToplevel { } {
 
     wm title . "RITZ - Remote interface to zino"
     wm iconname . "RITZ - Remote interface to zino"
-    wm geometry . 80x24
+    wm geometry . 100x24
 
     frame .mbar -relief raised -bd 2
 
@@ -140,7 +142,7 @@ proc uiInitToplevel { } {
 	    -command uiViewCaseById
 
     menu .mbar.view.menu.sort -tearoff 0
-    foreach entry "default age age-rev updated upd-rev" {
+    foreach entry "default age age-rev updated upd-rev down down-rev" {
 	.mbar.view.menu.sort add radiobutton \
 		-label $entry \
 		-variable Sortby \
@@ -152,7 +154,7 @@ proc uiInitToplevel { } {
 
     menu .mbar.view.menu.col
     foreach entry \
-	    "id opstate admstate priority age updated router port descr" {
+    "id opstate admstate priority age downtime updated router port descr" {
 	.mbar.view.menu.col add checkbutton \
 		-label [ucFirst $entry] \
 		-variable View($entry) \
@@ -630,10 +632,8 @@ proc uiViewCase { id } {
 proc uiAttrVal { id attr } {
 
     set val [Attr $id $attr]
-    if { $attr == "opened" } {
-	set val [clock format $val]
-    } elseif { $attr == "updated" } {
-	set val [clock format $val]
+    if { $attr == "opened" || $attr == "updated" || $attr == "lasttrans" } {
+        set val [clock format $val]
     }
     return $val
 }
@@ -961,7 +961,7 @@ proc possibleStates { } {
     return "open working waiting confirm-wait closed"
 }
 
-proc uiMkMatchtypeMenu { w item } {
+proc uiMkMatchtypeMenu { w item { matchtypes default }} {
 
     tixOptionMenu $w \
 	    -label "Matchtype:" \
@@ -969,16 +969,21 @@ proc uiMkMatchtypeMenu { w item } {
 	    -options {
 	menubutton.width 8
     }
-    foreach mt [possibleMatchTypes] {
+    if { $matchtypes == "default" } {
+	set mts [possibleMatchTypes]
+    } else {
+	set mts $matchtypes
+    }
+    foreach mt $mts {
 	$w add command $mt -label $mt
     }
 }
 
-proc uiMkSimpleEntry { w item } {
+proc uiMkSimpleEntry { w item { matchtypes default }} {
 
     entry $w.entry -textvariable FilterVal($item)
 
-    uiMkMatchtypeMenu $w.how $item
+    uiMkMatchtypeMenu $w.how $item $matchtypes
     pack $w.how -side right
     pack $w.entry -side right
 }
@@ -1006,7 +1011,7 @@ proc uiSetFilter { } {
     uiSimpleToplevelSetup $w $title
 
     foreach item {selected type portstate reachability \
-	    state router port descr} {
+	    state downtime router port descr} {
 	tixLabelFrame $w.$item -label $uiLabelFilter($item)
 
 	set f [$w.$item subwidget frame]
@@ -1029,6 +1034,9 @@ proc uiSetFilter { } {
 	    }
 	    state {
 		uiMkSimpleMenu $f $item [possibleStates]
+	    }
+	    downtime {
+		uiMkSimpleEntry $f $item [list "value>="]
 	    }
 	    router {
 		uiMkSimpleEntry $f $item
@@ -1071,7 +1079,7 @@ proc uiResetFilter { } {
     }
     foreach ix [array names FilterHow] {
 	set FilterVal($ix) ""
-	set FilterHow($ix) "exact"
+	catch { set FilterHow($ix) "exact" }
     }
     uiClearSelection
 }

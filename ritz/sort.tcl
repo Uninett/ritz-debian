@@ -118,6 +118,22 @@ proc compareSeverity { a b } {
     return [string compare $a $b]; # last resort
 }
 
+proc compareDowntime { a b } {
+
+    set ad 0
+    set bd 0
+
+    catch { set ad [getDowntime $a] }
+    catch { set bd [getDowntime $b] }
+
+    numCompare $bd $ad
+}
+
+proc compareDowntimeRev { a b } {
+
+    return [compareDowntime $b $a]
+}
+
 #
 # Main sorting routine
 #
@@ -132,10 +148,6 @@ proc compareCases { a b } {
 #    puts [format "types: %s" $s]
     if { $s != 0 } { return $s; }
 
-    set s [compareStates $a $b]
-#    puts [format "states: %s" $s]
-    if { $s != 0 } { return $s; }
-
     if { [Attr $a "type"] == "portstate" } {
 	set s [comparePortStates $a $b]
 #	puts [format "portstate: %s" $s]
@@ -147,6 +159,13 @@ proc compareCases { a b } {
     }
     set s [comparePriority $a $b]
 #    puts [format "priority: %s" $s]
+    if { $s != 0 } { return $s; }
+
+    set s [compareDowntime $a $b]
+    if { $s != 0 } { return $s; }
+
+    set s [compareStates $a $b]
+#    puts [format "states: %s" $s]
     if { $s != 0 } { return $s; }
 
     set s [compareAge $a $b]
@@ -175,6 +194,12 @@ proc sortCases { caseids } {
     }
     if { $Sortby == "upd-rev" } {
 	return [lsort -command compareUpdatedRev $caseids]
+    }
+    if { $Sortby == "down" } {
+	return [lsort -command compareDowntime $caseids]
+    }
+    if { $Sortby == "down-rev" } {
+	return [lsort -command compareDowntimeRev $caseids]
     }
     error [format "Unknown sort option: %s" $Sortby]
 }
@@ -246,8 +271,9 @@ proc filterPass { id } {
 	    set match [info exists Selected($id)]
 	} else {
 
-	    if { [catch { set val [Attr $id $attr] } msg] } {
-#		puts [format "Attr %s does not exist for id %s" $attr $id]
+	    if { $attr == "downtime" } {
+		set val [getDowntime $id]
+	    } elseif { [catch { set val [Attr $id $attr] } msg] } {
 		return 0;		# attribute does not exist, so no match
 	    }
 	    if { [info exists FilterHow($attr)] } {
@@ -260,6 +286,9 @@ proc filterPass { id } {
 		    }
 		    regexp {
 			set match [regexp -- $Filterval($attr) $val]
+		    }
+		    "value>=" {
+			set match [expr $val >= $FilterVal($attr)]
 		    }
 		}
 	    } else {

@@ -26,6 +26,9 @@ proc summaryLen { } {
     if { $View(updated) } {
 	set l [expr $l + 17]
     }
+    if { $View(downtime) } {
+	set l [expr $l + 17]
+    }
     if { $View(age) } {
 	set l [expr $l + 17]
     }
@@ -68,6 +71,12 @@ proc summarizePort { id } {
 	set s [format "%s %16s" $s [mib format sysUpTime \
 		[expr [getAge $id] * 100]]]
     }
+    if { $View(downtime) } {
+	set downtime 0
+	catch { set downtime [getDowntime $id] }
+	set s [format "%s %16s" $s [mib format sysUpTime \
+		[expr $downtime * 100]]]
+    }
     if { $View(updated) } {
 	set secs [expr [clock seconds] - [Attr $id "updated"]]
 	set s [format "%s %16s" $s [mib format sysUpTime \
@@ -104,6 +113,11 @@ proc summarizeReach { id } {
     if { $View(age) } {
 	set s [format "%s %16s" $s [mib format sysUpTime \
 	    [expr [getAge $id] * 100]]]
+    }
+    if { $View(downtime) } {
+	set downtime [getDowntime $id]
+	set s [format "%s %16s" $s [mib format sysUpTime \
+		[expr $downtime * 100]]]
     }
     if { $View(updated) } {
 	set secs [expr [clock seconds] - [Attr $id "updated"]]
@@ -146,6 +160,9 @@ proc summaryHeading { } {
     }
     if { $View(age) } {
 	set h [format "%s %-16s" $h " Age"]
+    }
+    if { $View(downtime) } {
+	set h [format "%s %-16s" $h " Downtime"]
     }
     if { $View(updated) } {
 	set h [format "%s %-16s" $h " Updated"]

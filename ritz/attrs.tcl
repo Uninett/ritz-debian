@@ -79,3 +79,38 @@ proc AttrForgetAll {} {
 	}
     }
 }
+
+proc isDown { id } {
+
+    set type [Attr $id "type"]
+    if { $type == "portstate" } {
+	set ps [Attr $id "portstate"]
+	if { $ps == "down" || $ps == "flapping" } {
+	    return 1
+	}
+	return 0;
+    } elseif { $type == "reachability" } {
+	set reach [Attr $id "reachability"]
+	if { $reach == "no-response" } {
+	    return 1
+	}
+	return 0
+    }
+}
+
+# Get current downtime for a given event
+
+proc getDowntime { id } {
+
+    set now [clock seconds]
+    set lt $now
+    catch { set lt [Attr $id "lasttrans"] }
+    if { $lt == 0 } {
+	set lt $now
+    }
+    set ad [Attr $id "ac-down"]
+    if [isDown $id] {
+	set ad [expr $ad + $now - $lt]
+    }
+    return $ad
+}
