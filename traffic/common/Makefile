@@ -2,7 +2,7 @@
 # $Id$
 #
 
-SCRIPTS=date.pl newtimelocal.pl plot.pl read-day-report.pl \
+SCRIPTS=date.pl newtimelocal.pl plot.pl read-5m-sum.pl read-day-report.pl \
 	read-hr-log.pl read-raw-log.pl read-week-report.pl \
 	scaling.pl search.pl timelocal.pl tmpfiles.pl utils.pl
 
