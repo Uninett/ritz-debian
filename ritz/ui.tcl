@@ -190,12 +190,49 @@ proc uiInitToplevel { } {
     .m add command -label "Clear flap" -command \
 	    {uiClearFlapAt [winfo rootx .m] [winfo rooty .m]}
 
+    menubutton .mbar.help -text Help -underline 0 -menu .mbar.help.menu
+
+    menu .mbar.help.menu -tearoff false
+
+    .mbar.help.menu add command \
+	    -label "About..." \
+	    -command uiAbout
+
     pack .mbar.file .mbar.edit .mbar.view -side left
+    pack .mbar.help -side right
     pack .mbar -side top -fill x
     pack .yscroll -side right -fill y
     pack .heading -fill x
     pack .xscroll -side bottom -fill x
     pack .text -fill both -expand 1
+}
+
+proc uiAbout { } {
+    global Version
+
+    set w .about
+    uiSimpleToplevelSetup $w "About ritz"
+    text $w.text -relief raised \
+	    -bd 2 \
+	    -wrap none \
+	    -setgrid 1 \
+	    -font {-adobe-new century schoolbook-bold-r-*-*-16-*} \
+	    -height 3 -width 27 \
+	    -background {#d9d9d9}
+
+    set w $w.text
+    $w insert end \
+	    [format "RITZ - version %s\n" $Version] \
+	    t1
+    $w tag configure t1 -justify center
+    $w insert end "(c) UNINETT and NORDUnet\n" t2
+    $w tag configure t2 -justify center
+    $w insert end "1998, 1999\n" t3
+    $w tag configure t3 -justify center
+
+    $w configure -state disabled
+
+    pack $w -expand 1 -fill both
 }
 
 proc uiScrollTexts { args } {
