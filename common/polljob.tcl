@@ -9,9 +9,9 @@
 #      ::config::conf
 # (which cannot be imported due to circular dependency)
 #
-# Needs to be initialized (::polljob::init) with fully qualified
-# procedures to call to do "initDev", "pollDev" and "destroyDev"
-# functions, all called with an snmp handle as the single argument.
+# Will by default do upcalls to ::initDev, ::pollDev, and
+# ::destroyDev, these upcalls can be modified with ::polljob::init.
+# These are all called with an snmp handle as the single argument.
 #
 # Provides
 #      handle $devname
@@ -28,9 +28,10 @@ namespace eval ::polljob {
     namespace import ::util::mtoms
 
     variable cx
-    variable initDev
-    variable pollDev
-    variable destroyDev
+
+    variable initDev ::initDev
+    variable pollDev ::pollDev
+    variable destroyDev ::destroyDev
 
 
     proc name { sh } {
