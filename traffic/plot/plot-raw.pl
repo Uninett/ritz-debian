@@ -250,22 +250,11 @@ sub plot_errors {
     my($line, $fh, $dn, $d, $tm) = @_;
     my($i, $has_details, $val, $pkts, $v, $tprinted);
 
-    $has_details = 0;
-    foreach $i (0 .. 10) {
-	$has_details |= defined($count{"locIfInCRC",$i});
-    }
+    $has_details = defined($base{"locIfInCRC"});
 
     foreach $i (0 .. $max_sample) {
 	$tprinted = 0;
-	foreach $v ("ifInUcastPkts" "ifInNUcastPkts" "ifInErrors") {
-	    if (!$tprinted && defined($sample_time{$v,$i})) {
-		printf($fh "%f", $sample_time{$v,$i} + ($d*24));
-		$tprinted = 1;
-	    }
-	}
-	if (!$tprinted) {
-	    printf($fh "%f", 0.0); # need something.  This is bogus. XXX
-	}
+	printf($fh, "%f", $sample_time{$i} + ($d * 24));
 
 	$pkts = ($count{"ifInUcastPkts",$i} +
 		 $count{"ifInNUcastPkts",$i} +
