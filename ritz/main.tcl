@@ -27,8 +27,8 @@ proc main { } {
     }
 
     if { ![info exists AllowClearTextAuth] } {
-	# the most secure setting
-	set AllowClearTextAuth 0
+	# the most permissive setting
+	set AllowClearTextAuth 1
     }
 
     set sortedCases {}
