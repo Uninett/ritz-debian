@@ -5,8 +5,7 @@
 CONFS=	config.pl
 
 SCRIPTS=daily-clean.sh daily.sh daily.pl \
-	fixup-data.pl fixup-data.sh \
-	startup.sh nanny.pl start-nanny.sh
+	fixup-data.pl fixup-data.sh startup.sh
 
 SUBST=	${.CURDIR}/../../subst
 
