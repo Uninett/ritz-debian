@@ -2,6 +2,15 @@
 # $Id$
 #
 
+#
+# PLEASE NOTE:
+#
+# Each variable setting can only have one variable substitution,
+# and that variable must be previously defined.  This is to allow
+# processing with mk-subst.awk and also due to my laziness.
+#
+
+
 # Top-level directory of traffic statistics tree
 #
 TOPDIR=/local/traffic
@@ -24,8 +33,11 @@ GZIP=/usr/bin/gzip
 GUNZIP=/usr/bin/gunzip
 ZCAT=/usr/bin/zcat
 PING=/sbin/ping
+RAWSENDMAIL=/usr/sbin/sendmail -oi
 SCOTTY=/usr/pkg/bin/scotty
 SNMPNETSTAT=/local/bin/snmpnetstat
+TACHOST=betong.veidekke.no
+TCLSH=/usr/pkg/bin/tclsh8.0
 #
 NOTIFY=he
 CHECKINTV=400
@@ -53,6 +65,7 @@ MAPDIR=${TOPDIR}/maps
 MIBDIR=${TOPDIR}/mibs
 PLOTDIR=${TOPDIR}/plot
 REPDIR=${TOPDIR}/reports
+ZINODIR=${TOPDIR}/zino
 #
 IMGDIR=${HTMLDIR}/imgs
 MREPDIR=${REPDIR}/monthly
