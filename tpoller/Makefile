@@ -25,4 +25,7 @@ install: ${PROGS}
 	install -c -m 555 tpoller ${BINDIR}
 	install -c -m 555 start-tpoll ${BINDIR}
 
+clean:
+	rm -f ${PROGS}
+
 .include "../Makefile.inc"
