@@ -247,7 +247,11 @@ proc swalkErrorHandler { sh err } {
 
 proc delayedCheckResponse { sh } {
     global responseCheckInProgress
+    global cx
 
+    set r $cx($sh,name)
+
+    log [format "checking reachability of %s" $r]
     if [checkResponse $sh] {
 	Response $sh
 
@@ -255,6 +259,7 @@ proc delayedCheckResponse { sh } {
 	after cancel delayedCheckResponse $sh
 	after cancel lastDelayedCheckResponse $sh
 	unset responseCheckInProgress($sh)
+	log [format "cleaned up after response from %s" $r]
     }
 }
 
@@ -281,7 +286,7 @@ proc delayedNoResponse { sh } {
 	} else {
 	    set doit 1
 	}
-	if { $doit } {
+	if { $doit != 0 } {
 	    set eid [eventId $r "reachability"]
 	    setEventAttr $eid "router" $r
 	    setEventAttr $eid "reachability" "no-response"
@@ -291,21 +296,24 @@ proc delayedNoResponse { sh } {
 	    eventLog $eid $s
 	    eventCommit $eid
 	    log $s
-	    after [60  * 1000] delayedCheckResponse $sh
-	    after [120 * 1000] delayedCheckResponse $sh
-	    after [240 * 1000] delayedCheckResponse $sh
-	    after [480 * 1000] delayedCheckResponse $sh
-	    after [960 * 1000] lastDelayedCheckResponse $sh
+	    after [expr 60  * 1000] delayedCheckResponse $sh
+	    after [expr 120 * 1000] delayedCheckResponse $sh
+	    after [expr 240 * 1000] delayedCheckResponse $sh
+	    after [expr 480 * 1000] delayedCheckResponse $sh
+	    after [expr 960 * 1000] lastDelayedCheckResponse $sh
 	}
     }
 }
 
 proc noResponse { sh } {
     global responseCheckInProgress
+    global cx
     
     if [info exists responseCheckInProgress($sh)] {
+	log [format "no-response from %s but checking already" $cx($sh,name)]
 	return
     }
+    log [format "no-response from %s, starting delayed check" $cx($sh,name)]
     after [expr 60 * 1000] delayedNoResponse $sh
     set responseCheckInProgress($sh) 1
 }
