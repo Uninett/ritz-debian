@@ -98,8 +98,8 @@ sub date_to_week {
     my($week, $year, $tm);
     
     if ($str =~ /(\d\d\d\d)(\d\d)(\d\d)/) {
-	# two hours into day
-	$tm = &timelocal(0,2,0,$3,$2-1,$1-1900);
+	# one minute into day
+	$tm = &timelocal(0,1,0,$3,$2-1,$1-1900);
 	$week = &weekno($tm);
 	return ($week, $1);
     }
@@ -114,8 +114,8 @@ sub date_to_previous_week {
     my($week, $year, $tm);
 
     if ($str =~ /(\d\d\d\d)(\d\d)(\d\d)/) {
-	# two hours into day
-	$tm = &timelocal(0,2,0,$3,$2-1,$1-1900);
+	# one minute into day
+	$tm = &timelocal(0,1,0,$3,$2-1,$1-1900);
 	$tm -= 60*60*24*7;
 	return &tm_to_week_and_year($tm);
     }
@@ -143,7 +143,7 @@ sub date_to_tm {
 	$yy = $1 - 1900;
 	$mm = $2 - 1;
 	$dd = $3;
-	$time = &timelocal (0, 0, 2, $dd, $mm, $yy);
+	$time = &timelocal(0, 1, 0, $dd, $mm, $yy);
     }
     $time;
 }
