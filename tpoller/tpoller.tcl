@@ -28,7 +28,7 @@ proc pollDev { sh } {
 
     set dev [name $sh]
     # First check if we're to collect stats from this box
-    if { [conf $name "statistics"] != "yes" } {	return; }
+    if { [conf $dev "statistics"] != "yes" } {	return; }
 
 #    puts [format "polling %s" [name $sh]]
     if [catch {
