@@ -122,11 +122,11 @@ proc forgetConfig { sh } {
     set name [name $sh]
     if [info exists cx($name,ifindexes)] {
 	foreach ix $cx($name,ifindexes) {
-	    catch {unset cx($name,address,$i)}
-	    catch {unset cx($name,type,$i)}
-	    catch {unset cx($name,speed,$i)}
-	    catch {unset cx($name,admin,$i)}
-	    catch {unset cx($name,descr,$i)}
+	    catch {unset cx($name,address,$ix)}
+	    catch {unset cx($name,type,$ix)}
+	    catch {unset cx($name,speed,$ix)}
+	    catch {unset cx($name,admin,$ix)}
+	    catch {unset cx($name,descr,$ix)}
 	}
 	unset cx($name,ifindexes)
     }
@@ -149,7 +149,12 @@ proc recordAddr { sh vbl } {
 	# only remember lowest address if interface
 	# has more than one
 	set cx($name,address,$ix) $ad
+
+#	puts [format "New address: %s for %s,%s" $ad $name $ix]
     }
+#	puts [format "Address already seen for %s,%s: %s %s (new)" \
+#		$name $ix $cx($name,address,$ix) $ad]
+#
 }
 
 proc getIfList { sh } {
@@ -183,6 +188,10 @@ proc recordIntf { sh vbl } {
     set cx($name,admin,$ix) $admin
     set cx($name,descr,$ix) $descr
     lappend cx($name,ifindexes) $ix
+
+#    puts [format "Intf %s,%s type %s speed %s admin %s descr %s" \
+#	    $name $ix $type $speed $admin $descr]
+
 }
 
 #
