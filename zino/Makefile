@@ -11,7 +11,7 @@ FILES= 	../common/util.tcl \
 	flaps.tcl events.tcl server.tcl auth.tcl \
 	zino-main.tcl
 
-PROGS=	zino start-zino
+PROGS=	zino start-zino tacping
 
 all: ${PROGS} zino.cf
 
@@ -22,10 +22,16 @@ zino: ${FILES} Makefile
 	chmod +x zino
 
 zino.cf: zino.cf.tmpl ../subst
+	rm -f zino.cf
 	sed -f ../subst < zino.cf.tmpl > zino.cf
 
 start-zino: start-zino.sh ../subst
+	rm -f start-zino
 	sed -f ../subst < start-zino.sh > start-zino
+
+tacping: tacping.pl ../subst
+	rm -f tacping
+	sed -f ../subst <tacping.pl > tacping
 
 install: ${PROGS} zino.cf
 	@if [ ! -d ${ZINODIR} ]; then \
@@ -45,6 +51,7 @@ install: ${PROGS} zino.cf
 			install -c -m 600 /dev/null ${ZINODIR}/$$f; \
 		fi; \
 	done
+	install -c -m 555 tacping ${BINDIR}
 
 
 clean:
