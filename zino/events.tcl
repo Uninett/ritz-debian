@@ -22,9 +22,9 @@ proc initEvent { saveFile saveDir } {
     set eventLogLimit 50
     set eventExpiry [expr 8 * 60 * 60]; # 8 hours
 
-    persistVar EventId
-    persistVar EventIdToIx
-    persistVar EventCloseTimes
+    ::persist::add ::EventId
+    ::persist::add ::EventIdToIx
+    ::persist::add ::EventCloseTimes
 
     foreach ix [array names EventId] {
 	set e $EventId($ix)
@@ -55,7 +55,7 @@ proc fixupEventState { } {
 
 proc initEventAttrs { id } {
 
-    persistVar EventAttrs_$id
+    ::persist::add ::EventAttrs_$id
 }
 
 proc fixupEventIdToIx { } {
@@ -199,8 +199,8 @@ proc eventCommit { id } {
     }
 
     # Force an update within 10s; save state
-    schedulePersistDump 10
-#    dumpPersistVars
+    ::persist::dump 10
+#    ::persist::dumpAll
 
     notifyCheck $id
 }
@@ -291,7 +291,7 @@ proc saveEvent { id } {
     
     set f [format "%s/%s" $d $id]
     set fh [open $f "w"]
-    dumpGlobalVar $fh $Attrs
+    ::persist::dumpGlobalVar $fh $Attrs
     close $fh
 }
 
@@ -673,3 +673,36 @@ proc fixupEventId { } {
 	}
     }
 }
+
+
+proc cleanupDBvars { r } {
+    global AddrToRouter
+    global portToIfDescr
+    global portToLocIfDescr
+    global portState
+    global isCisco
+
+    puts [format "Router %s removed, cleaning up" $r]
+
+    set msg [format "Router %s no longer monitored" $r]
+
+    catch { closeEventsOnRouter $r $msg }
+    catch { forgetFlaps $r $msg }
+
+    # Clean up in internal "databases"
+    foreach a [array names AddrToRouter] {
+	if { $AddrToRouter($a) == $r } {
+	    unset AddrToRouter($a)
+	}
+    }
+    foreach a "portToIfDescr portToLocIfDescr portState" {
+	foreach ix [array names $a] {
+	    set l [split $ix ","]
+	    if { [lindex $l 0] == $r } {
+		unset [set a]($ix)
+	    }
+	}
+    }
+    catch { unset isCisco($r) }
+}
+
