@@ -9,3 +9,10 @@ $Id$		-*- Text -*-
 
  o Zino should remove outdated mapping entries (entries for routers no
    longer in config file).
+
+ o Zino should not create "type"-less events when we cease polling a
+   device (now worked around in ritz, but the bug is in Zino).
+
+ o Zino's trap handling machinery badly needs to be reimplemented.
+
+ o Zino's response/no-response badly needs to be reimplemented.
