@@ -21,7 +21,7 @@
  * Usage: sha [-vt] [filename ...]
  *
  *      -v switch: output the filename as well
- *      -t switch: suppress spaces between 32-bit blocks
+ *      -t switch: use spaces between 32-bit blocks
  *
  *      If no input files are specified, process standard input.
  *
@@ -117,7 +117,7 @@ char **argv;
     char *s;
     int file_args = FALSE;  /* If no files, take it from stdin */
     int verbose = FALSE;
-    int terse = FALSE;
+    int terse = TRUE;
 
 #ifdef MEMTEST
     sha_memory("abc", 3l, hbuf);         /* NIST test value from appendix A */
@@ -165,7 +165,7 @@ char **argv;
 			verbose = TRUE;
 			break;
 		    case 't': case 'T':
-			terse = TRUE;
+			terse = FALSE;
 			break;
 		    default:
 			fprintf(stderr, "Unrecognized flag: %c\n", *s);
