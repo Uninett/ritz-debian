@@ -201,7 +201,8 @@ sub regen_needed {
     $now = time;
     $modt = &modtime($f);
 
-    if (&is_today($dsp)) { return 1; } # today's plots always require regen
+    # plots looking at values from today always require regen
+    if (&looking_at_today($dsp, $res)) { return 1; }
 
     if (! &tm_in_datespec($modt, $dsp)) { return undef; }
     
@@ -228,7 +229,7 @@ sub plotit {
 
 #	printf "$cmd<p>\n";
 	$errfile="/tmp/plot-all.$$.err";
-	$ret = system("($cmd) 2>$errfile");
+	$ret = system("($cmd) 2>$errfile 1>&2");
 	$ret = $ret / 256;
 	if ($ret != 0) {
 	    print "<PRE>\n";
@@ -471,7 +472,7 @@ if (&tm_in_datespec(time, $datespec)) {
 
 ($base_tm, $nofdays) = &decode_datespec($datespec);
 
-if (&is_today($datespec)) {
+if (&looking_at_today($datespec, $res)) {
     print $doc->header(-type => "text/html",
 		       -expires => sprintf("+%ds", $exp),
 		       -Refresh => &secs_to_expiry($res, $datespec)
