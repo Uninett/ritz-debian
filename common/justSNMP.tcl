@@ -203,7 +203,7 @@ namespace eval ::just {
     #
 
     proc getDNSCachedName { ipAddr } {
-#	global ptrCache
+	variable ptrCache
 	if { ![info exists ptrCache($ipAddr)] } {
 	    if { [catch { dns name $ipAddr } name] } {
 		set ptrCache($ipAddr) $ipAddr
@@ -218,7 +218,7 @@ namespace eval ::just {
     # Ditto for services
     #
     proc getCachedServiceName { service proto } {
-#	global serviceCache
+	variable serviceCache
 	if { ![info exists serviceCache($service,$proto)] } {
 	    if { [catch {netdb services name $service $proto} name] } {
 		set serviceCache($service,$proto) $service
