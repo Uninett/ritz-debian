@@ -8,6 +8,7 @@ source "../common/util.tcl"
 source "../common/conffile.tcl"
 source "../common/polljob.tcl"
 source "../common/config.tcl"
+source "../common/justSNMP.tcl"
 
 source "../tpoller/tpoller.tcl"
 
