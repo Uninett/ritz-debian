@@ -11,8 +11,11 @@
 
 proc compareStates { a b } {
 
-    set a [Attr $a "state"]
-    set b [Attr $b "state"]
+    set a "open"
+    set b "open"
+
+    catch { set a [Attr $a "state"] }
+    catch { set b [Attr $b "state"] }
 
     if { $a == $b } { return 0; }
 
@@ -28,8 +31,11 @@ proc compareStates { a b } {
 
 proc comparePortStates { a b } {
 
-    set a [getEffectivePortState $a]
-    set b [getEffectivePortState $b]
+    set a "down"
+    set b "down"
+
+    catch { set a [getEffectivePortState $a] }
+    catch { set b [getEffectivePortState $b] }
 
     if { $a == $b } { return 0; }
     foreach s "up adminDown flapping down" {
@@ -59,8 +65,11 @@ proc compareTypes { a b } {
 
 proc compareReachability { a b } {
 
-    set a [Attr $a "reachability"]
-    set b [Attr $b "reachability"]
+    set a "noResponse"
+    set b "noResponse"
+
+    catch { set a [Attr $a "reachability"] }
+    catch { set b [Attr $b "reachability"] }
 
     if { $a == $b } { return 0; }
     if { $a == "noResponse" } { return -1; }
@@ -77,8 +86,12 @@ proc numCompare { a b } {
 
 proc comparePriority { a b } {
 
-    set a [getPriority $a]
-    set b [getPriority $b]
+    set a 100
+    set b 100
+
+    catch { set a [getPriority $a] }
+    catch { set b [getPriority $b] }
+
     numCompare $b $a
 }
 
@@ -97,8 +110,12 @@ proc compareUpdatedRev { a b } {
 
 proc compareAge { a b } {
 
-    set a [getAge $a]
-    set b [getAge $b]
+    set a 0
+    set b 0
+
+    catch { set a [getAge $a] }
+    catch { set b [getAge $b] }
+
     numCompare $b $a
 }
 
@@ -109,8 +126,11 @@ proc compareAgeRev { a b } {
 
 proc compareSeverity { a b } {
 
-    set a [caseSeverity $a]
-    set b [caseSeverity $b]
+    set a "unknown"
+    set b "unknown"
+    
+    catch { set a [caseSeverity $a] }
+    catch { set b [caseSeverity $b] }
 
     if { $a == $b } { return 0; }
     foreach s {alarm warning normal unknown closed} {
@@ -151,15 +171,18 @@ proc compareCases { a b } {
 #    puts [format "types: %s" $s]
     if { $s != 0 } { return $s; }
 
-    if { [Attr $a "type"] == "portstate" } {
-	set s [comparePortStates $a $b]
+    if { [AttrExists $a "type"] } {
+	if { [Attr $a "type"] == "portstate" } {
+	    set s [comparePortStates $a $b]
 #	puts [format "portstate: %s" $s]
-	if { $s != 0 } { return $s; }
-    } elseif { [Attr $a "type"] == "reachability" } {
-	set s [compareReachability $a $b]
+	    if { $s != 0 } { return $s; }
+	} elseif { [Attr $a "type"] == "reachability" } {
+	    set s [compareReachability $a $b]
 #	puts [format "reach: %s" $s]
-	if { $s != 0 } { return $s; }
+	    if { $s != 0 } { return $s; }
+	}
     }
+
     set s [comparePriority $a $b]
 #    puts [format "priority: %s" $s]
     if { $s != 0 } { return $s; }
@@ -211,6 +234,9 @@ proc sortCases { caseids } {
 # One of alarm, warning, normal, unknown.
 
 proc caseSeverity { id } {
+
+    if { ! [AttrExists $id "type"] } { return "unknown"; }
+    if { ! [AttrExists $id "state"] } { return "unknown"; }
 
     set type [Attr $id "type"]
     set state [Attr $id "state"]
