@@ -284,6 +284,7 @@ sub flag_deviations {
     my($cv, $b, $fp, $dp) = @_;
     my($i);
     our($opt_l, $opt_u);
+    my($report) = "";
 
     my($aavg) = $fp->{"stats"}->{$cv}->{"accum_average"};
     my($astdd)= $fp->{"stats"}->{$cv}->{"accum_stddev"};
@@ -311,36 +312,50 @@ sub flag_deviations {
 	    )
 	{
 	    if (!$dhp->{$cv}) {
-		printf("%s %s %5s dev: cur %d avg %d stdd %d * %4.2f\n",
-		       time2str("%d %h %T", $$tp[$i]),
-		       &file_to_name($b, &today),
-		       $cv,
-		       $$vp[$i],
-		       $aavg,
-		       $astdd,
-		       $delta / $astdd
-		       );
+		$report .=
+		    sprintf("%s %s %5s dev: cur %d avg %d stdd %d * %4.2f\n",
+			    time2str("%d %h %T", $$tp[$i]),
+			    &file_to_name($b, &today),
+			    $cv,
+			    $$vp[$i],
+			    $aavg,
+			    $astdd,
+			    $delta / $astdd
+			    );
 	    }
 	    $dhp->{$cv} = 1;
 	} else {
 	    if ($delta < $down_tresh) {
 		if ($dhp->{$cv}) {
-		    printf("%s %s %5s clearing deviation\n",
-			   time2str("%d %h %T", $$tp[$i]),
-			   &file_to_name($b, &today),
-			   $cv);
-		    printf("%s %s %5s values: cur %d avg %d stdd %d\n",
-			   time2str("%d %h %T", $$tp[$i]),
-			   &file_to_name($b, &today),
-			   $cv,
-			   $$vp[$i],
-			   $aavg,
-			   $astdd);
+		    $report .=
+			printf("%s %s %5s clearing deviation\n",
+			       time2str("%d %h %T", $$tp[$i]),
+			       &file_to_name($b, &today),
+			       $cv);
+		    $report .=
+			printf("%s %s %5s values: cur %d avg %d stdd %d\n",
+			       time2str("%d %h %T", $$tp[$i]),
+			       &file_to_name($b, &today),
+			       $cv,
+			       $$vp[$i],
+			       $aavg,
+			       $astdd);
 		}
 		$dhp->{$cv} = 0;
 	    }
 	}
     }
+    return $report;
+}
+
+sub mail_report {
+    my($to, $report) = @_;
+
+    my $subj = "Stat deviations ";
+    $subj .= time2str("%R", time);
+    open(OUT, "| mail -s \"$subj\" $to");
+    printf(OUT, $report);
+    close(OUT);
 }
 
 
@@ -350,8 +365,8 @@ sub flag_deviations {
 
 sub process_values {
     my($b, $d) = @_;
-    my($i);
-    our($fd);
+    my($i, $report);
+    our($fd, $opt_m);
 
     if (!defined($fd->{$b})) {
 	$fd->{$b} = {};
@@ -359,7 +374,14 @@ sub process_values {
 
     foreach $cv ("okbps", "ikbps", "ipps", "opps", "obpp", "ibpp") {
 	&accumulate_stats($cv, $fd->{$b});
-	&flag_deviations($cv, $b, $fd->{$b}, $d);
+	$report = &flag_deviations($cv, $b, $fd->{$b}, $d);
+	if ($report ne "") {
+	    if (defined($opt_m)) {
+		&mail_report($opt_m, $report);
+	    } else {
+		printf(STDOUT, $report);
+	    }
+	}
     }
 }
 
@@ -509,12 +531,14 @@ sub save_position {
 }
 
 sub report_tail_stats {
-    my($b) = @_;
-    our($fd);
+    my($b, $ofile) = @_;
+    our($fd, $opt_i);
     my($ikbps, $okbps, $n);
     my($sp) = $fd->{$b}->{"save_values"};
     my $ia = $sp->{"ikbps"};
     my $oa = $sp->{"okbps"};
+
+    open(OUT, ">" . "$ofile") || die "Could not open $ofile for write\n";
 
     $n = 0;
     foreach my $v (@{ $ia }) {
@@ -540,24 +564,27 @@ sub report_tail_stats {
 
     my $name = &file_to_name($b, &today);
     if (!defined($name)) {
+	if (defined($opt_i)) {	# ignore unnamed logical ports
+	    next;
+	}
 	$name = $b;
     }
     # Output: name   last-kbps-in last-kbps-out avg-kbps-in avg-kbps-out
-    printf("%-30s %8d %8d %8d %8d %8d\n",
+    printf(OUT, "%-30s %8d %8d %8d %8d %8d\n",
 	   $name,
 	   $ia->[$#$ia],
 	   $oa->[$#$oa],
 	   $ikbps, $okbps,
 	   $fd->{$b}->{"ifspeed"} / 1000,
 	   );
-#    printf("\n");
+    close(OUT);
 }
 
 sub tail_process_file {
     my($f) = @_;
     my($b) = basename($f);
     my($cat, $base) = &cat_and_base($f, &today());
-    our($max_sample);
+    our($max_sample, $opt_r);
 
     if ($cat ne "cat") { return undef; }
 
@@ -572,7 +599,9 @@ sub tail_process_file {
     &process_data($b, 0, $max_sample);
     &trim_data($b, &timelocal(localtime) - $retention_time);
     &save_vars($b);
-    &report_tail_stats($b);
+    if (defined($opt_r)) {
+	&report_tail_stats($b, $opt_r);
+    }
 }
 
 # Read in data for one logical port and portion it up for the
@@ -634,7 +663,7 @@ sub do_all_files {
 # Main
 #
 
-&Getopts("d:l:n:p:u:");
+&Getopts("d:il:m:n:p:r:u:");
 
 # -n name	logical name of port to be analyzed
 # -d datestr	date which should be analyzed
@@ -642,6 +671,10 @@ sub do_all_files {
 # -l low-limit	factor to pass when de-flagging a deviation
 # -p percent	how many percent should data from new interval
 #		influence averaged statistical values (avg, stddev)
+# -r outfile	produce report about current load to this file
+#		only applicable if doing all files of current day
+# -i		ignore unnamed logical ports when making report
+# -m mailto	address to mail stats deviations report to
 
 if (defined($opt_n) && !defined($opt_d)) {
     die "Must specify both -n and -d value\n";
@@ -660,6 +693,9 @@ if (!defined($opt_p)) {
 }
 
 if (defined($opt_d) && defined($opt_n)) {
+    if (defined($opt_r)) {
+	die "-r cannot be used while procesing old stats\n";
+    }
     &do_one_file($opt_d, $opt_n);
 } else {
     &do_all_files();
