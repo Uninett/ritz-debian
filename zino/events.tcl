@@ -152,9 +152,10 @@ proc eventId { ix type } {
 }
 
 # Top-level, use this one also to set event state.
+# The settings will not take effect before eventCommit is called.
 
 proc setEventAttr { id attr value { user monitor } } {
-    set Attrs EventAttrs_$id
+    set Attrs NewEventAttrs_$id
     global $Attrs
     global EventState
     global eventAttrChange
@@ -173,6 +174,32 @@ proc setEventAttr { id attr value { user monitor } } {
     }
 
     set [set Attrs]($attr) $value
+}
+
+# Commit changes to an event.
+# Commit attribute setting, and check for a possible change
+# of state from "embryonic" to "open".
+
+proc eventCommit { id } {
+    set NewAttrs NewEventAttrs_$id
+    global NewAttrs
+    set Attrs EventAttrs_$id
+    global Attrs
+
+    # Commit values
+    foreach ix [array names $NewAttrs] {
+	set [set Attrs]($ix) [set [set NewAttrs]($ix)]
+    }
+
+    if { [getEventAttr $id state] == "embryonic" } {
+	setEventAttr $id opened [clock seconds]
+	setEventAttr $id state "open"
+    }
+    # Force an update within 10s; save state
+    schedulePersistDump 10
+#    dumpPersistVars
+
+    notifyCheck $id
 }
 
 proc getEventAttr { id attr } {
@@ -201,6 +228,10 @@ proc addLogEntry { id max type entry } {
     global $Attrs
 
     set entry [prepareLogEntry $entry]
+
+    if { $type == "log" } {
+	catch { recordDowntime $id $entry }
+    }
 
     lappend ${Attrs}($type) $entry
     set log [set [set Attrs]($type)]
@@ -360,22 +391,6 @@ proc setEventState { id state user } {
     }
 }
 
-# Finish updating an event, could cause a change of state
-# from "embryonic" to "open"
-
-proc eventCommit { id } {
-
-    if { [getEventAttr $id state] == "embryonic" } {
-	setEventAttr $id opened [clock seconds]
-	setEventAttr $id state "open"
-    }
-    # Force an update within 10s; save state
-    schedulePersistDump 10
-#    dumpPersistVars
-
-    notifyCheck $id
-}
-
 # Dump the "simple" event attributes (no multi-line attributes)
 # to the given channel, using putProc instead of "puts".
 
@@ -438,8 +453,107 @@ proc closeEventsOnRouter { r msg } {
     }
 }
 
+proc isDown { id } {
+
+    set type [getEventAttr $id "type"]
+    if { $type == "portstate" } {
+	set ps [getEventAttr $id "portstate"]
+	if { $ps == "down" } { return 1 }
+	if { $ps == "flapping" } { return 1 }
+	return 0
+    } elseif { $type == "reachability" } {
+	set reach [getEventAttr $id "reachability"]
+	if { $reach == "no-response" } { return 1 }
+	return 0
+    }
+    return 0
+}
+
+proc recordDowntime { id le } {
+
+    set ts [eventTimeStamp $le]
+    if { [isLogUpState $le] && [isDown $id] } {
+	set dt [expr $ts - [getEventAttr $id "lasttrans"]]
+	# bogus, ignore
+	if { $dt <= 0 } { return }
+	set downtime 0
+	catch { set downtime [getEventAttr $id "ac-down"] }
+	set downtime [expr $downtime + $dt]
+	setEventAttr $id "ac-down" $downtime
+	setEventAttr $id "lasttrans" $ts
+    } elseif { [isLogDownState $le] && [isUp $id] } {
+	setEventAttr $id "lasttrans" $ts
+    }
+}
+
+# Return the "real event time" extracted from a logging line.
+# This could be the encoded ifLastChange.
+# However, ignore the ifLastChange value if it differs from the
+# logging time stamp by more than 24h (some agents are severely
+# broken in their ifLastChange implementation).
+
+proc eventTimeStamp { le } {
+
+    if [regexp {changed state from .* to .* on ([0-9]*)} $le dummy ts] {
+	set lts [lindex $le 0]
+	if { [expr $lts - $ts] > [expr 24 * 60 * 60] } {
+	    return $lts
+	} else {
+	    return $ts
+	}
+    } else {
+	return [lindex $le 0]
+    }
+}
+
+proc isLogDownState { le } {
+
+    if [regexp "linkDown" $le] { return 1 }
+    if [regexp "no-response" $le] { return 1 }
+    if [regexp {changed state from .* to down} $le] { return 1 }
+    if [regexp {) flapping, [0-9]+ flaps} $le] { return 1 }
+    return 0
+}
+
+proc isLogUpState { le } {
+
+    if [regexp "linkUp" $le] { return 1 }
+    if [regexp "reachable" $le] { return 1 }
+    if [regexp {changed state from .* to up} $le] { return 1 }
+    return 0
+}
 
 # Some simple debugging support
+
+proc fixupDowntime { } {
+    global EventIdToIx
+
+    foreach id [array names EventIdToIx] {
+	set log [getEventAttr $id "log"]
+
+	set state "up"
+	set downtime 0
+	set lasttrans 0
+	foreach le $log {
+	    if { [isLogDownState $le] && $state == "up" } {
+		set state "down"
+		set start [eventTimeStamp $le]
+	    }
+	    if { [isLogUpState $le] && $state == "down" } {
+		set state "up"
+		set end [eventTimeStamp $le]
+		set dt [expr $end - $start]
+		if { $dt < 0 } { continue; }
+		set downtime [expr $downtime + $dt]
+		set lasttrans $end
+	    }
+	}
+
+	setEventAttr $id "ac-down" $downtime
+	setEventAttr $id "lasttrans" $lasttrans
+	eventCommit $id
+    }
+}
 
 proc dumpEventIds { } {
     global EventId
