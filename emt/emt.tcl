@@ -19,6 +19,8 @@ proc emt_main {} {
     foreach f "~/.ritz.tcl ~/.emt.tcl" {
 	if { [file exists $f] } {
 	    source $f
+	} else {
+	    error "File $f must exist but does not"
 	}
     }
 
