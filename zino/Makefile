@@ -48,6 +48,6 @@ install: ${PROGS} zino.cf
 
 
 clean:
-	rm -f zino
+	rm -f ${PROGS} zino.cf
 
 .include "../Makefile.inc"
