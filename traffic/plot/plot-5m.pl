@@ -222,7 +222,7 @@ sub plot_discards {
 	    }
 	    printf ($fh " %f", $val);
 	} else {
-	    printf($fh " ?");
+	    printf($fh " 0");
 	}
 	printf($fh "\n");
     }
@@ -423,7 +423,7 @@ sub plot_eerrs {
 		printf($fh " 0 0 0 0");
 	    }
 	} else {
-	    printf($fh " ? ? ? ?");
+	    printf($fh " 0 0 0 0");
 	}
 	printf($fh "\n");
     }

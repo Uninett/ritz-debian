@@ -193,7 +193,7 @@ sub plot_discards {
 	    }
 	    printf($fh "%f\n", $val);
 	} else {
-	    printf($fh "?\n");
+	    printf($fh "0\n");
 	}
     }
 }
@@ -398,7 +398,7 @@ sub plot_eerrs {
 		printf($fh "0 0 0 0\n");
 	    }
 	} else {
-	    printf($fh "? ? ? ?\n");
+	    printf($fh "0 0 0 0\n");
 	}
     }
 }
