@@ -387,7 +387,10 @@ proc linkTrans { router ifIndex descr updown reason } {
 	eventLog $eid $s
 	
 	eventCommit $eid
+	# Poll immediately just to be certain of interface state change
 	pollSingleIf $cx($router,handle) $ifIndex
+	# Check again in two minutes
+	after [expr 120 * 1000] pollSingleIf $cx($router,handle) $ifIndex
     }
 }
 
