@@ -35,4 +35,4 @@ scheme which uses the Secure Hash Algorithm implemented by the program
 in the sha/ subdirectory.  Compile and install it in a directory in
 the users PATH to use it.
 
-Comments to Havard.Eidnes@runit.sintef.no
+Comments to he@runit.no
