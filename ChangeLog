@@ -1,3 +1,172 @@
+2004-03-11  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Mark what we have now as version 0.7.
+
+2004-02-26  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Actually make writing of report file optional.
+
+	* traffic/report/tail-stats.pl:
+	Open report file in outer loop, pass reference inwards.
+
+	* traffic/report/tail-stats.pl:
+	Avoid taking sqrt of negative numbers when computing
+	stddev.  This isn't supposed to happen, but, well, it did.
+
+	* traffic/Makefile:
+	Create tail-save/ subdirectory for tail-stats.
+
+	* traffic/report/tail-stats.pl: Fix typo.
+
+	* traffic/report/Makefile:
+	Add installation of tail-stats script.
+
+	* traffic/report/tail-stats.pl:
+	Make "installable" by using %% substitutions.
+	Make it necessary to specify header mail from address when sending
+	mail.  Add usage() and use of same.
+
+2004-02-01  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Let -i ignore unnamed ports also in the stat deviation calculation.
+	Avoid a possible division by zero.
+	Use sprintf, not printf when collecting up a string...
+	Correct a few syntax errors related to printf to FDs.
+	Collect up statistics deviation report for all files before sending
+	mail (if that's what we're asked to do).
+
+2004-01-27  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl: Add three new options:
+	 -r <outfile>	put report about "latest load" in this file
+	 -i		suppress/ignore logical ports with no name in report
+	 -m <mailto>	address to send stats deviation report to
+
+2004-01-14  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Drop attempt at using year in time string -- it's going
+	to be too wide anyway.
+
+2004-01-13  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Add a comment describing the options.
+
+	* traffic/report/tail-stats.pl:
+	This is a version which can post-process old files,
+	but has not been re-tested in the "tail" mode.
+	This now has some tunable statistical machinery to
+	detect major deviations in traffic patterns.
+
+	* traffic/common/read-raw-log.pl:
+	Only set $date in the inner loop after hour 00 has been seen.
+
+2003-12-26  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl: Rename a few functions.
+
+2003-12-09  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl:
+	Complete the former -- remove comments which removed
+	the sending of the original e-mail messages...
+
+2003-12-08  vegardv  <vegardv@uninett.no>
+
+	* emt/emt.tcl:
+	Added a new option for sending brief alarm messages to another
+	channel, e.g. via SMS.	
+
+2003-11-06  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Add a comment to the output format.
+
+	* traffic/report/tail-stats.pl:
+	Version which works and could replace the "lastnu" script.
+
+2003-11-04  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/report-day.pl: cat_and_base() moved out.
+
+	* traffic/common/read-raw-log.pl:
+	Make "hour 23" handling optional.
+
+	* traffic/common/search.pl: Put cat_and_base() here.
+
+	* traffic/report/tail-stats.pl:
+	The start of a "tail-stats" script.
+
+2003-10-08  Havard Eidnes  <he@uninett.no>
+
+	* zino/trap.tcl: Comment out the trap debugging again.
+
+	* zino/trap.tcl:
+	Simplify and make the debug output more explicit.
+
+	* zino/trap.tcl:
+	Enable trap debugging code again, printing out varbind list.
+	Compensate for missing ifDescr in Juniper trap messages, instead
+	derive from ifIndex and existing portToIfDescr table.
+
+2003-07-28  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Add ignore of new "dont_reencode" one-line TGIF directive.
+
+2003-07-11  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/update-dbs.pl:
+	Yet another RE correction (+ instead of *).
+
+	* traffic/db/update-dbs.pl:
+	Correct typo -- missing / terminating RE.
+
+2003-07-10  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/update-dbs.pl:
+	Tolerate, but warn against trailing whitespace.
+
+2003-05-26  Havard Eidnes  <he@uninett.no>
+
+	* TODO: One more item: count input drops?
+
+2003-05-21  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-raw-log.pl:
+	Fix comment to point out use for $base{$v}.
+
+	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
+	Do 32-bit counter wraparound also for non-octet counters.
+
+2003-04-28  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/pretty-ios.pl:
+	Refine version string matching pattern, so as to only match on a
+	single line.
+
+	* vwatch/cur-vers.pl:
+	Resort to simple string comparison if the "intelligent" version
+	doesn't work.  Makes routers appear in alphabetical order when
+	they have the same software version.
+
+	* TODO: Legg til innslag om DoS-deteksjon.
+
+2002-12-06  Havard Eidnes  <he@uninett.no>
+
+	* mibs/Makefile: Allow clean (does nothing here yet).
+
+2002-10-30  Havard Eidnes  <he@uninett.no>
+
+	* ChangeLog: Minor tweak, remove hostname portion.
+
+	* ChangeLog: Update for marking this as 0.6.1.
+
+	* Makefile: Minor version bump to 0.6.1.
+
 2002-10-30  Havard Eidnes  <he@uninett.no>
 
 	* ChangeLog: Update for marking this as 0.6.1.
