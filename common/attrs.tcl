@@ -8,7 +8,7 @@ namespace eval ::attr {
     namespace export exists get set names
     namespace export forget forgetAll
     namespace export effectivePortState priority age downtime
-    namespace export isDown isDownState getOperState
+    namespace export isDown isUpState isDownState getOperState
 
     variable defaultPriority
 
@@ -105,6 +105,11 @@ namespace eval ::attr {
 	    return 1
 	}
 	return 0
+    }
+
+    proc isUpState { state } {
+
+	return [expr ! [isDownState $state]]
     }
 
     proc isDown { id } {
