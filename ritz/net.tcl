@@ -59,7 +59,7 @@ proc authUser { user secret } {
     set chan $ServerChan
 
     set s [format "%s %s" $AuthChallenge($chan) $secret]
-    set r [exec sha -t <<$s]
+    set r [exec sha <<$s]
     safePuts $chan [format "user %s %s" $user $r]
     safeGets $chan l
     if {! [regexp "^200" $l]} {
