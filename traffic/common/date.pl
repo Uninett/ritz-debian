@@ -445,7 +445,10 @@ sub make_datespec {
 	return (sprintf("%04d--%02d", $year, $week));
 
     } elsif ($type eq "day") {
-	($day, $month, $year) = reverse (split ('-', $val));
+	($day, $week, $month, $year) = reverse(split('-', $val));
+	if (!defined($year)) {
+	    ($day, $month, $year) = reverse(split('-', $val));
+	}
 	$year = 1900 + (localtime(time))[5] unless $year;
 	# This will break at the turn of the century
 	$year += 1900 if ($year < 1900);
