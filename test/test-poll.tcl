@@ -1,0 +1,32 @@
+#!/store/bin/scotty
+
+# $Id$
+
+# Test rig for polljob module and config file parsing & handling
+
+source "../common/util.tcl"
+source "../common/conffile.tcl"
+source "../common/polljob.tcl"
+source "../common/config.tcl"
+
+namespace import ::polljob::cx
+
+proc initDev { sh } {
+
+    puts "initDev $::polljob::cx($sh,name)"
+}
+
+proc pollDev { sh } {
+
+    puts "pollDev $::polljob::cx($sh,name)"
+}
+
+proc destroyDev { sh } {
+
+    puts "destroyDev $::polljob::cx($sh,name)"
+}
+
+set conffile "routers.cf"
+
+::conffile::setHandler ::config::handleChangedConf
+::conffile::startCheckJob $conffile 30
