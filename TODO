@@ -17,12 +17,8 @@ $Id$		-*- Text -*-
 
  o Zino's response/no-response badly needs to be reimplemented.
 
- o Add a "packets per second" plot
-
  o Make sure reboot time is logged when it needs to; currently in some
    cases it may be omitted, apparently.
-
- o Make it possible to view today's traffic.
 
  o Create an "animated" GIF of the load map, showing the sample loads?
    (Yep, that's more for amusement value than for anything else...)
@@ -42,21 +38,14 @@ $Id$		-*- Text -*-
  o Zino: Add "region" tags to routers, so that a UI can restrict its
    view to only the routers which are part of a region.
 
- o Tpoller & traffic scripts: support Counter64 measurements.
-
- o Compute and report 90-percentile values in reports in preference
-   to peak samples.  While statistically/mathematically somewhat
-   dubious, could compute average 90-p values (over available
-   values) in week and month reports.
-   It seems this cannot be done without re-reading the raw data file
-   once more per port, as the current "slurp-in" in the daily report
-   automatically distributes the values across the hours.
-   Either that, or modify read-hr-log also to leave the individual
-   measurements in separate variables.
-
  o Customized plots (select variables to plot)?
 
- o Fix daily tabular report to say "peak sample" as long as that's what
-   it's showing.
+ o Zoom-in areas do not take into account that there may not be data
+   for the entire period being looked at (via the given timespec).
+   Compensate?
 
- o Fix scripts and HTML to do method=GET instead of POST.
+ o Implement a server which can inform clients of e.g. current 5-minute
+   average values of bytes/packets/errors etc., so that separate clients
+   can be created to report sudden PPS increases (DoS indication), for
+   feeding data into rrdtool, for creating a map which paints based on
+   data from current values, etc.
