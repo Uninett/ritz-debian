@@ -9,7 +9,7 @@
 sub pretty_desc {
     my($desc) = @_;
 
-    if ($desc =~ /IOS.*\(([^\)]+)\), Version ([^,]+),/) {
+    if ($desc =~ /IOS.*\(([^\)]+)\), Version ([^,\n]+),/) {
 	$desc = "$2 $1";
     }
     if ($desc =~ /IOS.*\(([^\)]+)\),.*Version ([^ ]+) /) {
