@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!%PERL%
 #
 # $Id$
 #
@@ -31,11 +31,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-require "getopts.pl";
-
-# push(@INC, "%LIBDIR%");
-push(@INC, "/archive/traffic/lib");
-push(@INC, "/archive/traffic/conf");
+push(@INC, "%LIBDIR%");
+push(@INC, "%CONFDIR%");
 
 require 'getopts.pl';
 
@@ -355,12 +352,16 @@ sub flag_deviations {
 }
 
 sub mail_report {
-    my($to, $report) = @_;
+    my($from, $to, $report) = @_;
 
     my $subj = "Stat deviations ";
     $subj .= time2str("%R", time);
-    open(OUT, "| mail -s \"$subj\" $to");
-    printf(OUT $report);
+    open(OUT, "| %RAWSENDMAIL%");
+    printf(OUT "From: %s\n", $from);
+    printf(OUT "To: %s\n", $to);
+    printf(OUT "Subject: %s\n", $subj);
+    printf(OUT "\n");
+    printf(OUT, "%s", $report);
     close(OUT);
 }
 
@@ -657,6 +658,7 @@ sub do_all_files {
     my($dir) = &find_data_dir(&today());
     my(@files) = &directory_files($dir);
     our($stat_report);
+    our($opt_m, $opt_M);
 
 #    select(STDOUT); $| = 1;	# unbuffer
     $stat_report = "";
@@ -664,17 +666,43 @@ sub do_all_files {
 	&tail_process_file($dir . "/" . $f);
 #	printf(".");
     }
-    if ($stat_report != "" && defined($opt_m)) {
-	&mail_report($opt_m, $stat_report);
+    if ($stat_report != "" && defined($opt_m) && defined($opt_M)) {
+	&mail_report($opt_M, $opt_m, $stat_report);
     }
 #    printf("\n");
+}
+
+sub usage {
+
+    printf(STDERR "usage: tail-stats [-n name] [-d datestr] [-u up-limit]\n");
+    printf(STDERR "    [-l low-limit] [-p percent] [-r outfile] [-i]\n");
+    printf(STDERR "    [-m mailto -M mailfrom]\n");
+    printf(STDERR "\n");
+    printf(STDERR "Option descriptions:\n");
+    printf(STDERR "-n name      logical name of port to be analyzed\n");
+    printf(STDERR "             (default is all logical ports, but see -i)\n");
+    printf(STDERR "-d datestr   date which should be analyzed\n");
+    printf(STDERR "             (default is current day, ");
+    printf(STDERR "start from end of last run)\n");
+    printf(STDERR "-u up-limit  factor on an up-transition for flagging\n");
+    printf(STDERR "-l low-limit factor to go below when de-flagging\n");
+    printf(STDERR "-p percent   how many percent should data from new");
+    printf(STDERR " interval count\n");
+    printf(STDERR "-r outfile   produce report about current load\n");
+    printf(STDERR "             only applicable when doing current day\n");
+    printf(STDERR "-i           ignore unnamed logical ports when");
+    printf(STDERR " making report\n");
+    printf(STDERR "-m mailto    mail statistical deviations report to addr\n");
+    printf(STDERR "-M mailfrom  set from address for stat dev. reports\n");
+
+    exit 1;
 }
 
 #
 # Main
 #
 
-&Getopts("d:il:m:n:p:r:u:");
+&Getopts("d:hil:M:m:n:p:r:u:");
 
 # -n name	logical name of port to be analyzed
 # -d datestr	date which should be analyzed
@@ -687,12 +715,26 @@ sub do_all_files {
 # -i		ignore unnamed logical ports when making report
 # -m mailto	address to mail stats deviations report to
 
+if (defined($opt_h)) {
+    &usage();
+}
 if (defined($opt_n) && !defined($opt_d)) {
-    die "Must specify both -n and -d value\n";
+    printf(STDERR "Must specify both -n and -d value\n");
+    &usage();
 }
 if (defined($opt_d) && !defined($opt_n)) {
-    die "Must specify both -n and -d value\n";
+    printf(STDERR "Must specify both -n and -d value\n");
+    &usage();
 }
+if (defined($opt_m) && !defined($opt_M)) {
+    printf(STDERR "Must specify both -m and -M values\n");
+    &usage();
+}
+if (defined($opt_M) && !defined($opt_m)) {
+    printf(STDERR "Must specify both -m and -M values\n");
+    &usage();
+}
+
 if (!defined($opt_u)) {
     $opt_u = 18;
 }
@@ -705,7 +747,8 @@ if (!defined($opt_p)) {
 
 if (defined($opt_d) && defined($opt_n)) {
     if (defined($opt_r)) {
-	die "-r cannot be used while procesing old stats\n";
+	printf(STDERR "-r cannot be used while procesing old stats\n");
+	&usage();
     }
     &do_one_file($opt_d, $opt_n);
 } else {
