@@ -217,7 +217,7 @@ proc emt_hist { id } {
     if [info exists history($id)] {
 	return $history($id)
     }
-    return [emt_newhist $id]
+    return [emt_gethist $id]
 }
 
 proc report_single_port { id } {
