@@ -4,7 +4,7 @@ $Id$   -*- Text -*-
 	RITZ is "Remote Interface to ZINO"
 	ZINO is "Zino is not OpenView"
 
-Ok, so we ran out of good ideas for a name...
+Ok, so I ran out of good ideas for a name...
 
 
 Together these two make up a prototype of a simple network management
@@ -35,4 +35,24 @@ scheme which uses the Secure Hash Algorithm implemented by the program
 in the sha/ subdirectory.  Compile and install it in a directory in
 the users PATH to use it.
 
-Comments to he@runit.no
+
+Since the above was written, the NORDstat package has been integrated
+into this package, and zino, the traffic statistics collector and the
+software version monitor all share a common configuration file and
+code to handle that.
+
+This has caused some minor modification of the config file format; the
+enclosed examples show the difference (the addition of "default" in
+front of the default settings).
+
+The traffic statistics collection software should now support 64-bit
+counters as well, including computation of daily reports, and the
+various plots.
+
+Lastly, the daily textual reports have been extended with a
+calculation of 90th percentile load values, and the weekly and monthly
+reports also include the medians of the daily 90th percentile values.
+These values are not yet reported via the web interface.
+
+
+Comments to he@nordu.net
