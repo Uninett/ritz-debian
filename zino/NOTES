@@ -27,3 +27,4 @@ Possible extensions:
    (configurable?) threshold value
  o Check for crashed routers (on cisco), report restarted routers.
  o Monitor OSPF neighbor state, report changes.
+ o Monitor BGP neighbor state, report changes.
