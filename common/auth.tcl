@@ -19,7 +19,7 @@ namespace eval ::auth {
 	variable AllowClearTextAuth
 
 	set s [format "%s %s" $challenge $secret]
-	set r [exec sha <<$s]
+	set r [exec %SHA% <<$s]
 	::net::puts [format "user %s %s" $user $r]
 	::net::gets l
 	if {! [regexp "^200" $l] } {
