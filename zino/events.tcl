@@ -40,7 +40,9 @@ proc fixupEventState { } {
 
     foreach ix [array names EventId] {
 	set id $EventId($ix)
-	set state [getEventAttr $id state]
+	if [catch { set state [getEventAttr $id state] } msg] {
+	    continue;		# oops
+	}
 	if { ! [info exists EventState($id)] } {
 	    set EventState($id) $state
 #	    puts [format "Initializing eventstate for %s to %s" \
