@@ -22,8 +22,12 @@ zino: $(FILES) Makefile
 zino.cf: zino.cf.tmpl ../subst
 	sed -f ../subst < zino.cf.tmpl > zino.cf
 
+start-zino: start-zino.sh ../subst
+	sed -f ../subst < start-zino.sh > start-zino
+
 install: zino
 	install -c -m 555 zino ${BINDIR}
+	install -c -m 555 start-zino ${BINDIR}
 	install -c -m 444 zino.cf ${ZINODIR}
 	@if [ ! -f ${ZINODIR}/eventid ]; then \
 		echo "echo 0 > ${ZINODIR}/eventid"; \
