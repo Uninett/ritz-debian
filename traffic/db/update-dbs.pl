@@ -115,6 +115,7 @@ sub read_manuals {
 sub alive {
     my($address) = @_;
 
+    if (defined($opt_n)) { return 1; }
     # XXX Name of command should go in a config file
     open(IN, "%PING% -s 56 -c 5 -i 2 $address 2>&1 |");
     while(<IN>) {
@@ -140,7 +141,9 @@ sub get_addrs {
     while(<IN>) {
 	if (/noResponse/) {
 	    printf(STDERR "noResponse from %s\n", $dev);
-	    close(IN); return undef;
+	    close(IN);
+	    $dead{$polladdr} = 1;
+	    return undef;
 	}
 	chop;
 	@_ = split;
@@ -166,7 +169,9 @@ sub get_line_names {
     while(<IN>) {
 	if (/noResponse/) {
 	    printf(STDERR "noResponse from %s\n", $dev);
-	    close(IN); return undef;
+	    close(IN);
+	    $dead{$polladdr} = 1;
+	    return undef;
 	}
 	if (/^(\d+)\s+\S+\s+\S+ "(.*)"$/) {
 	    @a = split(/, /,$2);
@@ -335,11 +340,12 @@ sub usage {
 
 # Main (test)
 
-&Getopts("t:v");
+&Getopts("nt:v");
 
 if (!defined($opt_t)) { &usage(); }
-if (defined($opt_v) {
-    select(STDERR); $| = 1;
+if (defined($opt_v)) {
+    select(STDERR);
+    $| = 1;
     select(STDOUT);
 }
 
