@@ -5,8 +5,8 @@
 catch { namespace delete ::persist }
 
 namespace eval ::persist {
-    namespace export add remove
-    namespace export setFile startPeriodicDump scheduleDump readDump
+    namespace export setup add remove checkpoint restore
+    namespace export startPeriodicCheckpoint
 
     variable persistFile
     variable persistVar
@@ -25,13 +25,13 @@ namespace eval ::persist {
 	catch { unset persistVar($var) }
     }
 
-    proc setFile { file } {
+    proc setup { file } {
 	variable persistFile
 
 	set persistFile $file
     }
 
-    proc readDump { } {
+    proc restore { } {
 	variable persistFile
 
 	if { [catch { source $persistFile } msg] } {
@@ -39,9 +39,13 @@ namespace eval ::persist {
 	}
     }
 
-    # intv is in minutes
+    proc checkpoint { { secs 0 } } {
 
-    proc startPeriodicDump { intv } {
+	after cancel [namespace current]::dumpAll
+	after [expr $secs * 1000] [namespace current]::dumpAll
+    }
+
+    proc startPeriodicCheckpoint { intv } {
 	variable persistJob
 
 	if [info exists persistJob] {
@@ -49,13 +53,12 @@ namespace eval ::persist {
 	}
 	set persistJob [job create \
 		-interval [expr $intv * 1000 * 60] \
-		-command [namespace current]::dumpVars]
+		-command [namespace current]::dumpAll]
     }
 
-    proc scheduleDump { secs } {
+    proc startPeriodicDump { intv } {
 
-	after cancel dumpVars
-	after [expr $secs * 1000] dumpVars
+	startPeriodicCheckpoint $intv
     }
 
     proc dumpGlobals { f } {
@@ -66,7 +69,7 @@ namespace eval ::persist {
 	}
     }
 
-    proc dumpVars { } {
+    proc dumpAll { } {
 	variable persistFile
 
 	set newFile [format "%s.new" $persistFile]
