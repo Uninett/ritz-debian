@@ -160,6 +160,10 @@ sub tgif_attr {
 	    $name[$elt] = $v;
 	} elsif ($n eq "color") {
 	    $load_color[$v] = $fill_color[$elt];
+	    $color_elt[$v] = $elt;
+	} elsif ($n eq "lowlim") {
+	    $lowlimit[$elt] = $v;
+	    $limits_specified = 1;
 	} elsif ($v eq "nosplit") {
 	    $nosplit[$elt] = 1;
 	} elsif ($n eq "mapref") {
@@ -338,6 +342,15 @@ sub tgif_objlist {
     return $elt;
 }
 
+sub setup_color_limits {
+    my($c, $elt);
+
+    for($c = 0; $c <= $#load_color; $c++) {
+	$elt = $color_elt[$c];
+	$load_limit[$c] = $lowlimit[$elt];
+    }
+}
+
 sub read_tgif {
     my($fh) = @_;
     my(@f, $elt);
@@ -349,6 +362,9 @@ sub read_tgif {
 	chop;
 	@f = split(/[,\(\) ]+/);
 	$elt = &tgif_obj($fh, $elt, @f);
+    }
+    if (defined($limits_specified)) {
+	&setup_color_limits();
     }
     return $elt;
 }
@@ -842,12 +858,21 @@ sub get_data {
 
 sub load_color {
     my($load) = @_;
-    my($ix);
+    my($ix, $i);
     
-    $ix = int($load/10);
-    if ($ix > 9) { $ix = 9; }
-    if ($ix < 0) { $ix = 0; }
-    return $load_color[$ix];
+    if (defined($limits_specified)) {
+	for($i = 0; $i <= $#load_color; $i++) {
+	    if ($load < $load_limit[$i]) {
+		return($load_color[&max(0,$i-1)]);
+	    }
+	}
+	return $load_color[$#load_color];
+    } else {
+	$ix = int($load/10);
+	if ($ix > 9) { $ix = 9; }
+	if ($ix < 0) { $ix = 0; }
+	return $load_color[$ix];
+    }
 }
 
 # Try to swap around the names, in sequence:
