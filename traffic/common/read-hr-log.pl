@@ -45,9 +45,9 @@
 #   $max_rate{$v, $h}	Max rate per interval per hour for variable $v
 #   $date		Date string of log
 #   $ifspeed, $iftype, $ifdescr		As picked from log
-#   $sample_vals{$v, $sno}   Delta for counter $v in sample $sno
-#   $sample_time{$v, $sno}   Timestamp for counter $v, sample $sno
-#   $max_sample		Maximum sample number for $sample_vals etc.
+#   $sample_delta{$v, $sno}   Delta for counter $v in sample $sno
+#   $sample_time{$v, $sno}   Timestamp (hour) for counter $v, sample $sno
+#   $max_sample		Maximum sample number for $sample_delta etc.
 
 
 # Read a single daily log, suck in data.
@@ -152,7 +152,7 @@ sub read_log {
 
 #	printf(STDERR "var %s delta %f\n", $v, $delta);
 
-	$sample_vals{$v, $sno} = $delta;
+	$sample_delta{$v, $sno} = $delta;
 	$sample_time{$v, $sno} = $now / 3600.0;
 
 	$delta_time = $now - $lasttime{$v};

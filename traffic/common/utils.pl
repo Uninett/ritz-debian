@@ -88,6 +88,61 @@ sub floor_int {
     return int($v);
 }
 
+# Return n'th percentile among values
+
+sub percentile {
+    my($perc, @values) = @_;
+    my(@sv) = sort {$a <=> $b} @values;
+    my($i);
+
+    $i = int($#sv * $perc / 100);
+    return $sv[$i];
+}
+
+# Return a suitable variable to compute input octet values with
+# Prefer 64-bit counters if present
+
+sub octets_var {
+    my($dir) = @_;
+    my($i);
+
+    if ($dir eq "in") {
+	for ($i = 0; $i <= 10; $i++) {
+	    if (defined($sample_delta{"ifHCInOctets",$i})) {
+		return "ifHCInOctets";
+	    }
+	}
+	return "ifInOctets";
+    } else {
+	for ($i = 0; $i <= 10; $i++) {
+	    if (defined($sample_delta{"ifHCOutOctets",$i})) {
+		return "ifHCOutOctets";
+	    }
+	}
+	return "ifOutOctets";
+    }
+}
+
+# Given a variable, return array of consecutive "per second"
+# values from recently read sample data.
+
+sub sample_val_ps {
+    my($var) = @_;
+    my(@array, $i, $dt, $dr);
+
+    for ($i = 1; $i <= $max_sample; $i++) {
+	if (defined($sample_delta{$var, $i}) &&
+	    defined($sample_time{$var, $i-1}) &&
+	    defined($sample_time{$var, $i}))
+	{
+	    $dt = ($sample_time{$var, $i} - $sample_time{$var, $i-1}) * 3600.0;
+	    $dr = $sample_delta{$var, $i} / $dt;
+	    push(@array, $dr);
+	}
+    }
+    return @array;
+}
+
 # Return list of files in a directory
 
 sub directory_files {

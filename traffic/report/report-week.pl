@@ -51,10 +51,10 @@
 #
 # Possible heading for traffic:
 #
-# Interface         Peak    Busy        Busy day       Week
-#                 sample    hour     input  output  average   speed
-#                %in out  %in out  %   day %   day  %in out  kbit/s  iftype
-#xxxxxxxxxxxxxxx xxx xxx  xxx xxx  xxx xxx xxx xxx  xxx xxx  xxxxxx  xx
+# Intf.       Peak    Busy        Busy day       Week                  Median
+#           sample    hour     input  output  average   speed         90% load
+#          %in out  %in out  %   day %   day  %in out  kbit/s  iftype  in  out
+#xxxxxxxxx xxx xxx  xxx xxx  xxx xxx xxx xxx  xxx xxx  xxxxxx  xx     xxx  xxx
 #
 #
 # Possible heading for traffic.kbit:
@@ -63,6 +63,12 @@
 #       input output   input output   input output   input output kbit/s iftype
 #xxxxx xxxxxx xxxxxx  xxxxxx xxxxxx  xxxxxx xxxxxx  xxxxxx xxxxxx xxxxxx xxxxxx
 #
+# plus
+#        Median 90%
+#       input output
+#      xxxxxx xxxxxx
+#
+# (yes, it exceeds 80 coloums.)
 #
 # Possible heading for errors.perc:
 #
@@ -124,6 +130,8 @@ sub get_all_data {
 		$counts{$intf}++;
 		$type{$intf} = $iftype{$intf, $date}; # use last value
 		$speed{$intf} = $ifspeed{$intf, $date};	# use last value
+		push( @{ $in_90percs{$intf} }, $in_90perc{$intf, $date});
+		push( @{ $out_90percs{$intf} }, $out_90perc{$intf, $date});
 	    }
 	}
 	undef(%intf);
@@ -135,6 +143,8 @@ sub get_all_data {
 	undef(%average_load_out);
 	undef(%ifspeed);
 	undef(%iftype);
+	undef(%in_90perc);
+	undef(%out_90perc);
 
 	open(IN, $dn . "/traffic.kbit") || next;
 #	printf("Reading traffic.kbit for date %s\n", $date);
@@ -165,6 +175,8 @@ sub get_all_data {
 		$sum_in_kbit{$intf} += $average_load_in{$intf, $date};
 		$sum_out_kbit{$intf} += $average_load_out{$intf, $date};
 		$counts_kbit{$intf}++;
+		push( @{ $in_90p_kbits{$intf} },  $in_90perc{$intf, $date});
+		push( @{ $out_90p_kbits{$intf} }, $out_90perc{$intf, $date});
 	    }
 	}
 	undef(%intf);
@@ -176,6 +188,9 @@ sub get_all_data {
 	undef(%average_load_out);
 	undef(%ifspeed);
 	undef(%iftype);
+	undef(%in_90perc);
+	undef(%out_90perc);
+
 	open(IN, $dn . "/errors.perc") || next;
 #	printf("Reading errors.perc for date %s\n", $date);
 	&read_errors(IN, $date);
@@ -228,7 +243,9 @@ sub report_traffic {
 #	   "%in", "out", "kbit/s", "iftype");
 
     foreach $intf (keys %counts) {
-	printf($out "%-25s %3d %3d  %3d %3d  %3d %3s  %3d %3s  %3d %3d  %6d  %-d\n",
+	printf($out
+	       "%-25s %3d %3d  %3d %3d  %3d %3s  %3d %3s  %3d %3d  %6d  %-3d" .
+	       "  %3d  %3d\n",
 	       $intf,
 	       $peak_in{$intf},
 	       $peak_out{$intf},
@@ -241,7 +258,10 @@ sub report_traffic {
 	       $sum_in{$intf} / $counts{$intf},
 	       $sum_out{$intf} / $counts{$intf},
 	       $speed{$intf},
-	       $type{$intf});
+	       $type{$intf},
+	       &percentile(50, @{ $in_90percs{$intf} }),
+	       &percentile(50, @{ $out_90percs{$intf}})
+	       );
     }
 }
 
@@ -256,7 +276,8 @@ sub report_traffic_kbit {
 #	   "input", "output", "kbit/s", "iftype");
 
     foreach $intf(keys %counts_kbit) {
-	printf($out "%-25s %6d %6d  %6d %6d  %6d %6d  %6d %6d %6d %6d\n",
+	printf($out "%-25s %6d %6d  %6d %6d  %6d %6d  %6d %6d %6d %6d" .
+	       "  %6d %6d\n",
 	       $intf,
 	       $peak_kbit_in{$intf},
 	       $peak_kbit_out{$intf},
@@ -267,7 +288,10 @@ sub report_traffic_kbit {
 	       $sum_in_kbit{$intf} / $counts_kbit{$intf},
 	       $sum_out_kbit{$intf} / $counts_kbit{$intf},
 	       $speed{$intf},
-	       $type{$intf});
+	       $type{$intf},
+	       &percentile(50, @{ $in_90p_kbits{$intf} }),
+	       &percentile(50, @{ $out_90p_kbits{$intf}})
+	       );
     }
 }
 

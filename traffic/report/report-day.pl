@@ -49,16 +49,16 @@
 # 
 # Possible heading for traffic:
 #
-#                          Busy hour      Busy sample
-# Interface            input  output    input  output  average   speed
-#                      %  hr   %  hr    %  hr   %  hr  %in out  kbit/s  iftype
-#xxxxxxxxxxxxxxxxxxx xxx  xx xxx  xx  xxx  xx xxx  xx  xxx xxx  xxxxxx  xxxxxx
+#             Busy hour      Busy sample
+# Intf.   input  output    input  output  average   speed          90%  90%
+#         %  hr   %  hr    %  hr   %  hr  %in out  kbit/s  iftype   in  out
+#xxxxxx xxx  xx xxx  xx  xxx  xx xxx  xx  xxx xxx  xxxxxx  xxxxxx  xxx  xxx
 #
 # Possible heading for traffic.kbit
 #
-#                        Busy hour    Busy sample   24hr average  speed
-# Interface           input output   input output   input output kbit/s iftype
-#xxxxxxxxxxxxxxxxxxx xxxxxx xxxxxx  xxxxxx xxxxxx  xxxxxx xxxxxx xxxxxx xxxxxx
+#          Busy hour    Busy sample   24hr average  speed            90%    90%
+# Intf.  input output   input output   input output kbit/s iftype     in    out
+#xxxxxx xxxxxx xxxxxx  xxxxxx xxxxxx  xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx
 #
 # Possible heading for errors:
 #
@@ -163,8 +163,15 @@ sub get_file_data {
 	    }
 	}
     }
+    $in_90perc_bps  = &percentile(90, &sample_val_ps(&octets_var("in")))
+	* 8.0;
+    $out_90perc_bps = &percentile(90, &sample_val_ps(&octets_var("out")))
+	* 8.0;
+
     undef %max_rate;
     undef %count;
+    undef %sample_delta;
+    undef %sample_time;
 }
 
 
@@ -239,12 +246,12 @@ sub report_traffic {
     my($out, $n) = @_;
 
 #    printf("%-20s %15s  %15s\n", "", "Busy hour", "Busy sample");
-#    printf("%-20s %7s %7s  %7s %7s  %7s  %6s\n",
-#	   "Interface", "input", "output",
-#	   "input", "output", "average", "speed");
-#    printf("%-20s %3s  %2s %3s  %2s  %3s  %2s %3s  %2s  %3s %3s  %6s  %6s",
-#	   "", "%", "hr", "%", "hr",
-#	   "%", "hr", "%", "hr", "%in", "out", "kbit/s", "iftype");
+#    printf("%-20s %7s %7s  %7s %7s  %7s  %6s  %3s  %3s\n",
+#	 "Interface", "input", "output",
+#	 "input", "output", "average", "speed", "90%", "90%");
+#    printf("%-20s %3s  %2s %3s  %2s  %3s  %2s %3s  %2s  %3s %3s  %6s  %6s  %3d  %3d",
+#	 "", "%", "hr", "%", "hr",
+#	 "%", "hr", "%", "hr", "%in", "out", "kbit/s", "iftype", "in", "out");
 #    printf("\n");
 
     if ($ifspeed{$n} != 0) {
@@ -254,7 +261,7 @@ sub report_traffic {
 	       $max_h{$n,"ifInOctets"},
 	       $max_r{$n,"ifOutOctets"}*8*100.0/3600/$ifspeed{$n},
 	       $max_h{$n,"ifOutOctets"});
-	printf($out "  %3d  %02d %3d  %02d  %3d %3d  %6d  %6d\n",
+	printf($out "  %3d  %02d %3d  %02d  %3d %3d  %6d  %6d  %3d  %3d\n",
 	       $peak_r{$n,"ifInOctets"}*8*100.0/$ifspeed{$n},
 	       $peak_h{$n,"ifInOctets"},
 	       $peak_r{$n,"ifOutOctets"}*8*100.0/$ifspeed{$n},
@@ -262,7 +269,10 @@ sub report_traffic {
 	       $total{$n,"ifInOctets"}*8*100.0/3600/24/$ifspeed{$n},
 	       $total{$n,"ifOutOctets"}*8*100.0/3600/24/$ifspeed{$n},
 	       $ifspeed{$n}/1000,
-	       $iftype{$n});
+	       $iftype{$n},
+	       $in_90perc_bps * 100.0 / $ifspeed{$n},
+	       $out_90perc_bps * 100.0 / $ifspeed{$n}
+	       );
     }
 }
 
@@ -271,12 +281,12 @@ sub report_traffic_kbit {
 
 #    printf($out "%-20s %13s  %13s  %13s %6s\n",
 #	   "", "Busy hour", "Busy sample", "24hr average", "speed");
-#    printf($out "%-20s %6s %6s  %6s %6s  %6s %6s %6s %6s\n",
+#    printf($out "%-20s %6s %6s  %6s %6s  %6s %6s %6s %6s %6s %6s\n",
 #	   "Interface", "input", "output", "input", "output",
-#	   "input", "output", "kbit/s", "iftype");
+#	   "input", "output", "kbit/s", "iftype", "90%in", "90%out");
 
     if ($ifspeed{$n} != 0) {
-	printf($out "%-20s %6d %6d  %6d %6d  %6d %6d %6d %6d\n",
+	printf($out "%-20s %6d %6d  %6d %6d  %6d %6d %6d %6d %6d %6d\n",
 	       $n,
 	       $max_r{$n,"ifInOctets"}*8/1000/3600,
 	       $max_r{$n,"ifOutOctets"}*8/1000/3600,
@@ -285,7 +295,9 @@ sub report_traffic_kbit {
 	       $total{$n,"ifInOctets"}*8/1000/3600/24,
 	       $total{$n,"ifOutOctets"}*8/1000/3600/24,
 	       $ifspeed{$n}/1000,
-	       $iftype{$n});
+	       $iftype{$n},
+	       $in_90perc_bps / 1000,
+	       $out_90perc_bps / 1000);
     }
 }
 

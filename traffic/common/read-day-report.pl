@@ -45,6 +45,8 @@
 #  $average_load_out{$intf, $yyyymmdd}	average output load
 #  $ifspeed{$intf, $yyyymmdd}		speed in kbit/s this day
 #  $iftype{$intf, $yyyymmdd}		interface type this day
+#  $in_90perc{$intf, $yyyymmdd}		90th percentile input load
+#  $out_90perc{$intf, $yyyymmdd}	90th percentile output load
 #
 # _load_ variables are either in kbit/s or percentage load depending
 # on the type of report read.
@@ -79,6 +81,8 @@ sub read_traffic {
 	$average_load_out{$intf, $yyyymmdd} = $_[10];
 	$ifspeed{$intf, $yyyymmdd} = $_[11];
 	$iftype{$intf, $yyyymmdd} = $_[12];
+	$in_90perc{$intf, $yyyymmdd} = $_[13];
+	$out_90perc{$intf, $yyyymmdd} = $_[14];
     }
 }
 
@@ -99,6 +103,8 @@ sub read_traffic_kbit {
 	$average_load_out{$intf, $yyyymmdd} = $_[6];
 	$ifspeed{$intf, $yyyymmdd} = $_[7];
 	$iftype{$intf, $yyyymmdd} = $_[8];
+	$in_90perc{$intf, $yyyymmdd} = $_[9];
+	$out_90perc{$intf, $yyyymmdd} = $_[10];
     }
 }
 
