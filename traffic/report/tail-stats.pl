@@ -154,7 +154,7 @@ sub convert_times {
     }
 }
 
-sub compute_values {
+sub compute_basic_values {
     my($b, $d) = @_;
     my($i);
     our($max_sample, %count);
@@ -280,7 +280,7 @@ sub process_data {
 	},
     };
 
-    &compute_values($b, $desc);
+    &compute_basic_values($b, $desc);
 
     # bytes per packet derived from values computed above
     for ($i = 0; $i <= $max_sample; $i++) {
@@ -379,7 +379,7 @@ sub report {
 #    printf("\n");
 }
 
-sub process_file {
+sub tail_process_file {
     my($f) = @_;
     my($b) = basename($f);
     my($cat, $base) = &cat_and_base($f, &today());
@@ -405,7 +405,7 @@ sub do_all_files {
 
 #    select(STDOUT); $| = 1;	# unbuffer
     foreach $f (@files) {
-	&process_file($dir . "/" . $f);
+	&tail_process_file($dir . "/" . $f);
 #	printf(".");
     }
 #    printf("\n");
