@@ -37,6 +37,7 @@ namespace eval ::auth {
 
     proc reset { } {
 	variable challenge
+	variable authenticated
 
 	catch { unset challenge }
 	catch { unset authenticated }
