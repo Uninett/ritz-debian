@@ -52,7 +52,7 @@ $plt_docbase = "%TOPDIR%/data/plot";
      'x11', '',
      'ppm', '',
      'fig', '',
-     'png', 'small color',
+     'png', 'small',
     );
 
 %device_exit_strings =
