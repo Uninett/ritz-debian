@@ -73,6 +73,8 @@ proc logMsg { lead_text { value "" }} {
 proc expectedUptime { sh newup } {
     global uptime lastpoll uptimeSlop
 
+    if { ! [info exists lastpoll($sh)] } { return 0; }
+
     set estup [expr $uptime($sh) + \
 	    100 * ( [clock seconds] - $lastpoll($sh) ) ]
 
@@ -105,6 +107,7 @@ proc devDescr { sh {err "unknown error"} {objid ""} {descr ""}} {
 
     if { $err == "noError" } {
 	set descr [lindex $descr 2]
+	regsub -all "\r" $descr "" descr
 	logMsg [format "%s software" [name $sh]] $descr
 
 	set oid [mib oid [lindex $objid 2]]
@@ -134,6 +137,7 @@ proc saveDescr { sh {err "unknown error"} {objid ""} {descr ""}} {
 	    return
 	}
 	set descr [lindex $descr 2]
+	regsub -all "\r" $descr "" descr
 	puts $fh $descr
 	close $fh
     }
