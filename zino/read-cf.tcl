@@ -13,11 +13,6 @@ proc readCf { filename } {
     global ChangedRouter
     global cx
 
-    # Start with an empty sheet each time, so that we can
-    # detect routers which were removed
-    catch {unset Address}
-    # Code in oldRouterNames indicates that we should not unset Interval
-
     set f [open $filename]
     set globals 1
 
@@ -142,7 +137,7 @@ proc readCf { filename } {
     }
 
     # Default community context attribute, interval and priority
-    foreach r [array names Address] {
+    foreach r [array names seenRouter] {
 
 	if {[info exists cf_Community($r)]} {
 	    set cx($r,community) $cf_Community($r)
