@@ -186,15 +186,16 @@ proc eventCommit { id } {
     set Attrs EventAttrs_$id
     global $Attrs
 
+    if { [getEventAttr $id state] == "embryonic" } {
+	setEventAttr $id opened [clock seconds]
+	setEventAttr $id state "open"
+    }
+
     # Commit values
     foreach ix [array names $NewAttrs] {
 	set [set Attrs]($ix) [set [set NewAttrs]($ix)]
     }
 
-    if { [getEventAttr $id state] == "embryonic" } {
-	setEventAttr $id opened [clock seconds]
-	setEventAttr $id state "open"
-    }
     # Force an update within 10s; save state
     schedulePersistDump 10
 #    dumpPersistVars
