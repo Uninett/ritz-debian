@@ -30,6 +30,7 @@ emt: ${SRCS} Makefile ../subst
 	mv $@ $@.new
 	sed -f ../subst $@.new > $@
 	chmod +x $@
+	rm -f $@.new
 
 start-emt: start-emt.sh ../subst
 	sed -f ../subst start-emt.sh > start-emt
