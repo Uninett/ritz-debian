@@ -28,7 +28,7 @@ proc initDev { sh } {
 proc pollDev { sh } {
     global uptimeList
 
-    set code [catch {$sh get $uptimeList [list devUpTime %S %E %V]} result]
+    catch { $sh get $uptimeList [list devUpTime %S %E %V] }
 }
 
 proc destroyDev { sh } {
