@@ -2,9 +2,9 @@
 # $Id$
 #
 
-VERSION=0.3a
+VERSION=0.3b
 
-SUBDIR=emt ritz sha tpoller traffic vwatch zino
+SUBDIR=conf-diff emt ritz sha tpoller traffic vwatch zino
 
 all: version.tcl subst
 
