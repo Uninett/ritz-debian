@@ -107,8 +107,8 @@ sub tgif_minilines {
 		    }
 		}
 	    } else {
-		&err(sprintf("mini_line not found at line %s.\n", $.) .
-		     sprintf("line: %s", $_));
+		&warn(sprintf("mini_line not found at line %s.\n", $.) .
+		      sprintf("line: %s", $_));
 	    }
 	    $_ = <$fh>;
 	}
@@ -118,9 +118,9 @@ sub tgif_minilines {
 	    $elt++;
 	}
     } else {
-	&err(sprintf("minilines not found, $lines expected at line %s.\n",
-		     $.) .
-	     sprintf("line: %s\n", $_));
+	&warn(sprintf("minilines not found, $lines expected at line %s.\n",
+		      $.) .
+	      sprintf("line: %s\n", $_));
     }
     $_ = <$fh>;
     return $elt;
@@ -165,7 +165,7 @@ sub tgif_attr {
 	} elsif ($n eq "lw") {
 	    $lw_seen = 1;
 	} else {
-	    &err(sprintf("Unknown attr: '%s=%s'\n", $n, $v));
+	    &warn(sprintf("Unknown attr: '%s=%s'\n", $n, $v));
 	}
 	$_ = <$fh>;
 	@f = split(/[,\(]+/);
@@ -308,7 +308,7 @@ sub tgif_obj {
     } elsif (defined($ignore{$f[0]})) {
 	return $elt;
     } else {
-	&err(sprintf("TGIF Line %s Skipped: %s\n", $., $_));
+	&warn(sprintf("TGIF Line %s Skipped: %s\n", $., $_));
     }
     return $elt;
 }
@@ -772,6 +772,13 @@ sub err {
     print $doc->end_html;
     print "\n";
     exit(1);
+}
+
+sub warn {
+    my($msg) = @_;
+
+    printf("<h2>%s</h2>\n\n", $msg);
+    printf(STDERR "%s\n", $msg);
 }
 
 # Read in base data, return number of records read.
