@@ -422,6 +422,7 @@ proc emt_open { server port user secret } {
 	log [format "Retrying open in 60 seconds"]
 	after [expr 60 * 1000]
     }
+    log [format "Server connection to %s opened." $server]
 }
 
 # Periodically "ping" the other end to see that we get a response
