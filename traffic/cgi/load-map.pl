@@ -846,6 +846,7 @@ sub load_color {
 # xx.yy -> yy.xx
 # xx-nn2 -> nn-xx2
 # xx-nn  -> nn-xx
+# xx-nn-t -> nn-xx-t
 # and check if the result exists
 # Otherwise return xx-nn/i ("use input value")
 
@@ -861,8 +862,8 @@ sub rev_name {
     }
     if      ($name =~ /([^-]+)-([^-0-9]+)([0-9]+)/) {
 	$rn = "$2" . "-" . "$1" . "$3";
-    } elsif ($name =~ /([^-]+)-([^-]+)/) {
-	$rn = "$2" . "-" . "$1";
+    } elsif ($name =~ /([^-]+)-([^-]+)(.*)/) {
+	$rn = "$2" . "-" . "$1" . "$3";
     }
     if (defined($in_load{$rn})) {
 	return $rn;
