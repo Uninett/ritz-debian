@@ -72,7 +72,7 @@ sub read_config {
     while(<IN>) {
 	chomp;
 	if (/^\#/) { next; }
-	if (/\s*$) {
+	if (/\s*$/) {
 	    printf (STDERR "extraneous trailing whitespace: %s\n", $_);
 	    $_ =~ s/\s*$//;
 	}
