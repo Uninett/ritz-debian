@@ -1,4 +1,4 @@
-#!%PERL%
+#! %PERL%
 #
 # $Id$
 #
@@ -197,7 +197,16 @@ sub get_current_state {
 		$address{$k} = "#" . $i;
 	    }
 	    $fn = $r . "." . $address{$k};
-	    $file{$line_name{$k}} = $fn;
+	    # Check if we should override existing mapping
+	    if (defined($file{$line_name{$k}})) {
+		# Only override if previous value didn't have an address
+		# ...and current one has
+		if ($file{$line_name{$k}} =~ /\#/ && $fn !~ /\#/) {
+		    $file{$line_name{$k}} = $fn;
+		}
+	    } else {
+		$file{$line_name{$k}} = $fn;
+	    }
 	    $line{$fn} = $line_name{$k};
 	}
     }
