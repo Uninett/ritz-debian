@@ -353,7 +353,7 @@ sub pretty_datespec {
     if ($day) {
 	if (&is_today($datespec)) {
 	    ($s, $min, $hour, $d, $d, $d, $d, $d, $d, $d) = localtime(time);
-	    return sprintf("%s-%s-%s %s:%s",
+	    return sprintf("%s-%s-%s %02d:%02d",
 			   $year, $month, $day,
 			   $hour, $min);
 	} else {
@@ -365,7 +365,7 @@ sub pretty_datespec {
 	$day = $week;
 	if (&is_today($datespec)) {
 	    ($s, $min, $hour, $d, $d, $d, $d, $d, $d, $d) = localtime(time);
-	    return sprintf("%s-%s-%s %s:%s",
+	    return sprintf("%s-%s-%s %02d:%02d",
 			   $year, $month, $day,
 			   $hour, $min);
 	} else {
