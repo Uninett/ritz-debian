@@ -40,7 +40,7 @@
 
 require 'date.pl';
 
-$data_roots = "%DATA_ROOTS%";
+$data_roots = %DATA_ROOTS%;
 
 foreach $r (split(/ +/, $data_roots)) {
     push(@data_roots, $r);
