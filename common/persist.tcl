@@ -34,7 +34,7 @@ namespace eval ::persist {
     proc readDump { } {
 	variable persistFile
 
-	if { [cacth { source $persistFile } msg] } {
+	if { [catch { source $persistFile } msg] } {
 	    error [format "Error reading %s: %s" $persistFile $msg]
 	}
     }
@@ -49,7 +49,7 @@ namespace eval ::persist {
 	}
 	set persistJob [job create \
 		-interval [expr $intv * 1000 * 60] \
-		-command dumpVars]
+		-command [namespace current]::dumpVars]
     }
 
     proc scheduleDump { secs } {
@@ -96,14 +96,14 @@ namespace eval ::persist {
 	if { [array exists $var] } {
 	    foreach l_ix [lsort [array names $var]] {
 		puts -nonewline $f [format "set %s(%s) " $var $l_ix]
-		puts $f [ExternalVal [set [set var]($l_ix)]]
+		puts $f [externalize [set [set var]($l_ix)]]
 	    }
 	} else {
 	    if { [info exists $var] } {
 		puts -nonewline $f [format "set %s " $var]
-		puts $f [ExternalVal [set $var]]
+		puts $f [externalize [set $var]]
 	    } else {
-		noPersistVar $var
+		remove $var
 	    }
 	}
     }
