@@ -11,47 +11,61 @@
 
 proc compareStates { a b } {
 
-    set a "open"
-    set b "open"
+    set as "open"
+    set bs "open"
 
-    catch { set a [Attr $a "state"] }
-    catch { set b [Attr $b "state"] }
+    if [catch { set as [Attr $a "state"] }] {
+	puts "No state attr for $a"
+    }
+    if [catch { set bs [Attr $b "state"] }] {
+	puts "No state attr for $b"
+    }
 
-    if { $a == $b } { return 0; }
+    if { $as == $bs } { return 0; }
 
     foreach s "open working waiting confirm-wait closed" {
-	if { $a == $s } { return -1; }
-	if { $b == $s } { return 1; }
+	if { $as == $s } { return -1; }
+	if { $bs == $s } { return 1; }
     }
-    puts [format "resorting to string compare for %s <-> %s" $a $b]
-    return [string compare $a $b];# last resort
+    puts [format "resorting to string compare for %s <-> %s" $as $bs]
+    return [string compare $as $bs];# last resort
 }
 
 # Compare port states as given above.
 
 proc comparePortStates { a b } {
 
-    set a "down"
-    set b "down"
+    set as "down"
+    set bs "down"
 
-    catch { set a [getEffectivePortState $a] }
-    catch { set b [getEffectivePortState $b] }
-
-    if { $a == $b } { return 0; }
-    foreach s "up adminDown flapping down" {
-	if { $a == $s } { return 1; }
-	if { $b == $s } { return -1; }
+    if [catch { set as [getEffectivePortState $a] }] {
+	puts "No portstate for $a"
     }
-    puts [format "resorting to string compare for %s <-> %s" $a $b]
-    return [string compare $a $b];# last resort
+    if [catch { set bs [getEffectivePortState $b] }] {
+	puts "No portstate for $b"
+    }
+
+    if { $as == $bs } { return 0; }
+    foreach s "up adminDown flapping down" {
+	if { $as == $s } { return 1; }
+	if { $bs == $s } { return -1; }
+    }
+    puts [format "resorting to string compare for %s <-> %s" $as $bs]
+    return [string compare $as $bs];# last resort
 }
 
 # Compare different case types ("portstate" before "reachability")
 
 proc compareTypes { a b } {
 
-    if { ! [AttrExists $a "type"] } { return 1; }
-    if { ! [AttrExists $b "type"] } { return -1; }
+    if { ! [AttrExists $a "type"] } {
+	puts "No type attr for $a"
+	return 1;
+    }
+    if { ! [AttrExists $b "type"] } {
+	puts "No state for $b"
+	return -1;
+    }
 
     set a [Attr $a "type"]
     set b [Attr $b "type"]
@@ -59,22 +73,27 @@ proc compareTypes { a b } {
     if { $a == $b } { return 0; }
     if { $a == "portstate" } { return -1; }
     if { $b == "portstate" } { return 1; }
+
     puts [format "resorting to string compare for %s <-> %s" $a $b]
     return [string compare $a $b]; # last resort
 }
 
 proc compareReachability { a b } {
 
-    set a "noResponse"
-    set b "noResponse"
+    set ar "noResponse"
+    set br "noResponse"
 
-    catch { set a [Attr $a "reachability"] }
-    catch { set b [Attr $b "reachability"] }
+    if [catch { set ar [Attr $a "reachability"] }] {
+	puts "No reachability attr for $a" 
+    }
+    if [catch { set br [Attr $b "reachability"] }] {
+	puts "No reachability attr for $b"
+    }
 
-    if { $a == $b } { return 0; }
-    if { $a == "noResponse" } { return -1; }
-    puts [format "resorting to string compare for %s <-> %s" $a $b]
-    return [string compare $a $b]; # last resort
+    if { $ar == $br } { return 0; }
+    if { $ar == "noResponse" } { return -1; }
+    puts [format "resorting to string compare for %s <-> %s" $ar $br]
+    return [string compare $ar $br]; # last resort
 }
 
 proc numCompare { a b } {
@@ -86,19 +105,29 @@ proc numCompare { a b } {
 
 proc comparePriority { a b } {
 
-    set a 100
-    set b 100
+    set an 100
+    set bn 100
 
-    catch { set a [getPriority $a] }
-    catch { set b [getPriority $b] }
+    if [catch { set an [getPriority $a] }] {
+	puts "No priority for $a"
+    }
+    if [catch { set bn [getPriority $b] }] {
+	puts "No priority for $b"
+    }
 
-    numCompare $b $a
+    numCompare $bn $an
 }
 
 proc compareUpdated { a b } {
 
-    if [catch { set a [Attr $a "updated"] }] { return 0; }
-    if [catch { set b [Attr $b "updated"] }] { return 1; }
+    if [catch { set a [Attr $a "updated"] }] {
+	puts "No updated attr for $a"
+	return 0;
+    }
+    if [catch { set b [Attr $b "updated"] }] {
+	puts "No updated attr for $b"
+	return 1;
+    }
 
     numCompare $a $b
 }
@@ -110,13 +139,17 @@ proc compareUpdatedRev { a b } {
 
 proc compareAge { a b } {
 
-    set a 0
-    set b 0
+    set aa 0
+    set ba 0
 
-    catch { set a [getAge $a] }
-    catch { set b [getAge $b] }
+    if [catch { set aa [getAge $a] }] {
+	puts "No age for $a"
+    }
+    if [catch { set ba [getAge $b] }] {
+	puts "No age for $b"
+    }
 
-    numCompare $b $a
+    numCompare $ba $aa
 }
 
 proc compareAgeRev { a b } {
@@ -126,19 +159,23 @@ proc compareAgeRev { a b } {
 
 proc compareSeverity { a b } {
 
-    set a "unknown"
-    set b "unknown"
+    set as "unknown"
+    set bs "unknown"
     
-    catch { set a [caseSeverity $a] }
-    catch { set b [caseSeverity $b] }
-
-    if { $a == $b } { return 0; }
-    foreach s {alarm warning normal unknown closed} {
-	if { $a == $s } { return -1; }
-	if { $b == $s } { return 1; }
+    if [catch { set as [caseSeverity $a] }] {
+	puts "No severity for $a"
     }
-    puts [format "resorting to string compare for %s <-> %s" $a $b]
-    return [string compare $a $b]; # last resort
+    if [catch { set bs [caseSeverity $b] }] {
+	puts "No severity for $b"
+    }
+
+    if { $as == $bs } { return 0; }
+    foreach s {alarm warning normal unknown closed} {
+	if { $as == $s } { return -1; }
+	if { $bs == $s } { return 1; }
+    }
+    puts [format "resorting to string compare for %s <-> %s" $as $bs]
+    return [string compare $as $bs]; # last resort
 }
 
 proc compareDowntime { a b } {
@@ -146,8 +183,12 @@ proc compareDowntime { a b } {
     set ad 0
     set bd 0
 
-    catch { set ad [getDowntime $a] }
-    catch { set bd [getDowntime $b] }
+    if [catch { set ad [getDowntime $a] }] {
+	puts "No downtime for $a"
+    }
+    if [catch { set bd [getDowntime $b] }] {
+	puts "No downtime for $b"
+    }
 
     numCompare $bd $ad
 }
@@ -235,8 +276,14 @@ proc sortCases { caseids } {
 
 proc caseSeverity { id } {
 
-    if { ! [AttrExists $id "type"] } { return "unknown"; }
-    if { ! [AttrExists $id "state"] } { return "unknown"; }
+    if { ! [AttrExists $id "type"] } {
+	puts "No type attr for $id"
+	return "unknown";
+    }
+    if { ! [AttrExists $id "state"] } {
+	puts "No state attr for $id"
+	return "unknown";
+    }
 
     set type [Attr $id "type"]
     set state [Attr $id "state"]
