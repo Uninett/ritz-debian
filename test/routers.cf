@@ -12,7 +12,7 @@ default domain: uninett.no
 
 # highest-priority (backbone) routers first
 name: no-gw2
-address: 128.39.0.85
+address: 128.39.0.84
 domain: nordu.net
 priority: 500
 
@@ -217,7 +217,7 @@ address: 158.38.0.82
 ignorepat: Serial1/0:[0-9]+|Virtual-Access|Dialer
 
 name: borre-gw
-address: 193.156.92.170
+address: 128.39.3.6
 ignorepat: BRI|Dialer|Virtual-Access
 
 name: bibsys-gw
@@ -297,9 +297,6 @@ address: 158.36.19.38
 name: kjeller-gw
 address: 128.39.0.13
 
-name: tonsberg-gw
-address: 128.39.3.142
-
 name: uninett-ipv6-gw
 address: 158.38.60.66
 
@@ -315,7 +312,7 @@ ignorepat: BRI|Virtual-Access|Dialer
 
 name: nlh-gw
 address: 128.39.8.1
-ignorepat: Serial1/0:
+ignorepat: Serial1/0:|Serial1/1:
 
 name: ulleval-gw
 address: 158.36.84.42
