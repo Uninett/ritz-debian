@@ -25,7 +25,7 @@ proc initAuth { fn } {
 proc authChallenge { chan } {
     global authChallenge
     
-    set ch [exec date | sha -t]
+    set ch [exec date | sha]
     set authChallenge($chan) $ch
     return $ch
 }
