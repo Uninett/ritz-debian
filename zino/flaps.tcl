@@ -192,6 +192,8 @@ proc flapAger { } {
 			setEventAttr $eid "port" $portToIfDescr($ix)
 		    }
 
+		    setEventAttr $eid "id" $eid
+		    setEventAttr $eid "type" "portstate"
 		    setEventAttr $eid "flapstate" "stable"
 		    setEventAttr $eid "portstate" $portState($router,$i)
 		    setEventAttr $eid "router" $router
