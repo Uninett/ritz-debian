@@ -91,6 +91,7 @@ proc readCf { filename } {
 		foreach v $vars {
 		    if {[info exists [set v]($name)]} {
 			if {[set [set v]($name)] != $val} {
+			    puts [format "Router %s changed config" $name]
 			    set ChangedRouter($name) 1
 			}
 		    }
@@ -104,6 +105,7 @@ proc readCf { filename } {
 		    # if Interval($r) was not set in previous read of the
 		    # configuration file, we have a new router
 		    if {! [info exists Interval($name)]} {
+			puts [format "Router %s is new" $name]
 			set NewRouter($name) 1
 		    }
 		}
@@ -115,6 +117,7 @@ proc readCf { filename } {
     # Detect deleted routers
     foreach r [oldRouterNames] {
 	if {! [info exists seenRouter($r)]} {
+	    puts [format "Router %s is removed" $r]
 	    set DeletedRouter($r) 1
 	    cleanupDBvars $r
 	}
