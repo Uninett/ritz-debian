@@ -7,6 +7,7 @@ catch { namespace delete ::net }
 namespace eval ::net {
     namespace export open close puts gets
 
+    # Server connection
     variable chan
 
 
@@ -45,13 +46,21 @@ namespace eval ::net {
 	}
     }
 
-    proc gets { var } {
-	variable chan
+    proc gets { args } {
+
+	if { [lindex $args 0] == "-channel" } {
+	    set ch [lindex $args 1]
+	    set var [lindex $args 2]
+	} else {
+	    variable chan
+	    set ch $chan
+	    set var [lindex $args 0]
+	}
 	upvar $var line
 	
-	set cc [::gets $chan line]
+	set cc [::gets $ch line]
 	if { $cc == -1 } {
-	    error [format "channel %s lost connection (eof)" $chan]
+	    error [format "channel %s lost connection (eof)" $ch]
 	}
 	return $cc
     }
