@@ -72,6 +72,10 @@ sub read_config {
     while(<IN>) {
 	chomp;
 	if (/^\#/) { next; }
+	if (/\s*$) {
+	    printf (STDERR "extraneous trailing whitespace: %s\n", $_);
+	    $_ =~ s/\s*$//;
+	}
 	if (/^default community:\s(\S+)$/) {
 	    $def_community = $1;
 	    next;
