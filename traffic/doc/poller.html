@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Poller implementation notes</title>
+</head>
+
+<body>
+<h1>Poller implementation notes</h1>
+
+The traffic poller is a scotty/TCL script of some 550 lines of code.
+It uses scotty's built-in asynchronous job system with one
+asynchronous job per router to be polled. <p>
+
+Other notes:<p>
+
+<ul>
+  <li>If scotty had had a primitive to do a table walk in a sparsely
+      populated table, the script would be a lot simpler, and possibly
+      consume less resources.
+
+  <li>The script is relatively resource intensive in terms of CPU
+      time.  If scotty is rewritten to take advantage of the speed-ups
+      of TCL version 8.0 it would probably consume a lot less
+      resources.
+
+  <li>The list of variables to collect from the routers is hardcoded
+      in the script; that could be amended, but then again, the
+      backend scripts also need work to take advantage of the new
+      data.
+
+  <li>The poller has a built-in assumption that all variables to be
+      collected are indexed by interface index, as used in the
+      interfaces table in MIB-II.  I have thus resisted desires to
+      extend the poller to e.g. collect ATM-specific information as
+      that would break this basic assumption.
+
+  <li>The format of the logged data is as shown in this example: <p>
+
+      <pre>
+       ifSpeed 100000000
+       ifType 15
+       ifDescr "Fddi1/0"
+       Wed Jun 11 00:03:31 1997 ifInOctets.5 773449322
+       Wed Jun 11 00:03:31 1997 ifInUcastPkts.5 3046116449
+       Wed Jun 11 00:03:31 1997 ifInNUcastPkts.5 4994188
+       Wed Jun 11 00:03:31 1997 ifInDiscards.5 38
+       Wed Jun 11 00:03:31 1997 ifInErrors.5 113056
+       Wed Jun 11 00:03:31 1997 ifOutOctets.5 3763151177
+       Wed Jun 11 00:03:31 1997 ifOutUcastPkts.5 4015824231
+       Wed Jun 11 00:03:31 1997 ifOutNUcastPkts.5 1992451
+       Wed Jun 11 00:03:31 1997 ifOutDiscards.5 97832
+       Wed Jun 11 00:03:31 1997 ifOutErrors.5 0
+      </pre><p>
+
+      The time stamps are not simply the "raw seconds" for a reason;
+      if the rotation of the logs doesn't happen as they should it is
+      relatively easy to separate the pieces later through use of
+      <code>egrep</code> and/or <code>sed</code>.
+
+  <li>The file names used for logging is composed of the router name
+      from the config file plus either the IP address of the port (if
+      it has one), or the interface index (after a #-sign).
+
+  <li>The polling rate can be adjusted on a per-router basis.  Routers
+      with heavily loaded FDDI ports or with heavily loaded STM-1
+      POSIP ports will cause the 32-bit counters in the MIB-II
+      interfaces group to wrap in a relatively short time.  (No, the
+      poller currently doesn't know how to access the 64-bit
+      counters.)
+
+  <li>The error messages from the poller should be logged in another
+      way, so that it's easy to rotate the error log e.g. on a daily
+      basis.
+
+  <li>The format of the config file is inherited from the time when
+      the poller was written in <code>C</code> and the config file was
+      parsed with <code>yacc</code>.  The format of the config file
+      will probably change, so that other information can be collected
+      there and parsed more easily (e.g. region information for
+      filtering of the tabular reports).
+
+  <li>The poller dynamically detects changes to the config file
+      (adding and/or removing routers), and reconfigures automatically
+      when it detects that the config file has been updated.
+
+</ul>
+
+
+<hr>
+<address>
+he@nordu.net
+</address>
+<!-- hhmts start -->
+Last modified: Wed Jun 11 23:13:43 MET DST 1997
+<!-- hhmts end -->
+</body> </html>

@@ -1,0 +1,40 @@
+#
+# $Id$
+#
+
+CONFS=		config.pl
+
+SCRIPTS=	daily-clean.sh daily.sh daily.pl \
+		fixup-data.pl fixup-data.sh \
+		startup.sh nanny.pl start-nanny.sh
+
+all:
+
+install:
+	@for s in ${SCRIPTS}; do \
+		base=`basename $$s .sh`; \
+		dst=${BINDIR}/$$base; \
+		tmp=/tmp/jtmp.$$$$; \
+		echo sed -f ../subst '<' $$s '>' $$tmp; \
+		sed -f ../subst < $$s > $$tmp; \
+		echo install -c -m 555 $$tmp $$dst; \
+		install -c -m 555 $$tmp $$dst; \
+		echo rm -f $$tmp; \
+		rm -f $$tmp; \
+	done
+	@for s in ${CONFS}; do \
+		dst=${CONFDIR}/$$s; \
+		tmp=/tmp/jtmp.$$$$; \
+		echo sed -f ../subst '<' $$s '>' $$tmp; \
+		sed -f ../subst < $$s > $$tmp; \
+		echo install -c -m 444 $$tmp $$dst; \
+		install -c -m 444 $$tmp $$dst; \
+		echo rm -f $$tmp; \
+		rm -f $$tmp; \
+	done
+
+obj:
+clean:
+cleandir:
+
+.include "../Makefile.inc"

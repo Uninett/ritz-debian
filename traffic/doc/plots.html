@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Plot scripts implementation notes</title>
+</head>
+
+<body>
+<h1>Plot scripts implementation notes</h1>
+
+The collection of plot scripts are divided into two major parts:
+<p>
+<ul>
+  <li>Four separate "backend" scripts producing plots of varying
+      resolution (samples, hour, day, week), producing a PNG file on
+      standard output.
+  <li>A common front-end plot script which takes care of the HTML and
+      HTTP handling (a CGI-BIN script).
+</ul>
+<p>
+These are documented separately below.
+
+<h2>Backend scripts</h2>
+
+These live in the <code>plot/</code> directory.<p>
+
+These scripts take a number of command line arguments and produces a
+plot file of a given format on standard output.  The scripts all take
+the same arguments, and they are:<p>
+
+<dl>
+  <dt>-d datespec<dd>Specifies the start time and period to plot data
+      for.  Defaulted to "yesterday".
+  <dt>-n name<dd>Specifies the logical port name to plot data for.
+      Mandatory.
+  <dt>-m max-scale<dd>Set max value on Y scale.  The default is to
+      autoscale, which is the recommended method.
+  <dt>-f format<dd>Set the output file format.  May be one of
+      <ul>
+	<li><code>postscript</code> (the default)
+	<li><code>png</code>
+	<li><code>x11</code> (not very useful as it'll only be shown
+	    30 seconds)
+	<li><code>ppm</code>
+	<li><code>fig</code>
+      </ul> The WWW scripts only uses the <code>png</code> parameter.
+  <dt>-t type-of-plot<dd>Set the data type to be plotted.  May be one
+      of:
+      <dl>
+	<dt>traffic<dd>The traffic load (in percentage of
+	    the capacity, the default)
+	<dt>traffic-kbit<dd>The traffic load in kbit/s.
+	<dt>discards<dd>Output discards and input ignores (the latter
+	    from the cisco enterprise-specific interface mib
+	    extensions)
+	<dt>errors<dd>Input errors of various forms (more specific
+	    information available on cisco routers)
+	<dt>resets<dd>The number of interface resets
+	<dt>eerrs<dd>Ethernet-specific input errors (only makes sense
+	    for ethernet interfaces)
+      </dl>
+  <dt>-r<dd>Regenerate plots unconditionally (don't use plot file
+      cache)
+</dl>
+
+All the backend scripts maintain a cache of plot command and data
+files for gnuplot.  In hindsight I'm not certain the gain of having
+such a cache is worth the trouble of maintaining it.<p>
+
+The majority of the code in these files is relatively regular; one set
+of functions for creating the data file for the plot (the
+<code>plot_*</code> functions, one other set to "decorate" the plots,
+i.e. add legends, labels, and create the control file for gnuplot (the
+<code>decorate_*</code> functions.<p>
+
+
+<h2>The front-end script</h2>
+
+This is <code>cgi/plot-all.pl</code>.<p>
+
+This script creates the HTML (and HTTP) data stream, and uses the
+output of the backend plot scripts above to create the plot proper.
+The majority of the code is responsible for creating the client-side
+image map which is overlayed on the plot to make it possible to zoom
+in or out, or go to the next or previous plot.<p>
+
+An attempt has been made to drive parts of the content from tabular
+data (which data types to zoom to etc.).<p>
+
+
+<hr>
+<address>
+he@nordu.net
+</address>
+<!-- hhmts start -->
+Last modified: Mon Jun 16 12:17:08 MET DST 1997
+<!-- hhmts end -->
+</body> </html>

@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<!-- $Id$ -->
+<html><head>
+<title>
+Plot image-map documentation
+</title>
+</head>
+
+<body>
+
+<h2>How to use plot zoom functions</h2>
+
+The plots produced here all contain areas which are "clickable".  The
+figure below illustrates where the sensitive areas are located and the
+functions they serve.
+
+<p>
+<a href="pics/zoom.gif"><img src="pics/zoom.gif" alt="Illustration"></a>
+<p>
+
+A couple of caveats:
+
+<ul>
+  <li>For this to work your browser has to support so-called client-side
+      image maps.  Server-side image maps can't be used since the areas
+      covered vary for the different plots and over time.
+
+  <li>If the underlying scripts don't think there is data available for
+      the "next" and "previous" periods, those areas will not be sensitive.
+
+  <li>The algorithm used for splitting up the X-axis in the plot into
+      sensitive regions is rather simple-minded, in that it distributes the
+      X axis evenly between the "zoom-in" references.  In cases where only
+      parts of a week is visible (e.g. when you view a plot of the current
+      month), the week boundaries will not fall on the Sunday/Monday border
+      in the plot itself.
+</ul>
+
+<hr>
+<address></address>
+<!-- hhmts start -->
+Last modified: Wed Jun 25 23:01:01 MET DST 1997
+<!-- hhmts end -->
+<br> <em>(c) 1996, 1997 UNINETT and NORDUnet</em>
+</body> </html>

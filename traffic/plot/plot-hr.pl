@@ -1,0 +1,517 @@
+#!%PERL%
+#
+# $Id$
+#
+
+# Copyright (c) 1996, 1997
+#      UNINETT and NORDUnet.  All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. All advertising materials mentioning features or use of this software
+#    must display the following acknowledgement:
+#      This product includes software developed by UNINETT and NORDUnet.
+# 4. Neither the name of UNINETT or NORDUnet nor the names
+#    of its contributors may be used to endorse or promote
+#    products derived from this software without specific prior
+#    written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY UNINETT AND NORDUnet ``AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL UNINETT OR NORDUnet OR
+# THEIR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+# Produces a plot (of specified data type) on stdout (except for X11)
+# Options:
+#   -d <datespec>
+#       yyyy-mm for a month
+#       yyyy--ww for a week
+#       yyyy-mm--dd for a day
+#       yyyy-mm-dd for a day
+#       (default is yesterday)
+#   -n <name> 		name of logical port, mandatory
+#   -m <max-scale>	set max value on y scale (%) (default: autoscale)
+#   -f <output-format>  may be one of
+#	png
+#       postscript (default)
+#       x11 (not very useful, because the X window will disappear when
+#            we exit, but we will pause 30 secs)
+#       ppm
+#       fig
+#   -t <type-of-plot>	may be one of
+#	traffic		(percentage, default)
+#	traffic-kbit
+#	discards
+#	errors
+#	resets
+#	eerrs
+#   -r 			unconditionally regenerate plot
+#
+
+push(@INC, "%LIBDIR%");
+
+require 'getopts.pl';
+require 'date.pl';
+require 'db-lookup.pl';
+require 'search.pl';
+require 'read-hr-log.pl';
+require 'scaling.pl';
+require 'plot.pl';
+require 'utils.pl';
+
+
+sub plot_traffic {
+    my($line, $fh, $dn, $d, $tm) = @_;
+    my($i, $h, $val);
+    
+    foreach $i (0 .. 23) {
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
+	$h = sprintf("%02d", $i);
+
+	&maxit($val = $count{"ifInOctets",$h}*8*100.0/3600/$ifspeed);
+	printf($fh " %f", $val);
+	&maxit($val = $max_rate{"ifInOctets",$h}*8*100.0/$ifspeed);
+	printf($fh " %f", $val);
+	&maxit($val = $count{"ifOutOctets",$h}*8*100.0/3600/$ifspeed);
+	printf($fh " %f", $val);
+	&maxit($val = $max_rate{"ifOutOctets",$h}*8*100.0/$ifspeed);
+	printf($fh " %f\n", $val);
+    }
+}
+
+sub decorate_traffic_1 {
+    my($fh, $maxy, $df, $dsp, $ylabel) = @_;
+
+    printf($fh
+	   &plot_title(sprintf("$name hourly load on %s, capacity %d kbit/s",
+			       &pretty_datespec($dsp),
+			       $ifspeed / 1000)));
+    printf($fh &plot_xlabel("hourly average + peak interval in hour"));
+    printf($fh "%s", &plot_ylabel($ylabel));
+
+    # Try to manage without this (?)
+    printf($fh &plot_yrange("0:$maxy"));
+    
+    # NB This should be generalized and put into plot.pl
+    printf($fh "plot  \"$df\" using 1:2 title \"in\" with lines,");
+    printf($fh "      \"$df\" using 1:3 title \"peak-in\" with lines,");
+    printf($fh "      \"$df\" using 1:4 title \"out\" with lines,");
+    printf($fh "      \"$df\" using 1:5 title \"peak-out\" with lines\n");
+}
+
+sub decorate_traffic {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    &decorate_traffic_1($fh, $maxy, $df, $dsp, "% load");
+}
+
+sub plot_traffic_kbit {
+    my($line, $fh, $dn, $d, $tm) = @_;
+    my($i, $h, $val);
+    
+    foreach $i (0 .. 23) {
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
+	$h = sprintf("%02d", $i);
+
+	&maxit($val = $count{"ifInOctets",$h}*8/1000/3600);
+	printf(PLOTDATA " %f", $val);
+	&maxit($val = $max_rate{"ifInOctets",$h}*8/1000);
+	printf(PLOTDATA " %f", $val);
+	&maxit($val = $count{"ifOutOctets",$h}*8/1000/3600);
+	printf(PLOTDATA " %f", $val);
+	&maxit($val = $max_rate{"ifOutOctets",$h}*8/1000);
+	printf(PLOTDATA " %f\n", $val);
+    }
+}
+
+sub decorate_traffic_kbit {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    &decorate_traffic_1($fh, $maxy, $df, $dsp, "kbit/s");
+}
+
+sub plot_discards {
+    my($line, $fh, $dn, $d, $tm) = @_;
+    my($i, $h, $val);
+    my($base, $pkts);
+
+    foreach $i (0 .. 23) {
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
+	$h = sprintf("%02d", $i);
+
+	$base = ($count{"ifOutUcastPkts",$h} +
+		 $count{"ifOutNUcastPkts",$h});
+	$pkts = $base + $count{"ifOutDiscards",$h};
+	if ($pkts > 0) {
+	    &maxit($val = $count{"ifOutDiscards",$h} * 100.0 / $pkts);
+	} else {
+	    $val = 0;
+	}
+	printf($fh "%f ", $val);
+	if (defined($count{"ifInUcastPkts",$h}))
+	{
+	    $base = ($count{"ifInUcastPkts",$h} +
+		     $count{"ifInNUcastPkts",$h});
+	    $pkts = $base + $count{"locIfInIgnored",$h};
+	    if ($pkts > 0) {
+		&maxit($val = $count{"locIfInIgnored",$h}
+		       * 100.0 / $pkts);
+	    } else {
+		$val = 0;
+	    }
+	    printf($fh "%f\n", $val);
+	} else {
+	    printf($fh "?\n");
+	}
+    }
+}
+
+sub decorate_discards {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    printf($fh &plot_title(sprintf("$name hourly discard/ignore rate on %s",
+				   &pretty_datespec($dsp))));
+    printf($fh "%s",
+	   &plot_xlabel("Time"));
+    printf($fh "%s", &plot_ylabel("% discard/ignore rate"));
+
+    # Try to manage without this (?)
+    printf($fh &plot_yrange("0:$maxy"));
+    
+    # NB This should be generalized and put into plot.pl
+    printf($fh "plot  \"$df\" using 1:2 title \"discards\" with lines,");
+    printf($fh "      \"$df\" using 1:3 title \"ignores\" with lines\n");
+}
+
+sub plot_errors {
+    my($line, $fh, $dn, $d, $tm) = @_;
+    my($i, $h, $val);
+    my($has_details);
+    my($pkts);
+
+    $has_details = defined($count{"locIfInCRC","00"});
+
+    foreach $i (0 .. 23) {
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
+	$h = sprintf("%02d", $i);
+
+	$pkts = ($count{"ifInUcastPkts",$h} +
+		 $count{"ifInNUcastPkts",$h} +
+		 $count{"ifInErrors",$h});
+	if ($pkts > 0) {
+	    &maxit($val = $count{"ifInErrors",$h} * 100.0 / $pkts);
+	} else {
+	    $val = 0;
+	}
+	printf($fh "%f ", $val);
+	if ($has_details) {
+	    if ($pkts > 0) {
+		&maxit($val = $count{"locIfInCRC",$h}
+		       * 100.0 / $pkts);
+		printf($fh "%f ", $val);
+		&maxit($val = $count{"locIfInFrame",$h}
+		       * 100.0 / $pkts);
+		printf($fh "%f ", $val);
+		&maxit($val = $count{"locIfInAbort",$h}
+		       * 100.0 / $pkts);
+		printf($fh "%f\n", $val);
+
+	    } else {
+		printf($fh "0 0 0\n", $i, 0);
+	    }
+	} else {
+	    printf($fh "? ? ?\n");
+	}
+    }
+}
+
+sub decorate_errors {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    printf($fh &plot_title(sprintf("$name hourly input error rate on %s",
+				   &pretty_datespec($dsp))));
+    printf($fh "%s", &plot_xlabel("Time"));
+    printf($fh "%s", &plot_ylabel("% input error rate"));
+
+    # Try to manage without this (?)
+    printf($fh &plot_yrange("0:$maxy"));
+    
+    # NB This should be generalized and put into plot.pl
+    printf($fh "plot  \"$df\" using 1:2 title \"Errs\" with lines,");
+    printf($fh "      \"$df\" using 1:3 title \"CRC\" with lines,");
+    printf($fh "      \"$df\" using 1:4 title \"Frame\" with lines,");
+    printf($fh "      \"$df\" using 1:5 title \"Abort\" with lines\n");
+}
+
+sub plot_resets {
+    my($line, $fh, $dn, $d, $tm) = @_;
+    my($i, $h, $val);
+
+    foreach $i (0 .. 23) {
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
+	$h = sprintf("%02d", $i);
+
+	&maxit($val = $count{"locIfResets",$h});
+	printf($fh "%f\n", $val);
+    }
+}
+
+sub decorate_resets {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    printf($fh &plot_title(sprintf("$name hourly resets on %s",
+				   &pretty_datespec($dsp))));
+    printf($fh "%s", &plot_xlabel("Time"));
+    printf($fh "%s", &plot_ylabel("resets"));
+
+    # Try to manage without this (?)
+    printf($fh &plot_yrange("0:$maxy"));
+    
+    # NB This should be generalized and put into plot.pl
+    printf($fh "plot  \"$df\" using 1:2 title \"resets\" with lines\n");
+}
+
+sub plot_eerrs {
+    my($line, $fh, $dn, $d, $tm) = @_;
+    my($i, $h, $val);
+    my($ipkts, $opkts, $has_details);
+
+    $has_details = defined($count{"locIfInCRC","00"});
+
+    foreach $i (0 .. 23) {
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
+	$h = sprintf("%02d", $i);
+
+	$ipkts = ($count{"ifInUcastPkts",$h} +
+		  $count{"ifInNUcastPkts",$h} +
+		  $count{"ifInErrors",$h});
+	$opkts = ($count{"ifOutUcastPkts",$h} +
+		  $count{"ifOutNUcastPkts",$h} +
+		  $count{"ifOutErrors",$h});
+	if ($ipkts > 0) {
+	    &maxit($val = $count{"ifInErrors",$h} * 100.0 / $ipkts);
+	} else {
+	    $val = 0;
+	}
+	printf ($fh "%f ", $val);
+	if ($opkts > 0) {
+	    &maxit($val = $count{"ifOutErrors",$h} * 100.0 / $opkts);
+	} else {
+	    $val = 0;
+	}
+	printf ($fh "%f ", $val);
+
+	if ($has_details) {
+	    if ($ipkts > 0) {
+		&maxit($val = $count{"locIfInCRC",$h}
+		       * 100.0 / $ipkts);
+		printf($fh "%f ", $val);
+		&maxit($val = $count{"locIfInFrame",$h}
+		       * 100.0 / $ipkts);
+		printf($fh "%f ", $val);
+		&maxit($val = $count{"locIfInRunts",$h}
+		       * 100.0 / $ipkts);
+		printf($fh "%f ", $val);
+		&maxit($val = $count{"locIfInGiants",$h}
+		       * 100.0 / $ipkts);
+		printf($fh "%f\n", $val);
+	    } else {
+		printf($fh "0 0 0 0\n");
+	    }
+	} else {
+	    printf($fh "? ? ? ?\n");
+	}
+    }
+}
+
+sub decorate_eerrs {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    printf($fh &plot_title(sprintf("$name input error rate on %s",
+				   &pretty_datespec($dsp))));
+    printf($fh "%s", &plot_xlabel("Time"));
+    printf($fh "%s", &plot_ylabel("% input error rate"));
+
+    # Try to manage without this (?)
+    printf($fh &plot_yrange("0:$maxy"));
+    
+    # NB This should be generalized and put into plot.pl
+    printf($fh "plot  \"$df\" using 1:2 title \"in-errs\" with lines,");
+    printf($fh "      \"$df\" using 1:3 title \"out-errs\" with lines,");
+    printf($fh "      \"$df\" using 1:4 title \"CRC\" with lines,");
+    printf($fh "      \"$df\" using 1:5 title \"Frame\" with lines,");
+    printf($fh "      \"$df\" using 1:6 title \"Runts\" with lines,");
+    printf($fh "      \"$df\" using 1:7 title \"Giangs\" with lines\n");
+}
+
+
+#
+#
+#
+
+%data_plotter = (
+		 "traffic"	=> \&plot_traffic,
+	         "traffic-kbit"	=> \&plot_traffic_kbit,
+	         "discards"	=> \&plot_discards,
+	         "errors"	=> \&plot_errors,
+		 "resets"	=> \&plot_resets,
+		 "eerrs"	=> \&plot_eerrs,
+		 );
+
+%decorator = (
+	      "traffic"		=> \&decorate_traffic,
+	      "traffic-kbit"	=> \&decorate_traffic_kbit,
+	      "discards"	=> \&decorate_discards,
+	      "errors"		=> \&decorate_errors,
+	      "resets"		=> \&decorate_resets,
+	      "eerrs"		=> \&decorate_eerrs,
+	      );
+
+#
+#
+#
+
+sub make_plot_file  {
+    my($line, $datespec, $device, $plot) = @_;
+    my($plotf);
+    my($h, $val, $maxy);
+    my($houroffset);
+    my($save_tm);
+    my($di_plotname, $plotit, $decorate, $regen);
+
+    # Look up filenames for plot-files for the given line, date and
+    # output device.
+    ($refname, $plotname, $plotdatafile, $di_plotname) = 
+	&plot_names("hr-" . $plot, $line, $datespec, $device);
+
+    ($base_tm, $no_days) = &decode_datespec($datespec);
+    return undef unless $base_tm;
+
+    $regen = 0;
+
+    if (defined($opt_r) ||
+	! -r $plotdatafile ||
+	# the data file was produced within the datespec
+	(&tm_in_datespec(&modtime($plotdatafile), $datespec) &&
+	 # ...and we have a new day
+	 (! &same_day(&modtime($plotdatafile), time))))
+    {
+	$regen = 1;
+
+	open(PLOTDATA, ">$plotdatafile") ||
+	    die "Could not open $plotdatafile for write: $!\n";
+
+	$tm = $base_tm;
+	foreach $d (0 .. $no_days - 1) {
+	    $tm = $base_tm + ($d) * (60*60*24);
+	    $date = &tm_to_date($tm);
+
+	    if (! defined($base = &name_to_file($line, $date))) {
+		&plot_err("Could not find base file name for $line / $date\n");
+		next;
+	    }
+	    ($catter, $f) = &find_cat_and_file($base, $date);
+	    if (! defined($f)) {
+		&plot_err("Could not find data file for $base / $date\n");
+		next;
+	    }
+	    open(DAYLOG, "$catter $f |") ||
+		die "Could not open \"$catter $f\": $!\n";
+	    &read_log(DAYLOG);
+	    close(DAYLOG);	
+
+	    if (!defined($start_tm)) { # Record when we have first data
+		$start_tm = $tm; # in global variables...
+		$start_day = $d;
+	    }
+
+	    # remember for later, when setting X tics
+	    $data_days = $d - $start_day + 1;
+	    
+	    if (!defined($plotit = $data_plotter{$plot})) {
+		die "Could not find data plotter routine for $plot\n";
+	    }
+	    &$plotit($line, PLOTDATA, $dn, $d, $save_tm);
+
+	    undef(%count);
+	    undef(%max_rate);
+	}
+	close (PLOTDATA);
+    }
+
+    if (defined($opt_m)) {
+	$maxy = $opt_m;
+    } else {
+	$maxy = &max_scale();	# Autoscale
+    }
+    
+    # Now prepare the plot command files for gnuplot
+    if (! -r $di_plotname || $regen) {
+	open(DIP, ">$di_plotname") ||
+	    die "Could not open $di_plotname for write: $!\n";
+
+	printf(DIP &plot_set_xtics($base_tm, $data_days, $no_days));
+
+	if (!defined($decorate = $decorator{$plot})) {
+	    die "Could not find decorator for $plot\n";
+	}
+	&$decorate(DIP, $maxy, $plotdatafile, $datespec);
+	close(DIP);
+    }
+
+    if (! -r $plotname) {
+	open(PLOT, ">$plotname") ||
+	    die "Could not open $plotname for write: $!\n";
+#	select (plot); $| = 1;
+	printf(PLOT &plot_init($device));
+	printf(PLOT "load \"%s\"\n", $di_plotname);
+	printf(PLOT &plot_exit($device));
+	close(PLOT);
+    }
+
+    return($plotname);
+}
+
+#
+# Main
+#
+
+&Getopts("d:f:m:n:rt:");
+
+$name = $opt_n;
+$datespec = $opt_d;
+$format = $opt_f;
+$plot = $opt_t;
+
+if (!defined($datespec)) { $datespec = &yesterday_spec(); }
+if (!defined($format)) { $format = "postscript"; }
+if (!defined($name)) { die "Need to specify logical port name\n"; }
+if (!defined($plot)) { $plot = "traffic"; }
+
+umask(0);
+
+$plotname = &make_plot_file($name, $datespec, $format, $plot);
+
+if ($plotname) {
+    system("%GNUPLOT% $plotname");
+}

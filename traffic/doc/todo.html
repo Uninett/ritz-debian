@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>NORDstat TODO list</title>
+</head>
+
+<body>
+<h1>NORDstat TODO list</h1>
+
+This is a non-exhaustive list of things to fix in and/or things to add
+to this package.<p>
+
+<ul>
+  <li>The traffic poller should record restart events on all ports
+      right after it starts.  (Otherwise the backend scripts might
+      lack information about a reset of the counters.)
+
+  <li>The error messages from the poller should be handled better.
+      They probably should not be logged directly to a file.  Use the
+      "syslog" command instead?
+
+  <li>Find (and fix) bug (in scotty (?)) which sometimes causes poller
+      to stop, stuck in blocking recvfrom().  This would remove the
+      need for the <code>nanny.pl</code> script.
+
+  <li>Redo configuration file syntax, introduce "region tags", make it
+      possible to filter tabular reports by region tag.
+
+  <li>Write script summarizing new ports added and removed ports for
+      each day.
+
+  <li>Add help document for datespec format.
+
+  <li>Document conventions for cisco description field format.
+
+  <li>Let load-map show other data than percentage load?
+
+  <li>Let load-map have references to other maps.
+
+  <li>Let load-map get "zoom out" and "previous" and "next" period
+      imagemap areas.
+
+  <li>Make base map for load-map time-dependent (as the physical setup
+      will change over time).
+
+  <li>Make a cleaner split between the front-end and the back-end of
+      the load-map, making it easier to add an interpreter for a new
+      drawing format.
+
+  <li>Make load-map interpret the
+      <a
+      href="ftp://ftp.sunet.se/pub/X11/contrib/applications/tgif/tgif-3.0-p13.tar.gz">tgif</a>
+      drawing format (since the xfig file easily becomes cluttered and
+      hence difficult to maintain, it looks more promising with tgif).
+
+</ul>
+<p>
+
+
+<hr>
+<address>he@nordu.net</address>
+<!-- hhmts start -->
+Last modified: Wed Jun 25 21:32:11 MET DST 1997
+<!-- hhmts end -->
+</body> </html>

@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<!-- $Id$ -->
+<html> <head>
+<title>Tabular report entry form</title>
+</head>
+
+<body>
+<h2 align="center">Tabular report entry form</h2>
+
+For a sorted and "clickable" tabular summary of all the selected
+ports, fill out this form and press "Submit Query" below.  The
+resulting tabular report contains references which will show a plot of
+the corresponding data for each port.
+
+<form method=post action="../stat-q/tbl-report">
+
+<p>Period (<a href="dsp.html">help</a>):
+<input type="text" name="datespec" size=15>
+Report period:
+<select name="dsp-type">
+  <option value="day">Day
+  <option value="week">Week
+  <option value="month" selected>Month
+</select>
+
+<p><input type="radio" name="type" value="traffic">
+Percent traffic load, sorted by:
+
+<select name="t-sort">
+  <option>Average in
+  <option selected>Average out
+  <option>Busy day in
+  <option>Busy day out
+  <option>Busy hour in
+  <option>Busy hour out
+  <option>Peak sample in
+  <option>Peak sample out
+  <option>Name
+</select>
+
+<p><input type="radio" name="type" value="traffic-kbit" checked>
+Traffic load in kbit/s, sorted by:
+
+<select name="tk-sort">
+  <option>Average in
+  <option selected>Average out
+  <option>Busy day in
+  <option>Busy day out
+  <option>Busy hour in
+  <option>Busy hour out
+  <option>Peak sample in
+  <option>Peak sample out
+  <option>Name
+</select>
+
+<p><input type="radio" name="type" value="errors">
+Errors, sort by:
+<select name="e-sort">
+  <option selected>Error hours
+  <option>Input errors
+  <option>CRC errors
+  <option>Framing errors
+  <option>Abort errors
+  <option>Ignored packets
+  <option>Interface resets
+  <option>Output discards
+  <option>Peak out discards
+  <option>Name
+</select>
+
+<p><input type="radio" name="type" value="ether-errs">
+Ethernet errors, sort by:
+<select name="ee-sort">
+  <option selected>Input errors
+  <option>CRC errors
+  <option>Framing errors
+  <option>Runts
+  <option>Giants
+  <option>Ignored packets
+  <option>Output errors
+  <option>Output discards
+  <option>Collisions
+  <option>Name
+  <option>
+</select>
+
+<p>Filter interface types: <select name="filter">
+  <option selected value="all">All interface types
+  <option value="serial">Only serial interfaces
+  <option value="ethernet">Only Ethernet interfaces
+  <option value="fddi">Only FDDI interfaces
+  <option value="atm">Only ATM interfaces
+</select>
+
+<p><input type="submit" name="submit">
+<input type="reset">
+
+</form>
+
+<hr>
+<address></address>
+<!-- hhmts start -->
+Last modified: Tue Jun 17 15:29:50 MET DST 1997
+<!-- hhmts end -->
+<br> <em>(c) 1996, 1997 UNINETT and NORDUnet</em>
+</body> </html>

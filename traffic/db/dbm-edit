@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# $Id$
+
+# Edit one of the databases in %TOPDIR%/db.
+# Specify only base name of database as $1.
+
+if [ -z "${1}" ]; then
+    echo "usage: $0 base-of-db-file\n" >&2
+    exit 1
+fi
+
+n=`basename ${1} .db`
+if [ $n != ${1} ]; then
+    echo "Specify only base name of DB to edit\n" >&2
+    exit 1
+fi
+
+tmp=/tmp/${1}-tmp.$$
+ntmp=/tmp/${1}-tmp2.$$
+
+cd %TOPDIR%/db
+
+%TOPDIR%/bin/dbm-dump $1 > $tmp
+if [ $? != 0 ]; then exit 1; fi
+
+cp -p $tmp $ntmp
+
+${EDITOR:=emacs} $ntmp
+
+if cmp -s $tmp $ntmp; then
+    echo "No changes, edit aborted" 2>&1
+    exit 0
+fi
+
+if [ $? != 0 ]; then exit 1; fi
+if [ -f $1.pag ]; then
+    cp -p $1.pag $1.pag.old
+    if [ $? != 0 ]; then
+	exit $?
+    fi
+    cp -p $1.dir $1.dir.old
+    if [ $? != 0 ]; then
+	exit $?
+    fi
+    rm -f $1.pag $1.dir
+elif [ -f $1.db ]; then
+    cp -p $1.db $1.db.old
+    if [ $? != 0 ]; then
+	exit $?
+    fi
+    rm -f $1.db
+fi
+
+%TOPDIR%/bin/dbm-load $1 < $ntmp
+
+if [ $? != 0 ]; then exit 1; fi
+rm -f $1.pag.old $1.dir.old $1.db.old $tmp $ntmp

@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Router configuration conventions</title>
+</head>
+
+<body>
+<h1>Router configuration conventions</h1>
+
+This package uses what I call <em>logical port names</em> to identify
+the ports in a PoP.  The main advantage to using logical names is that
+you can track the statistics for a given circuit or connection even
+though you move it to another physical port in the same PoP, possibly
+on a different router.<p>
+
+This package has been written with cisco routers in mind, and with a
+tool to collect the logical port names from the routers, in particular
+from the "description" field for each interface.  For this to work,
+certain conventions need to be adhered to when setting up the
+description field:<p>
+
+<ul>
+  <li>The description field is broken into several parts, divided by
+      <code>", "</code> (comma and a single space).  The logical port
+      name is extracted from the second such field.  In our case we
+      use the first field to record the PTT circuit identifier in the
+      case of wide-area leased line ports, but what you put here or in
+      the third and subsequent fields (if anything) is up to you.
+  <li>The logical port names should be constructed from letters,
+      digits and hyphens.  In particular: avoid spaces, colon, comma
+      and slash.
+  <li>The conventions used to name the logical ports can vary; we use
+      "popA-popB" for point-to-point wide-area circuits, possibly
+      appending a numeral if there are several parallel cuircuits
+      between PoPs.  The circuit will be connected to two ports, in
+      the case above the other end (at PoP B) would be called
+      "popB-popA".
+  <li>For multi-access networks, e.g. LANs inside a PoP, we use the
+      naming convention for the logical port names of "router.lan",
+      where "lan" is a unique identifier for this particular
+      multi-access network.
+</ul>
+
+The information about the mapping between "logging file name" used by
+the traffic poller and the logical port names is collected and updated
+once per day by the script <code>bin/update-dbs</code>.  This
+information is recorded in a DBM database (on-disk hash from Perl).<p>
+
+For other routers than cisco routers, these mappings need to be
+maintained manually, and the <code>update-dbs</code> script needs to
+be prevented from trying to collect this information.  You do the
+latter by listing the router names in <code>db/manual-rtrs</code>.  To
+update the mapping information, use the <code>bin/dbm-edit</code> or
+the <code>bin/dbm-dump</code> and the <code>bin/dbm-load</code>
+scripts.<p>
+
+It is also important to adhere to a couple of other conventions when
+configuring routers for this package to work well:<p>
+
+<ul>
+  <li>The interface port speed returned via SNMP should be the same as
+      the physical port speed for the circuit connected to the
+      routers.  This is so that e.g. the percentage load calculation
+      can be done correctly.  On cisco routers this is done with the
+      <code>bandwidth xxxx</code> configuration command.
+  <li>Once a port is taken out of operation it's IP address should be
+      removed, the interface should be administratively shut down, and
+      on a cisco router the description field should be cleared.
+  <li>If the circuit speed is upgraded (e.g. for a fractional T1 or
+      E1), the interface speed ought to be updated the same day to
+      avoid having to manually doctor raw data files after the fact
+      and re-run the report generation for the days/weeks/months where
+      the recorded data was wrong.
+</ul>
+
+<hr>
+<address>he@nordu.net</address>
+<!-- hhmts start -->
+Last modified: Thu Jun 26 12:34:57 MET DST 1997
+<!-- hhmts end -->
+</body> </html>

@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Support routines implementation</title>
+</head>
+
+<body>
+<h1>Support routines implementation</h1>
+
+The main Perl code shares some common back-end routines.  The code in
+the source tree is in more than one directory.
+
+<h2>Code in <code>common/</code></h2>
+
+Some of the files in this directory are:<p>
+
+<dl>
+  <dt>read-hr-log.pl<dd>This script implements reading of a raw
+      data file, extracting the data values and distributing the
+      measurements over the hours of the day.
+  <dt>read-raw-log.pl<dd>This script is similar to the one above, but
+      it simply records the individual samples instead of collating
+      the measurements into their respective hours.  Both these
+      routines are called <code>read_log</code>, and return data in
+      global variables.
+  <dt>date.pl<dd>This is a set of functions to handle time values and
+      their different representations.  In hindsight this could
+      probably have been designed better; there are a number of
+      "ad-hoc" functions in this file.
+  <dt>search.pl<dd>This finds data and reports, some functions
+      possibly create the required directories. 
+  <dt>plot.pl<dd>This file implements some basic support functions to
+      create plot files for gnuplot; one of them computes X tick marks
+      to be set for a given plot.
+</dl>
+
+
+<h2>Code in <code>db/</code></h2>
+
+Some of the files in this directory are:<p>
+
+<dl>
+  <dt>db-lookup.pl<dd>This set of functions implements the feature
+      where a logical port can move from one router to another over
+      time.  Given a date the routines can translate from logical port
+      name to a "physical" name (base name of the raw data file) and
+      vice versa.
+  <dt>update-dbs.pl<dd>This script updates the database of mappings
+      between logical port names and the base name of the raw data
+      files, and should be run periodically (once per day).  This
+      script uses the snmpnetstat TCL/scotty script to collect the
+      data.  This script could probably be made more robust to
+      operator errors such as inserting spaces in the wrong places
+      etc.
+</dl>
+<p>
+
+It is possible to "hand edit" the database by using the
+<code>dbm-edit</code> script, but note that the reports generated in
+the affected period need to be regenerated afterwards.
+
+<hr>
+<address>he@nordu.net</address>
+<!-- hhmts start -->
+Last modified: Thu Jun 26 12:11:57 MET DST 1997
+<!-- hhmts end -->
+</body> </html>

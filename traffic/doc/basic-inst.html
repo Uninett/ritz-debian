@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Basic installation instructions</title>
+</head>
+
+<body>
+<h1>Basic installation instructions</h1>
+
+
+In order to make the output of the CGI scripts cacheable, you need to
+"hide" the fact that they are indeed CGI scripts to cache servers.
+This means that you shouldn't use "cgi-bin" for the directory where
+the scripts are installed.  Personally, I use the following
+customization in Apache's srm.conf file to redirect two URLs to the
+directories where I install the NORDstat software:<p>
+
+<pre>
+	ScriptAlias /stat-q/ /archive/traffic/cgi/
+	Alias /stats/ /archive/traffic/html/
+</pre>
+<p>
+
+The customization is done in <code>Makefile.inc</code> in the
+top-level source directory.  The distributed copy is available as
+<code>Makefile.inc.dist</code>.  If you are upgrading from an earlier
+version, you need to check if you need to update your Makefile.inc
+with more configurable variables.<p>
+
+If you decide you don't want (or can't) use Berkeley make, you will
+need to edit some (most?) of the makefiles.<p>
+
+After customizing <code>Makefile.inc</code>, do "make install" as the
+user which will own the files.  This should install the software where
+you pointed <code>TOPDIR</code> in <code>Makefile.inc</code>.<p>
+
+Make your own list of routers to poll.  An example can be found in
+<code>site/ifs.cf</code>, install it in <code>TOPDIR/conf</code>.
+(Warning: the format and name of this file will change, hopefully for
+the better.)<p>
+
+Install something similar to the following in your machine's startup
+job (in my case, in <code>/etc/rc.local</code>):<p>
+
+<pre>
+	# Traffic poller
+	if [ -x /archive/traffic/bin/startup ]; then
+	        su he -c /archive/traffic/bin/startup
+	        su he -c /archive/traffic/bin/start-nanny
+	        echo -n ' traffic-poller'
+	fi
+</pre>
+
+Substitute "he" with the user owning the NORDstat files.<p>
+
+Manually start up the traffic poller by performing the two main
+commands above manually.  Data should now start being collected in
+<code>TOPDIR/data/today</code>.<p>
+
+Install crontab job lines for the user which owns the NORDstat similar
+to the following:<p>
+
+<pre>
+	57 23 * * *     /archive/traffic/bin/daily
+	0   1 * * 1     /archive/traffic/bin/report-week
+	0   5 1 * *     /archive/traffic/bin/report-month
+</pre>
+<p>
+
+This completes the basic installation of the NORDstat system.
+
+<hr>
+<address>he@nordu.net</address>
+<!-- hhmts start -->
+Last modified: Thu Jun 26 12:37:12 MET DST 1997
+<!-- hhmts end -->
+</body> </html>

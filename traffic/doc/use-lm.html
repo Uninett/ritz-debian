@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Load-map configuration instructions</title>
+</head>
+
+<body>
+<h1>Load-map configuration instructions</h1>
+
+The idea to this portion of code comes from the
+<a href="http://www.ee.ethz.ch/~oetiker/webtools/mrtg/">MRTG</a>
+package, so the rules set forth here have several similarities with
+what what comes from that package.<p>
+
+The <code>cgi/load-map</code> code needs a FIG file formatted
+according to a number of conventions to provide the "base drawing" on
+which the line load can be shown.  The FIG file needs to be formatted
+according to the following guidelines:<p>
+
+<ul>
+  <li>The drawing needs to be "flat" except for the components used to
+      provide "meta" information in the drawing.  I.e. do not "group"
+      your objects.
+
+  <li>You can use the following drawing elements:
+      <ul>
+	<li>Text (only use Courier 10', either horizontal or vertical)
+	<li>Polylines
+	<li>Rectangles
+	<li>Ellipsis
+      </ul>
+      Do not make rounded corners, arrows or splines.
+
+  <li>Polylines, rectangles and ellipsis can be filled, you can also
+      choose a line width for the lines making up these elements.
+
+  <li>There are 10 different colors used to paint the line load in the
+      drawing.  The colors are defined with a special text string that
+      contains "color:x" where "x" is between 0 and 9, and the text
+      should have the color used for that range.  0 represents 0-10%,
+      1 represents 10-20% etc.  In place of the "color:x" text strings
+      will be written the text showing the ranges of the corresponding
+      color.  You should probably draw some small color-filled
+      rectangles beside the "color:x" text elements, as is done in the
+      example drawing in <code>site/ndn-map.fig</code>.
+
+  <li>It is possible to specify a number of different line widths
+      corresponding to different link speeds.  The line width is
+      specifed with a line (of the given width) and a text element of
+      the form "lw:n" grouped together.  The "lw:n" tag will not be
+      shown, instead the text part of the config file specifying the
+      ranges is drawn in its place.The ranges the line width cover can
+      be specified in a per-map config file
+      (<code><i>map</i>.rng</code>) or a default set of ranges in
+      <code>default.rng</code>, both in the <code>MAPDIR</code>
+      directory.  A sample config file can be found in
+      <code>site/default.rng</code>.
+      
+  <li>Draw the links.  Each port (to a LAN) or circuit should consist
+      of two separate line segments, each representing "input" and
+      "output".  Each of these line segments (or polylines) should be
+      grouped together with a text object of the form "name:port" or
+      "name:port/i" (for the "input" part) where "port" is the logical
+      port name for the corresponding interface.  Put the "output"
+      part of the circuit/port closest to the originating router.
+
+  <li>Draw the clickable areas.  You can create links to relevant
+      plots by creating rectangles or polylines and group them
+      together with a text object of the form "urlc:port", where
+      "port" is the logical port name for the port.
+
+  <li>Define the image area.  Draw a rectangle surrounding all the other
+      drawing elements and group it together with a text object
+      with "imgarea" as the text value.
+
+</ul>
+<p>
+
+An example map can be found in <code>site/ndn-map.fig</code>.<p>
+
+Some extensions to this program are planned, see the
+<a href="todo.html">todo</a> list.
+
+<hr>
+<address>he@nordu.net</address>
+<!-- hhmts start -->
+Last modified: Thu Jun 26 12:43:40 MET DST 1997
+<!-- hhmts end -->
+</body> </html>

@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<!-- $Id$ -->
+<html> <head>
+<title>Plot load for a single port</title>
+</head>
+
+<body>
+<h2 align="center">Load plot for a single port</h2>
+
+For a plot of the load for a particular port in a given period, fill
+out this form and press "Submit Query" below.
+
+<form method=post action="../stat-q/intf-load">
+
+<p>Period (<a href="dsp.html">help</a>):
+<input type="text" name="datespec" size=10>
+<select name="dsp-type">
+  <option value="day">Day (default: yesterday)
+  <option value="week">Week (default: last week)
+  <option value="month">Month (default: last month)
+  <option value="year">Year (default: last year)
+  <option value="epoch">Epoch (covering all data)
+</select>
+
+<p>Sample resolution:
+<select name="res">
+  <option value="raw"> Samples (typically 15 min)
+  <option selected value="hr"> Hour
+  <option value="day"> Day
+  <option value="week"> Week
+</select>
+
+<p>
+<em>Note that not all combinations of period and resolution are available</em>,
+specifically, the "Sample" and "Hour" resolutions in
+anything longer than a week are unavailable.
+
+<p>Type of plot:
+<select name="plot-type">
+  <option value="traffic"> % of capacity
+  <option selected value="traffic-kbit"> kbit/s
+</select>
+      
+<p>Port name: <input type="text" name="intf" size=25>
+<a href="../stat-q/list-ports">List current port names</a>
+
+<p><input type="submit" name="submit">
+<input type="reset">
+
+</form>
+
+<hr>
+<address></address>
+<!-- hhmts start -->
+Last modified: Wed Jun 25 16:22:38 MET DST 1997
+<!-- hhmts end -->
+<br> <em>(c) 1996, 1997 UNINETT and NORDUnet</em>
+</body> </html>

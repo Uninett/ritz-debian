@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Load-map implementation</title>
+</head>
+
+<body>
+<h1>Load-map implementation</h1>
+
+The idea to this code came from the
+<a href="http://www.ee.ethz.ch/~oetiker/webtools/mrtg/">MRTG</a>
+package, but it is completely reimplemented, adding a few new features
+of my own:<p>
+
+<ul>
+  <li>The width of the lines vary with the interface speed (fetched
+      from the data base), the ranges are configurable.
+  <li>Each port has two separate parts: "in" and "out", where the
+      inbound and outbound values are shown. 
+  <li>The overlaid imagemap uses the names given in the drawing as
+      components in dynmamically-constructed URLs pointing to the
+      relevant port load plots.
+</ul>
+<p>
+
+More information on <a href="use-lm.html">how to set up the drawing
+file</a> is available.<p>
+
+The code consists of the following major elements:<p>
+<ul>
+  <li>Code reading in and storing the relevant data from the FIG
+      file which defines the drawing.
+  <li>Code to actually create the PNG image, using the Perl GD
+      library, based on the data read from the FIG file and data from
+      the report being visualized.  While the PNG image is
+      constructed, the client-side image map to be used is also
+      constructed. 
+  <li>Code to emit the surrounding HTML code, as well as taking
+      care of HTTP (Expires header etc.).
+</ul>
+
+<hr>
+<address>he@nordu.net</address>
+<!-- hhmts start -->
+Last modified: Thu Jun 26 12:49:16 MET DST 1997
+<!-- hhmts end -->
+</body> </html>

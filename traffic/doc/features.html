@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>NORDstat features</title>
+</head>
+
+<body>
+<h1>NORDstat features</h1>
+
+This package has the following main features:
+
+<ul>
+  <li>The amount of work to maintain the setup is attempted kept at
+      a minimum.  This means "no per-port configuration work" apart
+      from setting up the port on the router.  For this to work well,
+      the operators of the network need to adhere to certain <a
+      href="conf-conv.html">conventions</a> when configuring the
+      individual router ports.
+
+  <li>There are three main entry points to the statistics, a <a
+      href="http://www.nordu.net/stat-q/load-map/ndn-map,,traffic,peak">
+      clickable graphical map</a> showing the circuit loading with
+      colour codes, <a
+      href="http://www.nordu.net/stat-q/plot-all/ndn-funet,1997-06--09,hr,traffic">
+      zoomable plots</a> for the individual ports, and an entry point to <a
+      href="http://www.nordu.net/stats/tbl-report.html">tabular
+      reports</a> covering various time periods.  (The references here
+      lead to "live" examples of these features.)
+
+  <li>Implemented using freely available tools; uses TCL, Scotty, perl
+      (version 5), gnuplot (beta version), GD library etc.  See
+      <a href="tools.html">the list of tools</a> for a complete list
+      and pointers to the tools used to implement this package.
+
+  <li>CGI script results written to be cacheable, and in most cases
+      sensible HTTP Expires headers are emitted to control cache
+      expiration of documents returned.
+
+  <li>Most scripts emit sensible ALT= tags so that it is possible to
+      use <a href="http://lynx.browser.org/">lynx</a> to look at the
+      statistics.
+
+</ul>
+
+
+<hr>
+<address>he@nordu.net</address>
+<!-- hhmts start -->
+Last modified: Thu Jun 26 12:25:17 MET DST 1997
+<!-- hhmts end -->
+</body> </html>
