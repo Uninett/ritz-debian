@@ -7,11 +7,11 @@
 
 proc initStatus { } {
 
-    persistVar AddrToRouter
-    persistVar portToIfDescr
-    persistVar portToLocIfDescr
-    persistVar portState
-    persistVar isCisco
+    ::persist::add ::AddrToRouter
+    ::persist::add ::portToIfDescr
+    ::persist::add ::portToLocIfDescr
+    ::persist::add ::portState
+    ::persist::add ::isCisco
 
     setSWalkEhandler swalkErrorHandler
 }
@@ -36,16 +36,15 @@ proc getSysID { sh } {
 
 proc recordAddr { sh vbl } {
     global AddrToRouter RouterToAlist
-    global cx
 
-    persistVar AddrToRouter
+    ::persist::add ::AddrToRouter
 
     set ixVbl [lindex $vbl 0]
     set adVbl [lindex $vbl 1]
     set ix [lindex $ixVbl 2]
     set ad [lindex $adVbl 2]
 
-    set r $cx($sh,name)
+    set r [name $sh]
 
     set AddrToRouter($ad) $r
     lappend RouterToAlist($r) $ad
@@ -54,9 +53,9 @@ proc recordAddr { sh vbl } {
 # Get current list of IP addresses, store mapping(s)
 
 proc getAddrList { sh } {
-    global RouterToAlist cx
+    global RouterToAlist
 
-    catch { unset RouterToAlist($cx($sh,name)) }
+    catch { unset RouterToAlist([name $sh]) }
     if { [catch {
 	$sh walk x "ipAdEntIfIndex ipAdEntAddr" { recordAddr $sh $x }
     } msg] } {
@@ -67,11 +66,11 @@ proc getAddrList { sh } {
 }
 
 proc basePollList { sh } {
-    global cx isCisco
+    global isCisco
 
     set bl "ifIndex ifDescr ifAdminStatus ifOperStatus ifLastChange"
-    if { [info exists isCisco($cx($sh,name))] } {
-	if { $isCisco($cx($sh,name)) } {
+    if { [info exists isCisco([name $sh])] } {
+	if { $isCisco([name $sh]) } {
 	    lappend bl "locIfDescr" "locIfReason"
 	}
     }
@@ -79,14 +78,13 @@ proc basePollList { sh } {
 }
 
 proc pollSingleIf { sh ix } {
-    global cx
 
     foreach v [split [basePollList $sh]] {
 	lappend vl [format "%s.%d" $v $ix]
     }
     if { [catch { $sh get $vl { recordIntf "%S" "%V" } msg }] } {
 	log [format "%s: error polling intf %d: %s" \
-		$cx($sh,name) $ix $msg]
+		[name $sh] $ix $msg]
     }
     Response $sh
 }
@@ -97,10 +95,7 @@ proc eventTime { uptime changetime } {
 }
 
 proc recordIntf { sh vbl } {
-    global cx IgnorePat portState
-    global portToIfDescr portToLocIfDescr
-    global Address
-    global Priority
+    global portState portToIfDescr portToLocIfDescr
 
     foreach vb $vbl {
 	set oid [lindex $vb 0]
@@ -109,7 +104,7 @@ proc recordIntf { sh vbl } {
 	set $var $val
     }
 
-    set r $cx($sh,name)
+    set r [name $sh]
 
     # Here test for ifAdminStatus=on, ifOperStatus=down,
     # if event already known etc.
@@ -128,8 +123,8 @@ proc recordIntf { sh vbl } {
 
     # Check if interface state changes should be ignored,
     # could e.g. be ISDN or dialup interface
-    if { [info exists IgnorePat($r)] } {
-	if { [regexp $IgnorePat($r) $ifDescr] } {
+    if { [::config::confExists $r ignorepat] } {
+	if { [regexp [::config::conf $r ignorepat] $ifDescr] } {
 #	    log [format "%s intf \"%s\" ignored" $r $ifDescr]
 	    return
 	}
@@ -148,7 +143,7 @@ proc recordIntf { sh vbl } {
     foreach v "ifAdminStatus ifOperStatus" {
 	if { ! [info exists $v] } {
 	    set m [format "no %s from %s for port %s" \
-		    $cx($sh,name) $ifIndex]
+		    [name $sh] $ifIndex]
 	    error $m $m
 	}
     }
@@ -172,8 +167,8 @@ proc recordIntf { sh vbl } {
 	    setEventAttr $eid "port" $ifDescr
 	    setEventAttr $eid "portstate" $state
 	    setEventAttr $eid "ifindex" $ifIndex
-	    setEventAttr $eid "polladdr" $Address($r)
-	    setEventAttr $eid "priority" $Priority($r)
+	    setEventAttr $eid "polladdr" [::config::conf $r address]
+	    setEventAttr $eid "priority" [::config::conf $r priority]
 
 	    if { [catch {set sysUpTime [getUptime $sh]} msg] } {
 		log [format "%s: %s" $r $msg]
@@ -217,7 +212,6 @@ proc pollIfs { sh } {
 # Return uptime in 100'ths of a second, or err
 
 proc getUptime { sh } {
-    global cx
 
     if { [catch { set uvbl [$sh get "sysUpTime.0"]} msg] } {
 	set m [format "%s: %s" "getUptime" $msg]
@@ -225,18 +219,18 @@ proc getUptime { sh } {
     }
     set name  [lindex [lindex $uvbl 0] 0]
     set value [lindex [lindex $uvbl 0] 2]
-#    puts [format "%s uptime %s" $cx($sh,name) $value]
+#    puts [format "%s uptime %s" [name $sh] $value]
     Response $sh
 
     return [mib scan $name $value]
 }
 
 proc checkConfig { sh } {
-    global cx isCisco
+    global isCisco
 
     set uptime [getUptime $sh]
     set sysid [getSysID $sh]
-    set isCisco($cx($sh,name)) [oidPfxMatch [mib oid cisco] $sysid]
+    set isCisco([name $sh]) [oidPfxMatch [mib oid cisco] $sysid]
     getAddrList $sh
 }
 
@@ -251,23 +245,21 @@ proc swalkErrorHandler { sh err } {
 
 proc cleanupDelayedResponse { sh } {
     global responseCheckInProgress
-    global cx
 
-    set r $cx($sh,name)
+    set r [name $sh]
 
     # cleanup any remaining check jobs
     if [info exists responseCheckInProgress($sh)] {
 	after cancel delayedCheckResponse $sh
 	after cancel lastDelayedCheckResponse $sh
 	unset responseCheckInProgress($sh)
-	log [format "cleaned up after response from %s" $r]
+	log [format "cleaned up delayed check for %s" $r]
     }
 }
 
 proc delayedCheckResponse { sh } {
-    global cx
 
-    set r $cx($sh,name)
+    set r [name $sh]
 
     log [format "checking reachability of %s" $r]
     if [checkResponse $sh] {
@@ -284,13 +276,16 @@ proc lastDelayedCheckResponse { sh } {
 }
 
 proc delayedNoResponse { sh } {
-    global cx
-    global Address Priority
+    global responseCheckInProgress
+    
+    set r [name $sh]
+#    log [format "checking reachability of %s" $r]
     
     if { ! [checkResponse $sh] } {
-	set r $cx($sh,name)
+#	log [format "checking: no response from %s" $r]
 
 	set doit 0
+	# Do we already have an event for this failure?
 	if [eventIxExists $r "reachability"] {
 	    set eid [eventId $r "reachability"]
 	    if { [getEventAttr $eid "reachability"] != "no-response" } {
@@ -299,12 +294,14 @@ proc delayedNoResponse { sh } {
 	} else {
 	    set doit 1
 	}
+#	log [format "checking %s, doit is %s" $r $doit]
+
 	if { $doit != 0 } {
 	    set eid [eventId $r "reachability"]
 	    setEventAttr $eid "router" $r
 	    setEventAttr $eid "reachability" "no-response"
-	    setEventAttr $eid "polladdr" $Address($r)
-	    setEventAttr $eid "priority" $Priority($r)
+	    setEventAttr $eid "polladdr" [::config::conf $r address]
+	    setEventAttr $eid "priority" [::config::conf $r priority]
 	    set s [format "%s no-response" $r]
 	    eventLog $eid $s
 	    eventCommit $eid
@@ -314,19 +311,23 @@ proc delayedNoResponse { sh } {
 	    after [expr 240 * 1000] delayedCheckResponse $sh
 	    after [expr 480 * 1000] delayedCheckResponse $sh
 	    after [expr 960 * 1000] lastDelayedCheckResponse $sh
+	} else {
+	    cleanupDelayedResponse $sh
 	}
+    } else {
+	log [format "checking: cancelling check of %s" $r]
+	cleanupDelayedResponse $sh
     }
 }
 
 proc noResponse { sh } {
     global responseCheckInProgress
-    global cx
     
     if [info exists responseCheckInProgress($sh)] {
-	log [format "no-response from %s but checking already" $cx($sh,name)]
+	log [format "no-response from %s but checking already" [name $sh]]
 	return
     }
-    log [format "no-response from %s, starting delayed check" $cx($sh,name)]
+    log [format "no-response from %s, starting delayed check" [name $sh]]
     after [expr 60 * 1000] delayedNoResponse $sh
     set responseCheckInProgress($sh) 1
 }
@@ -346,9 +347,8 @@ proc doResponse { router eid } {
 }
 
 proc Response { sh } {
-    global cx
 
-    set r $cx($sh,name)
+    set r [name $sh]
 
 #    puts [format "Response from %s" $r]
 
@@ -367,10 +367,9 @@ proc Response { sh } {
 }
 
 proc checkResponse { sh } {
-    global cx
 
     if [catch { getUptime $sh } msg] {
-	log [format "%s: %s" $cx($sh,name) $msg]
+	log [format "%s: %s" [name $sh] $msg]
 	if [regexp "noResponse" $msg] {
 	    return 0
 	}
@@ -378,22 +377,9 @@ proc checkResponse { sh } {
     return 1
 }
 
-proc checkConfigs { } {
-    global cx Address
-    foreach r [array names Address] {
-	if { [catch {checkConfig $cx($r,handle)} msg] } {
-	    log [format "%s: %s" $r $msg]
-	    if { [regexp "noResponse" $msg] } {
-		noResponse $cx($r,handle)
-	    }
-	}
-    }
-}
-
 proc pollRouter { r } {
-    global cx
 
-    set sh $cx($r,handle)
+    set sh [handle $r]
     if { [catch {checkConfig $sh} msg] } {
 	if { [regexp "noResponse" $msg] } {
 	    noResponse $sh
@@ -406,147 +392,12 @@ proc pollRouter { r } {
     }
 }
 
-proc startRouterPollJob { r } {
-    global pollJobs pollJob Interval
-
-    set j [job create \
-	    -interval [expr $Interval($r) * 60 * 1000] \
-	    -command [list pollRouter $r]]
-    lappend pollJobs $j
-    set pollJob($r) $j
-}
-
-proc startRouterPollJobs { } {
-    global Address DefaultInterval
-
-    set n [array size Address]
-    set intv [expr $DefaultInterval * 60 * 1000 / $n]
-    set delay 0
-    foreach r [array names Address] {
-	after $delay startRouterPollJob $r
-	set delay [expr $delay + $intv]
-    }
-}
-
-proc stopRouterPollJobs { } {
-    global Address pollJobs
-
-    foreach r [array names Address] {
-	after cancel startRouterPollJob $r
-    }
-    if { [info exists pollJobs] } {
-	foreach j $pollJobs {
-	    catch { $j destroy }
-	}
-    }
-}
-
-proc setupHandle { r } {
-    global cx Address Timeout Retry
-
-    if { [info exists cx($r,handle)] } {
-	return;			# already done
-    }
-    set s [snmp session \
-	    -address $Address($r) \
-	    -community $cx($r,community) \
-	    -timeout $Timeout($r) \
-	    -retries $Retry($r) ]
-    set cx($r,handle) $s
-    set cx($s,name) $r
-}
-
-proc setupHandles { } {
-    global Address
-
-    foreach r [array names Address] {
-	setupHandle $r
-    }
-}
-
-proc stopRouterPolling { r } {
-    global pollJob cx
-
-    catch { $pollJob($r) destroy }
-    catch { unset pollJob($r) }
-    after cancel startRouterPollJob $r
-
-    catch {
-	set h $cx($r,handle)
-	$h destroy
-	unset cx($r,handle)
-    }
-}
-
-proc stopPollDeletedRouters { } {
-    global DeletedRouter Address cx
-
-    foreach r [array names DeletedRouter] {
-	stopRouterPolling $r
-
-	unset DeletedRouter($r)
-	catch { unset Address($r) }
-	catch { unset cx($h,name) }
-    }
-}
-
-proc startPollNewRouters { } {
-    global NewRouter
-    global DefaultInterval
-
-    set n [array size NewRouter]
-    if { $n == 0 } { return; }
-    set intv [expr $DefaultInterval * 60 * 1000 / $n]
-    set delay 0
-
-    foreach r [array names NewRouter] {
-	setupHandle $r
-	after $delay startRouterPollJob $r
-	set delay [expr $delay + $intv]
-
-#puts [format "starting polling router %s" $r]
-
-	unset NewRouter($r)
-    }
-}
-
-proc restartPollChangedRouters { } {
-    global ChangedRouter
-    global DefaultInterval
-
-    set n [array size ChangedRouter]
-    if { $n == 0 } { return; }
-    set intv [expr $DefaultInterval * 60 * 1000 / $n]
-    set delay 0
-
-    foreach r [array names ChangedRouter] {
-	stopRouterPolling $r
-	setupHandle $r
-	after $delay startRouterPollJob $r
-	set delay [expr $delay + $intv]
-
-	puts [format "Restarting polling router %s" $r]
-
-	unset ChangedRouter($r)
-    }
-}
-
 proc knownRouter { r } {
-    global Address cx
 
-    return [expr [info exists Address($r)] && [info exists cx($r,handle)]]
-}
-
-proc fixupPollJob { } {
-    global pollJob
-
-    foreach j [job info] {
-	set s [$j configure]
-	if { [regexp pollRouter $s] } {
-	    set r [lindex [lindex $s 1] 1]
-#	    puts [format "%s: %s" $j $r]
-	    set pollJob($r) $j
-	}
+    if [::config::confExists $r address] {
+	return 1
+    } else {
+	return 0
     }
 }
 
