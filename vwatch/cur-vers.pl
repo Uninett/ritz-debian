@@ -1,11 +1,16 @@
-#!/usr/bin/perl
-
+#! %PERL%
+#
 # $Id$
+#
 
-# Produce report of current software verions on the monitored routers.
+#
+# Produce report of current software verions on the monitored devices.
+#
+
+push(@INC, "%TOPDIR%/conf");
 
 require 'config.pl';
-require 'pretty.pl';
+require 'pretty-ios.pl';
 
 sub get_start_software {
     local($daydir) = @_;
@@ -72,12 +77,14 @@ sub report {
 # Main
 #
 
+$LOGTREE = "%TOPDIR%/ver-watch/logs";
+
 $today = $LOGTREE . "/today";
 
 &get_start_software($today);
-open(in, $today . "/ver-watch.log") ||
-    die "Could not open today/ver-watch.log: $!";
-&read_day_data(in);
-close(in);
+$f = $today . "/ver-watch.log";
+open(IN, $f) || die "Could not open $f: $!";
+&read_day_data(IN);
+close(IN);
 &report();
 
