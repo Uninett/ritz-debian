@@ -16,44 +16,47 @@
 # where $s is "snmp handle".
 #
 # Provides
-#      cx $devname handle
-#      cx $handle name
+#      handle $devname
+#      name $handle
 # commands for translation between device name and snmp handle.
 #
 
 catch { namespace delete ::polljob }
 
 namespace eval ::polljob {
-    namespace export start restart stop cx
+    namespace export start restart stop
+    namespace export name handle
     namespace import ::util::mtoms
 
     variable cx
 
-    proc cx { a b } {
+    proc name { sh } {
 	variable cx
-	return $cx($a,$b)
+	return $cx($sh,name)
     }
 
+    proc handle { dev } {
+	variable cx
+	return $cx($dev,name)
+    }
 
     # spread poll scheduling of devices over default interval
 
     proc spreadIntv { devs } {
-	variable ::config::defaults
 
 	set ndevs [llength $devs]
 	if { $ndevs == 0 } { return 0; }
 
-	set intv $::config::defaults(interval)
+	set intv [::config::defaults interval]
 	return [expr ( $intv + 0.0 ) / $ndevs]
     }
 
     proc startCommonAfter { dev delay { upcall "" } } {
-	variable ::config::conf
 	variable cx
 
-	set ip $::config::conf($dev,address)
-	set community $::config::conf($dev,community)
-	set intv $::config::conf($dev,interval)
+	set ip [::config::conf $dev address]
+	set community [::config::conf $dev community]
+	set intv [::config::conf $dev interval]
 
 	set code [catch {snmp session -address $ip -community $community} s]
 	if $code {
