@@ -15,10 +15,10 @@
 #      destroyDev $s
 # where $s is "snmp handle".
 #
-# Also provides
-#      cx($devname,handle)
-#      cx($handle,name)
-# for translation between device name and snmp handle.
+# Provides
+#      cx $devname handle
+#      cx $handle name
+# commands for translation between device name and snmp handle.
 #
 
 catch { namespace delete ::polljob }
@@ -28,6 +28,11 @@ namespace eval ::polljob {
     namespace import ::util::mtoms
 
     variable cx
+
+    proc cx { a b } {
+	variable cx
+	return $cx($a,$b)
+    }
 
 
     # spread poll scheduling of devices over default interval
