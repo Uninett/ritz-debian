@@ -600,6 +600,7 @@ sub read_ranges {
     my(@f, $n);
 
     for ($n = 1; <$fh>; $n++) {
+	chomp;
 	@f = split(/\s+/, $_, 2);
 	$high[$n] = $f[0];
 	$lw_text[$n] = $f[1];
