@@ -57,7 +57,7 @@ proc uiInitToplevel { } {
 
     wm title . "RITZ - Remote interface to zino"
     wm iconname . "RITZ - Remote interface to zino"
-    wm geometry . 100x24
+    wm geometry . 94x24
 
     frame .mbar -relief raised -bd 2
 
