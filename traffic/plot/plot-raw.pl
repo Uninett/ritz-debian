@@ -407,16 +407,16 @@ sub plot_eerrs {
 
 	if ($has_details) {
 	    if ($ipkts > 0) {
-		&maxit($val = $count{"locIfInCRC",$h}
+		&maxit($val = $count{"locIfInCRC",$i}
 		       * 100.0 / $ipkts);
 		printf($fh " %f", $val);
-		&maxit($val = $count{"locIfInFrame",$h}
+		&maxit($val = $count{"locIfInFrame",$i}
 		       * 100.0 / $ipkts);
 		printf($fh " %f", $val);
-		&maxit($val = $count{"locIfInRunts",$h}
+		&maxit($val = $count{"locIfInRunts",$i}
 		       * 100.0 / $ipkts);
 		printf($fh " %f", $val);
-		&maxit($val = $count{"locIfInGiants",$h}
+		&maxit($val = $count{"locIfInGiants",$i}
 		       * 100.0 / $ipkts);
 		printf($fh " %f", $val);
 	    } else {
