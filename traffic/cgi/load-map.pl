@@ -877,8 +877,8 @@ sub load_color {
 
 # Try to swap around the names, in sequence:
 # xx.yy -> yy.xx
-# xx-nn2 -> nn-xx2
 # xx-nn  -> nn-xx
+# xx-nn2 -> nn-xx2
 # xx-nn-t -> nn-xx-t
 # and check if the result exists
 # Otherwise return xx-nn/i ("use input value")
@@ -887,8 +887,14 @@ sub rev_name {
     my($name) = @_;
     my($rn);
 
-    if      ($name =~ /([^.]+).([^.])/) {
+    if      ($name =~ /([^.]+).([^.]+)/) {
 	$rn = $2 . "." . $1;
+    }
+    if (defined($in_load{$rn})) {
+	return $rn;
+    }
+    if      ($name =~ /([^-]+)-([^-]+)/) {
+	$rn = $2 . "-" . $1;
     }
     if (defined($in_load{$rn})) {
 	return $rn;
