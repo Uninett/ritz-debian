@@ -12,14 +12,19 @@ namespace eval ::conffile {
     variable file_name
 
     # Read config file.
+    #
     # Format is "keyword: value", neither of which can contain whitespace
     # comments from coloumn 0 starts with #
+    #
     # defaults as "default keyword: value"
+    #
     # individual entries (separated with blank line(s))
     # must start with "name: xxx".
+    #
     # Checks attribute names against assoc array known_attrs
     # and prints warnings for "unknown" attributes if checkKnown is != 0.
-    # Returns list of names seen.
+    #
+    # Returns list of seen object names (in "name: xxx" attribute).
 
     proc read { filename attrs defaults known_attrs checkKnown } {
 	upvar $attrs Attrs
@@ -86,11 +91,13 @@ namespace eval ::conffile {
 		}
 	    }
 	}
+	close $f
 	return $names
     }
 
     proc warn { str } {
-	variable file_name line_number
+	variable file_name
+	variable line_number
 	
 	puts stderr \
 		[format \
@@ -100,32 +107,43 @@ namespace eval ::conffile {
 
     # internal check job
     proc checkCfFile { name } {
-	variable lastMod changedHandler
+	variable lastMod
+	variable changedHandler
+	global errorInfo
 
+	set first 0
 	file stat $name st
 	if { ! [info exists lastMod] } {
 	    set lastMod $st(mtime)
-	    return
+	    set first 1
 	}
-	if { $st(mtime) != $lastMod } {
-	    puts [format "Config file %s updated, calling handler" $name]
-	    if [catch {changedHandler $name} msg] {
-		puts [format "Config handler failed: %s, retrying later" $msg]
+	if { $st(mtime) != $lastMod || $first } {
+	    if { $first } {
+		puts stderr [format \
+			"Config file %s initial read starting" $name]
+	    } else {
+		puts stderr [format \
+			"Config file %s updated, rereading" $name]
+	    }
+	    if [catch {$changedHandler $name} msg] {
+		puts stderr [format \
+			"Config handler failed: %s, retrying later" $msg]
+		puts stderr $errorInfo
 		return;		# Try again later
 	    }
 	    set lastMod $st(mtime)
-	    puts [format "Config file update handled"]
+	    puts stderr [format "Config file update handled OK"]
 	}
     }
 
-    # set procedure to handle config file updates
+    # set proc to handle config file updates
     proc setHandler { h } {
 	variable changedHandler
 
 	set changedHandler $h
     }
 
-    # name of config file, interval in minutes
+    # name of config file, interval in seconds
     proc startCheckJob { name interval } {
 	variable changedHandler
 
@@ -133,10 +151,10 @@ namespace eval ::conffile {
 	    error "need to set changedHandler"
 	}
 
-	set msintv [expr $interval $ 60 * 1000]
+	set msintv [expr $interval * 1000]
 	job create \
 		-interval $msintv \
-		-command [list checkCfFile $name]
+		-command [list ::conffile::checkCfFile $name]
     }
 
 }
