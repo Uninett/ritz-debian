@@ -28,7 +28,7 @@ proc emt_main {} {
 
     ::persist::setup "emt-save.tcl"
     ::persist::restore
-    ::persist::startPeriodicDump 5;# minutes
+    ::persist::startPeriodicCheckpoint 5;# minutes
 
     ::persist::add state
     ::persist::add nagged
@@ -436,12 +436,12 @@ proc emt_open { server port user secret } {
     global errorInfo
 
     while [catch {
-	::net::close
+	catch { ::net::close }
 	::net::open $server $port
 	::auth::login $user $secret
 	::notify::open emt_notify
     } msg ] {
-	log [format "Error opening server %s" $server]
+	log [format "Error opening server %s port %s" $server $port]
 	log [format "Cause: %s" $msg]
 	log [format "Detailed info: %s" $errorInfo]
 	log [format "Retrying open in 60 seconds"]
