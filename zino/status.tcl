@@ -79,14 +79,27 @@ proc basePollList { sh } {
 
 proc pollSingleIf { sh ix } {
 
-    foreach v [split [basePollList $sh]] {
-	lappend vl [format "%s.%d" $v $ix]
+#    puts [format "%s: polling single intf %s" [name $sh] $ix]
+
+    set bpl [basePollList $sh]
+    foreach v [split $bpl] {
+	lappend pl [format "%s.%d" $v [expr $ix - 1]]
+	lappend sl [mib oid $v]
     }
-    if { [catch { $sh get $vl { recordIntf "%S" "%V" } msg }] } {
-	log [format "%s: error polling intf %d: %s" \
+    if [catch {set res [$sh getnext $pl]} msg] {
+	log [format "%s: error polling single intf %s: %s" \
 		[name $sh] $ix $msg]
     }
+    set fres [filterLowestMatching $sl $ix $res]
+    if { "$fres" == "" } {
+	log [format "%s: error polling single intf %s: no match" \
+		[name $sh] $ix]
+	return
+    }
+    recordIntf $sh $fres
     Response $sh
+
+#    puts [format "%s: poll of single intf %s OK" [name $sh] $ix]
 }
 
 proc eventTime { uptime changetime } {
