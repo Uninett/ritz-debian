@@ -88,12 +88,12 @@ sub process {
 		next;	# ignore, too long ago
 	    }
             foreach $k (keys %lastval) {
-		# print all old variable values prior to reboot
-		if (defined($saveline{$k})) {
-		    printf("%s\n", $saveline{$k});
-		    undef $saved{$k};
+		# print all saved lines prior to reboot
+		if (defined($lastline{$k})) {
+		    printf("%s\n", $lastline{$k});
+		    undef $lastline{$k};
 		}
-                $base{$k} = 0;
+		undef $lastval{$k};
             }
 	    printf("%s\n", $_);
             next;
@@ -107,14 +107,16 @@ sub process {
 	    # time decreasing or same? ignore.
 	    if ($lasttime{$v} >= $now) { next; }
 
-	    # value the same?  ignore (but save).
+	    # value the same?  Print first, save later
 	    if ($lastval{$v} == $f[6]) {
-		# Save first line with same value
-		if (! defined($saveline{$v})) {
-		    $saveline{$v} = $_;
-		    $saved{$v} = 1;
+		if (! defined($samevalseen{$v})) {
+		    # print first with same value to bring
+		    # delta($v) = 0.
+		    printf("%s\n", $_);
+		    $samevalseen{$v} = 1;
+		    next;
 		}
-		# ...and the last line (to possibly be printed at the end)
+		# Save later occurrances
 		$lastline{$v} = $_;
 		next;
 	    }
@@ -129,22 +131,19 @@ sub process {
 	    {
 		next;		# ignore
 	    }
-	    undef $lastline{$v}; # different value, and other checks passed
 	}
-	if (defined($saved{$v})) {
-	    printf("%s\n", $saveline{$v});
-	    undef $saved{$v};
-	    undef $saveline{$v};
+	if (defined($lastline{$v})) {
+	    printf("%s\n", $lastline{$v});
+	    undef $lastline{$v};
 	}
 	$lastval{$v} = $f[6];
 	$lasttime{$v} = $now;
 	printf("%s\n", $_);
     }
-    foreach $v (keys %saved) {
-	printf("%s\n", $saveline{$v});
-    }
     foreach $v (keys %lastline) {
-	printf("%s\n", $lastline{$v});
+	if (defined($lastline{$v})) {
+	    printf("%s\n", $lastline{$v});
+	}
     }
 }
 
