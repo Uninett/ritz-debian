@@ -104,14 +104,16 @@ sub read_log {
             next;
         }
 
-	$lasttime = $now;
-
         ($v, $dummy) = split(/\./, $f[5]);
 
+	if ($lasttime != $now || defined($count{$v, $sample_no})) {
+	    $sample_no++;
+	    $sample_time{$sample_no} = $now / 3600.0;
+	}
+
+	$lasttime = $now;
+
         if (!defined($base{$v})) {
-	    if (!defined($starter)) {
-		$starter = $v;
-	    }
             $base{$v} = $f[6];
         } else {
             $delta = ($f[6] - $base{$v});
@@ -119,9 +121,6 @@ sub read_log {
                 $delta += 0xffffffff;
             }
 
-	    if ($v eq $starter) {
-		$sample_no++;
-	    }
             $count{$v, $sample_no} = $delta;
 	    $sample_time{$v, $sample_no} = $now / 3600.0;
 
