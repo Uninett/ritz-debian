@@ -10,12 +10,14 @@ namespace eval ::notify {
     variable acceptchan notifychan
     variable h_notify
 
+    unset acceptchan
+
     # Open notify connection and set up handlers.
     # Precondition: server channel must already be open.
 
     proc open { handleNotify } {
 	variable h_notify
-	varaible acceptchan
+	variable acceptchan
 
 	if [info exists h_notify] {
 	    error "notify connection already open"
@@ -25,7 +27,7 @@ namespace eval ::notify {
 	if [info exists acceptchan] {
 	    error "another notify connection open already in progress"
 	}
-	set nas [socket -server accept 0]
+	set nas [socket -server [namespace current]::accept 0]
 	set acceptchan $nas
 	set port [lindex [fconfigure $nas -sockname] 2]
 	::net::puts [format "nsocket %s" $port]
@@ -44,7 +46,7 @@ namespace eval ::notify {
 	catch { unset h_notify }
 	foreach c "notify accept" {
 	    set v [format "%schan" $c]
-	    catch { close [set $v] }
+	    catch { ::close [set $v] }
 	    catch { unset $v }
 	}
     }
@@ -59,7 +61,7 @@ namespace eval ::notify {
 	fconfigure $chan -buffering line
 	fileevent $chan readable [list handle $chan]
 
-	close $acceptchan
+	::close $acceptchan
 	unset acceptchan
     }
 
