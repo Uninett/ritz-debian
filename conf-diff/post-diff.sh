@@ -5,7 +5,7 @@
 
 cd /tftpboot
 
-CF=${HOME}/.send-diff
+CF=${HOME}/.zino-mail
 if [ ! -f $CF ]; then
     echo "No $CF file" >&2
     exit 1
@@ -19,7 +19,7 @@ if test -s last-checked-diff ; then
     echo "From: ${MAILFROM}";
     echo "Subject: Device config changes `date +%y-%m-%d`";
     echo "";
-    cat last-checked-files last-checked-diff
+    cat last-checked-files last-checked-diff;
     ) | %RAWSENDMAIL% ${MAILTO}
 
     cat last-checked-files last-checked-diff > last-checked-diff.`date +%a`
