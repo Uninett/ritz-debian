@@ -76,6 +76,15 @@ require 'plot.pl';
 			 "eerrs" => 1,
 			 "pps" => 1,
 		     },
+		     "5m" => {
+			 "traffic" => 1,
+			 "traffic-kbit" => 1,
+			 "discards" => 1,
+			 "errors" => 1,
+			 "resets" => 1,
+			 "eerrs" => 1,
+			 "pps" => 1,
+		     },
 		     "hr" => {
 			 "traffic" => 1,
 			 "traffic-kbit" => 1,
@@ -104,6 +113,7 @@ require 'plot.pl';
 
 %resolution_name = (
 		    "raw" => "samples",
+		    "5m" => "5-min averages",
 		    "hr"  => "hourly",
 		    "day" => "daily",
 		    "week"=> "weekly",
@@ -118,6 +128,15 @@ require 'plot.pl';
 				 "day", "month"],
 		 "week" =>	["day", "month"],
 		 "month" =>	["day", "year",
+				 "week", "epoch"],
+	     },
+	     "5m" => {
+		 "day" =>	["5m", "week",
+				 "hr", "week",
+				 "day", "month"],
+		 "week" =>	["day", "month"],
+		 "month" =>	["day", "year",
+				 "week", "year",
 				 "week", "epoch"],
 	     },
 	     "hr" => {
@@ -150,6 +169,10 @@ require 'plot.pl';
 %zoom_in = (
 	    "raw" => {
 		"week" =>	["raw", "day",
+				 "hr", "day"],
+	    },
+	    "5m" => {
+		"week" =>	["5m", "day",
 				 "hr", "day"],
 	    },
 	    "hr" => {
@@ -187,6 +210,7 @@ sub img_names {
 }
 
 %checker = ("hr"	=> \&same_day,
+	    "5m"	=> \&same_day,
 	    "raw"	=> \&same_day,
 	    "day"	=> \&same_day,
 	    "week"	=> \&same_week,
@@ -267,11 +291,16 @@ sub forward_refs {
     my($base_tm, $pr_base_tm, $nx_base_tm, $ndays, $o_dsp, @l);
     my($z_dsp_t, $z_res, $ds, $head_done);
     my($map, $ref, $first, @ds, $dummy, $date);
-
+    my(@l);
 
     # Get start of when we have data available
 
-    if (!defined($date = &data_origin($line))) {
+    @l = split(/\+/, $line); # use first if there's more than one
+
+    if (!defined($date = &data_origin($l[0]))) {
+	printf("<hr>\n");
+	printf("Could not find origin for %s\n", $l[0]);
+	printf("<hr>\n");
 	return undef;
     }
     $origin = &date_to_tm($date);
@@ -503,7 +532,7 @@ print $doc->start_html(-title=>$title,
 # Do argument validation
 
 @al = ($line, $datespec, $res, $plot, $regen);
-if (defined($ai = &invalid_arg("[-A-Za-z0-9_.]*", @al))) {
+if (defined($ai = &invalid_arg("[-A-Za-z0-9_.\+]*", @al))) {
     printf("<h2>Invalid argument: %s</h2>\n", $al[$ai]);
     print $doc->end_html;
     print "\n";
