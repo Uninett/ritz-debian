@@ -231,6 +231,7 @@ proc report_single_port { id } {
     set rs [format "%s  case-state: %s\n" $rs [::attr::get $id "state"]]
     set rs [format "%s        down: %s\n" $rs [pdt [::attr::downtime $id]]]
     set rs [format "%s      reason: %s\n" $rs [::attr::get $id "reason"]]
+    set rs [format "%slast log entry:\n%s\n" $rs [emt_lastlogline $id]]
     set rs [format "%srecent event history:\n%s\n" $rs [emt_hist $id]]
 #    set rs [format "%s\n" $rs]
 
@@ -244,6 +245,7 @@ proc report_single_reach { id } {
     set rs [format "%sreachability: %s\n" $rs $r]
     set rs [format "%s  case-state: %s\n" $rs [::attr::get $id "state"]]
     set rs [format "%s        down: %s\n" $rs [pdt [::attr::downtime $id]]]
+    set rs [format "%slast log entry:\n%s\n" $rs [emt_lastlogline $id]]
     set rs [format "%srecent event history:\n%s\n" $rs [emt_hist $id]]
 #    set rs [format "%s\n" $rs]
 
@@ -383,18 +385,36 @@ proc emt_gethist { id } {
 }
 
 proc emt_newlog { id } {
-    global log
+    global log newlog
 
     set ol 0
     catch { set ol [string length $log($id)] }
     set new [emt_getlog $id]
-    return [string range $new $ol end]
+    set newlog($id) [string range $new $ol end]
+    return $newlog($id)
 }
 
 proc emt_getlog { id } {
     global log
 
     set log($id) [::cp::getLog $id]
+}
+
+proc emt_lastlogline { id } {
+    global log
+
+    if [catch { set l $log($id) }] {
+	return ""
+    }
+    # Chop off last newline
+    set l [string range $l 0 [expr [string length $l] - 1]]
+    set ix [string last "\n" $l]
+    if { $ix == -1 } {
+	return $l
+    }
+    # Skip newline of previous log line
+    set l [string range $l [expr $ix + 1] end]
+    return $l
 }
 
 proc emt_forget { id } {
