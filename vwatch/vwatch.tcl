@@ -1,17 +1,12 @@
-#!/store/bin/scotty
-
+#
 # $Id$
+#
 
 # Script to monitor/log the software versions and the restart
 # reasons (for Cisco routers).
 
 mib load rfc1213.mib
 mib load cisco.mib
-
-source "../common/util.tcl"
-source "../common/conffile.tcl"
-source "../common/polljob.tcl"
-source "../common/config.tcl"
 
 namespace import ::polljob::name
 
@@ -196,12 +191,3 @@ proc initPoller {} {
     set ciscoOidPrefix [format "%s." [mib oid cisco]]
     set ciscoList [mib oid whyReload.0]
 }
-
-set conffile "../test/routers.cf"; # Needs to be "externally settable"
-set dev_descr_dir "dsc"; # Ditto
-set logFIle "log"; # Ditto
-
-initPoller
-::conffile::setHandler ::config::handleChangedConf
-# Start the show (Should use larger file check interval)
-::conffile::startCheckJob $conffile 30
