@@ -107,14 +107,14 @@ sub octets_var {
     my($i);
 
     if ($dir eq "in") {
-	for ($i = 0; $i <= 10; $i++) {
+	for ($i = 0; $i <= 5000; $i++) {
 	    if (defined($sample_time{"ifHCInOctets",$i})) {
 		return "ifHCInOctets";
 	    }
 	}
 	return "ifInOctets";
     } else {
-	for ($i = 0; $i <= 10; $i++) {
+	for ($i = 0; $i <= 5000; $i++) {
 	    if (defined($sample_time{"ifHCOutOctets",$i})) {
 		return "ifHCOutOctets";
 	    }
