@@ -20,12 +20,12 @@ namespace eval ::net {
 	}
 	set s [socket $host $port]
 	fconfigure $s -buffering line
-	gets $s l
+	set chan $s
+	::net::gets l
 	if { ! [regexp "^200" $l] } {
 	    error [format "protocol error in open: %s" $l]
 	}
 	set ::auth::challenge [lindex [split $l " "] 1]
-	set chan $s
     }
 
     proc close { } {
@@ -35,12 +35,13 @@ namespace eval ::net {
 	::notify::close
 	catch { ::puts $chan "quit"}
 	catch { ::close $chan }
-	unset chan
+	catch { unset chan }
     }
 
     proc puts { str } {
 	variable chan
 
+#	::puts [format "-> %s" $str]
 	if { [catch { ::puts $chan $str } msg ] } {
 	    error [format "channel %s lost connection: %s" $chan $msg]
 	}
@@ -59,6 +60,9 @@ namespace eval ::net {
 	upvar $var line
 	
 	set cc [::gets $ch line]
+
+#	::puts [format "<- %s" $line]
+
 	if { $cc == -1 } {
 	    error [format "channel %s lost connection (eof)" $ch]
 	}
