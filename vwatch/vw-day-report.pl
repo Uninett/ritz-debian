@@ -7,6 +7,8 @@
 # Produce daily report, store it and e-mail it.
 #
 
+push(@INC, "%LIBDIR%");
+
 require 'unctime.pl';
 require 'pretty-ios.pl';
 

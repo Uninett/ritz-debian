@@ -7,6 +7,8 @@
 # Produce a report of this month's restarts
 #
 
+push(@INC, "%LIBDIR%");
+
 require 'unctime.pl';
 require 'pretty-ios.pl';
 

@@ -7,6 +7,7 @@
 # Produce report of current software verions on the monitored devices.
 #
 
+push(@INC, "%LIBDIR%");
 push(@INC, "%TOPDIR%/conf");
 
 require 'config.pl';
