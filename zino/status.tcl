@@ -249,8 +249,17 @@ proc swalkErrorHandler { sh err } {
     }
 }
 
-proc delayedCheckResponse { sh } {
+proc cleanupDelayedResponse { sh } {
     global responseCheckInProgress
+
+    # cleanup any remaining check jobs
+    after cancel delayedCheckResponse $sh
+    after cancel lastDelayedCheckResponse $sh
+    unset responseCheckInProgress($sh)
+    log [format "cleaned up after response from %s" $r]
+}
+
+proc delayedCheckResponse { sh } {
     global cx
 
     set r $cx($sh,name)
@@ -258,12 +267,7 @@ proc delayedCheckResponse { sh } {
     log [format "checking reachability of %s" $r]
     if [checkResponse $sh] {
 	Response $sh
-
-	# cleanup any remaining check jobs
-	after cancel delayedCheckResponse $sh
-	after cancel lastDelayedCheckResponse $sh
-	unset responseCheckInProgress($sh)
-	log [format "cleaned up after response from %s" $r]
+	cleanupDelayedResponse $sh
     }
 }
 
@@ -348,10 +352,12 @@ proc Response { sh } {
     if {[eventIxExists $r $rch]} {
 	set eid [eventId $r $rch]
 	doResponse $r $eid
+	cleanupDelayedResponse $sh
     }
     if {[closedEventIxExists $r $rch]} {
 	set eid [closedEventId $r $rch]
 	doResponse $r $eid
+	cleanupDelayedResponse $sh
     }
 }
 
