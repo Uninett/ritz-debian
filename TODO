@@ -1,5 +1,7 @@
 $Id$		-*- Text -*-
 
+ o Count input drops?
+
  o Add a DoS-detection facility, triggering on large swings in
    traffic, pps, or bytes-per-packet.  To implement this, need
    to have a process which continually computes these values for
