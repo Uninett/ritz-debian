@@ -12,7 +12,7 @@ TSRCS=	vwatch.tcl \
 	vwatch-head.tcl \
 	vwatch-main.tcl
 
-SRCS=	${PSRCS} ${TSRCS}
+SRCS=	${PSRCS} ${TSRCS} start-vwatch.sh
 
 COMMON=	pretty-ios.pl \
 	unctime.pl
@@ -25,24 +25,30 @@ PPROGS=	cur-vers \
 
 TPROGS=	vwatch
 
-PROGS=	${PPROGS} ${TPROGS}
+PROGS=	${PPROGS} ${TPROGS} start-vwatch
+
+SUBST=	${.CURDIR}/../subst
 
 all: ${PROGS}
 
-${PPROGS}: ${PSRCS} ../subst
+start-vwatch: start-vwatch.sh ${SUBST}
+	rm -f $@
+	sed -f ${SUBST} $@.sh > $@
+
+${PPROGS}: ${PSRCS} ${SUBST}
 	@for f in ${PSRCS}; do \
 		b=`basename $$f .pl`; \
 		echo rm -f $$b; \
 		rm -f $$b; \
-		echo sed -f ${.CURDIR}/../subst ${.CURDIR}/$$f '>' $$b; \
-		sed -f ${.CURDIR}/../subst ${.CURDIR}/$$f > $$b; \
+		echo sed -f ${SUBST} ${.CURDIR}/$$f '>' $$b; \
+		sed -f ${SUBST} ${.CURDIR}/$$f > $$b; \
 	done
 
-vwatch: vwatch.tcl vwatch-main.tcl ../subst
+vwatch: vwatch.tcl vwatch-main.tcl ${SUBST}
 	rm -f vwatch
-	(sed -f ${.CURDIR}/../subst ${.CURDIR}/vwatch-head.tcl; \
+	(sed -f ${SUBST} ${.CURDIR}/vwatch-head.tcl; \
 	cat ${.CURDIR}/vwatch.tcl; \
-	sed -f ${.CURDIR}/../subst ${.CURDIR}/vwatch-main.tcl) > vwatch
+	sed -f ${SUBST} ${.CURDIR}/vwatch-main.tcl) > vwatch
 
 install: ${PROGS} ${COMMON}
 	@for f in ${PROGS}; do \
@@ -57,6 +63,7 @@ install: ${PROGS} ${COMMON}
 		echo mkdir -p ${TOPDIR}/ver-watch/logs/today/descs; \
 		mkdir -p ${TOPDIR}/ver-watch/logs/today/descs; \
 	fi
+	install -c -m 555 start-vwatch ${BINDIR}
 
 clean:
 	rm -f ${PROGS}
