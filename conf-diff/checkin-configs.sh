@@ -17,7 +17,7 @@ umask 022
 
 FLIST=$TDIR/modified
 
-trap '/bin/rm -rf $TDIR ; exit 0' 0 2 3
+trap '/bin/rm -rf $TDIR ; exit 0' EXIT HUP INT QUIT TERM
 
 cd /tftpboot
 
