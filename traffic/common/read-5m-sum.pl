@@ -61,7 +61,8 @@ sub read_5m_sum {
     my($tick, $tt, $lasttick, $ltt, $sno, $f1, $k);
     my($err) = "";
     my(%mycount, %mybase, %mysample_time, $myspeed, $my_max_sample);
-    
+
+    undef %base;
     $myspeed = 0;
 
     foreach $line (@lines) {
@@ -85,7 +86,7 @@ sub read_5m_sum {
 	    $sno = 1;
 	    $lasttime{$v} = $sample_time{0};
 	    $lasttick = &floor_int($lasttime{$v} * 60/5.0);
-	    
+
 	    for ($tick = &floor_int($sample_time{1} * 60/5.0);
 		 $tick < 24 * 60/5;
 		 $tick++)
