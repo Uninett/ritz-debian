@@ -55,15 +55,28 @@ namespace eval ::polljob {
 	return [expr ( $intv + 0.0 ) / $ndevs]
     }
 
+    proc snmpVersion { dev } {
+
+	if { [::config::conf $dev hcounters] != "no" } {
+	    return "SNMPv2c"
+	}
+	return "SNMPv1"
+    }
+
     proc setup { dev } {
 	variable cx
 
 	set ip	      [::config::conf $dev address]
 	set community [::config::conf $dev community]
 	set intv      [::config::conf $dev interval]
+	set version   [snmpVersion $dev]
 
 	if [catch {
-	    set s [snmp session -address $ip -community $community]
+	    set s [snmp session \
+		    -address $ip \
+		    -community $community \
+		    -version $version \
+		    ]
 	} msg] {
 	    puts stderr "snmp session failed for device $dev: $msg"
 	    return
