@@ -4,7 +4,7 @@
 
 VERSION=0.4
 
-SUBDIR=conf-diff emt ritz sha tpoller traffic vwatch zino
+SUBDIR=conf-diff emt mibs ritz tpoller traffic vwatch zino
 
 all: version.tcl subst
 
