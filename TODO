@@ -55,3 +55,8 @@ $Id$		-*- Text -*-
    measurements in separate variables.
 
  o Customized plots (select variables to plot)?
+
+ o Fix daily tabular report to say "peak sample" as long as that's what
+   it's showing.
+
+ o Fix scripts and HTML to do method=GET instead of POST.
