@@ -90,24 +90,34 @@ proc emt_delay { secs cmd } {
 }
 
 proc emt_delay_check { id } {
+    global state
 
     ::cp::getAttrs $id
+    if { ! [info exists state($id)] } {
+	set state($id) "unknown"
+    }
     after [expr 300 * 1000] emt_check_all
 }
 
 proc emt_should_report { id } {
-    global state nagged
+    global state nagged nagstate
 
     set os [::attr::getOperState $id]
-    if { [::attr::isUpState $os] && [info exists nagged($id)] } {
+    if { [::attr::isUpState $os] && \
+	    [info exists nagged($id)] && \
+	    $state($id) != $os } {
+	set state($id) $os
 	return 1
     } elseif { [::attr::isDownState $os] } {
+	# State down and different from what was previously known
+	# ...and it's been stable in that state for > 300 seconds
 	if { $state($id) != $os } {
-	    if { [expr [clock seconds] - [::attr::get $id "updated"]] > 300 } {
-		if { ! [info exists nagged($id)] } {
-		    return 1
-		}
+	    if { [expr [clock seconds] - \
+		    [::attr::get $id "updated"]] > 300 } {
+		set state($id) $os
+		return 1
 	    } else {
+		# Not right now, but check again in a while
 		emt_delay_check $id
 	    }
 	}
@@ -141,20 +151,22 @@ proc report_multi { ids } {
 
 proc report_compact_port { id } {
 
-    set r [::attr::get $id "router"]
-    set p [::attr::get $id "port"]
-    set d [::attr::get $id "descr"]
-    set s [::attr::get $id "portstate"]
+    set r  [::attr::get $id "router"]
+    set p  [::attr::get $id "port"]
+    set d  [::attr::get $id "descr"]
+    set s  [::attr::get $id "portstate"]
+    set as [::attr::get $id "state"
 
-    return [format "%s %s (%s) is %s" $r $p $d $s]
+    return [format "%9s: %-12s %-18s (%s) (%s)" $s $r $p $as $d]
 }
 
 proc report_compact_reach { id } {
     
     set r  [::attr::get $id "router"]
     set rs [::attr::get $id "reachability"]
+    set as [::attr::get $id "state"
 
-    return [format "%s %s" $r $rs]
+    return [format "%11s (%s) %s" $rs $as $r]
 }
 
 proc report_compact { id } {
@@ -229,7 +241,14 @@ proc multi_subject { ids } {
 
 proc single_subject { id } {
 
-    return [report_compact $id]
+    set str [report_compact $id]
+
+    # Convert multiple consecutive spaces to one
+    regsub -all " +" $str " " str
+    # Trim spaces at start and end
+    regsub -all "^ *" $str "" str
+    regsub -all " *$" $str "" str
+    return $str
 }
 
 proc emt_format_mail { subject body } {
