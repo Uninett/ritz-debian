@@ -324,7 +324,7 @@ sub flag_deviations {
 			    $$vp[$i],
 			    $aavg,
 			    $astdd,
-			    $astdd != 0 ?
+			    $astdd > 1e-100 ? # cheesy random value
 				sprintf("%4.2f", $delta / $astdd) :
 				"undef"
 			    );
