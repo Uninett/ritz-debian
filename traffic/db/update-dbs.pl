@@ -141,7 +141,7 @@ sub get_addrs {
 	return undef;
     }
     # XXX Name of command should go in a config file
-    open(IN, "%SNMPNETSTAT% -inh -y $community{$dev} $polladdr 2>&1|");
+    open(IN, "%SNMPNETSTAT% -inh -t 30 -y $community{$dev} $polladdr 2>&1|");
     while(<IN>) {
 	if (/noResponse/) {
 	    printf(STDERR "noResponse from %s\n", $dev);
@@ -169,7 +169,7 @@ sub get_line_names {
 	$dead{$polladdr} = 1;
 	return undef;
     }
-    open(IN, "%SNMPNETSTAT% -idnh -y $community{$dev} $polladdr 2>&1|");
+    open(IN, "%SNMPNETSTAT% -idnh -t 30 -y $community{$dev} $polladdr 2>&1|");
     while(<IN>) {
 	if (/noResponse/) {
 	    printf(STDERR "noResponse from %s\n", $dev);
