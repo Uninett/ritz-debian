@@ -182,9 +182,9 @@ proc setEventAttr { id attr value { user monitor } } {
 
 proc eventCommit { id } {
     set NewAttrs NewEventAttrs_$id
-    global NewAttrs
+    global $NewAttrs
     set Attrs EventAttrs_$id
-    global Attrs
+    global $Attrs
 
     # Commit values
     foreach ix [array names $NewAttrs] {
@@ -511,7 +511,7 @@ proc isLogDownState { le } {
     if [regexp "linkDown" $le] { return 1 }
     if [regexp "no-response" $le] { return 1 }
     if [regexp {changed state from .* to down} $le] { return 1 }
-    if [regexp {) flapping, [0-9]+ flaps} $le] { return 1 }
+    if [regexp {\) flapping, [0-9]+ flaps} $le] { return 1 }
     return 0
 }
 
@@ -520,6 +520,7 @@ proc isLogUpState { le } {
     if [regexp "linkUp" $le] { return 1 }
     if [regexp "reachable" $le] { return 1 }
     if [regexp {changed state from .* to up} $le] { return 1 }
+    if [regexp {changed state from .* to adminDown} $le] { return 1 }
     return 0
 }
 
@@ -529,7 +530,9 @@ proc fixupDowntime { } {
     global EventIdToIx
 
     foreach id [array names EventIdToIx] {
-	set log [getEventAttr $id "log"]
+	if [catch {set log [getEventAttr $id "log"]}] {
+	    continue
+	}
 
 	set state "up"
 	set downtime 0
@@ -538,6 +541,7 @@ proc fixupDowntime { } {
 	    if { [isLogDownState $le] && $state == "up" } {
 		set state "down"
 		set start [eventTimeStamp $le]
+		set lasttrans $start
 	    }
 	    if { [isLogUpState $le] && $state == "down" } {
 		set state "up"
