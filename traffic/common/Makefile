@@ -24,4 +24,4 @@ obj:
 clean:
 cleandir:
 
-.include "../Makefile.inc"
+.include "../../Makefile.inc"

@@ -24,4 +24,4 @@ install:
 		install -c -m 444 $$f ${DIR}; \
 	done
 
-.include "../Makefile.inc"
+.include "../../Makefile.inc"
