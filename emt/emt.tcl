@@ -364,11 +364,10 @@ proc emt_init {} {
 proc emt_newhist { id } {
     global history newhist hist_update
     
-    set new [::cp::getHist $id]
     set ol 0
     catch { set ol [string length $history($id)] }
-    set history($id) $new
-    set newhist($id) [string range $new $ol end]
+    emt_gethist $id
+    set newhist($id) [string range $history($id) $ol end]
     set hist_update($id) 1
 
     ::persist::add newhist
