@@ -9,7 +9,7 @@ clean:
 cleandir:
 
 .if exists(Makefile.inc)
-.include Makefile.inc
+.include "Makefile.inc"
 .endif
 
 .include "../../Makefile.inc"
