@@ -43,6 +43,7 @@
 #   $count{$v, $i}	Delta for counter $v in interval $i
 #   $base{$v}		Convenient tester for existence of variable in log
 #   $sample_time{$v, $i} Sample time in hrs for counter $v, end of sample $i
+#   $sample_time{$i}	Sample time in hrs for end of sample $i
 #   $date		Date string of log
 #   $ifspeed, $iftype, $ifdescr		As picked from log
 #   $max_sample		Max number of samples
