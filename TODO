@@ -48,5 +48,10 @@ $Id$		-*- Text -*-
    to peak samples.  While statistically/mathematically somewhat
    dubious, could compute average 90-p values (over available
    values) in week and month reports.
+   It seems this cannot be done without re-reading the raw data file
+   once more per port, as the current "slurp-in" in the daily report
+   automatically distributes the values across the hours.
+   Either that, or modify read-hr-log also to leave the individual
+   measurements in separate variables.
 
  o Customized plots (select variables to plot)?
