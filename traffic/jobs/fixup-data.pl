@@ -1,4 +1,4 @@
-#!%PERL%
+#! %PERL%
 #
 # $Id$
 #
@@ -88,6 +88,11 @@ sub process {
 		next;	# ignore, too long ago
 	    }
             foreach $k (keys %lastval) {
+		# print all old variable values prior to reboot
+		if (defined($saveline{$k})) {
+		    printf("%s\n", $saveline{$k});
+		    undef $saved{$k};
+		}
                 $base{$k} = 0;
             }
 	    printf("%s\n", $_);
