@@ -3,9 +3,9 @@
 # $Id$
 #
 
-cd %TOPDIR%/conf
+cd %TOPDIR%/zino
 
-../bin/tpoller >>../tp.err 2>&1 &
-echo $! > ../tpoller.pid
+../bin/zino >> err 2>&1 &
+echo $! > ../zino.pid
 
 exit 0
