@@ -1,8 +1,10 @@
-2002-10-30  Havard Eidnes  <he@smistad.uninett.no>
+2002-10-30  Havard Eidnes  <he@uninett.no>
+
+	* ChangeLog: Update for marking this as 0.6.1.
 
 	* Makefile: Minor version bump to 0.6.1.
 
-2002-10-23  Havard Eidnes  <he@smistad.uninett.no>
+2002-10-23  Havard Eidnes  <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Anchor the matches when reversing the line name, so the entire
