@@ -85,6 +85,7 @@ sub read_config {
 	    chomp;
 	    if (/^address:\s+([0-9].+)$/) {
 		$polladdr{$dev} = $1;
+		$device{$1} = $dev;
 		$poll_seen = 1;
 	    }
 	    if (/^community:\s+(\S+)$/) {
@@ -118,7 +119,10 @@ sub alive {
     open(IN, "%PING% -s 56 -c 5 -i 2 $address 2>&1 |");
     while(<IN>) {
 	if (! /packet loss/) { next; }
-	if (/100% packet loss/) { close(IN); return undef; }
+	if (/100% packet loss/) {
+	    printf(STDERR "no ping response from %s\n", $device{$address});
+	    close(IN); return undef;
+	}
     }
     close(IN);
     return 1;
@@ -134,7 +138,10 @@ sub get_addrs {
     # XXX Name of command should go in a config file
     open(IN, "%SNMPNETSTAT% -inh -y $community{$dev} $polladdr 2>&1|");
     while(<IN>) {
-	if (/noResponse/) { close(IN); return undef; }
+	if (/noResponse/) {
+	    printf(STDERR "noResponse from %s\n", $dev);
+	    close(IN); return undef;
+	}
 	chop;
 	@_ = split;
 	$as{$dev . ":" . $_[0]} = $_[2];
@@ -157,7 +164,10 @@ sub get_line_names {
     }
     open(IN, "%SNMPNETSTAT% -idnh -y $community{$dev} $polladdr 2>&1|");
     while(<IN>) {
-	if (/noResponse/) { close(IN); return undef; }
+	if (/noResponse/) {
+	    printf(STDERR "noResponse from %s\n", $dev);
+	    close(IN); return undef;
+	}
 	if (/^(\d+)\s+\S+\s+\S+ "(.*)"$/) {
 	    @a = split(/, /,$2);
 	    if ($#a < 1) { next; }
@@ -231,9 +241,11 @@ sub update_dbs {
 	    }
 	    # Tack on new entry at the end
 	    $ntf{$ln} .= $now . ":" . $file{$ln} . " " . $now . "-";
+	    printf(STDERR "Updated entry: %s -> %s\n", $ln, $file{$ln});
 	} else {
 	    # Add completely new entry
 	    $ntf{$ln} = $file{$ln} . " " . $now . "-";
+	    printf(STDERR "Added new entry: %s -> %s\n", $ln, $file{$ln});
 	}
     }
     foreach $fn (keys %line) {
@@ -249,9 +261,11 @@ sub update_dbs {
 	    }
 	    # Tack on new entry at the end
 	    $ftn{$fn} .= $now . ":" . $line{$fn} . " " . $now . "-";
+	    printf(STDERR "Updated entry: %s -> %s\n", $fn, $line{$fn});
 	} else {
 	    # Add completely new entry
 	    $ftn{$fn} = $line{$fn} . " " . $now . "-";
+	    printf(STDERR "Added new entry: %s -> %s\n", $fn, $line{$fn});
 	}
     }
 }
