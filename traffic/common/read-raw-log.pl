@@ -41,6 +41,7 @@
 
 # Return data in globals:
 #   $count{$v, $i}	Delta for counter $v in interval $i
+#   $base{$v}		Convenient tester for existence of variable in log
 #   $sample_time{$v, $i} Sample time in hrs for counter $v, end of sample $i
 #   $date		Date string of log
 #   $ifspeed, $iftype, $ifdescr		As picked from log
@@ -51,7 +52,7 @@ sub read_log {
     my($h, $m, $s, $sample_no);
     my($v, $dummy);
     my($delta, $lasttime, $day, $reboot_day, $reboot_time);
-    my($now, %base);
+    my($now);
     my($starter);
     my(@f);
 
