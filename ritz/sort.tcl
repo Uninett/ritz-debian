@@ -164,11 +164,11 @@ proc compareCases { a b } {
 #    puts [format "priority: %s" $s]
     if { $s != 0 } { return $s; }
 
-    set s [compareDowntime $a $b]
-    if { $s != 0 } { return $s; }
-
     set s [compareStates $a $b]
 #    puts [format "states: %s" $s]
+    if { $s != 0 } { return $s; }
+
+    set s [compareDowntime $a $b]
     if { $s != 0 } { return $s; }
 
     set s [compareAge $a $b]
