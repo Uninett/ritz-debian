@@ -51,22 +51,50 @@ namespace eval ::just {
     # A procedure imitating the scotty snmp walk primitive, but one
     # that will handle a sparsely populated table and still return
     # whole rows to the caller.  This version uses asynchronous
-    # operations but appears to be synchronous to the caller.
+    # operations (so that other events can be processed) but appears
+    # to be synchronous to the caller.  May unwind with error.
     #
     
     proc sparseTableWalk { sh varName varList body } {
+	# Unfortunately we need global variables since the callback
+	# bodies will be evaluated in the global context
+	set err [format "%serr" $sh]
+	set done [format "%sdone" $sh]
+	global $err
+	global $done
 
+	set $err ""
 	asyncSparseTableWalk $sh $varName $varList $body {
-	    set done 1
+	    set sh "%S"
+	    set done [format "%sdone" $sh]
+	    global $done
+	    set $done 1
+	} {
+	    set sh "%S"
+	    set err [format "%serr" $sh]
+	    set done [format "%sdone" $sh]
+
+	    set $err "%E"
+	    set $done 0
 	}
-	vwait done
+	vwait $done
+	if { [set $done] == 0 } {
+	    unset $done
+	    set errorval [set $err]
+	    unset $err
+	    error $errorval
+	}
+	unset $done
+	unset $err
     }
 
     #
     # The async version used by the above.
     #
 
-    proc asyncSparseTableWalk { sh varName varList body { endscript "" } } {
+    proc asyncSparseTableWalk {
+	sh varName varList body { endscript "" } { errscript "" }
+    } {
 
 	foreach v $varList {
 	    set oid [mib oid $v]
@@ -78,18 +106,22 @@ namespace eval ::just {
 	$sh getnext $oidList [list \
 		::just::processRow "%S" "%E" {{%V}} \
 		$oidList $oidList $lenList \
-		$varName $body $endscript ]
+		$varName $body $endscript $errscript]
 	return
     }
 
     proc processRow {
-	sh err vblList thisRow oidList lenList varName body endscript
+	sh err vblList thisRow oidList lenList \
+		varName body endscript errscript
     } {
-	variable eHandler
 
 	if { $err != "noError" } {
-	    if [info exists eHandler] {
-		$eHandler $sh $err
+	    if { $errscript != "" } {
+		# Simulate callback substitution for what we have
+		regsub -all "%E" $errscript "$err" errscript
+		regsub -all "%S" $errscript "$sh" errscript
+		uplevel $errscript
+		return
 	    } else {
 		error $err;
 	    }
@@ -108,6 +140,9 @@ namespace eval ::just {
 	}
 	if {! [info exists ixList]} {
 	    if { $endscript != "" } {
+		# Do callback substitution for what we have
+		regsub -all "%E" $endscript "$err" endscript
+		regsub -all "%S" $endscript "$sh" endscript
 		uplevel $endscript
 	    }
 	    return; # end of table
@@ -134,7 +169,7 @@ namespace eval ::just {
 	$sh getnext $thisRow [list \
 		::just::processRow "%S" "%E" {{%V}} \
 		$thisRow $oidList $lenList \
-		$varName $body $endscript]
+		$varName $body $endscript $errscript]
     }
 
     # the error handler should expect to be called as
