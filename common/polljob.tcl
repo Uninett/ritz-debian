@@ -29,6 +29,9 @@ namespace eval ::polljob {
 
     variable cx
 
+
+    # spread poll scheduling of devices over default interval
+
     proc spreadIntv { devs } {
 	variable ::config::defaults
 
@@ -39,7 +42,7 @@ namespace eval ::polljob {
 	return [expr ( $intv + 0.0 ) / $ndevs]
     }
 
-    proc startDevAfter { dev delay } {
+    proc startCommonAfter { dev delay { upcall "" } } {
 	variable ::config::conf
 	variable cx
 
@@ -49,7 +52,7 @@ namespace eval ::polljob {
 
 	set code [catch {snmp session -address $ip -community $community} s]
 	if $code {
-	    err "snmp session failed for device $dev: $s"
+	    puts stderr "snmp session failed for device $dev: $s"
 	    return
 	}
 
@@ -57,9 +60,34 @@ namespace eval ::polljob {
 	set cx($s,name) $dev
 	set cx($s,interval) $intv
 
-	::initDev $s
+	if { $upcall != "" } {
+	    $upcall $s
+	}
 
 	after [mtoms $delay] "::polljob::startDev $dev"
+    }
+
+    proc stopDevCommon { dev { upcall "" } } {
+	variable cx
+	
+	after cancel "::polljob::startDev $dev"
+
+	if [info exists cx($dev,handle)] {
+	    set s $cx($dev,handle)
+	}
+
+	if [info exists cx($s,job)] {
+	    $cx($s,job) destroy
+	    unset cx($s,job)
+	}
+
+	if { $upcall != "" } {
+	    $upcall $s
+	}
+
+	$s destroy
+	unset cx($s,name)
+	unset cx($dev,handle)
     }
 
     proc startDev { dev } {
@@ -76,25 +104,18 @@ namespace eval ::polljob {
 	set cx($s,job) $j
     }
 
+    proc startDevAfter { dev delay } {
+	startCommonAfter $dev $delay ::initDev
+    }
+
+    proc restartDevAfter { dev delay } {
+	# stop and start without upcalls
+	stopDevCommon $dev
+	startCommonAfter $dev $delay
+    }
+
     proc stopDev { dev } {
-	variable cx
-	
-	after cancel "::polljob::startDev $dev"
-
-	if [info exists cx($dev,handle)] {
-	    set s $cx($dev,handle)
-	}
-
-	if [info exists cx($s,job)] {
-	    $cx($s,job) destroy
-	    unset cx($s,job)
-	}
-
-	::destroyDev $s
-
-	$s destroy
-	unset cx($s,name)
-	unset cx($dev,handle)
+	stopDevCommon $dev ::destroyDev
     }
 
 
@@ -116,8 +137,12 @@ namespace eval ::polljob {
 
 #	puts [format "polljob::restart '%s'" $devs]
 
-	stop $devs
-	start $devs
+	set sintv [spreadIntv $devs]
+	set delta 0
+	foreach d $devs {
+	    restartDevAfter $d $delta
+	    set delta [expr $delta + $sintv]
+	}
     }
 
     proc stop { devs } {
