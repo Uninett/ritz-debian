@@ -23,7 +23,7 @@ ritz: ${SRCS} Makefile ../subst
 		cat $$f >> $@; \
 	done
 	echo "main" >> $@
-	sed -e -f ../subst $@ > $@.new
+	sed -f ../subst $@ > $@.new
 	mv $@.new $@
 	chmod +x $@
 
