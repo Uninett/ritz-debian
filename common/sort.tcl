@@ -150,11 +150,11 @@ namespace eval ::sort {
 
     proc caseSeverity { id } {
 
-	set type [Attr $id "type"]
-	set state [Attr $id "state"]
+	set type [::attr::get $id "type"]
+	set state [::attr::get $id "state"]
 	if { $state == "closed" } { return "closed"; }
 	if { $type == "portstate" } {
-	    set pstate [getEffectivePortState $id]
+	    set pstate [::attr::effectivePortState $id]
 	    if { $pstate == "down" || $pstate == "flapping" } {
 		if { $state == "open" } {
 		    return "alarm"
@@ -173,7 +173,7 @@ namespace eval ::sort {
 		return "unknown"
 	    }
 	} elseif { $type == "reachability" } {
-	    set reach [Attr $id "reachability"]
+	    set reach [::attr::get $id "reachability"]
 	    if { $reach == "no-response" } {
 		return "alarm"
 	    } else {
@@ -194,11 +194,11 @@ namespace eval ::sort {
 	#    puts [format "types: %s" $s]
 	if { $s != 0 } { return $s; }
 
-	if { [Attr $a "type"] == "portstate" } {
+	if { [::attr::get $a "type"] == "portstate" } {
 	    set s [comparePortStates $a $b]
 	    #	puts [format "portstate: %s" $s]
 	    if { $s != 0 } { return $s; }
-	} elseif { [Attr $a "type"] == "reachability" } {
+	} elseif { [::attr::get $a "type"] == "reachability" } {
 	    set s [compareReachability $a $b]
 	    #	puts [format "reach: %s" $s]
 	    if { $s != 0 } { return $s; }
