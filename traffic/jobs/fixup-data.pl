@@ -49,7 +49,7 @@ sub process {
     my($v, $dummy, $delta, $k);
     my($day, $reboot_day, $reboot_time);
     my($now, $lasttime, %lastval, %lasttime, $starter);
-    my(%saveline, %saved);
+    my(%saveline, %saved, %lastline);
 
     while (<>) {
 	chop;
@@ -109,8 +109,13 @@ sub process {
 
 	    # value the same?  ignore (but save).
 	    if ($lastval{$v} == $f[6]) {
-		$saveline{$v} = $_;
-		$saved{$v} = 1;
+		# Save first line with same value
+		if (! defined($saveline{$v})) {
+		    $saveline{$v} = $_;
+		    $saved{$v} = 1;
+		}
+		# ...and the last line (to possibly be printed at the end)
+		$lastline{$v} = $_;
 		next;
 	    }
 
@@ -124,6 +129,7 @@ sub process {
 	    {
 		next;		# ignore
 	    }
+	    undef $lastline{$v}; # different value, and other checks passed
 	}
 	if (defined($saved{$v})) {
 	    printf("%s\n", $saveline{$v});
@@ -136,6 +142,9 @@ sub process {
     }
     foreach $v (keys %saved) {
 	printf("%s\n", $saveline{$v});
+    }
+    foreach $v (keys %lastline) {
+	printf("%s\n", $lastline{$v});
     }
 }
 
