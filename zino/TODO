@@ -3,9 +3,6 @@ $Id$		-*- Text -*-
  o Make sure the Attrs_NN variables are being flushed to disk even
    after a restart -- extend eventInit?
 
- o Make it possible to "ignore" events on certain ports; detect
-   through separate "ignore" case state?
-
  o Improve robustness when we run out of file descriptors.  Two
    possible cases currently:
     - when notify socket is being set up
