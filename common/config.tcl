@@ -1,0 +1,145 @@
+#
+# $Id$
+#
+
+catch { namespace delete ::config }
+
+namespace eval ::config {
+    namespace export handleChangedConf conf
+
+    namespace import util::copyArray
+    namespace import polljob::start polljob::restart polljob::stop
+
+    variable known_attrs
+    variable conf
+
+    # Initialize set of well-known keywords/attributes
+    set known_attrs(name) 1
+    set known_attrs(address) 1
+    set known_attrs(community) 1
+    set known_attrs(dns) 1
+    set known_attrs(interval) 1
+    set known_attrs(ignorepat) 1
+    set known_attrs(priority) 1
+    set known_attrs(timeout) 1
+    set known_attrs(retry) 1
+
+    set known_attrs(domain) 1
+    set known_attrs(defaultpriority) 1
+
+
+    proc handleChangedConf { name } {
+	variable known_attrs
+	variable conf
+
+	set newdevs [conffile::read $file newconfig defaults known_attrs 1]
+	fillinDefaults newconfig defaults $newdevs
+
+	if [checkConfig newconfig $newdevs] {
+	    error [format "Config file %s contains errors" $name]
+	}
+
+	set changed_devs [changedDevs conf newconfig $newdevs]
+	set removed_devs [removedDevs conf $newdevs]
+	set new_devs [newDevs $config $newdevs]
+
+	polljob::stop $removed_devs
+
+	util::copyArray newconfig conf
+
+	polljob::restart $changed_devs
+	polljob::start $new_devs
+    }
+
+    proc fillinDefaults { newconfig defaults devs } {
+	upvar $newconfig Newconfig
+	upvar $defaults Defaults
+
+	foreach defattr [array names Defaults] {
+	    foreach d $devs {
+		if { ! [info exists Newconfig($d,$defattr)] } {
+		    set Newconfig($d,$defattr) $Defaults($defattr)
+		}
+	    }
+	}
+    }
+
+    proc checkConfig { newconfig newdevs } {
+	upvar $newconfig Newconfig
+
+	set ret 0;		# start an optimist
+	foreach d $newdevs {
+	    if { ! [info exists Newconfig($d,address)] } {
+		set ret 1
+		puts [format "Device %d has no address specified" $d]
+	    }
+	}
+	return $ret
+    }
+
+    proc changedDev { dev config newconfig } {
+	upvar $config Config
+	upvar $newconfig Newconfig
+
+	if { ! [info exists Config($dev,address)] } {
+	    return 0
+	}
+	foreach ix [array names Newconfig] {
+	    set l [split $ix ","]
+	    set d [lindex $l 0]
+	    set a [lindex $l 1]
+	    if { $d != $dev } { next; }
+	    if { ! [info exists Config($ix)] } { return 1; }
+	    if { $Config($ix) != $Newconfig($ix) } { return 1; }
+	}
+	foreach ix [array names Config] {
+	    set l [split $ix ","]
+	    set d [lindex $l 0]
+	    set a [lindex $l 1]
+	    if { $d != $dev } { next; }
+	    if { ! [info exists Newconfig($ix)] } { return 1; }
+	}
+	return 0
+    }
+
+    proc changedDevs { config newconfig newdevs } {
+	upvar $config Config
+	upvar $newconfig Newconfig
+
+	foreach d $newdevs {
+	    if [changedDev $d Config Newconfig] {
+		lappend chdevs $d
+	    }
+	}
+	return $chdevs
+    }
+
+    proc removedDevs { config newdevs } {
+	upvar $config Config
+
+	foreach d $newdevs {
+	    set Newdev($d) 1
+	}
+	foreach ix [array names Config] {
+	    set l [split $ix ","]
+	    set d [lindex $l 0]
+	    if { ! [info exists Newdev($d)] } {
+		lappend removed $d
+	    }
+	}
+	return $removed
+    }
+
+    proc newDevs { config newdevs } {
+	upvar $config Config
+
+	foreach d $newdevs {
+	    if { ! [info exists Config($d,address)] } {
+		lappend new $d
+	    }
+	}
+	return $new
+    }
+
+
+}
