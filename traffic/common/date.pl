@@ -279,6 +279,7 @@ sub days_in_month {
 #
 #	epoch	"The entire epoch since data collection started".
 #		In this installation that's %DATASTART%.
+#	today	the obvious meaning
 #        
 
 # Todo:
@@ -300,6 +301,11 @@ sub decode_datespec {
 	# Truncation takes care of that this only includes yesterday 
 	$no_days = int((time - $base_tm) / (60*60*24));
 	return ($base_tm, $no_days);
+    }
+
+    if ($datespec eq "today") {
+	$base_tm = &date_to_tm(&today());
+	$no_days = 1;
     }
 
     if ($datespec !~ /^(\d*)(-(\d*)(-(\d*)(-(\d*))*)*)*$/) {
@@ -480,6 +486,7 @@ sub datespec_type {
     my($type, $base_tm, $nodays);
     
     return "epoch" if ($datespec eq "epoch");
+    return "day" if ($datespec eq "today");
 
     ($base_tm, $nodays) = &decode_datespec($datespec);
     return (undef) unless ($base_tm);
@@ -646,11 +653,12 @@ sub expand_datespec {
 }
 
 
-# Return false if a tm is after last midnight
-sub tm_in_the_present {
+# Return false if a tm is after coming midnight
+
+sub tm_in_the_future {
     my($tm) = @_;
     my($start_of_today) = &date_to_tm(&today());
-    return (($start_of_today - $tm) >= -7200);
+    return (($tm - $start_of_today) >= 24*3600);
 }
 
 sub tm_in_datespec {
@@ -667,6 +675,14 @@ sub tm_in_datespec {
 	return 1;
     }
     return undef;
+}
+
+sub is_today {
+    my($dsp) = @_;
+    my($nd, $origin);
+
+    ($origin, $nd) = &decode_datespec($dsp);
+    return (&same_day($origin,time) && $nd == 1);
 }
 
 sub same_day {
@@ -712,10 +728,21 @@ sub tm_to_datespec {
 # Assumption: current time is within $dsp
 
 sub secs_to_expiry {
-    my($res) = @_;
+    my($res, $dsp) = @_;
     my($now_dsp, $dsp_t);
     my($nx_dsp, $tm, $nd);
     
+    if (defined($dsp)) {
+	if (&is_today($dsp)) {
+	    if ($res eq "raw") {
+		return 300;	# 5 minutes
+	    }
+	    if ($res eq "hr") {
+		return 1800;	# 30 minutes
+	    }
+	}
+    }
+
     if (!defined($dsp_t = $res_to_dsp_t{$res})) {
 	return undef;
     }

@@ -38,6 +38,8 @@
 # Routines to look up file/directory names
 #
 
+require 'date.pl';
+
 $data_roots = "%DATA_ROOTS%";
 
 foreach $r (split(/ +/, $data_roots)) {
@@ -78,6 +80,12 @@ sub find_cat_and_file {
 	    }
 	}
     }
+    if ($date eq &today()) {
+	$f = sprintf("%s/data/today/%s", "%TOPDIR%", $base);
+	if (-f $f) {
+	    return ("cat", $f);
+	}
+    }
     return undef;
 }
 
@@ -100,6 +108,9 @@ sub find_data_dir {
 	if ( -d $dn ) {
 	    return $dn;
 	}
+    }
+    if ($date eq &today()) {
+	return "%TOPDIR%/data/today";
     }
     return undef;
 }

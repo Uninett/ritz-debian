@@ -201,6 +201,8 @@ sub regen_needed {
     $now = time;
     $modt = &modtime($f);
 
+    if (&is_today($dsp)) { return 1; } # today's plots always require regen
+
     if (! &tm_in_datespec($modt, $dsp)) { return undef; }
     
     if (!defined($same_period = $checker{$res})) {
@@ -247,7 +249,9 @@ sub plotit {
 	}
     }
     if (&tm_in_datespec(time, $dsp)) {
-	$refname = sprintf("%CGIPFX%/ex-png/%s,%s", $res, $refname);
+	$refname = sprintf("%CGIPFX%/ex-png/%s,%s",
+			   &secs_to_expiry($res, $dsp),
+			   $refname);
     }
     printf("<a href=\"%s\"><img src=\"%s\" ",
     	   $refname, $refname);
@@ -308,8 +312,7 @@ sub forward_refs {
 	# How far back do we have data available
 	$pr_ex = ($pr_base_tm >= $origin);
 	# Make sure we are not trying to see into the future
-	# (or trying to do "today")
-	$nx_ex = ($nx_base_tm < (time - 24*60*60));
+	$nx_ex = ! &tm_in_the_future($nx_base_tm);
 	
 	if ($pr_ex || $nx_ex) {
 	    printf("or proceed to\n<ul>");
@@ -461,16 +464,25 @@ $ourname = sprintf("%splot-all", $pfx);
 ($line, $datespec, $res, $plot, $regen) = split(/\s*,\s*/,"$query");
 
 if (&tm_in_datespec(time, $datespec)) {
-    $exp = &secs_to_expiry($res);
+    $exp = &secs_to_expiry($res, $datespec);
 } else {
     $exp = 30*24*60*60;		# one month, really "eternally"
 }
 
-# Emit a sensible Expires: header
-print $doc->header(-type => "text/html",
-		   -expires => sprintf("+%ds", $exp));
-
 ($base_tm, $nofdays) = &decode_datespec($datespec);
+
+if (&is_today($datespec)) {
+    print $doc->header(-type => "text/html",
+		       -expires => sprintf("+%ds", $exp),
+		       -Refresh => &secs_to_expiry($res, $datespec),
+		       -Pragma => "no-cache",
+		       -'Cache-Control' => "no-cache",
+		       );
+} else {
+    print $doc->header(-type => "text/html",
+		       -expires => sprintf("+%ds", $exp),
+		       );
+}
 
 $title = "$line ";
 $title .= $resolution_name{$res};
@@ -479,13 +491,13 @@ $title .= $plot_title{$plot};
 $title .= " ";
 $title .= &pretty_datespec($datespec);
 
-print $doc->start_html(-title=>$title);
-
 # Prevent robot indexing, method supported by at least *some* robots...
 # You should however probably also add a robots.txt file to your server, see
 # http://info.webcrawler.com/mak/projects/robots/exclusion.html
 
-printf("\n<META NAME=\"ROBOTS\" CONTENT=\"NOINDEX, NOFOLLOW\">\n\n");
+print $doc->start_html(-title=>$title,
+		       -meta=> { "robots" => "noindex, nofollow" }
+		       );
 
 # Do argument validation
 
@@ -504,7 +516,7 @@ if (!defined($datespec)) {
     exit 1;
 }
 
-if (! &tm_in_the_present($base_tm)) {
+if (&tm_in_the_future($base_tm)) {
     print "<h2>Sorry, can't look into the future </h2>\n";
     printf("May be you could try to see the " .
 	   "<a href=\"%s/%s,%s,%s,%s\"> previous period (%s)</a> instead <p>", 

@@ -498,8 +498,11 @@ sub make_plot_file  {
 	! -r $plotdatafile ||
 	# the data file was produced within the datespec
 	(&tm_in_datespec(&modtime($plotdatafile), $datespec) &&
-	 # ...and we have a new day
-	 (! &same_day(&modtime($plotdatafile), time))))
+	 (
+	  # ...and we have a new day
+	  (! &same_day(&modtime($plotdatafile), time)) ||
+	  # ...or we're plotting "today"
+	  (&is_today($datespec)))))
     {
 	$regen = 1;
 
