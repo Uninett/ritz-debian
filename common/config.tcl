@@ -6,7 +6,7 @@ catch { namespace delete ::config }
 
 namespace eval ::config {
     namespace export handleChangedConf
-    namespace export conf defaults
+    namespace export conf confExists defaults
 
     namespace import ::util::copyArray
     namespace import ::polljob::start ::polljob::restart ::polljob::stop
@@ -39,6 +39,12 @@ namespace eval ::config {
     proc conf { dev attr } {
 	variable conf
 	return $conf($dev,$attr)
+    }
+
+    proc confExists { dev attr } {
+	variable conf
+
+	return [info exists conf($dev,$attr)]
     }
 
     proc defaults { attr } {
@@ -76,6 +82,9 @@ namespace eval ::config {
 	polljob::restart $changed_devs
 	polljob::start $new_devs
     }
+
+    # setup default config file handler
+    ::conffile::setHandler ::config::handleChangedConf
 
     proc fillinDefaults { newconfig defaults devs } {
 	upvar $newconfig Newconfig
@@ -190,7 +199,6 @@ namespace eval ::config {
 		}
 		puts ""
 	    }
-
 	}
     }
 
