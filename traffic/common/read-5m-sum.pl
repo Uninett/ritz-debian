@@ -114,11 +114,13 @@ sub read_5m_sum {
 			$mycount{$v,$tick} += $count{$v,$sno};
 		    }
 		}
-		# ...and add any remaining partial sample in this tick
-		$f1 = ($tt - &max($ltt, $lasttime{$v})) /
-		    ($sample_time{$sno} - $lasttime{$v});
-		$mycount{$v,$tick} += $count{$v,$sno} * $f1;
-		$lasttick = $my_max_sample = $tick;
+		if ($sample_time{$sno} > $lasttime{$v}) {
+		    # ...and add any remaining partial sample in this tick
+		    $f1 = ($tt - &max($ltt, $lasttime{$v})) /
+			($sample_time{$sno} - $lasttime{$v});
+		    $mycount{$v,$tick} += $count{$v,$sno} * $f1;
+		    $lasttick = $my_max_sample = $tick;
+		}
 	    }
 	}
 	$myspeed += $ifspeed;
