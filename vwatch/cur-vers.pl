@@ -115,7 +115,12 @@ sub cmp_lines {
     @a = split(/\s+/, $one);
     @b = split(/\s+/, $two);
 
-    return &cmp_versions($a[1], $b[1]);
+    my $r = &cmp_versions($a[1], $b[1]);
+    if ($r == 0) {
+	return $a[0] cmp $b[0];
+    } else {
+	return $r;
+    }
 }
 
 sub report {
