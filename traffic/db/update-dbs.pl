@@ -120,7 +120,7 @@ sub alive {
     while(<IN>) {
 	if (! /packet loss/) { next; }
 	if (/100% packet loss/) {
-	    printf(STDERR "no ping response from %s\n", $device{$address});
+	    printf(STDERR "No ping response from %s\n", $device{$address});
 	    close(IN); return undef;
 	}
     }
@@ -193,10 +193,27 @@ sub get_current_state {
     my($k);
     my($fn);
 
+    if (defined($opt_v)) {
+	printf(STDERR "Getting current state\n");
+    }
     foreach $r (keys %polladdr) {
-	if (defined($manual{$r})) { next; }
+	if (defined($manual{$r})) {
+	    if (defined($opt_v)) {
+		printf(STDERR "Router %s - manual mapping\n", $r);
+	    }
+	    next;
+	}
+	if (defined($opt_v)) {
+	    printf(STDERR "Checking %s for addresses...", $r);
+	}
 	&get_addrs ($r, $polladdr{$r});
+	if (defined($opt_v)) {
+	    printf(STDERR "interface descs...");
+	}
 	&get_line_names ($r, $polladdr{$r});
+	if (defined($opt_v)) {
+	    printf(STDERR "\n");
+	}
 
 	for $i (1 .. $max_ix{$r}) {
 	    $k = $r . ":" . $i;
@@ -228,44 +245,75 @@ sub update_dbs {
     my(@a,@b);
     
     $now = &get_today_str();
+
+    if (defined($opt_v)) {
+	printf(STDERR "Checking name -> file DB\n");
+    }
     foreach $ln (keys %file) {
 	if (!defined $file{$ln}) { next; }
+	if (defined($opt_v)) {
+	    printf(STDERR "Checking %s ...", $ln);
+	}
 	if (defined $ntf{$ln}) {
 	    # separate entries in name-to-file database
 	    @a = split(/:/, $ntf{$ln});
 	    # split last entry on spaces
 	    @b = split(/ /, $a[$#a]);
 	    if ($b[0] eq $file{$ln}) {
+		if (defined($opt_v)) {
+		    printf(STDERR "...same\n");
+		}
 		# same as before
 		next;
 	    }
 	    # Tack on new entry at the end
 	    $ntf{$ln} .= $now . ":" . $file{$ln} . " " . $now . "-";
-	    printf(STDERR "Updated entry: %s -> %s\n", $ln, $file{$ln});
+	    if (defined($opt_v)) {
+		printf(STDERR "\nUpdated entry: %s -> %s\n",
+		       $ln, $file{$ln});
+	    }
 	} else {
 	    # Add completely new entry
 	    $ntf{$ln} = $file{$ln} . " " . $now . "-";
-	    printf(STDERR "Added new entry: %s -> %s\n", $ln, $file{$ln});
+	    if (defined($opt_v)) {
+		printf(STDERR "\nAdded new entry: %s -> %s\n",
+		       $ln, $file{$ln});
+	    }
 	}
+    }
+    if (defined($opt_v)) {
+	printf(STDERR "Checking file -> name DB\n");
     }
     foreach $fn (keys %line) {
 	if (!defined $line{$fn}) { next; }
+	if (defined($opt_v)) {
+	    printf(STDERR "Checking %s ...");
+	}
 	if (defined $ftn{$fn}) {
 	    # separate entries in file-to-name database
 	    @a = split(/:/, $ftn{$fn});
 	    # split last entry on spaces
 	    @b = split(/ /, $a[$#a]);
 	    if ($b[0] eq $line{$fn}) {
+		if (defined($opt_v)) {
+		    printf(STDERR "...same\n");
+		}
 		# same as before
 		next;
 	    }
 	    # Tack on new entry at the end
 	    $ftn{$fn} .= $now . ":" . $line{$fn} . " " . $now . "-";
-	    printf(STDERR "Updated entry: %s -> %s\n", $fn, $line{$fn});
+	    if (defined($opt_v)) {
+		printf(STDERR "\nUpdated entry: %s -> %s\n",
+		       $fn, $line{$fn});
+	    }
 	} else {
 	    # Add completely new entry
 	    $ftn{$fn} = $line{$fn} . " " . $now . "-";
-	    printf(STDERR "Added new entry: %s -> %s\n", $fn, $line{$fn});
+	    if (defined($opt_v)) {
+		printf(STDERR "\nAdded new entry: %s -> %s\n",
+		       $fn, $line{$fn});
+	    }
 	}
     }
 }
@@ -287,9 +335,13 @@ sub usage {
 
 # Main (test)
 
-&Getopts("t:");
+&Getopts("t:v");
 
 if (!defined($opt_t)) { &usage(); }
+if (defined($opt_v) {
+    select(STDERR); $| = 1;
+    select(STDOUT);
+}
 
 &open_dbs($opt_t . "/db");
 &read_config($opt_t . "/conf/polldevs.cf");
