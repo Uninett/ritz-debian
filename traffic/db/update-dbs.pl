@@ -34,20 +34,20 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Input: ifs.cf on standard input or on command line
-#	 ../db/manual-rtrs for list of routers where mapping is
-#		manually maintained
-# Output: updated ntf and ftn DBM databases.
+# Input: -t topdir
+#	points to top directory.  Implicitly uses
+#	topdir/conf/polldevs.cf,
+#	topdir/db/ntf, topdir/db/ftn hashed files and
+#	topdir/db/manual-devs for list of devices where mapping is
+#	manually maintained
+# Output: updated ntf and ftn hashed files
 #
 # Check config database for possible updates, do updates
 # if required.
 #
-# TODO:
-#   Assumes "public" is a usable community string.
-
 # Relies on certain conventions for "interface description" field
-# on Cisco routers; briefly "bla bla, logical-port-name, bla bla"
-# where the ", " is the field delimiter.
+# on Cisco devices; briefly "bla bla, logical-port-name, bla bla"
+# where the ", " is the field delimiter (note: two chars!).
 
 require 'getopts.pl';
 
@@ -66,23 +66,34 @@ sub close_dbs {
 
 sub read_config {
     my($f) = @_;
-    my($rtr_name);
-    my($poll_seen);
+    my($dev, $poll_seen, $def_community);
 
     open(IN, $f) || die "Could not open $f: $!\n";
     while(<IN>) {
+	if (/^\#/) { next; }
+	if (/^default community:\s(\S)$/) {
+	    $def_community = $1;
+	    next;
+	}
+	if (/^default /) { next; }
 	if (! /^name:\s+(\S+)$/) { next; };
-	$rtr_name = $1;
+	$dev = $1;
 	$poll_seen = 0;
-	while (!$poll_seen && !/^$/) {
+	while (!/^$/) {
 	    $_ = <IN>;
 	    if (/^address:\s+([0-9].+)$/) {
-		$polladdr{$rtr_name} = $1;
+		$polladdr{$dev} = $1;
 		$poll_seen = 1;
+	    }
+	    if (/^community:\s+(\S+)$/) {
+		$community{$dev} = $1;
 	    }
 	}
         if (!$poll_seen) {
-	    printf (STDERR "Poll address for $rtr_name not found!\n");
+	    printf (STDERR "Poll address for $dev not found!\n");
+	}
+	if (!defined($community{$dev})) {
+	    $community{$dev} = $def_community;
 	}
     }
     close(IN);
@@ -112,22 +123,22 @@ sub alive {
 }
 
 sub get_addrs {
-    my($router, $polladdr) = @_;
+    my($dev, $polladdr) = @_;
 
     if ($dead{$polladdr} || ! &alive($polladdr)) {
 	$dead{$polladdr} = 1;
 	return undef;
     }
     # XXX Name of command should go in a config file
-    open(IN, "%SNMPNETSTAT% -inh $polladdr 2>&1|");
+    open(IN, "%SNMPNETSTAT% -inh -y $community{$dev} $polladdr 2>&1|");
     while(<IN>) {
 	if (/noResponse/) { close(IN); return undef; }
 	chop;
 	@_ = split;
-	$as{$router . ":" . $_[0]} = $_[2];
-	$address{$router . ":" . $_[0]} = $_[4];
-	if (!defined($max_ix{$router}) || $_[0] > $max_ix{$router}) {
-	    $max_ix{$router} = $_[0];
+	$as{$dev . ":" . $_[0]} = $_[2];
+	$address{$dev . ":" . $_[0]} = $_[4];
+	if (!defined($max_ix{$dev}) || $_[0] > $max_ix{$dev}) {
+	    $max_ix{$dev} = $_[0];
 	}
     }
     close(IN);
@@ -135,14 +146,14 @@ sub get_addrs {
 }
 
 sub get_line_names {
-    my($router, $polladdr) = @_;
+    my($dev, $polladdr) = @_;
     my(@a);
 
     if ($dead{$polladdr} || ! &alive($polladdr)) {
 	$dead{$polladdr} = 1;
 	return undef;
     }
-    open(IN, "%SNMPNETSTAT% -idnh $polladdr 2>&1|");
+    open(IN, "%SNMPNETSTAT% -idnh -y $community{$dev} $polladdr 2>&1|");
     while(<IN>) {
 	if (/noResponse/) { close(IN); return undef; }
 	if (/^(\d+)\s+\S+\s+\S+ "(.*)"$/) {
@@ -155,9 +166,9 @@ sub get_line_names {
 	    # ...so that later use of default "split"
 	    # doesn't produce unexpected results.
 	    $a[1] =~ s/ /-/g;
-	    $line_name{$router . ":" . $1} = $a[1];
-	    if ($1 > $max_ix{$router}) {
-		$max_ix{$router} = $1;
+	    $line_name{$dev . ":" . $1} = $a[1];
+	    if ($1 > $max_ix{$dev}) {
+		$max_ix{$dev} = $1;
 	    }
 	}
     }
