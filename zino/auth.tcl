@@ -57,19 +57,21 @@ proc authPass { chan user resp } {
 	error "Authentication failure (no such user)"
     }
 
-    # compute SHA(challenge+secret), compare to response
-    set s [format "%s %s" $authChallenge($chan) $authSecret($user)]
-    set r [exec sha -t <<$s]
-    if { $r == $resp } {
-	return
-    }
-
-    # compute SHA(response), compare to stored secret
-    # This is to handle clear-text passwords, and may be disabled.
-    if { $authClearTextPasswords } {
-	set r [exec sha -t <<$resp]
-	if { $r == $authSecret($user) } {
+    if { [info exists authSecret($user)] } {
+	# compute SHA(challenge+secret), compare to response
+	set s [format "%s %s" $authChallenge($chan) $authSecret($user)]
+	set r [exec sha -t <<$s]
+	if { $r == $resp } {
 	    return
+	}
+
+	# compute SHA(response), compare to stored secret
+	# This is to handle clear-text passwords, and may be disabled.
+	if { $authClearTextPasswords } {
+	    set r [exec sha -t <<$resp]
+	    if { $r == $authSecret($user) } {
+		return
+	    }
 	}
     }
 
