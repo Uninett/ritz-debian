@@ -2,10 +2,10 @@
 # $Id$
 #
 
-WISH=/store/bin/wish
+TCLSH=/store/bin/tclsh
 BINDIR=/local/bin
 
-FILES=	\
+SRCS=	\
 	../common/attrs.tcl \
 	../common/auth.tcl \
 	../common/cp.tcl \
@@ -19,7 +19,7 @@ all: emt
 
 emt: ${SRCS} Makefile
 	rm -f $@
-	echo "#!"${WISH} > $@
+	echo "#!"${TCLSH} > $@
 	echo "# -*- Tcl -*- " >> $@
 	echo "#" >> $@
 	echo "" >> $@
