@@ -161,7 +161,12 @@ namespace eval ::config {
     # for debugging
     proc printConf { config } {
 	upvar $config Config
+	variable defaults
 
+ 	foreach ix [array names defaults] {
+ 	    puts [format "default %s: %s" $ix $defaults($ix)]
+ 	}
+ 	puts ""
 	foreach ix [array names Config] {
 	    set l [split $ix ","]
 	    set dev [lindex $l 0]
