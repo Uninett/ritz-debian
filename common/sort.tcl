@@ -86,7 +86,7 @@ namespace eval ::sort {
     proc comparePriority { a b } {
 
 	set a [attr::priority $a]
-	set b [attr::riority $b]
+	set b [attr::priority $b]
 	numCompare $b $a
     }
 
