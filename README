@@ -26,6 +26,7 @@ To install and use zino/ritz, you need:
 
  o Tcl and TK version 8.0 (we used 8.0p2)
  o A version of Tix compatible with the above (we used 4.1.0p6)
+ o A version of TclX compatible with the above
  o A version of Scotty compatible with the above (we used 2.1.7 with
    the patch in scotty.diff applied; the latter is essential for this
    version of scotty to have the straps program work as intended).
