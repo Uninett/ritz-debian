@@ -139,7 +139,7 @@ proc recordIntf { sh vbl } {
 
     # If watch pattern exists, only watch matching interfaces
     if { [::config::confExists $r watchpat] } {
-	set wp [::config:conf $r watchpat]
+	set wp [::config::conf $r watchpat]
 	if { ! [regexp $wp $ifDescr] } {
 #	    log [format "%s intf \"%s\" not watched" $r $ifDescr]
 	    return
