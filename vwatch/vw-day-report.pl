@@ -133,7 +133,7 @@ sub report {
 	$old = $old_software{$rtr};
 	@sw = split(//, $software{$rtr});
 	foreach $sw (@sw) {
-	    printf("%-15s from %15s to %15s (%d restarts)\n",
+	    printf("%-15s from %15s to %15s (%d boots)\n",
 		   $rtr,
 		   &pretty_desc($old),
 		   &pretty_desc($sw),
