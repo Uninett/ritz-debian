@@ -49,7 +49,7 @@ ${PPROGS}: ${PSRCS} ${SUBST}
 		sed -f ${SUBST} ${.CURDIR}/$$f > $$b; \
 	done
 
-vwatch: vwatch.tcl vwatch-main.tcl ${SUBST} Makefile
+vwatch: vwatch.tcl vwatch-main.tcl ${SUBST} Makefile ${INCSRCS}
 	rm -f vwatch
 	(sed -f ${SUBST} ${.CURDIR}/vwatch-head.tcl; \
 	cat ${INCSRCS}; \
