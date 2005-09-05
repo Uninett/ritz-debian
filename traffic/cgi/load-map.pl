@@ -877,6 +877,7 @@ sub load_color {
 }
 
 # Try to swap around the names, in sequence:
+# xx.yy-2 -> yy.xx-2 (xx and yy may contain hyphens)
 # xx.yy -> yy.xx
 # xx-nn  -> nn-xx
 # xx-nn2 -> nn-xx2
@@ -888,7 +889,9 @@ sub rev_name {
     my($name) = @_;
     my($rn);
 
-    if      ($name =~ /^([^.]+).([^.]+)$/) {
+    if      ($name =~ /^([^.]+)\.([^.]+)-([0-9]+)$/) {
+	$rn = $2 . "." . $1 . "-" $3;
+    } elsif ($name =~ /^([^.]+)\.([^.]+)$/) {
 	$rn = $2 . "." . $1;
     }
     if (defined($in_load{$rn})) {
