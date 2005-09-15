@@ -29,7 +29,7 @@ proc pollDev { sh } {
 proc destroyDev { sh } {
     global uptime
 
-    unset uptime($sh)
+    catch { unset uptime($sh) }
 }
 
 #
