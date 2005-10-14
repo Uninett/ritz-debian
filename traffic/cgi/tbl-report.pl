@@ -158,9 +158,9 @@ sub month_traffic_line {
 
 sub day_traffic_kbit_header {
 
-    printf("%-25s %13s  %13s  %13s  %7s\n",
+    printf("%-25s %15s  %15s  %15s  %7s\n",
 	   "", "Busy hour", "Peak sample", "24hr average", "speed");
-    printf("%-25s %6s %6s  %6s %6s  %6s %6s  %7s\n",
+    printf("%-25s %7s %7s  %7s %7s  %7s %7s  %7s\n",
 	   "Interface", "input", "output", "input", "output",
 	   "input", "output", "kbit/s");
 }
@@ -168,29 +168,29 @@ sub day_traffic_kbit_header {
 sub day_traffic_kbit_line {
     my($dsp, @l) = @_;
 
-    printf("%-25.25s %6s %6s  %6s %6s  %6s %6s  %7s\n",
+    printf("%-25.25s %7s %7s  %7s %7s  %7s %7s  %7s\n",
 	   $l[0],
-	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[1]),
-	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[2]),
-	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[3]),
-	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[4]),
-	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[5]),
-	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[6]),
 	   $l[7]);
 }
 
 sub week_traffic_kbit_header {
 
-    printf("%-25s %13s  %13s  %13s  %13s  %7s\n", "Port",
+    printf("%-25s %15s  %15s  %15s  %15s  %7s\n", "Port",
 	   "Peak sample", "Busy hour", "Busy day(24h)",
 	   "Week average", "speed"); 
-    printf("%-25s %6s %6s  %6s %6s  %6s %6s  %6s %6s  %7s\n", "",
+    printf("%-25s %7s %7s  %7s %7s  %7s %7s  %7s %7s  %7s\n", "",
 	   "input", "output", "input", "output", "input", "output",
 	   "input", "output", "kbit/s");
 }
@@ -198,33 +198,33 @@ sub week_traffic_kbit_header {
 sub week_traffic_kbit_line {
     my($dsp, @l) = @_;
 
-    printf("%-25.25s %6s %6s  %6s %6s  %6s %6s  %6s %6s  %7s\n",
+    printf("%-25.25s %7s %7s  %7s %7s  %7s %7s  %7s %7s  %7s\n",
 	   $l[0],
-	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[1]),
-	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[2]),
-	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[3]),
-	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,hr,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[4]),
-	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[5]),
-	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[6]),
-	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[7]),
-	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[8]),
 	   $l[9]);
 }
 
 sub month_traffic_kbit_header {
 
-    printf("%-25s %13s  %21s  %13s  %s\n", "Port",
+    printf("%-25s %15s  %23s  %15s  %s\n", "Port",
 	   "Peak sample", "-------Busy day------", "Month average",
 	   "speed(s)");
-    printf("%-25s %6s %6s  %6s %3s %6s %3s  %6s %6s  %7s\n", "",
+    printf("%-25s %7s %7s  %7s %3s %7s %3s  %7s %7s  %7s\n", "",
 	   "input", "output", "input", "day", "output", "day",
 	   "input", "output", "kbit/s");
 }
@@ -232,21 +232,21 @@ sub month_traffic_kbit_header {
 sub month_traffic_kbit_line {
     my($dsp, @l) = @_;
 
-    printf("%-25.25s %6s %6s  %6s %3s %6s %3s  %6s %6s  %7s\n",
+    printf("%-25.25s %7s %7s  %7s %3s %7s %3s  %7s %7s  %7s\n",
 	   $l[0],
-	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[1]),
-	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[2]),
-	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[3]),
 	   $l[4],
-	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[5]),
 	   $l[6],
-	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[7]),
-	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%6d</a>",
+	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[8]),
 	   $l[9]);
 }
