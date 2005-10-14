@@ -50,10 +50,12 @@ require 'read-hr-log.pl';
 require 'db-lookup.pl';
 require 'search.pl';
 require 'date.pl';
+require 'utils.pl';
+
 
 sub process_file_data {
-    local($name) = @_;
-    local($h, $errpct, $inpkts);
+    my($name) = @_;
+    my($h, $errpct, $inpkts);
 
     push(@names, $name);
 
@@ -119,7 +121,7 @@ sub process_file_data {
 }
 
 sub report_traffic {
-    local($out) = @_;
+    my($out) = @_;
 
 #    printf("%-20s %15s  %15s\n", "", "Busy hour", "Busy sample");
 #    printf("%-20s %7s %7s  %7s %7s  %7s  %6s\n",
@@ -152,7 +154,7 @@ sub report_traffic {
 }
 
 sub report_traffic_kbit {
-    local($out) = @_;
+    my($out) = @_;
 
 #    printf($out "%-20s %13s  %13s  %13s %6s\n",
 #	   "", "Busy hour", "Busy sample", "24hr average", "speed");
@@ -177,7 +179,7 @@ sub report_traffic_kbit {
 }
 
 sub nice_sprint_perc_4 {
-    local($v) = @_;
+    my($v) = @_;
 
     if ($v >= 10) {
 	return sprintf("%4.1f", $v);
@@ -186,7 +188,7 @@ sub nice_sprint_perc_4 {
 }
 
 sub nice_sprint_perc_5 {
-    local($v) = @_;
+    my($v) = @_;
 
     if ($v >= 10) {
 	return sprintf("%5.2f", $v);
@@ -196,10 +198,10 @@ sub nice_sprint_perc_5 {
 
 
 sub report_error_percs {
-    local($out) = @_;
-    local($val);
-    local($inpkts);
-    local($outpkts);
+    my($out) = @_;
+    my($val);
+    my($inpkts);
+    my($outpkts);
 
     foreach $n (@names) {
 	printf ($out "%-20s   %2d  %2d  %2d",
@@ -233,8 +235,8 @@ sub report_error_percs {
 }
 
 sub report_ether_perc_errs {
-    local($out) = @_;
-    local($inpkts, $outpkts);
+    my($out) = @_;
+    my($inpkts, $outpkts);
     
     foreach $n (@names) {
 	if ($iftype{$n} != 6 &&	# ethernet-csmacd
@@ -271,9 +273,9 @@ sub report_ether_perc_errs {
 }
 
 sub get_file_data {
-    local($date, $base) = @_;
-    local($cat, $file);
-    local($name);
+    my($date, $base) = @_;
+    my($cat, $file);
+    my($name);
 
     if (!defined ($name = &file_to_name($base, $date))) {
 	printf(STDERR "Could not find 'logical name' for $base / $date\n");
@@ -291,8 +293,8 @@ sub get_file_data {
 # Append to all the daily reports
 
 sub all_reports {
-    local($date) = @_;
-    local($repdir);
+    my($date) = @_;
+    my($repdir);
 
     $repdir = &report_dir_create($date);
 
@@ -332,10 +334,10 @@ if ($#ARGV != 1) {
 }
 
 $date_str = $ARGV[0];
-if ($date = &get_date($date_str)) {
+if ($date_s = &get_date($date_str)) {
     $base = $ARGV[1];
-    &get_file_data($date, $base);
-    &all_reports($date);
+    &get_file_data($date_s, $base);
+    &all_reports($date_s);
 } else {
     &usage();
 }
