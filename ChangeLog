@@ -1,3 +1,138 @@
+2005-12-08  Havard Eidnes  <he@smistad.uninett.no>
+
+	* ChangeLog: update for version 0.9.
+
+2005-10-14  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/re-report-day.pl: Require utils.pl for floor_int().
+	Change "local" to "my", as that's quite sufficient.
+	Avoid reuse/overwrite of the $date global variable.
+
+	* traffic/cgi/tbl-report.pl:
+	Make most of the coloumn headings clickable, to change sort criteria.
+
+	* traffic/cgi/tbl-report.pl:
+	Widen coloumns in traffic report, so that values for 1-9.99Gbit/s fits.
+
+2005-09-15  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/vwatch.tcl: Ignore errors unsetting uptime in destroyDev.
+
+2005-09-14  Havard Eidnes  <he@uninett.no>
+
+	* zino/status.tcl: Ignore errors when removing "delayed check" stuff.
+
+2005-09-05  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl: Add missing string concatenation op.
+
+	* traffic/cgi/load-map.pl:
+	Add support for reversing xx.yy-<n> patterns.
+
+2005-08-24  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/Makefile: vwatch is also dependent on the included sources.
+
+2005-08-04  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/vw-day-report.pl: Shorten even more (get rid of "boots" text).
+
+2005-07-29  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/vw-day-report.pl:
+	Make shorter: restarts -> boots, to better fit within 80 coloumns.
+
+2005-07-03  Havard Eidnes  <he@uninett.no>
+
+	* zino/status.tcl:
+	Fix typo, need :: and not : between package and function name.
+
+2005-04-12  Havard Eidnes  <he@uninett.no>
+
+	* README: Add dependency on TclX.
+
+	* zino/server.tcl:
+	Add dependency on tclX, and use fcntl to turn on socket keepalives
+	for client connections.
+
+2005-03-03  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/tpoller.tcl, zino/flaps.tcl, zino/read-cf.tcl, zino/status.tcl, common/config.tcl:
+	Implement "watchpat" configuration option.
+
+2005-01-12  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/update-dbs.pl:
+	Set timeout on SNMPNETSTAT invocation to 30 seconds, up from the
+	default of 5.  This to work around Cisco ONS 15454 devices and their
+	broken SNMP agents which sometimes take eons to reply.
+
+2004-12-09  Havard Eidnes  <he@uninett.no>
+
+	* traffic/plot/plot-raw.pl, traffic/plot/plot-hr.pl, traffic/plot/plot-5m.pl:
+	Don't print question marks to plot files -- confuses gnuplot.
+
+2004-12-03  Havard Eidnes  <he@uninett.no>
+
+	* traffic/plot/plot-raw.pl:
+	Correct loop variable used in plot_eerrs.  We now again get Cisco-
+	specific "ethernet errors" type plots.
+
+2004-11-26  Havard Eidnes  <he@uninett.no>
+
+	* traffic/plot/plot-5m.pl, traffic/plot/plot-hr.pl, traffic/plot/plot-raw.pl:
+	Don't print "? ? ?" as error values if it's not plotting for a Cisco
+	router -- print "0 0 0" instead.  This makes error plots work for Juniper
+	routers.
+
+2004-11-12  vegardv  <vegardv@uninett.no>
+
+	* zino/status.tcl: Fjernet unødig loggmelding
+
+2004-11-02  Havard Eidnes  <he@uninett.no>
+
+	* Makefile, ChangeLog: Mark what we have now as version 0.8.
+
+2004-08-25  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/plot.pl:
+	Remove the "color" from the png device init string.
+	Newer gnuplot doesn't like it.
+
+2004-08-23  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Before deviding by stddev, ensure that stddev is > 1e-100, not just
+	different from 0, to avoid getting NaN as a result, leading to a panic
+	in perl (observed stddev was 9.9e-324).
+
+2004-07-21  Havard Eidnes  <he@uninett.no>
+
+	* conf-diff/checkin-configs.sh:
+	Use symbolic signal names, and add handling of HUP and TERM.
+
+2004-06-09  Havard Eidnes  <he@uninett.no>
+
+	* traffic/site/Makefile.inc.dist:
+	Move install / beforeinstall targets to Makefile.
+
+	* traffic/site/Makefile:
+	Only install changed files or files not present in target dir.
+
+2004-03-19  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
+	If there is a quiet period before the Reboot line is logged,
+	it would be discarded because $lasttime was too far into the
+	past.  Instead, compare to the actual timestamp of the Reboot
+	log message.
+
+2004-03-11  Havard Eidnes  <he@uninett.no>
+
+	* ChangeLog: Update for version 0.7.
+
+	* Makefile: Mark what we have now as version 0.7.
+
 2004-03-11  Havard Eidnes  <he@uninett.no>
 
 	* Makefile, ChangeLog: Mark what we have now as version 0.8.
