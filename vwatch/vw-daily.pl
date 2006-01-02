@@ -50,6 +50,9 @@ sub save_logs {
     if (mkdir ($today . "/descs", 0755) != 1) {
 	die "Could not recreate $today/descs\n";
     }
+    if (mkdir ($today . "/uptime", 0755) != 1) {
+	die "Could not recreate $today/uptime\n";
+    }
     system("touch $today/ver-watch.log"); # create empty file
 }
 
