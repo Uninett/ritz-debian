@@ -8,6 +8,7 @@ set vwtop "%TOPDIR%/ver-watch"
 set vwtoday [format "%s/%s" $vwtop "logs/today"]
 
 set dev_descr_dir "$vwtoday/descs"
+set uptime_dir "$vwtoday/uptime"
 set logFile "$vwtoday/ver-watch.log"
 set uptimeSlop [expr 100 * 60 * 5]; # 5 minutes
 
