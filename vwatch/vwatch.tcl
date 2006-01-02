@@ -48,6 +48,12 @@ proc dev_descr_file sh {
     return [format "%s/%s" $dev_descr_dir [name $sh]]
 }
 
+proc uptime_file sh {
+    global uptime_dir
+
+    return [format "%s/%s" $uptime_dir [name $sh]]
+}
+
 #
 # log a message -- lead-text + value (possibly multi-line, possibly empty)
 #
@@ -143,6 +149,17 @@ proc saveDescr { sh {err "unknown error"} {objid ""} {descr ""}} {
     }
 }
 
+proc saveUptime { sh uptime } {
+
+    set f [uptime_file $sh]
+    if { [catch { set fh [open $f "w"] } err] == 1 } {
+	logMsg [name $sh] "uptime-file open: $err"
+	return
+    }
+    puts $fh $uptime
+    close $fh
+}
+
 proc maybeSaveDescr { sh } {
     global oidDescrList
 
@@ -177,6 +194,7 @@ proc devUpTime { sh {err "unknown error"} {upt ""}} {
 	set lastpoll($sh) [clock seconds]
 
 	maybeSaveDescr $sh
+	saveUptime $sh $newUpTime
     } else {
 	logMsg [name $sh] "uptime poll returned $err"
     }
