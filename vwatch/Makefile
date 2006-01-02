@@ -3,6 +3,7 @@
 #
 
 PSRCS=	cur-vers.pl \
+	uptimes.pl \
 	vw-daily.pl \
 	vw-day-report.pl \
 	vw-month-rst.pl \
