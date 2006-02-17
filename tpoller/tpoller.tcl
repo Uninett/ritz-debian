@@ -293,16 +293,8 @@ proc logVars { sh vbl } {
 
     if { ! [info exists cx($name,descr,$ix)] &&
 	 ! [info exists cx($name,admin,$ix)] } {
-	puts stderr [format "Ignored %s invalid-ix %d vbl %s" $name $ix $vbl]
-	foreach vb $vbl {
-	    set oid [lindex $vb 0]
-	    if { $oid == {} } {
-		puts stderr [format "  (empty)"]
-	    } else {
-		puts stderr [format "  %s %s" [mib name $oid] [lindex $vb 2]]
-	    }
-	}
-	return;				# non-existent ifIndex?
+	return;				# mostly-non-existent ifIndex
+	# old Cisco MIB might return vars for locIf*
     }
 
     if [confExists $name "watchpat"] {
