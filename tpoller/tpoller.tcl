@@ -295,9 +295,12 @@ proc logVars { sh vbl } {
 	 ! [info exists cx($name,admin,$ix)] } {
 	puts stderr [format "Ignored %s invalid-ix %d vbl %s" $name $ix $vbl]
 	foreach vb $vbl {
-	    puts stderr [format "  %s %s"
-			 [mib name [lindex $vb 0]]
-			 [lindex $vb 2]]
+	    set oid [lindex $vb 0]
+	    if { $oid == {} } {
+		puts stderr [format "  (empty)"]
+	    } else {
+		puts stderr [format "  %s %s" [mib name $oid] [lindex $vb 2]]
+	    }
 	}
 	return;				# non-existent ifIndex?
     }
