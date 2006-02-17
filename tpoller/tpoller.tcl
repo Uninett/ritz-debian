@@ -283,6 +283,11 @@ proc logVars { sh vbl } {
     }
     if { ! [info exists ix] } { return; }
 
+    if { ! [info exists cx($name,descr,$ix)] &&
+	 ! [info exists cx($name,admin,$ix)] } {
+	return;				# non-existent ifIndex?
+    }
+
     if [confExists $name "watchpat"] {
 	set wp [conf $name "watchpat"]
 	# Only poll ports matching pattern
