@@ -294,7 +294,7 @@ proc logVars { sh vbl } {
     if { ! [info exists cx($name,descr,$ix)] &&
 	 ! [info exists cx($name,admin,$ix)] } {
 	puts stderr [format "Ignored %s invalid-ix %d vbl %s" $name $ix $vbl]
-	foreach vb $vdl {
+	foreach vb $vbl {
 	    puts stderr [format "  %s %s"
 			 [mib name [lindex $vb 0]]
 			 [lindex $vb 2]]
