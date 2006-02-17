@@ -117,8 +117,16 @@ proc getConfig { sh } {
     set name [name $sh]
     set cx($name,sysid) [getSysObjID $sh]
     forgetConfig $sh
-    getAddrList $sh
-    getIfList $sh
+    if [catch {getAddrList $sh} msg] {
+	set msg [format "Could not get AddrList from %s: %s" $name $msg]
+	logerr $msg
+	return
+    }
+    if [catch {getIfList $sh} msg] {
+	set msg [format "Could not get IfList from %s: %s" $name $msg]
+	logerr $msg
+	return
+    }
 }
 
 proc getSysObjID { sh } {
@@ -285,6 +293,12 @@ proc logVars { sh vbl } {
 
     if { ! [info exists cx($name,descr,$ix)] &&
 	 ! [info exists cx($name,admin,$ix)] } {
+	puts stderr [format "Ignored %s invalid-ix %d vbl %s" $name $ix $vbl]
+	foreach vb $vdl {
+	    puts stderr [format "  %s %s"
+			 [mib name [lindex $vb 0]]
+			 [lindex $vb 2]]
+	}
 	return;				# non-existent ifIndex?
     }
 
