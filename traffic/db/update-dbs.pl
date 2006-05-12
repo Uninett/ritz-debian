@@ -249,37 +249,53 @@ sub get_current_state {
     }
 }
 
+sub fn_to_rn {
+    my($fn) = @_;
+
+    if ($fn =~ /(\S+)\.\d+\.\d+\.\d+\.\d+$/) {
+	return $1;
+    }
+    if ($fn =~ /(\S+)\.\#\d+$/) {
+	return $1;
+    }
+    return undef;
+}
+
+sub closed_entry {
+    my($e) = @_;
+
+    if ($e =~ /-$/) {
+	return undef;
+    }
+    return 1;
+}
+
 sub update_dbs {
     my($now);
     my(@a,@b);
+    my($fn, $ln, $r);
     
     $now = &get_today_str();
 
     if (defined($opt_d)) {
-	printf(STDERR "Checking name -> file DB\n");
+	printf(STDERR "\nChecking name -> file DB\n\n");
     }
     foreach $ln (keys %file) {
 	if (!defined $file{$ln}) { next; }
-	if (defined($opt_d)) {
-	    printf(STDERR "Checking %s ...", $ln);
-	}
 	if (defined $ntf{$ln}) {
 	    # separate entries in name-to-file database
 	    @a = split(/:/, $ntf{$ln});
 	    # split last entry on spaces
 	    @b = split(/ /, $a[$#a]);
 	    if ($b[0] eq $file{$ln}) {
-		if (defined($opt_d)) {
-		    printf(STDERR "...same\n");
-		}
 		# same as before
 		next;
 	    }
 	    # Tack on new entry at the end
-	    $ntf{$ln} .= $now . ":" . $file{$ln} . " " . $now . "-";
-	    if (defined($opt_v)) {
-		printf(STDERR "\n");
+	    if (!&closed_entry($ftn{$fn})) {
+		$ftn{$fn} .= $now;
 	    }
+	    $ntf{$ln} .= ":" . $file{$ln} . " " . $now . "-";
 	    if (defined($opt_v) || defined($opt_d)) {
 		printf(STDERR "Updated entry: %s -> %s\n",
 		       $ln, $file{$ln});
@@ -287,9 +303,6 @@ sub update_dbs {
 	} else {
 	    # Add completely new entry
 	    $ntf{$ln} = $file{$ln} . " " . $now . "-";
-	    if (defined($opt_v)) {
-		printf(STDERR "\n");
-	    }
 	    if (defined($opt_v) || defined($opt_d)) {
 		printf(STDERR "Added new entry: %s -> %s\n",
 		       $ln, $file{$ln});
@@ -297,30 +310,25 @@ sub update_dbs {
 	}
     }
     if (defined($opt_d)) {
-	printf(STDERR "Checking file -> name DB\n");
+	printf(STDERR "\nChecking file -> name DB\n\n");
     }
     foreach $fn (keys %line) {
 	if (!defined $line{$fn}) { next; }
-	if (defined($opt_d)) {
-	    printf(STDERR "Checking %s ...", $fn);
-	}
 	if (defined $ftn{$fn}) {
 	    # separate entries in file-to-name database
 	    @a = split(/:/, $ftn{$fn});
 	    # split last entry on spaces
 	    @b = split(/ /, $a[$#a]);
 	    if ($b[0] eq $line{$fn}) {
-		if (defined($opt_d)) {
-		    printf(STDERR "...same\n");
-		}
 		# same as before
 		next;
 	    }
 	    # Tack on new entry at the end
-	    $ftn{$fn} .= $now . ":" . $line{$fn} . " " . $now . "-";
-	    if (defined($opt_v)) {
-		printf(STDERR "\n");
+	    if (!&closed_entry($ftn{$fn})) {
+		$ftn{$fn} .= $now;
 	    }
+	    $ftn{$fn} .= ":" . $line{$fn} . " " . $now . "-";
+
 	    if (defined($opt_v) || defined($opt_d)) {
 		printf(STDERR "Updated entry: %s -> %s\n",
 		       $fn, $line{$fn});
@@ -328,13 +336,74 @@ sub update_dbs {
 	} else {
 	    # Add completely new entry
 	    $ftn{$fn} = $line{$fn} . " " . $now . "-";
-	    if (defined($opt_v)) {
-		printf(STDERR "\n");
-	    }
+
 	    if (defined($opt_v) || defined($opt_d)) {
-		printf(STDERR "\nAdded new entry: %s -> %s\n",
+		printf(STDERR "Added new entry: %s -> %s\n",
 		       $fn, $line{$fn});
 	    }
+	}
+    }
+    # Check if entries need to be closed
+    if (defined($opt_v) || defined($opt_d)) {
+	printf(STDERR "\nChecking for closeable file -> name entries\n\n");
+    }
+    foreach $fn (keys %ftn) {
+	if (!defined($ftn{$fn})) { next; } # needed?
+	if (&closed_entry($ftn{$fn})) { next; }
+	$r = &fn_to_rn($fn);
+	if (!defined($r)) { next; }
+	$a = $polladdr{$r};
+	if (!defined($a)) {
+	    if (defined($opt_v) || defined($opt_d)) {
+		printf(STDERR "Closing %s on nonexisting router %s\n",
+		       $fn, $r);
+	    }
+	    $ftn{$fn} .= $now;
+	    next;
+	}
+	if ($dead{$a}) { next; }
+
+	if (!defined($line{$fn})) {
+	    # no longer seen on device, and not closed, so close entry
+	    if (defined($opt_v) || defined($opt_d)) {
+		printf(STDERR "Closing %s, last on %s\n", $fn, $r);
+	    }
+	    $ftn{$fn} .= $now;
+	}
+    }
+    if (defined($opt_v) || defined($opt_d)) {
+	printf(STDERR "\nChecking for closeable name -> file entries\n\n");
+    }
+    foreach $ln (keys %ntf) {
+	if (!defined($ntf{$ln})) { next; } # needed?
+	# look for already-closed corresponding entries in $ntf?
+	if (&closed_entry($ntf{$ln})) { next; }
+	
+	# pick apart entry in name-to-file database
+	@a = split(/:/, $ntf{$ln});
+	# split last entry on spaces
+	@b = split(/ /, $a[$#a]);
+	$fn = $b[0];
+	$r = &fn_to_rn($fn);
+	if (!defined($r)) { next; }
+	$a = $polladdr{$r};
+	if (!defined($a)) {
+	    if (defined($opt_v) || defined($opt_d)) {
+		printf(STDERR "Closing %s / %s on nonexisting router %s\n",
+		       $ln, $fn, $r);
+	    }
+	    $ntf{$ln} .= $now;
+	    next;
+	}
+	if ($dead{$a}) { next; }
+
+	if (!defined($file{$ln})) {
+	    # no longer seen on device, and not closed, so close
+	    if (defined($opt_v) || defined($opt_d)) {
+		printf(STDERR "Closing %s, file %s, last on %s\n",
+		       $ln, $fn, $r);
+	    }
+	    $ntf{$ln} .= $now;
 	}
     }
 }
