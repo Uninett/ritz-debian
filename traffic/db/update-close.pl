@@ -46,6 +46,8 @@
 # code in update-dbs.pl has been deployed.
 #
 
+push(@INC, "%LIBDIR%");
+
 require 'getopts.pl';
 
 require 'date.pl';
@@ -105,12 +107,13 @@ sub update_dbs {
 	if ($cdate != $opt_d) { next; }
 	my($newcdate) = &find_close_date($fn);
 	if (!defined($newcdate)) { next; }
+	if ($newcdate == $cdate) { next; }
 	my($new_entry) = substr($s, 0, -6) . $newcdate;
 	if (!defined($opt_n)) {
 	    $ntf{$ln} = $new_entry;
 	}
 	if (defined($opt_v)) {
-	    printf(STDERR "Changed close date %s to %s for %s / %s\n",
+	    printf(STDERR "%s to %s for %s / %s\n",
 		   $cdate, $newcdate, $ln, $fn);
 	}
     }
@@ -125,12 +128,13 @@ sub update_dbs {
 	if ($cdate != $opt_d) { next; }
 	my($newcdate) = &find_close_date($fn);
 	if (!defined($newcdate)) { next; }
+	if ($newcdate == $cdate) { next; }
 	my($new_entry) = substr($s, 0, -6) . $newcdate;
 	if (!defined($opt_n)) {
 	    $ftn{$fn} = $new_entry;
 	}
 	if (defined($opt_v)) {
-	    printf(STDERR "Changed close date %s to %s for %s / %s\n",
+	    printf(STDERR "%s to %s for %s / %s\n",
 		   $cdate, $newcdate, $fn, $ln);
 	}
     }
