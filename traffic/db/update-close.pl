@@ -153,7 +153,7 @@ if (defined($opt_v)) {
     $| = 1;
     select(STDOUT);
 }
-&open_dbs();
+&open_dbs($opt_t . "/db");
 &update_dbs();
 reset;
 &close_dbs();
