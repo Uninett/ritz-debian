@@ -36,7 +36,7 @@
 #
 
 #
-# usage: update-close.pl [-v] [-n] -t topdir -d yyyymmdd
+# usage: update-close [-v] [-n] -t topdir -d yyyymmdd
 #
 # Inspects the entries in topdir/db/ntf & topdir/db/ftn
 # closed on the given date and tries to backdate the close
