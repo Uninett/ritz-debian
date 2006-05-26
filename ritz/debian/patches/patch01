@@ -1,0 +1,47 @@
+*** ../ritz.orig	2006-05-25 12:26:33.000000000 +0200
+--- ../ritz	2006-05-25 12:32:54.000000000 +0200
+***************
+*** 1,4 ****
+! #! /usr/pkg/bin/tixwish
+  #
+  # DO NOT EDIT, AUTOMATICALLY GENERATED!!
+  #
+--- 1,4 ----
+! #! /usr/bin/wish
+  #
+  # DO NOT EDIT, AUTOMATICALLY GENERATED!!
+  #
+***************
+*** 881,887 ****
+      set chan $ServerChan
+  
+      set s [format "%s %s" $AuthChallenge($chan) $secret]
+!     set r [exec /usr/pkg/bin/sha1 <<$s]
+      safePuts $chan [format "user %s %s" $user $r]
+      safeGets $chan l
+      if {! [regexp "^200" $l]} {
+--- 881,887 ----
+      set chan $ServerChan
+  
+      set s [format "%s %s" $AuthChallenge($chan) $secret]
+!     set r [exec /usr/bin/sha1sum <<$s]
+      safePuts $chan [format "user %s %s" $user $r]
+      safeGets $chan l
+      if {! [regexp "^200" $l]} {
+***************
+*** 3120,3126 ****
+  #
+  
+  package require Tnm
+! # package require Tix
+  
+  mib load rfc1213.mib
+  
+--- 3120,3126 ----
+  #
+  
+  package require Tnm
+! package require Tix
+  
+  mib load rfc1213.mib
+  

@@ -1,0 +1,68 @@
+#!/usr/bin/make -f
+
+# http://women.alioth.debian.org/wiki/index.php/English/BuildingWithoutHelper
+
+package=ritz
+patches     = patches-applied
+
+# Top directory of the source code (thanks Manoj)
+SRCTOP    := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
+
+# Destination directory where files will be installed
+DESTDIR    = $(SRCTOP)/debian/$(package)
+
+BIN_DIR = $(DESTDIR)/usr/bin
+DOCS_DIR = $(DESTDIR)/usr/share/doc/ritz
+MENU_DIR = $(DESTDIR)/usr/lib/menu
+PIXMAPS_DIR = $(DESTDIR)/usr/share/pixmaps
+
+binary-indep: 
+
+# Definitions for install
+INST_OWN = -o root -g root
+MAKE_DIR  = install -p -d $(INST_OWN) -m 755
+INST_FILE = install -c    $(INST_OWN) -m 644
+INST_PROG = install -c    $(INST_OWN) -m 755
+INST_SCRIPT = install -c  $(INST_OWN) -m 755
+
+binary-arch: patch
+	$(INST_PROG) ritz $(BIN_DIR)
+	$(MAKE_DIR) $(DESTDIR)/DEBIAN
+
+	# Install Docs
+	$(MAKE_DIR) $(DOCS_DIR)
+	$(INST_FILE) debian/copyright $(DOCS_DIR)/copyright
+	$(INST_FILE) debian/changelog $(DOCS_DIR)/changelog.Debian
+	$(INST_FILE) debian/README $(DOCS_DIR)/README
+
+	# Compress Docs (thanks Helen)
+	gzip -f -9 $(DOCS_DIR)/changelog.Debian
+
+	# Generate the control file (thanks Helen)
+	dpkg-gencontrol	-isp -P$(DESTDIR)
+
+	# Make DEBIAN/md5sums (thanks Helen)
+	cd $(DESTDIR) && find . -type f ! -regex '.*DEBIAN/.*' -printf '%P\0' | xargs -r0 md5sum > DEBIAN/md5sums 
+
+	# Create the .deb package (thanks Helen)
+	dpkg-deb -b $(DESTDIR) ../
+
+patch:
+	test ! -f $(patches) # already patched
+	ls debian/patches/* >$(patches)
+	cat `cat $(patches)` | patch -p1 --no-backup-if-mismatch
+
+unpatch:
+	test -f $(patches) # not patched
+	cat `tac $(patches)` | patch -Rp1 --no-backup-if-mismatch
+	rm -f $(patches)
+
+
+# Below here is fairly generic really
+
+binary: binary-indep binary-arch
+
+.PHONY: binary binary-arch binary-indep clean build patch unpatch
+
+
+

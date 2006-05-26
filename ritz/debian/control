@@ -1,0 +1,12 @@
+Source: ritz
+Section: utils
+Priority: optional
+Maintainer: Vegard Vesterheim <vegard.vesterheim@uninett.no>
+Build-Depends: pmake
+Standards-Version: 0.8
+
+Package: ritz
+Architecture: any
+Depends: ${shlibs:Depends}, scotty, tix
+Description: RITZ is "Remote Interface to ZINO"
+ Ritz is a TK-based user interface to ZINO.
