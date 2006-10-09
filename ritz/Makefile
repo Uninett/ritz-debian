@@ -18,6 +18,8 @@ ritz: ${SRCS} Makefile ../subst
 	echo "#" >> $@
 	echo "# DO NOT EDIT, AUTOMATICALLY GENERATED!!" >> $@
 	echo "#" >> $@
+	echo "option clear" >> $@
+	echo "package require Tix" >> $@
 	echo "" >> $@
 	for f in ${SRCS}; do \
 		cat $$f >> $@; \

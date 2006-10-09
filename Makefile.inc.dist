@@ -39,7 +39,7 @@ SHA=/usr/pkg/bin/sha1
 SNMPNETSTAT=/local/bin/snmpnetstat
 TACHOST=betong.veidekke.no
 TCLSH=/usr/pkg/bin/tclsh8.0
-WISH=/usr/pkg/bin/tixwish
+WISH=/usr/pkg/bin/wish
 #
 NOTIFY=he
 CHECKINTV=400
