@@ -306,6 +306,7 @@ sub tgif_group {
 	   "fg_bg_colors" => 1,
 	   "page" => 1,
 	   "dont_reencode" => 1,
+	   "objshadow_info" => 1,
        );
 
 sub tgif_obj {
