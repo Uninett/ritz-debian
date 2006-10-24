@@ -115,13 +115,31 @@ sub cmp_lines {
     @a = split(/\s+/, $one);
     @b = split(/\s+/, $two);
 
-    my $r = &cmp_versions($a[1], $b[1]);
+    my $r = &cmp_versions($a[2], $b[2]);
     if ($r == 0) {
 	return $a[0] cmp $b[0];
     } else {
 	return $r;
     }
 }
+
+sub pretty_desc {
+    my($desc) = @_;
+
+    if ($desc =~ /IOS.*Version/ ||
+	$desc =~ /GS.*Version/ ||
+	$desc =~ /Cisco ONS/) {
+	return &pretty_ios_desc($desc);
+    }
+    if ($desc =~ /HP.*revision/) {
+	return &pretty_hp_desc($desc);
+    }
+    if ($desc =~ /Juniper Networks/) {
+	return &pretty_junos_desc($desc);
+    }
+    return $desc;
+}
+
 
 sub report {
     my($rtr, $l);
