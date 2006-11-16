@@ -33,6 +33,12 @@ find . -newer $stamp -name '*-confg' -print > $FLIST
 while test -s $FLIST; do
     while read f; do
 	echo $datestr $f >> last-checked-files
+
+	rcsdiff $f > $TDIR/diff 2>/dev/null
+	if [ ! -s $TDIR/diff ]; then
+	    continue
+	fi
+
 	echo $sep >> last-checked-diff
 	echo ==== $f =====>> last-checked-diff
 	if egrep '^end$' $f >/dev/null 2>&1; then
