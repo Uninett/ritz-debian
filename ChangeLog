@@ -169,7 +169,8 @@
 
 2004-12-09  Havard Eidnes  <he@uninett.no>
 
-	* traffic/plot/plot-raw.pl, traffic/plot/plot-hr.pl, traffic/plot/plot-5m.pl:
+	* traffic/plot/plot-raw.pl, traffic/plot/plot-hr.pl,
+	  traffic/plot/plot-5m.pl:
 	Don't print question marks to plot files -- confuses gnuplot.
 
 2004-12-03  Havard Eidnes  <he@uninett.no>
@@ -180,10 +181,11 @@
 
 2004-11-26  Havard Eidnes  <he@uninett.no>
 
-	* traffic/plot/plot-5m.pl, traffic/plot/plot-hr.pl, traffic/plot/plot-raw.pl:
+	* traffic/plot/plot-5m.pl, traffic/plot/plot-hr.pl,
+	  traffic/plot/plot-raw.pl:
 	Don't print "? ? ?" as error values if it's not plotting for a Cisco
-	router -- print "0 0 0" instead.  This makes error plots work for Juniper
-	routers.
+	router -- print "0 0 0" instead.  This makes error plots work for
+	Juniper	routers.
 
 2004-11-12  vegardv  <vegardv@uninett.no>
 
