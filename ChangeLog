@@ -34,7 +34,8 @@
 2006-05-26  Havard Eidnes  <he@uninett.no>
 
 	* vwatch/uptimes.pl:
-	Add a script which in addition to current versions also displays uptimes.
+	Add a script which in addition to current versions also displays
+	uptimes.
 
 2006-05-17  Havard Eidnes  <he@uninett.no>
 
