@@ -1,4 +1,103 @@
-2005-12-08  Havard Eidnes  <he@smistad.uninett.no>
+2006-11-20  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Bump version number to 0.9.1.
+
+2006-11-16  Havard Eidnes  <he@uninett.no>
+
+	* conf-diff/checkin-configs.sh:
+	If there is no change, don't output a heading.
+
+2006-10-24  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/cur-vers.pl, vwatch/pretty-ios.pl:
+	Add handling of JunOS version strings.
+
+2006-10-11  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Ignore one more attribute output by newer versions of tgif.
+
+2006-10-09  Havard Eidnes  <he@uninett.no>
+
+	* ritz/Makefile, Makefile.inc.dist:
+	Instead of using tixwish, use wish instead and require Tix instead.
+	Hint from Kolbjorn -- tixwish is apparently gone in later versions
+	of Tk.
+
+2006-05-26  Vegard Vesterheim  <vegardv@uninett.no>
+
+	* ritz/debian/README, ritz/debian/changelog, ritz/debian/control,
+	  ritz/debian/copyright, ritz/debian/patches/patch01,
+	  ritz/debian/rules:
+	Debinaizing ritz
+
+2006-05-26  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/uptimes.pl:
+	Add a script which in addition to current versions also displays uptimes.
+
+2006-05-17  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/update-close.pl: Ensure we can reach common library files.
+	Shorten debug output so more likely to fit in 80 coloumns.
+	Don't update if we end up not changing close date.
+
+	* traffic/db/update-close.pl: Um, need to point to databases.
+
+	* traffic/db/update-close.pl: Fix small typo in comment.
+
+	* traffic/db/update-close.pl:
+	Add script to update the close date of entries after introduction
+	of the "close entries" code in update-dbs.pl.
+
+2006-05-12  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/update-dbs.pl:
+	Add code to detect and close entries which can no longer be found
+	after the scan of monitored devices.  This inspects the logging file
+	names to extract the poll-device name, and that device must have
+	responded to snmp for the closing to be done.  Devices which are
+	no longer monitored will have their corresponding entries closed.
+
+	Also reduce the output level under -d -- now we don't emit a line for
+	each port/file checked.
+
+2006-02-17  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/tpoller.tcl: Remove debugging code.
+
+	* tpoller/tpoller.tcl: Don't try to extract mib name from an empty oid.
+
+	* tpoller/tpoller.tcl: Typo correction.
+
+	* tpoller/tpoller.tcl:
+	Catch errors from getAddrList and getIfList (e.g. time-outs), and log
+	instead of erroring out.
+	Give more debug information when ignoring info for ifIndex values we've
+	not seen anything about.
+
+	* tpoller/tpoller.tcl:
+	If we don't have descr or admin-status for a port, no point in later
+	trying to check descr against e.g. ignorepat and fall over because
+	it's not defined.  Instead, exit early from logVars.
+
+2006-01-24  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/tbl-report.pl, traffic/report/report-day.pl:
+	Expand error reports to use 3 decimals instead of 2.
+
+2006-01-02  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/Makefile: Add the uptimes script.
+
+	* vwatch/vwatch.tcl:
+	Save the uptime of each device on each round, for later reporting.
+
+	* vwatch/vwatch-main.tcl: Set uptime_dir.
+
+	* vwatch/vw-daily.pl: Also create uptime subdirectory.
+
+2005-12-08  Havard Eidnes  <he@uninett.no>
 
 	* ChangeLog: update for version 0.9.
 
