@@ -400,8 +400,12 @@ proc emt_check_all {} {
 
     set rids ""
     foreach id [array names state] {
-	if [emt_should_report $id] {
-	    lappend rids $id
+	if [catch {
+	    if [emt_should_report $id] {
+		lappend rids $id
+	    }
+	} err] {
+	    log [format "Caught exception: %s" $err]
 	}
     }
     if { [llength $rids] != 0 } {
