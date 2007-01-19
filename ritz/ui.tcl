@@ -507,7 +507,10 @@ proc uiDisplaySummary { caseIds } {
     .text configure -state normal
     .text delete 1.0 end
     foreach i $caseIds {
-	set c [uiColorCase $i]
+	if [catch {set c [uiColorCase $i]} err] {
+	    puts stderr [format "ritz: ignoring id %s: %s" $i $err]
+	    break
+	}
 	.text insert end [summaryStr $i] tag$i
 	.text insert end "\n"
 	.text tag configure tag$i -background $c
