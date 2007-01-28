@@ -12,7 +12,7 @@ source ../common/persist.tcl
 source ../common/sort.tcl
 source emt.tcl
 
-set emt_to "he@runit.sintef.no"
+set emt_to "he@uninett.no"
 set emt_from "netmon@uninett.no"
 
 # emt_main
