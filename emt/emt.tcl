@@ -161,14 +161,22 @@ proc pdt { secs } {
 
 proc report_multi { ids } {
 
-    if { [llength $ids] <= 3 } {
-	set rr report_single
-    } else {
-	set rr report_compact
-    }
     set rs ""
-    foreach id $ids {
-	set rs [format "%s%s\n" $rs [$rr $id]]
+    if { [llength $ids] <= 3 } {
+	foreach id $ids {
+	    set rs [format "%s%s\n" $rs [report_single $id]]
+	}
+    } else {
+	foreach id $ids {
+	    set hist [emt_hist $id]
+	    lappend id_hist($hist) $id
+	}
+	foreach hist [array names id_hist] {
+	    foreach id $id_hist($hist) {
+		set rs [format "%s%s\n" $rs [report_compact $id]]
+	    }
+	    set rs [format "%s%s" $rs $hist]
+	}
     }
     return $rs
 }
