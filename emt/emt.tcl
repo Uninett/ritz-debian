@@ -483,7 +483,7 @@ proc emt_lastlogline { id } {
 	return ""
     }
     # Chop off last newline
-    set l [string range $l 0 [expr [string length $l] - 1]]
+    set l [string range $l 0 [expr [string length $l] - 2]]
     set ix [string last "\n" $l]
     if { $ix == -1 } {
 	puts [format "Last log line: %s" $l]
