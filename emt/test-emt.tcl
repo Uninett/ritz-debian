@@ -1,4 +1,4 @@
-#!/store/bin/tclsh
+#!/usr/pkg/bin/tclsh
 #
 # $Id$
 #
