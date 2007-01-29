@@ -51,6 +51,9 @@ proc getEffectivePortState { id } {
 	    }
 	}
     }
+    if { $state == "lowerLayerDown" } {
+	return "down"
+    }
     return $state
 }
 

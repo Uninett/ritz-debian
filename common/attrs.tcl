@@ -102,7 +102,8 @@ namespace eval ::attr {
 	if {    $state == "down" || \
 		$state == "flapping" || \
 		$state == "no-response" || \
-		$state == "adminDown" } {
+		$state == "adminDown" || \
+		$state == "lowerLayerDown" } {
 	    return 1
 	}
 	return 0
