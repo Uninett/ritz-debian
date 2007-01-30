@@ -252,12 +252,22 @@ sub tgif_polygon {
 sub tgif_poly {
     my($fh, $elt, @f) = @_;
     my($nvs) = $f[3];
+    my($vc);
+    my($c) = $f[1];
 
-    $_ = <$fh>;
-    $_ =~ s/^\s+//g;
-    @f = split(/[,\]]+/);
-    $coords[$elt] = join(' ', @f[0 .. ($nvs*2)-1]);
-    $width[$elt] = $f[($nvs*2)+1];
+    $c =~ s/\'//g;
+    $pen_color[$elt] = $c;
+    $coords[$elt] = "";
+    while ($nvs > 0) {
+	$vc = ($nvs > 8) ? 8 : $nvs;
+	$_ = <$fh>;
+	$_ =~ s/\s+//g;
+	@f = split(/[,\]]+/);
+	$coords[$elt] .= " " . join(' ', @f[0 .. ($vc*2)-1]);
+	$nvs -= $vc;
+    }
+    $coords[$elt] =~ s/^\s//;
+    $width[$elt] = $f[($vc*2)+1];
     $type[$elt] = "polyline";
 
     $_ = <$fh>;
