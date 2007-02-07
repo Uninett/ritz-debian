@@ -25,8 +25,16 @@ INST_FILE = install -c    $(INST_OWN) -m 644
 INST_PROG = install -c    $(INST_OWN) -m 755
 INST_SCRIPT = install -c  $(INST_OWN) -m 755
 
-binary-arch: patch
-	$(INST_PROG) ritz $(BIN_DIR)
+pmake-build:
+	rm -f ritz
+	cp -f ../Makefile.inc.dist ../Makefile.inc
+	( cd .. ; pmake )
+	rm $(patches)
+
+binary-arch: pmake-build patch
+	$(MAKE_DIR) $(DOCS_DIR)
+	$(MAKE_DIR) $(BIN_DIR)
+	$(INST_PROG) ritz $(BIN_DIR)/ritz
 	$(MAKE_DIR) $(DESTDIR)/DEBIAN
 
 	# Install Docs
@@ -49,7 +57,7 @@ binary-arch: patch
 
 patch:
 	test ! -f $(patches) # already patched
-	ls debian/patches/* >$(patches)
+	ls debian/patches/patch* >$(patches)
 	cat `cat $(patches)` | patch -p1 --no-backup-if-mismatch
 
 unpatch:

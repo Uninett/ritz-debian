@@ -2,7 +2,7 @@
 --- ../ritz	2006-05-25 12:32:54.000000000 +0200
 ***************
 *** 1,4 ****
-! #! /usr/pkg/bin/tixwish
+! #! /usr/pkg/bin/wish
   #
   # DO NOT EDIT, AUTOMATICALLY GENERATED!!
   #
@@ -28,20 +28,3 @@
       safePuts $chan [format "user %s %s" $user $r]
       safeGets $chan l
       if {! [regexp "^200" $l]} {
-***************
-*** 3120,3126 ****
-  #
-  
-  package require Tnm
-! # package require Tix
-  
-  mib load rfc1213.mib
-  
---- 3120,3126 ----
-  #
-  
-  package require Tnm
-! package require Tix
-  
-  mib load rfc1213.mib
-  
