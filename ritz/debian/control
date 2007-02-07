@@ -3,7 +3,7 @@ Section: utils
 Priority: optional
 Maintainer: Vegard Vesterheim <vegard.vesterheim@uninett.no>
 Build-Depends: pmake
-Standards-Version: 0.8
+Standards-Version: 0.9
 
 Package: ritz
 Architecture: any
