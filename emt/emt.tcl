@@ -409,11 +409,17 @@ proc emt_check_all {} {
     set rids ""
     foreach id [array names state] {
 	if [catch {
+	    set es ::attr::get $id "state"
+	} err] {
+	    log [format "Caught exception(1): %s" $err]
+	}
+	if {$es == "ignored"} { continue; }
+	if [catch {
 	    if [emt_should_report $id] {
 		lappend rids $id
 	    }
 	} err] {
-	    log [format "Caught exception: %s" $err]
+	    log [format "Caught exception(2): %s" $err]
 	}
     }
     if { [llength $rids] != 0 } {
