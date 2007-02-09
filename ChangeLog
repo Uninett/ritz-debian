@@ -1,3 +1,77 @@
+2007-02-09  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Bump version to 0.9.2.
+
+	* ritz/sort.tcl:
+	Um, make sure we use the proper colour for "ignored" events.
+
+	* ritz/ui.tcl: Add support for the "ignored" event state.
+	Colour such events with a light blue colour.
+
+	* ritz/sort.tcl: Add support for "ignored" events.
+	While sorting, consider events marked as such as "normal".
+
+	* emt/emt.tcl: Add support for the "ignored" event state;
+	don't send alarms for such events.
+
+2007-02-07  Vegard Vesterheim  <vegardv@uninett.no>
+
+	* ritz/debian/changelog, ritz/debian/control: Oppdatert
+	versjonsnummer
+
+	* ritz/debian/patches/patch01, ritz/debian/changelog,
+	ritz/debian/rules:
+	New upstream version
+
+2007-01-30  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl: Handle polylines with more than 8
+	vertexes.
+
+2007-01-29  Havard Eidnes  <he@uninett.no>
+
+	* ritz/attrs.tcl, common/attrs.tcl:
+	Make "lowerLayerDown" be synonymous with "down".
+
+2007-01-28  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl: Even though we report more than 3 events, don't
+	skip the history log -- there could be manually added info there
+	relevant for the other NOC personnel.
+
+	* emt/emt.tcl: Actually chop off the last newline in order to find
+	the last line of the log.
+
+	* emt/test-emt.tcl: ...and e-mail address.
+
+	* emt/test-emt.tcl: Change tclsh path.
+
+2007-01-19  Havard Eidnes  <he@uninett.no>
+
+	* ritz/ui.tcl:
+	Try to add some robustness for a problem which appears to have
+	its root in zino itself, where some events can be created without
+	the "type" attribute(!)
+
+2007-01-18  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl:
+	Add some robustness to cater for a problem which probably
+	has its roots inside zino itself, in that apparently some
+	events can be created without the "type" attribute (!).
+	Catch the resulting exception, and just ignore that event
+	for now, and let the rest be checked & reported.
+
+2006-11-20  Havard Eidnes  <he@uninett.no>
+
+	* ChangeLog: Some more folding of long lines.
+
+	* ChangeLog: Fold a line.
+
+	* ChangeLog: Update ChangeLog, computed from CVS messages.
+
+	* Makefile: Bump version number to 0.9.1.
+
 2006-11-20  Havard Eidnes  <he@uninett.no>
 
 	* Makefile: Bump version number to 0.9.1.
