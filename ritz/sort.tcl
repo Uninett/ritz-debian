@@ -288,7 +288,7 @@ proc caseSeverity { id } {
     set type [Attr $id "type"]
     set state [Attr $id "state"]
     if { $state == "closed" } { return "closed"; }
-    if { $state == "ignored" } { return "normal"; }
+    if { $state == "ignored" } { return "ignored"; }
     if { $type == "portstate" } {
 	set pstate [getEffectivePortState $id]
 	if { $pstate == "down" || $pstate == "flapping" } {
