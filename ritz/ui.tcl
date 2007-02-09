@@ -46,6 +46,7 @@ proc uiResourceInit { } {
     option add *text.unknownColor		"gray80"	startupFile
     option add *text.reachabilityAlarmColor	"yellow"	startupFile
     option add *text.portstateUnknownColor	"gray50"	startupFile
+    option add *text.ignoredColor		"deep sky blue"	startupFile
 
 #   option add *Text.Font {Courier -12}				startupFile
 #   option add *Entry.Font {Courier -12} 			startupFile
@@ -1002,7 +1003,7 @@ proc possibleMatchTypes { } {
 
 proc possibleStates { } {
 
-    return "open working waiting confirm-wait closed"
+    return "open working waiting confirm-wait ignored closed"
 }
 
 proc uiMkMatchtypeMenu { w item { matchtypes default }} {
