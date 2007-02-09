@@ -23,7 +23,7 @@ proc compareStates { a b } {
 
     if { $as == $bs } { return 0; }
 
-    foreach s "open working waiting confirm-wait closed" {
+    foreach s "open working waiting confirm-wait ignored closed" {
 	if { $as == $s } { return -1; }
 	if { $bs == $s } { return 1; }
     }
@@ -288,6 +288,7 @@ proc caseSeverity { id } {
     set type [Attr $id "type"]
     set state [Attr $id "state"]
     if { $state == "closed" } { return "closed"; }
+    if { $state == "ignored" } { return "normal"; }
     if { $type == "portstate" } {
 	set pstate [getEffectivePortState $id]
 	if { $pstate == "down" || $pstate == "flapping" } {
