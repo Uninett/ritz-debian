@@ -1125,7 +1125,8 @@ sub imgmap {
     my($map) = "";
     my($e, $mc, @c, @ec, @fh, @lh, $url, $alt);
 
-    for ($e = 0; $e < $elts; $e++) {
+    # Emit in reverse order to match with front/back layering...
+    for ($e = $elts - 1; $e >= 0; $e--) {
 	$mc = "";
 	@c = split(/ /, $coords[$e]);
 
