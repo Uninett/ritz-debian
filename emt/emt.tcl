@@ -409,7 +409,7 @@ proc emt_check_all {} {
     set rids ""
     foreach id [array names state] {
 	if [catch {
-	    set es ::attr::get $id "state"
+	    set es [::attr::get $id "state"]
 	} err] {
 	    log [format "Caught exception(1): %s" $err]
 	}
