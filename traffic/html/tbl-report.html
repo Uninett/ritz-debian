@@ -1,6 +1,11 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <!-- $Id$ -->
-<html> <head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
 <title>Tabular report entry form</title>
 </head>
 
@@ -12,95 +17,100 @@ ports, fill out this form and press "Submit Query" below.  The
 resulting tabular report contains references which will show a plot of
 the corresponding data for each port.
 
-<form method=get action="../stat-q/tbl-report">
+<form method="get" action="../stat-q/tbl-report">
 
 <p>Period (<a href="dsp.html">help</a>):
-<input type="text" name="datespec" size=15>
+<input type="text" name="datespec" size="15" />
 Report period:
 <select name="dsp-type">
-  <option value="day" selected>Day
-  <option value="week">Week
-  <option value="month">Month
+  <option value="day" selected="selected">Day</option>
+  <option value="week">Week</option>
+  <option value="month">Month</option>
 </select>
+</p>
 
-<p><input type="radio" name="type" value="traffic">
+<p><input type="radio" name="type" value="traffic" />
 Percent traffic load, sorted by:
 
 <select name="t-sort">
-  <option>Average in
-  <option selected>Average out
-  <option>Busy day in
-  <option>Busy day out
-  <option>Busy hour in
-  <option>Busy hour out
-  <option>Peak sample in
-  <option>Peak sample out
-  <option>Name
+  <option>Average in</option>
+  <option selected="selected">Average out</option>
+  <option>Busy day in</option>
+  <option>Busy day out</option>
+  <option>Busy hour in</option>
+  <option>Busy hour out</option>
+  <option>Peak sample in</option>
+  <option>Peak sample out</option>
+  <option>Name</option>
 </select>
+</p>
 
-<p><input type="radio" name="type" value="traffic-kbit" checked>
+<p><input type="radio" name="type" value="traffic-kbit" checked="checked" />
 Traffic load in kbit/s, sorted by:
 
 <select name="tk-sort">
-  <option>Average in
-  <option selected>Average out
-  <option>Busy day in
-  <option>Busy day out
-  <option>Busy hour in
-  <option>Busy hour out
-  <option>Peak sample in
-  <option>Peak sample out
-  <option>Name
+  <option>Average in</option>
+  <option selected="selected">Average out</option>
+  <option>Busy day in</option>
+  <option>Busy day out</option>
+  <option>Busy hour in</option>
+  <option>Busy hour out</option>
+  <option>Peak sample in</option>
+  <option>Peak sample out</option>
+  <option>Name</option>
 </select>
+</p>
 
-<p><input type="radio" name="type" value="errors">
+<p><input type="radio" name="type" value="errors" />
 Errors, sort by:
 <select name="e-sort">
-  <option selected>Error hours
-  <option>Input errors
-  <option>CRC errors
-  <option>Framing errors
-  <option>Abort errors
-  <option>Ignored packets
-  <option>Interface resets
-  <option>Output discards
-  <option>Peak out discards
-  <option>Name
+  <option selected="selected">Error hours</option>
+  <option>Input errors</option>
+  <option>CRC errors</option>
+  <option>Framing errors</option>
+  <option>Abort errors</option>
+  <option>Ignored packets</option>
+  <option>Interface resets</option>
+  <option>Output discards</option>
+  <option>Peak out discards</option>
+  <option>Name</option>
 </select>
+</p>
 
-<p><input type="radio" name="type" value="ether-errs">
+<p><input type="radio" name="type" value="ether-errs" />
 Ethernet errors, sort by:
 <select name="ee-sort">
-  <option selected>Input errors
-  <option>CRC errors
-  <option>Framing errors
-  <option>Runts
-  <option>Giants
-  <option>Ignored packets
-  <option>Output errors
-  <option>Output discards
-  <option>Collisions
-  <option>Name
-  <option>
+  <option selected="selected">Input errors</option>
+  <option>CRC errors</option>
+  <option>Framing errors</option>
+  <option>Runts</option>
+  <option>Giants</option>
+  <option>Ignored packets</option>
+  <option>Output errors</option>
+  <option>Output discards</option>
+  <option>Collisions</option>
+  <option>Name</option>
+  <option></option>
 </select>
+</p>
 
 <p>Filter interface types: <select name="filter">
-  <option selected value="all">All interface types
-  <option value="serial">Only serial interfaces
-  <option value="ethernet">Only Ethernet interfaces
-  <option value="fddi">Only FDDI interfaces
-  <option value="atm">Only ATM interfaces
+  <option selected="selected" value="all">All interface types</option>
+  <option value="serial">Only serial interfaces</option>
+  <option value="ethernet">Only Ethernet interfaces</option>
+  <option value="fddi">Only FDDI interfaces</option>
+  <option value="atm">Only ATM interfaces</option>
 </select>
+</p>
 
-<p><input type="submit" name="submit">
-<input type="reset">
+<p><input type="submit" name="submit" />
+<input type="reset" />
+</p>
 
 </form>
 
-<hr>
+<hr />
 <address></address>
-<!-- hhmts start -->
-Last modified: Fri Oct  6 12:36:11 MEST 2000
-<!-- hhmts end -->
-<br> <em>(c) 1996, 1997 UNINETT and NORDUnet</em>
-</body> </html>
+<br /> <em>(c) 1996, 1997 ... 2007 UNINETT and NORDUnet</em>
+</body>
+</html>
