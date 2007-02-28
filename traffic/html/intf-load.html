@@ -1,6 +1,10 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <!-- $Id$ -->
-<html> <head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 <title>Plot load for a single port</title>
 </head>
 
@@ -10,49 +14,52 @@
 For a plot of the load for a particular port in a given period, fill
 out this form and press "Submit Query" below.
 
-<form method=get action="../stat-q/intf-load">
+<form method="get" action="../stat-q/intf-load">
 
 <p>Period (<a href="dsp.html">help</a>):
-<input type="text" name="datespec" size=10>
+<input type="text" name="datespec" size="10" />
 <select name="dsp-type">
-  <option value="day">Day (default: yesterday)
-  <option value="week">Week (default: last week)
-  <option value="month">Month (default: last month)
-  <option value="year">Year (default: last year)
-  <option value="epoch">Epoch (covering all data)
+  <option value="day">Day (default: yesterday)</option>
+  <option value="week">Week (default: last week)</option>
+  <option value="month">Month (default: last month)</option>
+  <option value="year">Year (default: last year)</option>
+  <option value="epoch">Epoch (covering all data)</option>
 </select>
+</p>
 
 <p>Sample resolution:
 <select name="res">
-  <option value="raw"> Samples (typically 15 min)
-  <option selected value="hr"> Hour
-  <option value="day"> Day
-  <option value="week"> Week
+  <option value="raw"> Samples (typically 15 min)</option>
+  <option selected="selected" value="hr"> Hour</option>
+  <option value="day"> Day</option>
+  <option value="week"> Week</option>
 </select>
+</p>
 
 <p>
 <em>Note that not all combinations of period and resolution are available</em>,
 specifically, the "Sample" and "Hour" resolutions in
 anything longer than a week are unavailable.
+</p>
 
 <p>Type of plot:
 <select name="plot-type">
-  <option value="traffic"> % of capacity
-  <option selected value="traffic-kbit"> kbit/s
+  <option value="traffic"> % of capacity</option>
+  <option selected="selected" value="traffic-kbit"> kbit/s</option>
 </select>
+</p>
       
-<p>Port name: <input type="text" name="intf" size=25>
+<p>Port name: <input type="text" name="intf" size="25" />
 <a href="../stat-q/list-ports">List current port names</a>
+</p>
 
-<p><input type="submit" name="submit">
-<input type="reset">
+<p><input type="submit" name="submit" />
+<input type="reset" />
+</p>
 
 </form>
 
-<hr>
+<hr />
 <address></address>
-<!-- hhmts start -->
-Last modified: Fri Jan 19 12:42:25 MET 2001
-<!-- hhmts end -->
-<br> <em>(c) 1996, 1997 UNINETT and NORDUnet</em>
+<br /> <em>(c) 1996, 1997 ... 2007 UNINETT and NORDUnet</em>
 </body> </html>
