@@ -178,7 +178,7 @@ sub get_line_names {
 	    return undef;
 	}
 	if (/^(\d+)\s+\S+\s+\S+ "(.*)"$/) {
-	    @a = split(/, /,$2);
+	    @a = split(/,[ _]/,$2);
 	    if ($#a < 1) { next; }
 	    # Trim leading and trailing spaces,
 	    $a[1] =~ s/^ +//;
@@ -292,8 +292,8 @@ sub update_dbs {
 		next;
 	    }
 	    # Tack on new entry at the end
-	    if (!&closed_entry($ftn{$fn})) {
-		$ftn{$fn} .= $now;
+	    if (!&closed_entry($ntf{$ln})) {
+		$ntf{$ln} .= $now;
 	    }
 	    $ntf{$ln} .= ":" . $file{$ln} . " " . $now . "-";
 	    if (defined($opt_v) || defined($opt_d)) {
