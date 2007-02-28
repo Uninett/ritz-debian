@@ -74,10 +74,10 @@ $title = "List of current port names";
 print $doc->start_html(-title => $title);
 print "<h2>$title</h2>\n";
 
-print "<hr><p><pre>\n";
+print "<hr /><pre>\n";
 
 &listem();
 
-print "</pre><hr>\n";
+print "</pre><hr />\n";
 print $doc->end_html;
 print "\n";
