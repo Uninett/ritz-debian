@@ -281,7 +281,7 @@ sub plotit {
     }
     printf("<a href=\"%s\"><img src=\"%s\" ",
     	   $refname, $refname);
-    printf("alt=\"[PNG plot]\" usemap=\"#plot\"></a>\n");
+    printf("alt=\"[PNG plot]\" usemap=\"#plot\" /></a>\n");
 }
 
 
@@ -298,9 +298,9 @@ sub forward_refs {
     @l = split(/\+/, $line); # use first if there's more than one
 
     if (!defined($date = &data_origin($l[0]))) {
-	printf("<hr>\n");
+	printf("<hr />\n");
 	printf("Could not find origin for %s\n", $l[0]);
-	printf("<hr>\n");
+	printf("<hr />\n");
 	return undef;
     }
     $origin = &date_to_tm($date);
@@ -312,20 +312,20 @@ sub forward_refs {
 
     # Simultaneously construct a client-side image map.
 
-    $map = "<map name=\"plot\">\n";
+    $map = "<map id=\"plot\" name=\"plot\">\n";
 
 
     # First, provide pointers to other type of plots covering the
     # same period with the same resolution.
 
-    printf("<hr>\n");
+    printf("<hr />\n");
     printf("You may further inspect for this period/port\n");
     printf("<ul>\n");
     foreach $pt (keys %{ $resolution_plots{$res}}) {
 	if ($pt ne $plot) {
 	    printf("<li><a href=\"%s/%s,%s,%s,%s\">\n",
 		   $ourname, $line, $dsp, $res, $pt);
-	    printf("%s</a>\n", $plot_title{$pt});
+	    printf("%s</a></li>\n", $plot_title{$pt});
 	}
     }
     printf("</ul>\n");
@@ -355,21 +355,22 @@ sub forward_refs {
 		printf("previous %s's %s plot</a>", 
 		       $dsp_t,
 		       $plot_title{$plot});
-		$map .= sprintf("<area shape=rect coords=\"%s\" %s",
+		$map .= sprintf("<area shape=\"rect\" coords=\"%s\" %s",
 				"0,0,64,479", $ref);
-		$map .= sprintf(" alt=\"Previous period\">\n");
+		$map .= sprintf(" alt=\"Previous period\" />\n");
 	    }
 	    if ($nx_ex) {
-		if ($pr_ex) { printf(", or\n"); } else { printf("\n"); }
+		if ($pr_ex) { printf(", or</li>\n"); }
+		else { printf("\n"); }
 		$ref = sprintf("href=\"%s/%s,%s,%s,%s\"",
 			       $ourname, $line, $nx_dsp, $res, $plot);
 		printf("<li><a %s>\n", $ref);
-		printf("next %s's %s plot</a>\n", 
+		printf("next %s's %s plot</a></li>\n", 
 		       $dsp_t, 
 		       $plot_title{$plot});
-		$map .= sprintf("<area shape=rect coords=\"%s\" %s",
+		$map .= sprintf("<area shape=\"rect\" coords=\"%s\" %s",
 				"625,0,639,479", $ref);
-		$map .= sprintf(" alt=\"Next period\">\n");
+		$map .= sprintf(" alt=\"Next period\" />\n");
 	    }
 	    printf("</ul>\n");
 	}
@@ -395,14 +396,14 @@ sub forward_refs {
 		printf("To \"zoom out\" and see the \"bigger picture\"\n");
 		printf("you may want to view <ul>\n");
 		$head_done = 1;
-		$map .= sprintf("<area shape=rect coords=\"%s\" %s",
+		$map .= sprintf("<area shape=\"rect\" coords=\"%s\" %s",
 				"65,0,624,24", $ref);
 		$map .= sprintf(" alt=\"Zoom out, %s plot in %s resolution\"",
 				$z_dsp_t, $z_res);
-		$map .= ">\n";
+		$map .= " />\n";
 	    }
 	    printf("<li>this %s's plot in ", $z_dsp_t);
-	    printf("<a %s> %s resolution</a>\n", $ref, $z_res);
+	    printf("<a %s> %s resolution</a></li>\n", $ref, $z_res);
 	}
     }
     if ($head_done) { printf("</ul>\n"); }
@@ -446,13 +447,15 @@ sub forward_refs {
 	    foreach $ds (@ds) {
 		$ref = sprintf("href=\"%s/%s,%s,%s,%s\"",
 			       $ourname, $line, $ds, $z_res, $plot);
-		printf("<li><a %s> %s </a>\n", $ref, &pretty_datespec($ds));
+		printf("<li><a %s> %s </a></li>\n",
+		       $ref, &pretty_datespec($ds));
 		if ($first) {
 		    $map .= sprintf("<area shape=rect coords=\"%s\" %s",
 				    sprintf("%d,24,%d,444",
 					    $x, $x+$dx-1),
 				    $ref);
-		    $map .= sprintf(" alt=\"Zoom in to %s-res plot of %s\">\n",
+		    $map .= sprintf(" alt=\"Zoom in to %s-res plot" .
+				    " of %s\" />\n",
 				    $z_res, &pretty_datespec($ds));
 		    $x += $dx;
 		}
@@ -566,7 +569,7 @@ print("<h2>$title</h2>\n");
 
 if ($resolution_plots{$res}{$plot}) {
     if (&plotit($line, $datespec, $plot, $res, $regen)) {
-	printf("<hr>The above image \"clickable\" for zooming etc.\n");
+	printf("<hr />The above image \"clickable\" for zooming etc.\n");
 	printf("A <a href=\"%s../stats/img-doc.html\">", $pfx);
 	printf("brief explanation</a> is available.\n");
 	&forward_refs($line, $datespec, $res, $plot);
