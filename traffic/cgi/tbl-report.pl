@@ -61,9 +61,9 @@ sub make_url {
 		    "tk-sort", "e-sort", "ee-sort", "filter")
     {
 	if ($field ne $sorttype) {
-	    $args .= $field . "=" . $in{$field} . "&";
+	    $args .= $field . "=" . $in{$field} . "&amp;";
 	} else {
-	    $args .= $field . "=" . $sortby . "&";
+	    $args .= $field . "=" . $sortby . "&amp;";
 	}
     }
     $args .= "submit=Submit";
@@ -712,7 +712,7 @@ sub report {
     print($doc->start_html(-title => $title));
     print("<h2>$title</h2>\n");
     
-    printf("<p><h2>Sorted by $sortfield");
+    printf("<h2>Sorted by $sortfield");
     if (defined($ift_filter = $in{"filter"})) {
 	printf(", %s", $ift_filter_name{$ift_filter});
     }
@@ -726,8 +726,7 @@ sub report {
 	}
     }
     printf("</h2>\n");
-    printf("<hr>\n");
-    printf("<p>\n");
+    printf("<hr />\n");
     printf("<pre>\n");
 
     # Output heading
@@ -813,7 +812,7 @@ sub report {
     close(IN);
 
     printf("</pre>\n");
-    printf("<hr>\n");
+    printf("<hr />\n");
 }
 
 
