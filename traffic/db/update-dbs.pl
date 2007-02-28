@@ -287,7 +287,7 @@ sub update_dbs {
 	    @a = split(/:/, $ntf{$ln});
 	    # split last entry on spaces
 	    @b = split(/ /, $a[$#a]);
-	    if ($b[0] eq $file{$ln}) {
+	    if ($b[0] eq $file{$ln} && !&closed_entry($ntf{$ln})) {
 		# same as before
 		next;
 	    }
@@ -319,7 +319,7 @@ sub update_dbs {
 	    @a = split(/:/, $ftn{$fn});
 	    # split last entry on spaces
 	    @b = split(/ /, $a[$#a]);
-	    if ($b[0] eq $line{$fn}) {
+	    if ($b[0] eq $line{$fn} && !&closed_entry($ftn{$fn})) {
 		# same as before
 		next;
 	    }
