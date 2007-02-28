@@ -1103,10 +1103,10 @@ sub other_map_ref {
 	$type[$elt] eq "polygon" ||
 	$type[$elt] eq "polyline")
     {
-	$mc = "<area shape=poly coords=\"";
+	$mc = "<area shape=\"poly\" coords=\"";
 	$mc .= join(',', &xlci(&other_map_coords($elt)));
     } elsif ($type[$elt] = "ellipsis") {
-	$mc = "<area shape=circle coords=\"";
+	$mc = "<area shape=\"circle\" coords=\"";
 	$mc .= join(',', &xlci($cx[$elt], $cy[$elt]), # center-x, center-y
 		    &scale(&min($radius_x[$elt], $radius_y[$elt])));
     } else {
@@ -1116,7 +1116,7 @@ sub other_map_ref {
     if (defined($alt)) {
 	$mc .= sprintf("\n\talt=\"%s\"", $alt);
     }
-    $mc .= ">\n";
+    $mc .= " />\n";
     return $mc;
 }
 
@@ -1133,18 +1133,18 @@ sub imgmap {
 	if (defined($name[$e]) && $name[$e] ne "area") {
 	    $url = &get_url($name[$e], $select);
 	    $alt = &get_alt($name[$e]);
-	    $mc = sprintf("<area shape=poly coords=\"");
+	    $mc = sprintf("<area shape=\"poly\" coords=\"");
 
 	    if (defined($nosplit[$e])) {
 		@ec = &enclose_polyline(@c);
 		$mc .= join(',', &xlci(@ec));
-		$mc .= sprintf("\"\n\thref=\"%s\"\n\talt=\"%s\">\n",
+		$mc .= sprintf("\"\n\thref=\"%s\"\n\talt=\"%s\" />\n",
 			       $url, $alt);
 	    } else {
 		@fh = &first_half_polyline(@c);
 		@ec = &enclose_polyline(@fh);
 		$mc .= join(',', &xlci(@ec));
-		$mc .= sprintf("\"\n\thref=\"%s\"\n\talt=\"%s\">\n",
+		$mc .= sprintf("\"\n\thref=\"%s\"\n\talt=\"%s\" />\n",
 			       $url, $alt);
 
 		$url = &get_url(&clean_rev_name($name[$e]), $select);
@@ -1152,9 +1152,9 @@ sub imgmap {
 
 		@lh = &last_half_polyline(@c);
 		@ec = &enclose_polyline(@lh);
-		$mc .= sprintf("<area shape=poly coords=\"");
+		$mc .= sprintf("<area shape=\"poly\" coords=\"");
 		$mc .= join(',', &xlci(@ec));
-		$mc .= sprintf("\"\n\thref=\"%s\"\n\talt=\"%s\">\n",
+		$mc .= sprintf("\"\n\thref=\"%s\"\n\talt=\"%s\" />\n",
 			       $url, $alt);
 	    }
 	    $map .= $mc;
@@ -1284,14 +1284,16 @@ sub add_zoom_areas {
 	$nx_ex = ($nx_base_tm < (time - 24*60*60));
 	
 	if ($pr_ex) {
-	    printf("<area shape=rect coords=\"%s\"\n", &pr_coords($w, $h));
+	    printf("<area shape=\"rect\" coords=\"%s\"\n", &pr_coords($w, $h));
 	    printf("\thref=\"%s\"\n", &map_ref($map, $pr_dsp, $type, $select));
-	    printf("\talt=\"%s\">\n", &map_alt($map, $pr_dsp, $type, $select));
+	    printf("\talt=\"%s\" />\n"
+		   , &map_alt($map, $pr_dsp, $type, $select));
 	}
 	if ($nx_ex) {
-	    printf("<area shape=rect coords=\"%s\"\n", &nx_coords($w, $h));
+	    printf("<area shape=\"rect\" coords=\"%s\"\n", &nx_coords($w, $h));
 	    printf("\thref=\"%s\"\n", &map_ref($map, $nx_dsp, $type, $select));
-	    printf("\talt=\"%s\">\n", &map_alt($map, $pr_dsp, $type, $select));
+	    printf("\talt=\"%s\" />\n",
+		   &map_alt($map, $pr_dsp, $type, $select));
 	}
     }
 }
@@ -1301,6 +1303,7 @@ sub add_help_ptr {
     printf("<p>A short <a href=\"%s\">explanation</a>",
 	   sprintf("%s../stats/map-doc.html", $pfx));
     printf(" of the map is available\n");
+    printf("</p>\n");
 }
 
 sub img_names {
@@ -1360,9 +1363,9 @@ sub produce_map {
     printf("<h2>%s</h2>\n", $title);
 
     printf("<a href=\"%s\">\n\t<img src=\"%s\" ", $refname, $refname);
-    printf("\n\talt=\"[PNG image]\"\n\tusemap=\"#mymap\">\n</a>\n");
+    printf("\n\talt=\"[PNG image]\"\n\tusemap=\"#mymap\" />\n</a>\n");
 
-    printf("<map name=\"mymap\">\n");
+    printf("<map id=\"mymap\" name=\"mymap\">\n");
     printf("%s", &imgmap($elts, $dsp, $type, $select));
     &add_zoom_areas($map, $dsp, $type, $select);
     printf("</map>\n");
