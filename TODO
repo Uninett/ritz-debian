@@ -72,3 +72,8 @@ $Id$		-*- Text -*-
 
  o Add environment monitoring module; check at least temperatures.
    Should trigger alarm also on sudden temperature increases.
+
+ o Analyze historical events from zino (and current outages?) to
+   produce a report of outage duration etc.
+
+ o Convert from kbit/s to Mbit/s in plots.
