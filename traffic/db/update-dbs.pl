@@ -178,6 +178,7 @@ sub get_line_names {
 	    return undef;
 	}
 	if (/^(\d+)\s+\S+\s+\S+ "(.*)"$/) {
+	    my($ix) = $1;
 	    @a = split(/,[ _]/,$2);
 	    if ($#a < 1) { next; }
 	    # Trim leading and trailing spaces,
@@ -188,9 +189,9 @@ sub get_line_names {
 	    # doesn't produce mismatch, new entry and
 	    # eventual overflow for the DB(M) entry (!).
 	    $a[1] =~ s/ /-/g;
-	    $line_name{$dev . ":" . $1} = $a[1];
-	    if ($1 > $max_ix{$dev}) {
-		$max_ix{$dev} = $1;
+	    $line_name{$dev . ":" . $ix} = $a[1];
+	    if ($ix > $max_ix{$dev}) {
+		$max_ix{$dev} = $ix;
 	    }
 	}
     }
@@ -226,9 +227,15 @@ sub get_current_state {
 
 	for $i (1 .. $max_ix{$r}) {
 	    $k = $r . ":" . $i;
-	    if (!defined($address{$k})) { next; } # skip holes in ifIndex space
-	    if ($as{$k} eq "off") { next; } # skip administratively down ifs.
-	    if (!defined($line_name{$k})) { next; } # skip "unnamed" lines
+	    if (!defined($address{$k})) {
+		next;		# skip holes in ifIndex space
+	    }
+	    if ($as{$k} eq "off") {
+		next;		# skip administratively down ifs.
+	    }
+	    if (!defined($line_name{$k})) {
+		next;		# skip "unnamed" lines
+	    }
 
 	    if ($address{$k} eq "none") {
 		$address{$k} = "#" . $i;
