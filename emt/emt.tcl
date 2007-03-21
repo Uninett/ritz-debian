@@ -324,15 +324,28 @@ proc emt_mail { to subject body } {
     log [format "Sent message:\n%s" $mail]
 }
 
-proc emt_send_alarm { body } {
-    global emt_to emt_mail emt_alarm_to emt_alarm_subject
+proc emt_do_send_alarm { to subject body } {
+    global emt_mail
 
-    set fd [open [format "|%s %s" $emt_mail $emt_alarm_to] "w"]
-    set mail [emt_format_mail $emt_alarm_to $emt_alarm_subject $body]
+    set fd [open [format "|%s %s" $emt_mail $to] "w"]
+    set mail [emt_format_mail $to $subject $body]
     puts $fd $mail
     close $fd
 
     log [format "Sent alarm message:\n%s" $mail]
+}
+
+proc emt_send_alarm { body } {
+    global emt_alarm_to emt_alarm_subject emt_alarm_phones
+
+    if { $emt_alarm_phones -ne "" } {
+	foreach phoneno $emt_alarm_phones {
+	    set subject [format "sms %s" $phoneno]
+	    emt_do_send_alarm $emt_alarm_to $subject $body
+	}
+    } else {
+	emt_do_send_alarm $emt_alarm_to $emt_alarm_subject $body
+    }
 }
 
 proc emt_report { ids } {
