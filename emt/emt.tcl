@@ -13,8 +13,13 @@ mib load rfc1213.mib
 
 set emt_mail "%RAWSENDMAIL%"
 
-proc emt_main {} {
-    global emt_to emt_from emt_alarm_to emt_alarm_subject
+proc emt_config {} {
+    global Server Port User Secret
+    global emt_from
+    global emt_to
+    global emt_alarm_to
+    global emt_alarm_subject
+    global emt_alarm_phones
 
     foreach f "~/.ritz.tcl ~/.emt.tcl" {
 	if { [file exists $f] } {
@@ -23,6 +28,12 @@ proc emt_main {} {
 	    error "File $f must exist but does not"
 	}
     }
+}
+
+proc emt_main {} {
+    global Server Port User Secret
+
+    emt_config
 
     if [info exists AllowClearTextAuth] {
 	set ::auth::AllowClearTextAuth $AllowClearTextAuth
@@ -436,6 +447,7 @@ proc emt_check_all {} {
 	}
     }
     if { [llength $rids] != 0 } {
+	emt_config;			# reconfig before sending alarms
 	emt_report $rids
 	if { [info exists emt_alarm_to] } {
 	    emt_alarm $rids
