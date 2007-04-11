@@ -1072,8 +1072,13 @@ sub other_map_url {
 
 sub other_map_alt {
     my($elt, $dsp, $type, $select) = @_;
+    my($mr) = $mapref[$elt];
 
-    return $mapalt[$elt];
+    if (defined($mapalt[$elt])) {
+	return $mapalt[$elt];
+    } else {
+	return sprintf("[%s %s %s map]", $mr, $type, $dsp);
+    }
 }
 
 sub other_map_coords {
