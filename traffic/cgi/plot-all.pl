@@ -450,7 +450,7 @@ sub forward_refs {
 		printf("<li><a %s> %s </a></li>\n",
 		       $ref, &pretty_datespec($ds));
 		if ($first) {
-		    $map .= sprintf("<area shape=rect coords=\"%s\" %s",
+		    $map .= sprintf("<area shape=\"rect\" coords=\"%s\" %s",
 				    sprintf("%d,24,%d,444",
 					    $x, $x+$dx-1),
 				    $ref);
