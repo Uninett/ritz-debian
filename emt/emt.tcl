@@ -349,7 +349,7 @@ proc emt_do_send_alarm { to subject body } {
 proc emt_send_alarm { body } {
     global emt_alarm_to emt_alarm_subject emt_alarm_phones
 
-    if { $emt_alarm_phones != "" } {
+    if { [info exists emt_alarm_phones] && $emt_alarm_phones != "" } {
 	foreach phoneno $emt_alarm_phones {
 	    set subject [format "sms %s" $phoneno]
 	    emt_do_send_alarm $emt_alarm_to $subject $body
