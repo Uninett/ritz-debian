@@ -53,6 +53,22 @@ push(@INC, "%LIBDIR%");
 
 require 'read-raw-log.pl';
 
+# Support using name of form "logical-portname:r" to
+# reverse packet and byte counters
+
+%rev_ctr = (
+	    "ifInUcastPkts" => "ifOutUcastPkts",
+	    "ifInNUcastPkts" => "ifOutNUcastPkts",
+	    "ifOutUcastPkts" => "ifInUcastPkts",
+	    "ifOutNUcastPkts" => "ifInNUcastPkts",
+	    
+	    "ifInOctets" => "ifOutOctets",
+	    "ifOutOctets" => "ifInOctets",
+
+	    "ifHCInOctets" => "ifHCOutOctets",
+	    "ifHCOutOctets" => "ifHCInOctets",
+	    );
+
 
 sub read_5m_sum {
     my($lines, $date) = @_;
@@ -61,11 +77,19 @@ sub read_5m_sum {
     my($tick, $tt, $lasttick, $ltt, $sno, $f1, $k);
     my($err) = "";
     my(%mycount, %mybase, %mysample_time, $myspeed, $my_max_sample);
+    my($reverse, $mv);
 
     undef %base;
     $myspeed = 0;
 
     foreach $line (@lines) {
+	if ($line =~ /([^:]*):r/) {
+	    $line = $1;
+	    $reverse = 1;
+	} else {
+	    $reverse = 0;
+	}
+
 	if (! defined($base = &name_to_file($line, $date))) {
 	    $err .= "Could not find base file name for $line / $date\n";
 	    next;
@@ -82,6 +106,11 @@ sub read_5m_sum {
 
 	foreach $v (keys %base) {
 	    $mybase{$v} = $base{$v};
+	    if ($reverse && defined($rev_ctr{$v})) {
+		$mv = $rev_ctr{$v};
+	    } else {
+		$mv = $v;
+	    }
 
 	    $sno = 1;
 	    $lasttime{$v} = $sample_time{0};
@@ -92,13 +121,13 @@ sub read_5m_sum {
 		 $tick++)
 	    {
 		$tt = $tick * 5.0/60;
-		$mysample_time{$v,$tick} = $tt;
+		$mysample_time{$mv,$tick} = $tt;
 		$mysample_time{$tick} = $tt;
 
 		$ltt = $lasttick * 5.0/60;
 
-		if (! defined($mycount{$v,$tick})) {
-		    $mycount{$v,$tick} = 0;
+		if (! defined($mycount{$mv,$tick})) {
+		    $mycount{$mv,$tick} = 0;
 		}
 		# First include remainder of last sample in this tick
 		if (defined($sample_time{$sno}) && defined($lasttime{$v}) &&
@@ -107,7 +136,7 @@ sub read_5m_sum {
 		    if ($tt > $sample_time{$sno}) {
 			$f1 = ($sample_time{$sno} - $ltt) /
 			    ($sample_time{$sno} - $lasttime{$v});
-			$mycount{$v,$tick} += $count{$v,$sno} * $f1;
+			$mycount{$mv,$tick} += $count{$v,$sno} * $f1;
 		    }
 		}
 		# ...then include any full samples in this tick
@@ -115,7 +144,7 @@ sub read_5m_sum {
 		    $lasttime{$v} = $sample_time{$sno};
 		    $sno++;
 		    if ($sample_time{$sno} < $tt) {
-			$mycount{$v,$tick} += $count{$v,$sno};
+			$mycount{$mv,$tick} += $count{$v,$sno};
 		    }
 		}
 		if (defined($sample_time{$sno}) && defined($lasttime{$v}) &&
@@ -124,7 +153,7 @@ sub read_5m_sum {
 		    # ...and add any remaining partial sample in this tick
 		    $f1 = ($tt - &max($ltt, $lasttime{$v})) /
 			($sample_time{$sno} - $lasttime{$v});
-		    $mycount{$v,$tick} += $count{$v,$sno} * $f1;
+		    $mycount{$mv,$tick} += $count{$v,$sno} * $f1;
 		    $lasttick = $my_max_sample = $tick;
 		}
 	    }
