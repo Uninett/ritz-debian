@@ -16,6 +16,7 @@ fi
 umask 022
 
 FLIST=$TDIR/modified
+start=$TDIR/start-check
 
 trap '/bin/rm -rf $TDIR ; exit 0' EXIT HUP INT QUIT TERM
 
@@ -24,6 +25,10 @@ cd /tftpboot
 if [ ! -f $stamp ]; then
 	touch $stamp
 fi
+if [ ! -f $start ]; then
+	touch $start
+fi
+sleep 10	# Allow any "hot files" (being written) to be modified
 
 maxiter=10
 datestr=`date +"%y-%m-%d %H:%M:%S"`
@@ -32,11 +37,12 @@ find . -newer $stamp -name '*-confg' -print > $FLIST
 
 while test -s $FLIST; do
     while read f; do
-	# Skip over empty files (and delay), since tftpd may be in the
-	# process of writing, and tftpd now truncates the output before
-	# it is written.
-	if [ ! -s $f ]; then
-	    sleep 20	# Give write a fair chance to complete
+	cf=$TDIR/${f}-check
+	find $f ! -newer $start > $cf
+	if [ ! -s $cf ]; then
+	    # Skip over "hot files", allow them to be picked
+	    # op on the next round.
+	    echo "Temporarily skipping hot file: " $f >&2
 	    continue
 	fi
 	echo $datestr $f >> last-checked-files
@@ -62,6 +68,8 @@ while test -s $FLIST; do
 	ci -u -m"New config" -t-"Saved config" $f
     done < $FLIST 
     touch now
+    touch $start	# Mark a new time to check from
+    sleep 10	# Allow more "hot files" (being written) to be modified
 
     # Check if any new configs have been written while we were
     # checking in our stuff, redo for those files
