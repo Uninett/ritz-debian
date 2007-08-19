@@ -32,6 +32,13 @@ find . -newer $stamp -name '*-confg' -print > $FLIST
 
 while test -s $FLIST; do
     while read f; do
+	# Skip over empty files (and delay), since tftpd may be in the
+	# process of writing, and tftpd now truncates the output before
+	# it is written.
+	if [ ! -s $f ]; then
+	    sleep 20	# Give write a fair chance to complete
+	    continue
+	fi
 	echo $datestr $f >> last-checked-files
 
 	rcsdiff $f > $TDIR/diff 2>/dev/null
@@ -41,6 +48,9 @@ while test -s $FLIST; do
 
 	echo $sep >> last-checked-diff
 	echo ==== $f =====>> last-checked-diff
+	# Compensate for tftpds which do not truncate the output
+	# before writing, and erase text after '^end$' if there is
+	# such an occurrance (assumed to be a cisco config).
 	if egrep '^end$' $f >/dev/null 2>&1; then
 	    bn=`basename $f`
 	    if sed '/^end$/q' $f > $TDIR/$bn; then
