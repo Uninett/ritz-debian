@@ -29,7 +29,7 @@ pmake-build:
 	rm -f ritz
 	cp -f ../Makefile.inc.dist ../Makefile.inc
 	( cd .. ; pmake )
-	rm $(patches)
+	rm -f $(patches)
 
 binary-arch: pmake-build patch
 	$(MAKE_DIR) $(DOCS_DIR)
