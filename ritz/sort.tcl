@@ -71,8 +71,14 @@ proc compareTypes { a b } {
     set b [Attr $b "type"]
     
     if { $a == $b } { return 0; }
+
+    # Port state ranks first
     if { $a == "portstate" } { return -1; }
     if { $b == "portstate" } { return 1; }
+
+    # BGP state ranks above reachability
+    if { $a == "bgp" } { return -1; }
+    if { $b == "bgp" } { return 1; }
 
     puts [format "resorting to string compare for %s <-> %s" $a $b]
     return [string compare $a $b]; # last resort
@@ -94,6 +100,38 @@ proc compareReachability { a b } {
     if { $ar == "noResponse" } { return -1; }
     puts [format "resorting to string compare for %s <-> %s" $ar $br]
     return [string compare $ar $br]; # last resort
+}
+
+proc compareBgp { a b } {
+
+    if [catch { set ao [Attr $a "bgpOS"] }] {
+	puts "no bgpOS for $a"
+	return 0
+    }
+    if [catch { set bo [Attr $b "bgpOS"] }] {
+	puts "no bgpOS for $b"
+	return 1
+    }
+
+    if { $ao != $bo } {
+	if { $ao == "established" } { return -1; }
+	if { $bo == "established" } { return 1; }
+    }
+
+    if [catch { set aa [Attr $a "bgpAS"] }] {
+	puts "no bgpAS for $a"
+	return 0
+    }
+    if [catch { set ba [Attr $a "bgpAS"] }] {
+	puts "no bgpAS for $b"
+	return 1
+    }
+
+    if { $aa != $ba } {
+	if { $aa != "start" } { return 1; }
+	if { $ba != "start" } { return -1; }
+    }
+    return 0;
 }
 
 proc numCompare { a b } {
@@ -142,14 +180,10 @@ proc compareAge { a b } {
     set aa 0
     set ba 0
 
-    if [catch { set aa [getAge $a] }] {
-	puts "No age for $a"
-    }
-    if [catch { set ba [getAge $b] }] {
-	puts "No age for $b"
-    }
+    catch { set aa [getAge $a] }
+    catch { set ba [getAge $b] }
 
-    numCompare $ba $aa
+    numCompare $aa $ba
 }
 
 proc compareAgeRev { a b } {
@@ -162,12 +196,8 @@ proc compareSeverity { a b } {
     set as "unknown"
     set bs "unknown"
     
-    if [catch { set as [caseSeverity $a] }] {
-	puts "No severity for $a"
-    }
-    if [catch { set bs [caseSeverity $b] }] {
-	puts "No severity for $b"
-    }
+    catch { set as [caseSeverity $a] }
+    catch { set bs [caseSeverity $b] }
 
     if { $as == $bs } { return 0; }
     foreach s {alarm warning normal unknown closed} {
@@ -183,12 +213,8 @@ proc compareDowntime { a b } {
     set ad 0
     set bd 0
 
-    if [catch { set ad [getDowntime $a] }] {
-	puts "No downtime for $a"
-    }
-    if [catch { set bd [getDowntime $b] }] {
-	puts "No downtime for $b"
-    }
+    catch { set ad [getDowntime $a] }
+    catch { set bd [getDowntime $b] }
 
     numCompare $bd $ad
 }
@@ -213,13 +239,19 @@ proc compareCases { a b } {
     if { $s != 0 } { return $s; }
 
     if { [AttrExists $a "type"] } {
-	if { [Attr $a "type"] == "portstate" } {
+
+	set at [Attr $a "type"]
+
+	if { $at == "portstate" } {
 	    set s [comparePortStates $a $b]
 #	puts [format "portstate: %s" $s]
 	    if { $s != 0 } { return $s; }
-	} elseif { [Attr $a "type"] == "reachability" } {
+	} elseif { $at == "reachability" } {
 	    set s [compareReachability $a $b]
 #	puts [format "reach: %s" $s]
+	    if { $s != 0 } { return $s; }
+	} elseif { $at == "bgp" } {
+	    set s [compareBgp $a $b]
 	    if { $s != 0 } { return $s; }
 	}
     }
@@ -272,7 +304,7 @@ proc sortCases { caseids } {
 }
 
 # Return severity of a given case.
-# One of alarm, warning, normal, unknown.
+# One of alarm, warning, normal, unknown, or ignored.
 
 proc caseSeverity { id } {
 
@@ -319,9 +351,23 @@ proc caseSeverity { id } {
 	} else {
 	    return "normal"
 	}
+    } elseif { $type == "bgp" } {
+	set as [Attr $id "bgpAS"]
+	if { $as == "start" } {
+	    set os [Attr $id "bgpOS"]
+	    if { $os == "established" } {
+		return "normal"
+	    } else {
+		return "alarm"
+	    }
+	} else {
+	    return "unknown"
+	}
     } else {
 	return "unknown"
     }
+    puts [format "Id %d: fell off end of caseSeverity" $id]
+    return "unknown"
 }
 
 # Is the filter empty?

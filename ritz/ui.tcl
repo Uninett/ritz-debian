@@ -228,7 +228,7 @@ proc uiAbout { } {
     $w tag configure t1 -justify center
     $w insert end "(c) UNINETT and NORDUnet\n" t2
     $w tag configure t2 -justify center
-    $w insert end "1998, 1999\n" t3
+    $w insert end "1998 - 2007\n" t3
     $w tag configure t3 -justify center
 
     $w configure -state disabled
@@ -614,9 +614,9 @@ proc uiViewCaseSetup { w id } {
     menu $m -tearoff 0
     $w.menu add cascade -label "Manage" -underline 0 -menu $m
 
-    $m add command -label "snmpnetstat -i" \
+    $m add command -label "justnetstat -i" \
 	    -command [format "uiSnmpNetstat_i %s" $id]
-    $m add command -label "snmpnetstat -idn" \
+    $m add command -label "justnetstat -idn" \
 	    -command [format "uiSnmpNetstat_idn %s" $id]
     $m add command -label "traceroute" \
 	    -command [format "uiTraceroute %s" $id]
@@ -668,6 +668,8 @@ proc uiViewCase { id } {
 	entry $e -width $width
 	$e insert end [uiAttrVal $id $attr]
 	$e configure -state disabled
+	$e configure -disabledforeground {#666666}
+	$e configure -disabledbackground {#ffffff}
 	pack $l $e -fill x -side left
 	pack $lf -side top
     }

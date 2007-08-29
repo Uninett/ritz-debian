@@ -29,7 +29,7 @@ ritz: ${SRCS} Makefile ../subst
 	mv $@.new $@
 	chmod +x $@
 
-install:
+install: ritz
 	rm -f ${BINDIR}/ritz
 	cp ritz ${BINDIR}/ritz
 

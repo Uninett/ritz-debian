@@ -94,6 +94,57 @@ proc summarizePort { id } {
     return [format "%-*s" [summaryLen] $s]
 }
 
+proc summarizeBGP { id } {
+    global View
+
+    set s ""
+    if { $View(id) } {
+	set s [format "%5s" $id]
+    }
+    if { $View(opstate) && $View(admstate) } {
+	set os [format "bgp %s" [Attr $id "bgpOS"]]
+	set l [string length $os]
+	set rl [expr 5 + 10 + 8 - $l]
+	set s [format "%s %s %*s" $s $os $rl [Attr $id "bgpAS"]]
+    } else {
+	if { $View(opstate) } {
+	    set s [format "%s bgp %-10s" $s [Attr $id "bgpOS"]]
+	}
+	if { $View(admstate) } {
+	    set s [format "%s %8s" $s [Attr $id "bgpAS"]]
+	}
+    }
+    if { $View(priority) } {
+	set s [format "%s %4s" $s [getPriority $id]]
+    }
+    if { $View(age) } {
+	set s [format "%s %16s" $s [mib format sysUpTime \
+	    [expr [getAge $id] * 100]]]
+    }
+    if { $View(downtime) } {
+	set s [format "%s %16s" $s ""]
+    }
+    if { $View(updated) } {
+	set secs [expr [clock seconds] - [Attr $id "updated"]]
+	set s [format "%s %16s" $s [mib format sysUpTime \
+		[expr $secs * 100]]]
+    }
+    if { $View(router) } {
+	set s [format "%s %-16s" $s [Attr $id "router"]]
+    }
+    if { $View(port) } {
+	set s [format "%s %-20s" $s \
+		   [format "AS %s %s" \
+			[Attr $id "remote-AS"] \
+			[Attr $id "remote-addr"] \
+		       ]]
+    }
+    if { [AttrExists $id "lastevent"] && $View(descr) } {
+	set s [format "%s (%s)" $s [Attr $id "lastevent"]]
+    }
+    return [format "%-*s" [summaryLen] $s]
+}
+
 proc summarizeReach { id } {
     global View
 
@@ -137,8 +188,10 @@ proc summaryStr { id } {
 	return [summarizePort $id]
     } elseif { $type == "reachability" } {
 	return [summarizeReach $id]
+    } elseif { $type == "bgp" } {
+	return [summarizeBGP $id]
     } else {
-	error [format "unknown case type: %s, id %s" $type $id]
+	puts stderr [format "Ignoring unknown case type: %s, id %s" $type $id]
     }
 }
 
