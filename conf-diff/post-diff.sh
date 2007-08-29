@@ -23,5 +23,6 @@ if test -s last-checked-diff ; then
     ) | %RAWSENDMAIL% ${MAILTO}
 
     cat last-checked-files last-checked-diff > last-checked-diff.`date +%a`
-    rm  last-checked-files last-checked-diff
+    rm -f last-checked-diff
 fi
+rm -f last-checked-files
