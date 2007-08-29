@@ -1,4 +1,123 @@
+2007-08-29  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Bump version to 0.9.3.
+
+	* ritz/Makefile, ritz/sort.tcl, ritz/summary.tcl, ritz/ui.tcl:
+	Several changes to ritz:
+	 o Add support for BGP events to ritz.
+	 o Make ritz more quiet if some attributes are missing.
+	 o Fix the Age sorting order; newer comes first.
+	 o Make ritz ignore unknown event types (log a warning to stderr)
+	   instead of flagging it as an error, requiring an OK to a popup.
+	   (Should perhaps make a dummy summary line, that may come next.)
+	 o Update copyright years.
+	 o Change from snmpnetstat to justnetstat.
+	 o Change the background & foreground colours for attribute value
+	   display, to enhance readability.
+
+	* mibs/BGP4-MIB.my: Update the BGP4 MIB to that found in RFC 4273.
+
+2007-08-19  Havard Eidnes  <he@uninett.no>
+
+	* conf-diff/checkin-configs.sh:
+	In the inner loop, skip over "hot files" (files being written),
+	and pick those up on the successive iterations of the outer loop.
+
+	Also add a comment explaining the presence of the handling of cisco
+	configs with tftpds which don't truncate their output.
+
+2007-07-16  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl:
+	Add support to reverse the in/out byte and packet counters by
+	appending :r to the logical port name(s).
+
+2007-06-20  Jarle Greipsland  <jarle@uninett.no>
+
+	* emt/emt.tcl:
+	"Hotfix" to ensure emt doesn't crash.  The new variable
+	emt_alarm_phones was being used without having been initialized.
+
+2007-04-11  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Ensure that we always emit an alt= attribute with an <area>.
+	This brings us XHTML 1.0 compliance for this document too.
+
+	* traffic/cgi/plot-all.pl:
+	Ensure all shape attribute values are quoted.
+
+2007-04-04  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl: Ugh, fix syntax error -- this is not sh...
+
+2007-03-22  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl:
+	Re-read config files before each run where alerts are being sent
+	out.  This allows one to change configuration in-flight, e.g. to
+	re-direct alarms to a different destination.
+
+2007-03-21  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl:
+	Add support to send short alarm messages to more than one
+	phone number using the "sms phoneno" subject convention
+	which our SMS gateway uses.
+
+2007-03-19  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/update-dbs.pl:
+	Fix a problem where a $1 was being inadvertently overwritten;
+	the symptom was that logical port names with spaces in their
+	names would not be recorded.
+	Make some if-bodies multi-line, to allow breakpoints to be set while
+	debugging the above problem.
+
+2007-03-14  Havard Eidnes  <he@uninett.no>
+
+	* TODO: Add two more wishlist items.
+
+2007-02-28  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/list-ports.pl, traffic/cgi/tbl-report.pl,
+	  traffic/html/tbl-report.html, traffic/html/intf-load.html, 
+	  traffic/cgi/plot-all.pl:
+	Make this or the output valid XHTML 1.0 Transitional.
+
+	* traffic/db/update-dbs.pl:
+	Make sure to re-open closed entries when they re-appear.
+
+	* traffic/db/update-dbs.pl:
+	Allow either ", " or ",_" as field separator, to cater
+	for e.g. D-Link switches which can't have " " in their
+	description fields.
+
+	Correct a cut&paste error which appears to have ended up
+	closing the wrong entry...
+
+	* traffic/cgi/load-map.pl:
+	Convert this so that it emits a valid XHTML 1.0 document.
+	Changes:
+	 - area shape values must be quoted
+	 - area elements must be closed with " />"
+	 - the paragraph at the end must be closed with </p>
+	 - use the id attribute (too) in the <map> element
+
+2007-02-27  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl: Hum, add missing square brackets.
+
+2007-02-15  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Reverse the order in which the image map elements are emitted,
+	so that the that when two lines overlap, the drawing layering
+	matches up with the image-map layering.
+
 2007-02-09  Havard Eidnes  <he@uninett.no>
+
+	* ChangeLog: Updated ChangeLog for new version bump.
 
 	* Makefile: Bump version to 0.9.2.
 
