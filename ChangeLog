@@ -1,5 +1,7 @@
 2007-08-29  Havard Eidnes  <he@uninett.no>
 
+	* ChangeLog: Update for bump to 0.9.3.
+
 	* Makefile: Bump version to 0.9.3.
 
 	* ritz/Makefile, ritz/sort.tcl, ritz/summary.tcl, ritz/ui.tcl:
