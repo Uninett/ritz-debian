@@ -41,14 +41,33 @@ proc doTrap { a type args } {
 #	puts [format "%s: var %s value %s" $r $fn $val]
 
     }
+
+    if { ! [info exists snmpTrapOID] } {
+	puts [format "snmpTrapOID missing from %s (%s)" [name $sh] $a]
+	return
+    }
+
+    # Tweak for SNMPv1 traps, they appear to have an "extra" 0 in the OID...
+    if { $type == "snmpV1-trap" } {
+	switch -regexp $snmpTrapOID {
+	    ^[0-9.]*$ {
+		set oidlist [split [mib name $snmpTrapOID] "."]
+		if { [lrange $oidlist 1 1] == 0 } {
+		    set inst [format "%s.%s" \
+				  [lrange $oidlist 0 0] \
+				  [join [lrange $oidlist 2 end] "."]]
+		    set snmpTrapOID [mib name [mib oid $inst]]
+		} else {
+		    set snmpTrapOID [mib name $snmpTrapOID]
+		}
+	    }
+	}
+    }
+
     if { [info exists sysUpTime] } {
 	set uptime [mib scan sysUpTime.0 $sysUpTime]
     } else {
 	puts [format "sysUpTime not part of trap"]
-	return
-    }
-    if { ! [info exists snmpTrapOID] } {
-	puts [format "snmpTrapOID missing from %s (%s)" [name $sh] $a]
 	return
     }
 
