@@ -1,4 +1,3 @@
-#!/store/bin/scotty
 #
 # $Id$
 #
@@ -14,6 +13,8 @@ proc initStatus { } {
     ::persist::add ::isCisco
 
     setSWalkEhandler swalkErrorHandler
+
+    initBGP
 }
 
 
@@ -426,6 +427,14 @@ proc pollRouter { r } {
     if { [catch {pollIfs $sh} msg] } {
 	log [format "%s: error polling router: %s" $r $msg]
 	return
+    }
+    # Maybe add more later to this list
+    foreach p "checkBGP" {
+	if { [info proc $p] == $p } {
+	    if { [catch {$p $sh} msg] } {
+		log [format "%s: error doing %s: %s" $r $p $msg]
+	    }
+	}
     }
 }
 
