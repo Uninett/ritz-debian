@@ -310,7 +310,7 @@ proc lastDelayedCheckResponse { sh } {
     global responseCheckInProgress
 
     delayedCheckResponse $sh
-    unset responseCheckInProgress($sh)
+    catch { unset responseCheckInProgress($sh) }
 }
 
 proc delayedNoResponse { sh } {
