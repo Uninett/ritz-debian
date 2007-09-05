@@ -251,7 +251,7 @@ proc getUptime { sh } {
     if [info exists uptime($sh)] {
 	return $uptime($sh)
     } else {
-	log [format "%s: returning 0 uptime" [name $sh]
+	log [format "%s: returning 0 uptime" [name $sh]]
 	return 0
     }
 }
