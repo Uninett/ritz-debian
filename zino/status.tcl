@@ -18,20 +18,6 @@ proc initStatus { } {
 }
 
 
-# Returns sysObjectID, or "" on failure
-
-proc getSysID { sh } {
-
-    if { [catch {set svbl [$sh get "sysObjectID.0"]} msg] } {
-	set m [format "%s: %s" "getSysID" $msg]
-	error $m $m
-    }
-    set name  [lindex [lindex $svbl 0] 0]
-    set value [lindex [lindex $svbl 0] 2]
-    Response $sh
-    return [mib scan $name $value]
-}
-
 # Create mapping table address -> handle
 # and handle -> address-list
 
@@ -199,10 +185,8 @@ proc recordIntf { sh vbl } {
 	    setEventAttr $eid "polladdr" [::config::conf $r address]
 	    setEventAttr $eid "priority" [::config::conf $r priority]
 
-	    if { [catch {set sysUpTime [getUptime $sh]} msg] } {
-		log [format "%s: %s" $r $msg]
-		noResponse $sh
-		# Fake it
+	    set sysUpTime [getUptime $sh]
+	    if { $sysUpTime == 0 } {
 		set sysUpTime [mib scan ifLastChange $ifLastChange]
 	    }
 
@@ -241,29 +225,35 @@ proc pollIfs { sh } {
     sparseWalk $sh $vl x [list eval recordIntf $sh {$x}]
 }
 
-# Return uptime in 100'ths of a second, or err
+# Return uptime in 100'ths of a second, or 0 if unknown
 
 proc getUptime { sh } {
+    global uptime
 
-    if { [catch { set uvbl [$sh get "sysUpTime.0"]} msg] } {
-	set m [format "%s: %s" "getUptime" $msg]
-	error $m $m
+    $sh get "sysUpTime.0" {
+	global uptime
+	if { "%E" != "noError" } {
+	    log "getUptime: %E"
+	    if [regexp "noResponse" "%E"] {
+		noResponse "%S"
+	    }
+	    return
+	}
+	Response "%S"
+
+	set name  [lindex [lindex "%V" 0] 0]
+	set value [lindex [lindex "%V" 0] 2]
+	set uptime(%S) [mib scan $name $value]
     }
-    set name  [lindex [lindex $uvbl 0] 0]
-    set value [lindex [lindex $uvbl 0] 2]
-#    puts [format "%s uptime %s" [name $sh] $value]
-    Response $sh
 
-    return [mib scan $name $value]
-}
+    $sh wait
 
-proc checkConfig { sh } {
-    global isCisco
-
-    set uptime [getUptime $sh]
-    set sysid [getSysID $sh]
-    set isCisco([name $sh]) [oidPfxMatch [mib oid cisco] $sysid]
-    getAddrList $sh
+    if [info exists uptime($sh)] {
+	return $uptime($sh)
+    } else {
+	log [format "%s: returning 0 uptime" [name $sh]
+	return 0
+    }
 }
 
 proc swalkErrorHandler { sh err } {
@@ -300,9 +290,15 @@ proc delayedCheckResponse { sh } {
     }
 
     log [format "checking reachability of %s" $r]
-    if [checkResponse $sh] {
-	Response $sh
-	cleanupDelayedResponse $sh
+    $sh get "sysUpTime.0" {
+	if { "%E" != "noError" } {
+	    if [regexp "noResponse" "%E"] {
+		noResponse %S
+	    }
+	} else {
+	    Response %S
+	    cleanupDelayedResponse %S
+	}
     }
 }
 
@@ -316,45 +312,50 @@ proc lastDelayedCheckResponse { sh } {
 proc delayedNoResponse { sh } {
     global responseCheckInProgress
     
-    set r [name $sh]
-#    log [format "checking reachability of %s" $r]
-    
-    if { ! [checkResponse $sh] } {
-#	log [format "checking: no response from %s" $r]
+    $sh get "sysUpTime.0" {
 
-	set doit 0
-	# Do we already have an event for this failure?
-	if [eventIxExists $r "reachability"] {
-	    set eid [eventId $r "reachability"]
-	    if { [getEventAttr $eid "reachability"] != "no-response" } {
-		set doit 1
+	set r [name %S]
+#	log [format "checking reachability of %s" $r]
+    
+	if { "%E" != "noError" } {
+	    if [regexp "noResponse" "%E"] {
+#		log [format "checking: no response from %s" $r]
+
+		set doit 0
+		# Do we already have an event for this failure?
+		if [eventIxExists $r "reachability"] {
+		    set eid [eventId $r "reachability"]
+		    if { [getEventAttr $eid "reachability"] != "no-response" } {
+			set doit 1
+		    }
+		} else {
+		    set doit 1
+		}
+		#	log [format "checking %s, doit is %s" $r $doit]
+
+		if { $doit != 0 } {
+		    set eid [eventId $r "reachability"]
+		    setEventAttr $eid "router" $r
+		    setEventAttr $eid "reachability" "no-response"
+		    setEventAttr $eid "polladdr" [::config::conf $r address]
+		    setEventAttr $eid "priority" [::config::conf $r priority]
+		    set s [format "%s no-response" $r]
+		    eventLog $eid $s
+		    eventCommit $eid
+		    log $s
+		    after [expr 60  * 1000] delayedCheckResponse %S
+		    after [expr 120 * 1000] delayedCheckResponse %S
+		    after [expr 240 * 1000] delayedCheckResponse %S
+		    after [expr 480 * 1000] delayedCheckResponse %S
+		    after [expr 960 * 1000] lastDelayedCheckResponse %S
+		} else {
+		    cleanupDelayedResponse %S
+		}
 	    }
 	} else {
-	    set doit 1
+	    log [format "checking: cancelling check of %s" $r]
+	    cleanupDelayedResponse %S
 	}
-#	log [format "checking %s, doit is %s" $r $doit]
-
-	if { $doit != 0 } {
-	    set eid [eventId $r "reachability"]
-	    setEventAttr $eid "router" $r
-	    setEventAttr $eid "reachability" "no-response"
-	    setEventAttr $eid "polladdr" [::config::conf $r address]
-	    setEventAttr $eid "priority" [::config::conf $r priority]
-	    set s [format "%s no-response" $r]
-	    eventLog $eid $s
-	    eventCommit $eid
-	    log $s
-	    after [expr 60  * 1000] delayedCheckResponse $sh
-	    after [expr 120 * 1000] delayedCheckResponse $sh
-	    after [expr 240 * 1000] delayedCheckResponse $sh
-	    after [expr 480 * 1000] delayedCheckResponse $sh
-	    after [expr 960 * 1000] lastDelayedCheckResponse $sh
-	} else {
-	    cleanupDelayedResponse $sh
-	}
-    } else {
-	log [format "checking: cancelling check of %s" $r]
-	cleanupDelayedResponse $sh
     }
 }
 
@@ -404,35 +405,35 @@ proc Response { sh } {
     }
 }
 
-proc checkResponse { sh } {
-
-    if [catch { getUptime $sh } msg] {
-	log [format "%s: %s" [name $sh] $msg]
-	if [regexp "noResponse" $msg] {
-	    return 0
-	}
-    }
-    return 1
-}
-
 proc pollRouter { r } {
 
-    set sh [handle $r]
-    if { [catch {checkConfig $sh} msg] } {
-	if { [regexp "noResponse" $msg] } {
-	    noResponse $sh
+    [handle $r] get "sysUpTime.0 sysObjectID.0" {
+	global isCisco
+	if { "%E" != "noError" } {
+	    if { "%E" == "noResponse" } {
+		noResponse %S
+	    }
+	    return
 	}
-	return
-    }
-    if { [catch {pollIfs $sh} msg] } {
-	log [format "%s: error polling router: %s" $r $msg]
-	return
-    }
-    # Maybe add more later to this list
-    foreach p "checkBGP" {
-	if { [info proc $p] == $p } {
-	    if { [catch {$p $sh} msg] } {
-		log [format "%s: error doing %s: %s" $r $p $msg]
+
+	set sh %S
+	set r [name $sh]
+
+	set uptime [lindex [lindex "%V" 0] 2]
+	set sysid  [lindex [lindex "%V" 1] 2]
+	set isCisco($r) [oidPfxMatch [mib oid cisco] $sysid]
+	getAddrList $sh
+
+	if { [catch {pollIfs $sh} msg] } {
+	    log [format "%s: error polling router: %s" $r $msg]
+	    return
+	}
+	# Maybe add more later to this list
+	foreach p "checkBGP" {
+	    if { [info proc $p] == $p } {
+		if { [catch {$p $sh} msg] } {
+		    log [format "%s: error doing %s: %s" $r $p $msg]
+		}
 	    }
 	}
     }
