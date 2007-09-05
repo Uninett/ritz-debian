@@ -24,7 +24,9 @@ proc doTrap { a type args } {
 	puts [format "ignored trap from %s" $a]
 	return
     }
-    set sh [handle $AddrToRouter($a)]
+    if [catch { set sh [handle $AddrToRouter($a)] }] {
+	return
+    }
     set r [name $sh]
 
 #    puts [format "%s: trap-type %s" $r $type]
