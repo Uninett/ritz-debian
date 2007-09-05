@@ -228,10 +228,10 @@ proc pollIfs { sh } {
 # Return uptime in 100'ths of a second, or 0 if unknown
 
 proc getUptime { sh } {
-    global uptime
+    global save_uptime
 
     $sh get "sysUpTime.0" {
-	global uptime
+	global save_uptime
 	if { "%E" != "noError" } {
 	    log "getUptime: %E"
 	    if [regexp "noResponse" "%E"] {
@@ -243,13 +243,13 @@ proc getUptime { sh } {
 
 	set name  [lindex [lindex "%V" 0] 0]
 	set value [lindex [lindex "%V" 0] 2]
-	set uptime(%S) [mib scan $name $value]
+	set save_uptime(%S) [mib scan $name $value]
     }
 
     $sh wait
 
-    if [info exists uptime($sh)] {
-	return $uptime($sh)
+    if [info exists save_uptime($sh)] {
+	return $save_uptime($sh)
     } else {
 	log [format "%s: returning 0 uptime" [name $sh]]
 	return 0
