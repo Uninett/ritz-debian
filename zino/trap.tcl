@@ -118,6 +118,10 @@ proc doTrap { a type args } {
 	CISCOTRAP-MIB!reload {
 	    log [format "%s: reload requested" $router]
 	}
+	bgpBackwardTransition {
+	    # has to do something...
+	    set s glorp
+	}
 	SNMPv2-MIB!authenticationFailure {
 	    # has to do something...
 	    set s glorp
