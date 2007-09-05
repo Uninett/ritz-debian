@@ -282,6 +282,19 @@ proc cleanupDelayedResponse { sh } {
     }
 }
 
+proc checkResponse { sh } {
+
+    $sh get "sysUpTime.0" {
+	if { "%E" != "noError" } {
+	    if [regexp "noResponse" "%E"] {
+		noResponse "%S"
+	    }
+	} else {
+	    Response "%S"
+	}
+    }
+}
+
 proc delayedCheckResponse { sh } {
 
     if [catch { set r [name $sh] }] {
