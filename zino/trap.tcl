@@ -174,11 +174,7 @@ proc doTrap { a type args } {
     }
     if [eventIxExists $router "reachability"] {
 	# We got a trap from the box -- check if it's now reachable
-	if [checkResponse $sh] {
-	    Response $sh
-	} else {
-	    noResponse $sh
-	}
+	checkResponse $sh
     }
 }
 
