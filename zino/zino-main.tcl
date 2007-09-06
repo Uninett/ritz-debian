@@ -19,7 +19,7 @@ proc initDev { sh } {
 
 proc pollDev { sh } {
 
-    pollRouter [name $sh]
+    schedPollRouter $sh
 }
 
 proc destroyDev { sh } {
