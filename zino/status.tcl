@@ -23,6 +23,9 @@ proc initStatus { } {
 
 proc recordAddr { sh vbl } {
     global AddrToRouter RouterToAlist
+    global lastPoll
+
+    set lastPoll($sh) [clock seconds]
 
     ::persist::add ::AddrToRouter
 
@@ -96,6 +99,9 @@ proc eventTime { uptime changetime } {
 
 proc recordIntf { sh vbl } {
     global portState portToIfDescr portToLocIfDescr
+    global lastPoll
+
+    set lastPoll($sh) [clock seconds]
 
     foreach vb $vbl {
 	set oid [lindex $vb 0]
@@ -234,7 +240,7 @@ proc getUptime { sh } {
 	global save_uptime
 	if { "%E" != "noError" } {
 	    log "getUptime: %E"
-	    if [regexp "noResponse" "%E"] {
+	    if { "%E" ==  "noResponse" } {
 		noResponse "%S"
 	    }
 	    return
@@ -247,6 +253,8 @@ proc getUptime { sh } {
     }
 
     $sh wait
+
+    log [format "debug: %s getUptime past wait point" [name $sh]]
 
     if [info exists save_uptime($sh)] {
 	return $save_uptime($sh)
@@ -286,7 +294,7 @@ proc checkResponse { sh } {
 
     $sh get "sysUpTime.0" {
 	if { "%E" != "noError" } {
-	    if [regexp "noResponse" "%E"] {
+	    if { "%E" == "noResponse" } {
 		noResponse "%S"
 	    }
 	} else {
@@ -305,7 +313,7 @@ proc delayedCheckResponse { sh } {
     log [format "checking reachability of %s" $r]
     $sh get "sysUpTime.0" {
 	if { "%E" != "noError" } {
-	    if [regexp "noResponse" "%E"] {
+	    if { "%E" == "noResponse" } {
 		noResponse %S
 	    }
 	} else {
@@ -331,7 +339,7 @@ proc delayedNoResponse { sh } {
 #	log [format "checking reachability of %s" $r]
     
 	if { "%E" != "noError" } {
-	    if [regexp "noResponse" "%E"] {
+	    if { "%E" == "noResponse"} {
 #		log [format "checking: no response from %s" $r]
 
 		set doit 0
@@ -418,37 +426,84 @@ proc Response { sh } {
     }
 }
 
+proc schedPollRouter { sh } {
+    global lastPoll
+    global lastSched
+    global lastSchedTime
+
+    if [info exists lastPoll($sh)] {
+	set now [clock seconds]
+	set delta [expr $now - $lastPoll($sh)]
+	if { $delta < 60 } {
+	    log [format "debug: %s skipping poll within 60s" [name $sh]]
+	    return
+	}
+    }
+
+    set now [clock seconds]
+    if [info exists lastSched($sh)] {
+	if { $lastSched($sh) > $now } {
+	    log [format "debug: skipping %s, already scheduled" [name $sh]]
+	    return
+	}
+    }
+    if { ! [info exists lastSchedTime] } {
+	set lastSchedTime [expr $now + 5]
+    }
+    set lastSchedTime [expr $lastSchedTime + 1.1]
+    if { $lastSchedTime < $now } {
+	set lastSchedTime [expr $now + 1.5]
+    }
+    set lastSched($sh) $lastSchedTime
+
+    set msintv [expr int(( $lastSchedTime - $now ) * 1000)]
+    after $msintv [list pollRouter [name $sh]]
+
+    log [format "debug: %s scheduled poll in %d ms" [name $sh] $msintv]
+}
+
+proc pollRest { sh vbl } {
+    global isCisco
+
+    set r [name $sh]
+#    log [format "debug: %s: proceeding with poll" $r]
+
+    Response $sh
+
+    set isCisco($r) [oidPfxMatch [mib oid cisco] \
+			 [lindex [lindex "$vbl" 1] 2]]
+
+#    log [format "debug: %s: getting address list" $r]
+    getAddrList $sh
+
+#    log [format "debug: %s: polling interfaces" $r]
+    if { [catch {pollIfs $sh} msg] } {
+	log [format "%s: error polling router: %s" $r $msg]
+	return
+    }
+
+    # Maybe add more later to this list
+    foreach p "checkBGP" {
+	if { [info proc $p] == $p } {
+	    log [format "debug: %s: checking BGP" $r]
+	    if { [catch {$p $sh} msg] } {
+		log [format "%s: error doing %s: %s" $r $p $msg]
+	    }
+	}
+    }
+}
+
 proc pollRouter { r } {
 
+#    log [format "debug: %s: starting poll" $r]
     [handle $r] get "sysUpTime.0 sysObjectID.0" {
-	global isCisco
 	if { "%E" != "noError" } {
 	    if { "%E" == "noResponse" } {
 		noResponse %S
 	    }
 	    return
 	}
-
-	set sh %S
-	set r [name $sh]
-
-	set uptime [lindex [lindex "%V" 0] 2]
-	set sysid  [lindex [lindex "%V" 1] 2]
-	set isCisco($r) [oidPfxMatch [mib oid cisco] $sysid]
-	getAddrList $sh
-
-	if { [catch {pollIfs $sh} msg] } {
-	    log [format "%s: error polling router: %s" $r $msg]
-	    return
-	}
-	# Maybe add more later to this list
-	foreach p "checkBGP" {
-	    if { [info proc $p] == $p } {
-		if { [catch {$p $sh} msg] } {
-		    log [format "%s: error doing %s: %s" $r $p $msg]
-		}
-	    }
-	}
+	pollRest %S "%V"
     }
 }
 
