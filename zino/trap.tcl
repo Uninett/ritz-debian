@@ -125,6 +125,10 @@ proc doTrap { a type args } {
 	    # has to do something...
 	    set s glorp
 	}
+	BGP4-MIB!bgpBackwardTransNotification {
+	    # has to do something...
+	    set s glorp
+	}
 	SNMPv2-MIB!authenticationFailure {
 	    # has to do something...
 	    set s glorp
