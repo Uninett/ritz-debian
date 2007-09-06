@@ -459,7 +459,7 @@ proc schedPollRouter { sh } {
     set msintv [expr int(( $lastSchedTime - $now ) * 1000)]
     after $msintv [list pollRouter [name $sh]]
 
-    log [format "debug: %s scheduled poll in %d ms" [name $sh] $msintv]
+#    log [format "debug: %s scheduled poll in %d ms" [name $sh] $msintv]
 }
 
 proc pollRest { sh vbl } {
@@ -485,7 +485,7 @@ proc pollRest { sh vbl } {
     # Maybe add more later to this list
     foreach p "checkBGP" {
 	if { [info proc $p] == $p } {
-	    log [format "debug: %s: checking BGP" $r]
+#	    log [format "debug: %s: doing %s" $r $p]
 	    if { [catch {$p $sh} msg] } {
 		log [format "%s: error doing %s: %s" $r $p $msg]
 	    }
