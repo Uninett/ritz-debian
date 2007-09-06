@@ -109,6 +109,9 @@ proc recordBGPpeer { sh uptime vbl } {
     global bgpPeerAdminState
     global localAS bgpPeerUpTime
     global bgpPeers sawPeer
+    global lastPoll
+
+    set lastPoll($sh) [clock seconds]
 
     foreach vb $vbl {
 	set oid [lindex $vb 0]
