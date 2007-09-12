@@ -77,3 +77,7 @@ $Id$		-*- Text -*-
    produce a report of outage duration etc.
 
  o Convert from kbit/s to Mbit/s in plots.
+
+ o Add detection of removed BGP peers(?)
+
+ o Detect and report duplicate logical port names!
