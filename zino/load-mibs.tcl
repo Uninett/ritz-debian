@@ -23,7 +23,17 @@ mib load CISCO-PRODUCTS-MIB.my
 mib load ../mibs/OLD-CISCO-INTERFACES-MIB.my
 mib load ../mibs/OLD-CISCO-TCP-MIB.my
 mib load ../mibs/OLD-CISCO-TS-MIB.my
+mib load ../mibs/INET-ADDRESS-MIB.my
+mib load ../mibs/CISCO-VTP-MIB.my
+mib load ../mibs/CISCO-PIM-MIB.my
+mib load ../mibs/CISCO-BGP4-MIB.my
+mib load ../mibs/MSDP-MIB.my
 mib load ../mibs/BGP4-MIB.my
+mib load ../mibs/CISCO-MAC-NOTIFICATION-MIB.my
+mib load ../mibs/PIM-MIB.my
+mib load ../mibs/CISCO-ENVMON-MIB.my
+mib load ../mibs/BRIDGE-MIB.my
+mib load ../mibs/ENTITY-MIB.my
 mib load ../mibs/mib.traps
 mib load ../mibs/cisco-10-mib.my
 mib load rfc1213.mib
