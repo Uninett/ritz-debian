@@ -450,7 +450,7 @@ proc schedPollRouter { sh } {
     if { ! [info exists lastSchedTime] } {
 	set lastSchedTime [expr $now + 5]
     }
-    set lastSchedTime [expr $lastSchedTime + 1.1]
+    set lastSchedTime [expr $lastSchedTime + 3]
     if { $lastSchedTime < $now } {
 	set lastSchedTime [expr $now + 1.5]
     }
@@ -459,11 +459,16 @@ proc schedPollRouter { sh } {
     set msintv [expr int(( $lastSchedTime - $now ) * 1000)]
     after $msintv [list pollRouter [name $sh]]
 
-#    log [format "debug: %s scheduled poll in %d ms" [name $sh] $msintv]
+    log [format "debug: %s scheduled poll in %d ms" [name $sh] $msintv]
 }
+
+# Poll BGP once every 5 rounds
+
+set delay_factor(checkBGP) 5
 
 proc pollRest { sh vbl } {
     global isCisco
+    global delay_factor
 
     set r [name $sh]
 #    log [format "debug: %s: proceeding with poll" $r]
@@ -485,7 +490,19 @@ proc pollRest { sh vbl } {
     # Maybe add more later to this list
     foreach p "checkBGP" {
 	if { [info proc $p] == $p } {
-#	    log [format "debug: %s: doing %s" $r $p]
+	    if [info exists delay_factor($sh,$p)] {
+		if { $delay_factor($sh,$p) <= 0 } {
+		    set delay_factor($sh,$p) $delay_factor($p)
+		    # ...and fallthrough to actually do it
+		} else {
+		    set delay_factor($sh,$p) [expr $delay_factor($sh,$p) - 1]
+		    continue
+		}
+	    } else {
+		set delay_factor($sh,$p) $delay_factor($p)
+		continue
+	    }
+	    log [format "debug: %s: doing %s" $r $p]
 	    if { [catch {$p $sh} msg] } {
 		log [format "%s: error doing %s: %s" $r $p $msg]
 	    }
@@ -495,7 +512,7 @@ proc pollRest { sh vbl } {
 
 proc pollRouter { r } {
 
-#    log [format "debug: %s: starting poll" $r]
+    log [format "debug: %s: starting poll" $r]
     [handle $r] get "sysUpTime.0 sysObjectID.0" {
 	if { "%E" != "noError" } {
 	    if { "%E" == "noResponse" } {
