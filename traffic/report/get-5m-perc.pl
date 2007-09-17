@@ -137,7 +137,7 @@ sub usage {
 # Main
 #
 
-&Getopts("d:N:n:p:");
+&Getopts("d:MN:n:p:");
 
 if (!defined($opt_d)) { &usage(); }
 if (!defined($opt_n)) { &usage(); }
@@ -145,10 +145,19 @@ if (!defined($opt_p)) { &usage(); }
 
 ($in, $out, $nd) = &get_percentile($opt_d, $opt_n, $opt_p);
 
+if (defined($opt_M)) {		# Output in Mbit/s instead of kbit/s
+    $in /= 1000;
+    $out /= 1000;
+}
+
 if (!defined($opt_N)) {
-    printf("%s %s (%d day%s) %dth percentile In: %.2f  Out: %.2f\n",
-	   $opt_n, $opt_d, $nd, $nd>1 ? "s" : "" , $opt_p, $in, $out);
+    printf("%-15s %s (%d day%s) %d perc in %7.2f  out %7.2f (%s)\n",
+	   $opt_n, $opt_d, $nd, $nd>1 ? "s" : "" , $opt_p, $in, $out,
+	   $opt_M ? "Mbit/s" : "kbit/s"
+	   );
 } else {
-    printf("%s %s (%d day%s) %dth percentile In: %.2f  Out: %.2f\n",
-	   $opt_N, $opt_d, $nd, $nd>1 ? "s" : "", $opt_p, $in, $out);
+    printf("%-15s %s (%d day%s) %d perc in %7.2f  out %7.2f (%s)\n",
+	   $opt_N, $opt_d, $nd, $nd>1 ? "s" : "", $opt_p, $in, $out,
+	   $opt_M ? "Mbit/s" : "kbit/s"
+	   );
 }
