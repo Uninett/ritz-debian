@@ -125,11 +125,26 @@ sub get_percentile {
     my $in  = &percentile($perc, @in);
     my $out = &percentile($perc, @out);
 
+    if (defined($opt_v)) {
+	printf("Discarded values for input:\n");
+	foreach my $v (@in) {
+	    if ($v > $in) {
+		printf("%7.2f\n", $v);
+	    }
+	}
+	printf("Discarded values for output:\n");
+	foreach my $v (@out) {
+	    if ($v > $out) {
+		printf("%7.2f\n", $v);
+	    }
+	}
+    }
+
     return ($in, $out, $no_days);
 }
 
 sub usage {
-    die "$0: usage: $0 [-N report-name] -d datespec -n portname -p percentile";
+    die "$0: usage: $0 [-v] [-N report-name] -d datespec -n portname -p percentile";
 }
 
 
@@ -137,7 +152,7 @@ sub usage {
 # Main
 #
 
-&Getopts("d:MN:n:p:");
+&Getopts("d:MN:n:p:v");
 
 if (!defined($opt_d)) { &usage(); }
 if (!defined($opt_n)) { &usage(); }
