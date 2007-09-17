@@ -129,7 +129,7 @@ sub get_percentile {
 }
 
 sub usage {
-    die "$0: usage: $0 -d datespec -n portname -p percentile";
+    die "$0: usage: $0 [-N report-name] -d datespec -n portname -p percentile";
 }
 
 
@@ -137,7 +137,7 @@ sub usage {
 # Main
 #
 
-&Getopts("d:n:p:");
+&Getopts("d:N:n:p:");
 
 if (!defined($opt_d)) { &usage(); }
 if (!defined($opt_n)) { &usage(); }
@@ -145,5 +145,10 @@ if (!defined($opt_p)) { &usage(); }
 
 ($in, $out, $nd) = &get_percentile($opt_d, $opt_n, $opt_p);
 
-printf("%s %s (%d day%s) %dth percentile In: %.2f  Out: %.2f\n",
-       $opt_n, $opt_d, $nd, $nd>1 ? "s" : "" , $opt_p, $in, $out);
+if (!defined($opt_N)) {
+    printf("%s %s (%d day%s) %dth percentile In: %.2f  Out: %.2f\n",
+	   $opt_n, $opt_d, $nd, $nd>1 ? "s" : "" , $opt_p, $in, $out);
+} else {
+    printf("%s %s (%d day%s) %dth percentile In: %.2f  Out: %.2f\n",
+	   $opt_N, $opt_d, $nd, $nd>1 ? "s" : "", $opt_p, $in, $out);
+}
