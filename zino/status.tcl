@@ -247,9 +247,8 @@ proc getUptime { sh } {
 	}
 	Response "%S"
 
-	set name  [lindex [lindex "%V" 0] 0]
-	set value [lindex [lindex "%V" 0] 2]
-	set save_uptime(%S) [mib scan $name $value]
+	set save_uptime(%S) [mib scan [lindex [lindex "%V" 0] 0] \
+				 [lindex [lindex "%V" 0] 2]]
     }
 
     $sh wait
