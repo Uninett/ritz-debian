@@ -39,7 +39,7 @@ while test -s $FLIST; do
     while read f; do
 	cf=$TDIR/${f}-check
 	find $f ! -newer $start > $cf
-	if [ ! -s $cf ]; then
+	if [ ! -s $cf -o ! -s $f ]; then
 	    # Skip over "hot files", allow them to be picked
 	    # op on the next round.
 	    echo "Temporarily skipping hot file: " $f >&2
