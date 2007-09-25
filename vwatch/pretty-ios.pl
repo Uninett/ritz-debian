@@ -42,12 +42,22 @@ sub pretty_junos_desc {
     return $desc;
 }
 
+sub pretty_procurve {
+    my($desc) = @_;
+
+    if ($desc =~ /ProCurve ([^ ]+) [^ ]+ ([^ ]+), revision ([^ ]+), ROM ([^ ]+) .*/) {
+	$desc = "ProCurve $1 $2 $3 ROM $4";
+    }
+    return $desc;
+}
+
 sub pretty_desc {
     my($desc) = @_;
 
     $desc = &pretty_ios_desc($desc);
     $desc = &pretty_junos_desc($desc);
     $desc = &pretty_hp_desc($desc);
+    $desc = &pretty_procurve($desc);
     return $desc;
 }
 
