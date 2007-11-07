@@ -166,12 +166,12 @@ if (defined($opt_M)) {		# Output in Mbit/s instead of kbit/s
 }
 
 if (!defined($opt_N)) {
-    printf("%-15s %s (%d day%s) %d perc in %7.2f  out %7.2f (%s)\n",
+    printf("%-15s %s (%d day%s) %s perc in %7.2f  out %7.2f (%s)\n",
 	   $opt_n, $opt_d, $nd, $nd>1 ? "s" : "" , $opt_p, $in, $out,
 	   $opt_M ? "Mbit/s" : "kbit/s"
 	   );
 } else {
-    printf("%-15s %s (%d day%s) %d perc in %7.2f  out %7.2f (%s)\n",
+    printf("%-15s %s (%d day%s) %s perc in %7.2f  out %7.2f (%s)\n",
 	   $opt_N, $opt_d, $nd, $nd>1 ? "s" : "", $opt_p, $in, $out,
 	   $opt_M ? "Mbit/s" : "kbit/s"
 	   );
