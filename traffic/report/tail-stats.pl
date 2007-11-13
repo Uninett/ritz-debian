@@ -577,7 +577,14 @@ sub report_tail_stats {
 	}
 	$name = $b;
     }
-    # Output: name   last-kbps-in last-kbps-out avg-kbps-in avg-kbps-out
+    # Output:
+    # name  last-kbps-in last-kbps-out avg-kbps-in avg-kbps-out ifspeed-in-kbps
+    #
+    # last-kbps-in    
+    # last-kbps-out     last computed kbps value
+    # avg-kbps-in     
+    # avg-kbps-out      average over history we keep
+    # ifspeed-in-kbps   interface speed in kbit/s
     printf($rfile "%-30s %8d %8d %8d %8d %8d\n",
 	   $name,
 	   $ia->[$#$ia],
@@ -663,7 +670,7 @@ sub do_all_files {
 #    select(STDOUT); $| = 1;	# unbuffer
     $stat_report = "";
     if (defined($opt_r)) {
-	unlink($opt_r) || die "Could not unlink $opt_r";
+	unlink($opt_r);		# ignore error
 	open(REP, ">" . $opt_r) || die "Could not open $opt_r for write";
     }
 
