@@ -1240,7 +1240,7 @@ sub start_doc {
     if (&is_today($dsp)) {
 	print $doc->header(-type => "text/html",
 			   -expires => sprintf("+%ds", $exp-30),
-			   -refresh => sprintf("+%ds", $exp));
+			   -refresh => $exp);
 	
     } else {
 	print $doc->header(-type => "text/html",
