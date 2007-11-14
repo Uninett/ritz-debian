@@ -1381,7 +1381,7 @@ sub modtime {
 
 sub last_update {
 
-    return strftime("%Y %h %e %H:%M", &modtime($load_now));
+    return strftime("%Y %h %e %H:%M", localtime(&modtime($load_now)));
 }
 
 
