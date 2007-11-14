@@ -51,7 +51,7 @@ push(@INC, "%CONFDIR%");
 require "config.pl";
 
 if (!defined($load_now)) {
-    $load_now = "%TOPDIR%" . "/report/load-now.txt";
+    $load_now = "%TOPDIR%" . "/reports/load-now.txt";
 }
 
 
