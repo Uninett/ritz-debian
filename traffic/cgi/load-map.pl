@@ -1239,8 +1239,8 @@ sub start_doc {
     # Emit a sensible Expires: header
     if (&is_today($dsp)) {
 	print $doc->header(-type => "text/html",
-			   -expires => sprintf("+%ds", $exp),
-			   -refresh => sprintf("+%ds", $exp+2));
+			   -expires => sprintf("+%ds", $exp-30),
+			   -refresh => sprintf("+%ds", $exp));
 	
     } else {
 	print $doc->header(-type => "text/html",
@@ -1340,7 +1340,7 @@ sub img_names {
     if (&is_today($dsp)) {
 	return(
 	       # Hardcoding refresh period for now to 15 minutes
-	       sprintf("%CGIPFX%/ex-png/%s,%s", 15 * 60, $rn),
+	       sprintf("%CGIPFX%/ex-png/%s,%s", (15*60)-30, $rn),
 	       sprintf("%s/imgs/%s", "%HTMLDIR%", $b)
 	       );
     } else {
