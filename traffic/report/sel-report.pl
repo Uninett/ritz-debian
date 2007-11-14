@@ -110,7 +110,7 @@ sub print_today {
 	@f = split;
 	my($speed) = $f[$sc];
 	if ($speed != 0) {
-	    printf("%s %s %s %s\n",
+	    printf("%s %f %f %s\n",
 		   $f[0],
 		   $f[$inc] * 100.0 / $speed,
 		   $f[$outc]* 100.0 / $speed,
