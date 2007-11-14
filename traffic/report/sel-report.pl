@@ -46,6 +46,14 @@ push(@INC, "%LIBDIR%");
 require 'date.pl';
 require 'search.pl';
 
+push(@INC, "%CONFDIR%");
+
+require "config.pl";
+
+if (!defined($load_now)) {
+    $load_now = "%TOPDIR%" . "/report/load-now.txt";
+}
+
 
 %find_dir = ("day"	=> \&find_day_report_dir,
 	     "week"	=> \&find_week_report_dir,
@@ -82,12 +90,48 @@ require 'search.pl';
 	 # XXX later add discards -> errors.perc etc.
 	 );
 
+%now_cols = (
+	     "traffic" => {
+		 "peak" => [1, 2, 5],
+		 "busy" => [3, 4, 5],
+		 "avg"  => [3, 4, 5],
+	     },
+	     );
+
+
+sub print_today {
+    my($type, $select) = @_;
+    my($inc, $outc, $sc) = @{ $now_cols{$type}{$select} };
+    my(@f);
+
+    open(IN, $load_now) || &err("Could not read $load_now");
+    while(<IN>) {
+	chomp;
+	@f = split;
+	my($speed) = $f[$sc];
+	if ($speed != 0) {
+	    printf("%s %s %s %s\n",
+		   $f[0],
+		   $f[$inc] * 100.0 / $speed,
+		   $f[$outc]* 100.0 / $speed,
+		   $speed);
+	} else {
+	    printf("%s 0 0 0\n", $f[0]);
+	}
+    }
+    close(IN);
+}
 
 sub select_and_print {
     my($dsp, $type, $select) = @_;
     my($dir_finder);
     my($dt, $d, $f, @f, @s, $speed);
     my($inc, $outc, $sc);
+
+    if (&is_today($dsp)) {
+	&print_today($type, $select);
+	return 1;
+    }
 
     $dt = &datespec_type($dsp);
     if (!defined ($dir_finder = $find_dir{$dt})) {
