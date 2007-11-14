@@ -50,6 +50,17 @@ push(@INC, "%LIBDIR%");
 require 'utils.pl';
 require 'date.pl';
 
+push(@INC, "%CONFDIR%");
+
+require "config.pl";
+
+if (!defined($load_now)) {
+    $load_now = "%TOPDIR%" . "/reports/load-now.txt";
+}
+
+use POSIX qw(strftime);
+
+
 $border = 10;			# in pixels
 $scale = 1.5;
 $touch_len = 5;			# sensitive area around lines
@@ -1362,6 +1373,18 @@ sub save_url_comps {
     }
 }
 
+sub modtime {
+    my($f) = @_;
+
+    return stat($f)[9];
+}
+
+sub last_update {
+
+    return strftime("%Y %h %e %H:%M", &modtime($load_now));
+}
+
+
 sub produce_map {
     my($exp, $map, $dsp, $type, $select) = @_;
     my($elts, $refname, $file, $img, $title);
@@ -1392,6 +1415,9 @@ sub produce_map {
     printf("%s", &imgmap($elts, $dsp, $type, $select));
     &add_zoom_areas($map, $dsp, $type, $select);
     printf("</map>\n");
+    if (&is_today($dsp)) {
+	printf("<p>Base data last updated %s\n</p>", &last_update());
+    }
     &add_help_ptr();
 
     print $doc->end_html;
