@@ -104,7 +104,7 @@ sub print_today {
     my($inc, $outc, $sc) = @{ $now_cols{$type}{$select} };
     my(@f);
 
-    open(IN, $load_now) || &err("Could not read $load_now");
+    open(IN, $load_now) || &err("Could not read $load_now: $!");
     while(<IN>) {
 	chomp;
 	@f = split;
