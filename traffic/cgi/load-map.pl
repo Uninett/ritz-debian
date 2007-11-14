@@ -1212,22 +1212,31 @@ sub getargs {
     if (!defined($dsp) || $dsp eq "") {
 	$dsp = &yesterday_spec();	# default is to show for previous day
 	$exp = &secs_to_expiry("day");
+    } elsif (&is_today($dsp)) {
+	$exp = 15*60;		# when inspecting current load
     } else {
-	$exp = 30*24*60*60;		# one month, really "eternally"
+	$exp = 30*24*60*60;	# one month, really "eternally"
     }
 
     return($exp, $map, $dsp, $type, $select);
 }
 
 sub start_doc {
-    my($exp, @args) = @_;
+    my($exp, $map, $dsp, @args) = @_;
     my($title);
     
     # Emit a sensible Expires: header
-    print $doc->header(-type => "text/html",
-		       -expires => sprintf("+%ds", $exp));
+    if (&is_today($dsp)) {
+	print $doc->header(-type => "text/html",
+			   -expires => sprintf("+%ds", $exp),
+			   -refresh => sprintf("+%ds", $exp+2));
+	
+    } else {
+	print $doc->header(-type => "text/html",
+			   -expires => sprintf("+%ds", $exp));
+    }
 
-    $title = &get_title(@args);
+    $title = &get_title($map, $dsp, @args);
     print $doc->start_html(-title=>$title);
 }
 
@@ -1315,17 +1324,27 @@ sub img_names {
     my($b);
 
     $b = sprintf("lm-tg.%s.%s.%s.%s.png", $m, $dsp, $t, $s);
-    return(
-	   sprintf("%HTMLPFX%/imgs/%s", $b),
-	   sprintf("%s/imgs/%s", "%HTMLDIR%", $b)
-	   );
+    my($rn) = sprintf("%HTMLPFX%/imgs/%s", $b);
+
+    if (&is_today($dsp)) {
+	return(
+	       # Hardcoding refresh period for now to 15 minutes
+	       sprintf("%CGIPFX%/ex-png/%s,%s", 15 * 60, $rn),
+	       sprintf("%s/imgs/%s", "%HTMLDIR%", $b)
+	       );
+    } else {
+	return(
+	       sprintf("%HTMLPFX%/imgs/%s", $b),
+	       sprintf("%s/imgs/%s", "%HTMLDIR%", $b)
+	       );
+    }
 }
 
 sub get_title {
     my($m, $dsp, $t, $s) = @_;
 
     return sprintf("Map %s for %s showing %s %s",
-		   $m, $dsp, $s, $t);
+		   $m, &pretty_datespec($dsp), $s, $t);
 }
 
 # By popular demand, show the load graphs directly in kbit/s, not
