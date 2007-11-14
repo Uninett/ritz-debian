@@ -1285,8 +1285,7 @@ sub add_zoom_areas {
 	# How far back do we have data available
 	$pr_ex = ($pr_base_tm >= $origin);
 	# Make sure we are not trying to see into the future
-	# (or trying to do "today")
-	$nx_ex = ($nx_base_tm < (time - 24*60*60));
+	$nx_ex = ($nx_base_tm < (time));
 	
 	if ($pr_ex) {
 	    printf("<area shape=\"rect\" coords=\"%s\"\n", &pr_coords($w, $h));
