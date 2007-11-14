@@ -1376,7 +1376,7 @@ sub save_url_comps {
 sub modtime {
     my($f) = @_;
 
-    return stat($f)[9];
+    return (stat($f))[9];
 }
 
 sub last_update {
