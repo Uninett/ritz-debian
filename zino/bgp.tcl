@@ -123,7 +123,11 @@ proc recordBGPpeer { sh uptime vbl } {
     foreach v "bgpPeerState bgpPeerAdminStatus \
 	bgpPeerLocalAddr bgpPeerRemoteAddr bgpPeerRemoteAs \
 	bgpPeerFsmEstablishedTime" {
-	if { ! [info exists $v] } { return }
+	if { ! [info exists $v] } {
+	    log [format "router %s misses %s" $r $v]
+	    log [format "router %s vbl %s" $r $vbl]
+	    return
+	}
     }
     set ix [format "%s,bgp,%s" $r $bgpPeerRemoteAddr]
 
