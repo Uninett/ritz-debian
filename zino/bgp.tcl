@@ -24,7 +24,16 @@ proc bgpAdminDown { sh ix vbl } {
     }
     set r [name $sh]
 
+    set old [eventIxExists $ix bgp]
+    
     set eid [eventId $ix bgp]
+
+    if { $old } {
+	if { [getEventAttr $eid "bgpAS"] == $bgpPeerAdminStatus } {
+	    return ;			# already noted
+	}
+    }
+
     setEventAttr $eid "router" $r
     setEventAttr $eid "polladdr" [::config::conf $r address]
     setEventAttr $eid "priority" [::config::conf $r priority]
@@ -54,7 +63,16 @@ proc bgpOperDown { sh ix vbl } {
     }
     set r [name $sh]
 
+    set old [eventIxExists $ix bgp]
+
     set eid [eventId $ix bgp]
+
+    if { $old } {
+	if { [getEventAttr $eid "bgpOS"] == "down" } {
+	    return ;			# already noted
+	}
+    }
+
     setEventAttr $eid "router" $r
     setEventAttr $eid "polladdr" [::config::conf $r address]
     setEventAttr $eid "priority" [::config::conf $r priority]
@@ -129,10 +147,16 @@ proc recordBGPpeer { sh uptime vbl } {
 	    return
 	}
     }
-    set ix [format "%s,bgp,%s" $r $bgpPeerRemoteAddr]
+    set ix [format "%s,%s" $r $bgpPeerRemoteAddr]
+
+#    log [format "debug: BGP r %s loc %s rem %s AS %s as %s os %s" \
+	     $r $bgpPeerLocalAddr $bgpPeerRemoteAddr \
+	     $bgpPeerRemoteAs $bgpPeerAdminStatus $bgpPeerState]
 
     # Bug in JunOS -- info from IPv6 BGP sessions spill over
-    if { $bgpPeerLocalAddr == "0.0.0.0" } { return }
+    if { $bgpPeerRemoteAddr == "0.0.0.0" } { return }
+    # Bug in earlier Cisco IOS, info from elsewhere (IPv6?) spills over
+    if { $bgpPeerRemoteAddr == "32.1.7.0" } { return }
 
     if { $bgpPeerState == "established" } {
 	if { [info exists bgpPeerUpTime($ix)] } {
@@ -143,43 +167,45 @@ proc recordBGPpeer { sh uptime vbl } {
 		    if { $localAS($sh) != $bgpPeerRemoteAs } {
 			# external peer session was reset => alert
 			bgpExternalReset $sh $ix $vbl
+			log [format "debug: Noted external reset for %s: %s" \
+				 $r $ix]
 		    }
 		}
 	    }
 	}
-	set bgpPeerUpTime($ix) $bgpPeerFsmEstablishedTime
     } else {
 	if { $bgpPeerAdminStatus == "stop" } {
 	    # admin turned off
-	    if { [info exists bgpPeerAdminState($ix)] } {
-		if { $bgpPeerAdminState($ix) != "stop" } {
-		    # admin state changed => alert
-		    bgpAdminDown $sh $ix $vbl
-		}
-	    }
-	    set bgpPeerAdminState($ix) "stop"
+	    bgpAdminDown $sh $ix $vbl
+	    log [format "debug: Router %s peer %s AS %s admin-down" \
+		     $r $bgpPeerRemoteAddr $bgpPeerRemoteAs]
 	} else {
 	    # peer is not up, but configured to be up
+	    # Check if it's an external AS
 	    if { $localAS($sh) != $bgpPeerRemoteAs } {
 		# First verify that we've been up more than 10 minutes
 		# before we flag it as an alert
 		if { $uptime > 600 } {
-		    # external peer is down
-		    if { [info exists bgpPeerOperState($ix)] } {
-			if { $bgpPeerOperState($ix) != "down" } {
-			    # oper state change => alert
-			    bgpOperDown $sh $ix $vbl
-			}
-		    }
-		    set bgpPeerOperState($ix) "down"
+		    # peer is down
+		    bgpOperDown $sh $ix $vbl
+		    log [format "debug: Router %s peer %s AS %s os %s (down)" \
+			     $r $bgpPeerRemoteAddr \
+			     $bgpPeerRemoteAs $bgpPeerState]
+		} else {
+		    log [format "debug: Router %s peer %s AS %s is %s (down), but uptime = %d" \
+			     $r $bgpPeerRemoteAddr $bgpPeerRemoteAs \
+			     $bgpPeerState $uptime]
 		}
 	    } else {
-		# iBGP peer is down
-		# Do periodic validation separately at a later stage
-		set bgpPeerOperState($ix) "down"
+		log [format "debug: Router %s peer %s state %s but same AS" \
+			 $r $bgpPeerRemoteAddr $bgpPeerState]
 	    }
 	}
     }
+    set bgpPeerOperState($ix) $bgpPeerState
+    set bgpPeerAdminState($ix) $bgpPeerAdminStatus
+    set bgpPeerUpTime($ix) $bgpPeerFsmEstablishedTime
+
 
     # Possibly add to list of peers, record it as recently seen
     # to allow later garbage collection
@@ -200,10 +226,6 @@ proc recordBGPpeer { sh uptime vbl } {
 	set sawPeer($k) $now
     }
 
-#    puts [format "%-20s %5d  %-8s %-8s %s" \
-	      $bgpPeerRemoteAddr $bgpPeerRemoteAs \
-	      $bgpPeerState $bgpPeerAdminStatus \
-	      $bgpPeerFsmEstablishedTime]
 }
 
 proc checkBGPpeers { sh up } {
