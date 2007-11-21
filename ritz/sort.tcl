@@ -358,7 +358,11 @@ proc caseSeverity { id } {
 	    if { $os == "established" } {
 		return "normal"
 	    } else {
-		return "alarm"
+		if { $state == "open" } {
+		    return "alarm"
+		} else {
+		    return "warning"
+		}
 	    }
 	} else {
 	    return "unknown"
