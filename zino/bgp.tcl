@@ -175,18 +175,29 @@ proc recordBGPpeer { sh uptime vbl } {
 	}
     } else {
 	if { $bgpPeerAdminStatus == "stop" } {
-	    # admin turned off
-	    bgpAdminDown $sh $ix $vbl
-	    log [format "debug: Router %s peer %s AS %s admin-down" \
-		     $r $bgpPeerRemoteAddr $bgpPeerRemoteAs]
+	    if { ! [info exists bgpPeerAdminState($ix)] } {
+		set bgpPeerAdminState($ix) "unknown"
+	    }
+	    if { $bgpPeerAdminState($ix) != $bgpPeerAdminStatus } {
+		# admin turned off
+		bgpAdminDown $sh $ix $vbl
+		log [format "debug: Router %s peer %s AS %s admin-down" \
+			 $r $bgpPeerRemoteAddr $bgpPeerRemoteAs]
+	    } else {
+		log [format "debug: Router %s peer %s AS %s admin-down (but known)" \
+			 $r $bgpPeerRemoteAddr $bgpPeerRemoteAs]
+	    }
 	} else {
+	    if { ! [info exists bgpPeerOperState($ix)] } {
+		set bgpPeerOperState($ix) "established"
+	    }
 	    # peer is not up, but configured to be up
 	    # Check if it's an external AS
-	    if { $localAS($sh) != $bgpPeerRemoteAs } {
+	    if { $localAS($sh) != $bgpPeerRemoteAs && \
+		 $bgpPeerOperState($ix) == "established" } {
 		# First verify that we've been up more than 10 minutes
 		# before we flag it as an alert
 		if { $uptime > 600 } {
-		    # peer is down
 		    bgpOperDown $sh $ix $vbl
 		    log [format "debug: Router %s peer %s AS %s os %s (down)" \
 			     $r $bgpPeerRemoteAddr \
@@ -197,8 +208,9 @@ proc recordBGPpeer { sh uptime vbl } {
 			     $bgpPeerState $uptime]
 		}
 	    } else {
-		log [format "debug: Router %s peer %s state %s but same AS" \
-			 $r $bgpPeerRemoteAddr $bgpPeerState]
+		log [format "debug: Router %s peer %s AS %s os %s (down), but known not-up" \
+			 $r $bgpPeerRemoteAddr \
+			 $bgpPeerRemoteAs $bgpPeerState]
 	    }
 	}
     }
