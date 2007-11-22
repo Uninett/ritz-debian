@@ -101,14 +101,24 @@ proc summarizeBGP { id } {
     if { $View(id) } {
 	set s [format "%5s" $id]
     }
+    set os [Attr $id "bgpOS"]
+    set as [Attr $id "bgpAS"]
     if { $View(opstate) && $View(admstate) } {
-	set os [format "bgp %s" [Attr $id "bgpOS"]]
-	set l [string length $os]
+	if { $as == "start" } {
+	    set m [format "bgp %s" [Attr $id "bgpOS"]]
+	} else {
+	    set m "bgp admin-down"
+	}
+	set l [string length $m]
 	set rl [expr 5 + 10 + 8 - $l]
-	set s [format "%s %s %*s" $s $os $rl [Attr $id "state"]]
+	set s [format "%s %s %*s" $s $m $rl [Attr $id "state"]]
     } else {
 	if { $View(opstate) } {
-	    set s [format "%s bgp %-10s" $s [Attr $id "bgpOS"]]
+	    if { $as == "start" } {
+		set s [format "%s bgp %-10s" $s [Attr $id "bgpOS"]]
+	    } else {
+		set s [format "%s bgp admin-down" $s]
+	    }
 	}
 	if { $View(admstate) } {
 	    set s [format "%s %8s" $s [Attr $id "state"]]
