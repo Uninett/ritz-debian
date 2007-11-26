@@ -4,7 +4,7 @@
 
 FILES=	Zino.pm zino-monitor.pl emt-config.tcl
 
-PROGS=	zinomon emt-config zino-monitor.pl
+PROGS=	zinomon zino-monitor.pl emt-config
 
 LIBS=	Zino.pm
 
