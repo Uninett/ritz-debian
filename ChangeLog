@@ -1,5 +1,7 @@
 2007-11-26  Havard Eidnes  <he@uninett.no>
 
+	* ChangeLog: Update for the bump to 0.9.4.
+
 	* Makefile: Add zinomon subdir, bump to 0.9.4.
 
 	* zino/bgp.tcl, zino/status.tcl: Comment out debug log messages.
