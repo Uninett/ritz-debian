@@ -64,7 +64,7 @@ send_alarm () {
 		 echo ""
 		 echo "Failed to contact zino:"
 		 cat $OUT
-	     ) cat >&2
+	     ) | cat >&2
 	 fi
     fi
 }
