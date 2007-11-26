@@ -5,7 +5,7 @@
 OUT=`mktemp /tmp/zm.XXXXXX`
 PREVF="%TOPDIR%/zinomon-prev"
 
-trap 0 "rm -f $OUT"
+trap "rm -f $OUT" 0
 
 if [ ! -f $PREVF ]; then
     echo 0 > $PREVF
