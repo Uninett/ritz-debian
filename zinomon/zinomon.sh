@@ -42,6 +42,33 @@ send_sms_alarm () {
     fi
 }
 
+send_alarm () {
+
+    if [ x"$emt_to" != x -a \
+	 x"$emt_from" != x ]; then
+	 (
+	     echo "To: $emt_to"
+	     echo "From: $emt_from"
+	     echo "Subject: zinomon detected zino problem"
+	     echo ""
+	     echo "Failed to contact zino:"
+	     cat $OUT
+	 ) | %RAWSENDMAIL% -t
+	 if [ $? != 0 ]; then
+	     (
+		 echo "Failed to send message:"
+		 echo ""
+		 echo "To: $emt_to"
+		 echo "From: $emt_from"
+		 echo "Subject: zinomon detected zino problem"
+		 echo ""
+		 echo "Failed to contact zino:"
+		 cat $OUT
+	     ) cat >&2
+	 fi
+    fi
+}
+
 
 %PERL% -I %LIBDIR% %BINDIR%/zino-monitor.pl > $OUT 2>&1
 
@@ -58,5 +85,6 @@ if [ $es != 0 -a $es != $PS ]; then
 	    send_sms_alarm "$emt_alarm_subject"
 	fi
     fi
+    send_alarm
 fi
 echo $es > $PREVF
