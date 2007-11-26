@@ -27,6 +27,18 @@ send_sms_alarm () {
 	    echo "Failed to contact zino:"
 	    cat $OUT
 	) | %RAWSENDMAIL% -t
+	if [ $? != 0 ]; then
+	    (
+		echo "Failed to send message:"
+		echo ""
+		echo "To: $emt_alarm_to"
+		echo "From: $emt_from"
+		echo "Subject: $subj"
+		echo ""
+		echo "Failed to contact zino:"
+		cat $OUT
+	    ) | cat >&2
+	fi
     fi
 }
 
