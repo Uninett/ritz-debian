@@ -31,7 +31,7 @@ send_sms_alarm () {
 }
 
 
-%PERL% -I %LIBDIR% %BINDIR%/zinomon.pl > $OUT 2>&1
+%PERL% -I %LIBDIR% %BINDIR%/zino-monitor.pl > $OUT 2>&1
 
 es=$?
 
