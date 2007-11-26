@@ -359,7 +359,7 @@ sub mail_report {
 
     my $subj = "Stat deviations ";
     $subj .= time2str("%R", time);
-    open(OUT, "| %RAWSENDMAIL%");
+    open(OUT, "| %RAWSENDMAIL% -t");
     printf(OUT "From: %s\n", $from);
     printf(OUT "To: %s\n", $to);
     printf(OUT "Subject: %s\n", $subj);
