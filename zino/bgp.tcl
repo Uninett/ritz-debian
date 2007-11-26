@@ -167,7 +167,7 @@ proc recordBGPpeer { sh uptime vbl } {
 		    if { $localAS($sh) != $bgpPeerRemoteAs } {
 			# external peer session was reset => alert
 			bgpExternalReset $sh $ix $vbl
-			log [format "debug: Noted external reset for %s: %s" \
+#			log [format "debug: Noted external reset for %s: %s" \
 				 $r $ix]
 		    }
 		}
@@ -181,10 +181,10 @@ proc recordBGPpeer { sh uptime vbl } {
 	    if { $bgpPeerAdminState($ix) != $bgpPeerAdminStatus } {
 		# admin turned off
 		bgpAdminDown $sh $ix $vbl
-		log [format "debug: Router %s peer %s AS %s admin-down" \
+#		log [format "debug: Router %s peer %s AS %s admin-down" \
 			 $r $bgpPeerRemoteAddr $bgpPeerRemoteAs]
 	    } else {
-		log [format "debug: Router %s peer %s AS %s admin-down (but known)" \
+#		log [format "debug: Router %s peer %s AS %s admin-down (but known)" \
 			 $r $bgpPeerRemoteAddr $bgpPeerRemoteAs]
 	    }
 	} else {
@@ -199,16 +199,16 @@ proc recordBGPpeer { sh uptime vbl } {
 		# before we flag it as an alert
 		if { $uptime > 600 } {
 		    bgpOperDown $sh $ix $vbl
-		    log [format "debug: Router %s peer %s AS %s os %s (down)" \
+#		    log [format "debug: Router %s peer %s AS %s os %s (down)" \
 			     $r $bgpPeerRemoteAddr \
 			     $bgpPeerRemoteAs $bgpPeerState]
 		} else {
-		    log [format "debug: Router %s peer %s AS %s is %s (down), but uptime = %d" \
+#		    log [format "debug: Router %s peer %s AS %s is %s (down), but uptime = %d" \
 			     $r $bgpPeerRemoteAddr $bgpPeerRemoteAs \
 			     $bgpPeerState $uptime]
 		}
 	    } else {
-		log [format "debug: Router %s peer %s AS %s os %s (down), but known not-up" \
+#		log [format "debug: Router %s peer %s AS %s os %s (down), but known not-up" \
 			 $r $bgpPeerRemoteAddr \
 			 $bgpPeerRemoteAs $bgpPeerState]
 	    }

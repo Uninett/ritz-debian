@@ -253,7 +253,7 @@ proc getUptime { sh } {
 
     $sh wait
 
-    log [format "debug: %s getUptime past wait point" [name $sh]]
+#    log [format "debug: %s getUptime past wait point" [name $sh]]
 
     if [info exists save_uptime($sh)] {
 	return $save_uptime($sh)
@@ -434,7 +434,7 @@ proc schedPollRouter { sh } {
 	set now [clock seconds]
 	set delta [expr $now - $lastPoll($sh)]
 	if { $delta < 60 } {
-	    log [format "debug: %s skipping poll within 60s" [name $sh]]
+#	    log [format "debug: %s skipping poll within 60s" [name $sh]]
 	    return
 	}
     }
@@ -442,7 +442,7 @@ proc schedPollRouter { sh } {
     set now [clock seconds]
     if [info exists lastSched($sh)] {
 	if { $lastSched($sh) > $now } {
-	    log [format "debug: skipping %s, already scheduled" [name $sh]]
+#	    log [format "debug: skipping %s, already scheduled" [name $sh]]
 	    return
 	}
     }
@@ -458,7 +458,7 @@ proc schedPollRouter { sh } {
     set msintv [expr int(( $lastSchedTime - $now ) * 1000)]
     after $msintv [list pollRouter [name $sh]]
 
-    log [format "debug: %s scheduled poll in %d ms" [name $sh] $msintv]
+#    log [format "debug: %s scheduled poll in %d ms" [name $sh] $msintv]
 }
 
 # Poll BGP once every 5 rounds
@@ -501,7 +501,7 @@ proc pollRest { sh vbl } {
 		set delay_factor($sh,$p) $delay_factor($p)
 		continue
 	    }
-	    log [format "debug: %s: doing %s" $r $p]
+#	    log [format "debug: %s: doing %s" $r $p]
 	    if { [catch {$p $sh} msg] } {
 		log [format "%s: error doing %s: %s" $r $p $msg]
 	    }
@@ -511,7 +511,7 @@ proc pollRest { sh vbl } {
 
 proc pollRouter { r } {
 
-    log [format "debug: %s: starting poll" $r]
+#    log [format "debug: %s: starting poll" $r]
     [handle $r] get "sysUpTime.0 sysObjectID.0" {
 	if { "%E" != "noError" } {
 	    if { "%E" == "noResponse" } {
