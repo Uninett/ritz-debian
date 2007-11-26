@@ -21,10 +21,12 @@ emt-config: emt-config.tcl
 	chmod +x $@
 
 install: ${PROGS}
-	for f in ${LIBS}; do \
+	@for f in ${LIBS}; do \
+		echo install -c -m 555 $$f ${LIBDIR}; \
 		install -c -m 555 $$f ${LIBDIR}; \
 	done
-	for f in ${PROGS}; do \
+	@for f in ${PROGS}; do \
+		echo install -c -m 555 $$f ${BINDIR}; \
 		install -c -m 555 $$f ${BINDIR}; \
 	done
 
