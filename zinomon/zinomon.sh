@@ -37,7 +37,7 @@ send_sms_alarm () {
 		echo ""
 		echo "Failed to contact zino:"
 		cat $OUT
-	    ) | cat >&2
+	    ) >&2
 	fi
     fi
 }
@@ -64,7 +64,7 @@ send_alarm () {
 		 echo ""
 		 echo "Failed to contact zino:"
 		 cat $OUT
-	     ) | cat >&2
+	     ) >&2
 	 fi
     fi
 }
@@ -76,8 +76,8 @@ es=$?
 
 if [ $es != 0 -a $es != $PS ]; then
     echo $es > $PREVF
-    if [ x"$emt_phones" != x ]; then
-	for p in $emt_phones; do
+    if [ x"$emt_alarm_phones" != x ]; then
+	for p in $emt_alarm_phones; do
 	    send_sms_alarm "sms $p"
 	done
     else
