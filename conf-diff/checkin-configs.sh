@@ -36,7 +36,7 @@ touch $newstart
 maxiter=10
 datestr=`date +"%y-%m-%d %H:%M:%S"`
 sep="========================================================================"
-find . -newer $stamp -name '*-confg' -print > $FLIST
+find . -newer $stamp -name '*-confg' -print > $FLIST 2>/dev/null
 
 while test -s $FLIST; do
     while read f; do
@@ -51,7 +51,7 @@ while test -s $FLIST; do
 
 	# Was the file recently written?
 	cf=$TDIR/${f}-check
-	find $f ! -newer $start > $cf
+	find $f ! -newer $start > $cf 2>/dev/null
 	if [ ! -s $cf -o ! -s $f ]; then
 	    # Skip over "hot files", allow them to be picked
 	    # up on the next round.
@@ -78,7 +78,7 @@ while test -s $FLIST; do
     # Collect new list of files, may pass over some files more than once
     # since we keep the starting point constant through this script
     find . -newer $stamp -name '*-confg' -print | \
-	sort - $FLIST | uniq -u > $FLIST.tmp
+	sort - $FLIST | uniq -u > $FLIST.tmp 2>/dev/null
     mv $FLIST.tmp $FLIST
     maxiter=`expr $maxiter - 1`;
     if [ $maxiter -le 0 ]; then
