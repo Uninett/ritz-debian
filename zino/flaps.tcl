@@ -275,6 +275,9 @@ proc ignoreTrap { r ifIndex updown } {
 	return 0
     }
 
+    if { ! [info exists portState($ix)] } {
+	set portState($ix) "unknown"
+    }
     # If restart happened more than 5 minutes ago...
     if { [expr $now - $RestartTime($r)] > [expr 60 * 5] } {
 	# Do not ignore traps indicating different state than known
