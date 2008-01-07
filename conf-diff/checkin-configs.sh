@@ -68,6 +68,7 @@ while test -s $FLIST; do
 	cat $tout           >> last-checked-diff
 	rcs -l $f
 	ci -u -m"New config" -t-"Saved config" $f
+	chmod 664 $f
     done < $FLIST 
     touch now
 
