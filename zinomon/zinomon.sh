@@ -3,9 +3,10 @@
 # $Id$
 
 OUT=`mktemp /tmp/zm.XXXXXX`
+OUT2=`mktemp /tmp/zm2.XXXXXX`
 PREVF="%TOPDIR%/zinomon-prev"
 
-trap "rm -f $OUT" 0
+trap "rm -f $OUT $OUT2" 0
 
 if [ ! -f $PREVF ]; then
     echo 0 > $PREVF
@@ -70,10 +71,11 @@ send_alarm () {
 }
 
 
-%PERL% -I %LIBDIR% %BINDIR%/zino-monitor.pl 2>&1 | \
-    tr -d '[]' > $OUT
+%PERL% -I %LIBDIR% %BINDIR%/zino-monitor.pl > $OUT2 2>&1
 
 es=$?
+
+tr -d '[]' > $OUT < $OUT2
 
 if [ $es != 0 -a $es != $PS ]; then
     echo $es > $PREVF
