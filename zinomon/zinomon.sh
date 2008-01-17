@@ -70,7 +70,8 @@ send_alarm () {
 }
 
 
-%PERL% -I %LIBDIR% %BINDIR%/zino-monitor.pl > $OUT 2>&1
+%PERL% -I %LIBDIR% %BINDIR%/zino-monitor.pl | \
+    tr -d '[]' > $OUT 2>&1
 
 es=$?
 
