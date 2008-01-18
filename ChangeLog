@@ -1,3 +1,125 @@
+2008-01-18  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Bump version number to 0.9.5.
+
+	* mibs/Makefile:
+	Add MIB files required to support the Juniper chassis alarm handling.
+
+	* mibs/mib-jnx-chassis-alarm.txt: Juniper Chassis alarm MIB.
+
+	* mibs/mib-jnx-smi.txt: Juniper SMI MIB module.
+
+	* zino/load-mibs.tcl:
+	Add MIBs required to support Juniper chassis alarms.
+
+	* zino/bgp.tcl:
+	Avoid using "local" variables in an SNMP callback script.  The
+	callback is evaluated in the global context(!)
+
+	* zino/status.tcl:
+	Add an isJuniper array, and init the new Juniper alarm handling
+	module.
+
+	* zino/jnx-alarm.tcl:
+	Add a file to probe the number of chassis alarms in Juniper routers,
+	and flag them with the new "alarm" event type.
+
+	* ritz/summary.tcl, ritz/sort.tcl:
+	Add support for the new "alarm" event type.
+
+	* ritz/ui.tcl: Update copyright year.
+
+2008-01-17  Havard Eidnes  <he@uninett.no>
+
+	* zinomon/zinomon.sh:
+	Hm, correctly collect exit status from the perl script.
+
+	* zinomon/zinomon.sh: Uhm, correct redirection.
+
+	* zinomon/zinomon.sh:
+	For some strange reason, use of brackets in messages to the SMS
+	gateway ends up converting the entire message to be all made up of
+	question marks!?!  Therefore, delete []'s from the data from
+	zino-monitor.pl before sending onwards to the SMS gateway.
+
+2008-01-07  Havard Eidnes  <he@uninett.no>
+
+	* conf-diff/checkin-configs.sh:
+	Ensure tftp file remains group- and owner-writable (yes, this
+	hardcodes the file permission setting).
+
+2007-12-11  Havard Eidnes  <he@uninett.no>
+
+	* zino/flaps.tcl:
+	Improve resiliency; set un-recorded port state to "unknown".
+
+	* zino/bgp.tcl: Reenable some debugging.
+	Ensure that we detect "up" state for events we've previously
+	created events for.
+
+2007-12-05  Havard Eidnes  <he@uninett.no>
+
+	* conf-diff/checkin-configs.sh:
+	Add stderr redirection to the find commands.
+
+	* conf-diff/checkin-configs.sh:
+	Rip out the compensation for non-truncating-tftpds; people better
+	fix their tftpds.
+	Re-order the code so that we have a better chance of actually
+	avoiding doing diffs of "hot" files.
+
+2007-11-27  Havard Eidnes  <he@uninett.no>
+
+	* zinomon/zinomon.sh: Get rid of the useless cat processes.
+	Use the correct name for the ritz config variable for potentially
+	multiple phone numbers.
+
+2007-11-26  Havard Eidnes  <he@uninett.no>
+
+	* zinomon/zinomon.sh: Add missing pipe symbol.
+
+	* zinomon/zinomon.sh:
+	Also send an alarm via e-mail if a problem is detected with zino.
+
+	* zinomon/zinomon.sh:
+	If message submission via sendmail for some reason should fail, emit
+	the text on stderr and let cron send it to the owner of the cron job.
+
+	* traffic/report/tail-stats.pl:
+	Instruct sendmail to pick up recipients from stdin by giving the
+	-t option.
+
+	* ChangeLog: Another update, this time including ourselves...
+
+	* ChangeLog: Update for the bump to 0.9.4.
+
+	* zino/bgp.tcl, zino/status.tcl: Comment out debug log messages.
+
+	* Makefile: Add zinomon subdir, bump to 0.9.4.
+
+	* zinomon/Makefile: Make install output more readable.
+
+	* zinomon/zinomon.sh: Correct usage of trap function.
+
+	* zinomon/Makefile: Reorder.
+
+	* zinomon/Makefile: Install zino-monitor.pl as well.
+
+	* zinomon/zinomon.sh: Correct the name of the perl script.
+
+	* zinomon/zinomon.sh:
+	Shell script to monitor zino, to be run from cron.
+
+	* zinomon/Makefile:
+	Makefile to install the various bits of the zino monitor.
+
+	* zinomon/emt-config.tcl:
+	Script to output emt config as shell variables.
+
+	* zinomon/Zino.pm, zinomon/zino-monitor.pl:
+	Add a monitor of zino itself, version 0.02, to be run from cron.
+	Wrapper script to check exit status and send SMS will be added.
+
 2007-11-26  Havard Eidnes  <he@uninett.no>
 
 	* ChangeLog: Update for the bump to 0.9.4.
