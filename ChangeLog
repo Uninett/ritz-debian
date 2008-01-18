@@ -1,5 +1,7 @@
 2008-01-18  Havard Eidnes  <he@uninett.no>
 
+	* ChangeLog: Update for version 0.9.5.
+
 	* Makefile: Bump version number to 0.9.5.
 
 	* mibs/Makefile:
