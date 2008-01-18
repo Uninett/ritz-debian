@@ -11,10 +11,12 @@ proc initStatus { } {
     ::persist::add ::portToLocIfDescr
     ::persist::add ::portState
     ::persist::add ::isCisco
+    ::persist::add ::isJuniper
 
     setSWalkEhandler swalkErrorHandler
 
     initBGP
+    initJNXalarm
 }
 
 
@@ -467,6 +469,7 @@ set delay_factor(checkBGP) 5
 
 proc pollRest { sh vbl } {
     global isCisco
+    global isJuniper
     global delay_factor
 
     set r [name $sh]
@@ -476,6 +479,8 @@ proc pollRest { sh vbl } {
 
     set isCisco($r) [oidPfxMatch [mib oid cisco] \
 			 [lindex [lindex "$vbl" 1] 2]]
+    set isJuniper($r) [oidPfxMatch [mib oid juniperMIB] \
+			   [lindex [lindex "$vbl" 1] 2]]
 
 #    log [format "debug: %s: getting address list" $r]
     getAddrList $sh
