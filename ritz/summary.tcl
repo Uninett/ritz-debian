@@ -191,6 +191,48 @@ proc summarizeReach { id } {
     return [format "%-*s" [summaryLen] $s]
 }
 
+proc summarizeAlarm { id } {
+    global View
+
+    set s ""
+    if { $View(id) } {
+	set s [format "%5s" $id]
+    }
+    if { $View(opstate) } {
+	set s [format "%s %-15s" $s [format "%s alarm" \
+					 [Attr $id "alarm-type"]]]
+    }
+    if { $View(admstate) } {
+	set s [format "%s %8s" $s [Attr $id "state"]]
+    }
+    if { $View(priority) } {
+	set s [format "%s %4s" $s [getPriority $id]]
+    }
+    if { $View(age) } {
+	set s [format "%s %16s" $s [mib format sysUpTime \
+	    [expr [getAge $id] * 100]]]
+    }
+    if { $View(downtime) } {
+	set s [format "%s %16s" $s ""]
+    }
+    if { $View(updated) } {
+	set secs [expr [clock seconds] - [Attr $id "updated"]]
+	set s [format "%s %16s" $s [mib format sysUpTime \
+		[expr $secs * 100]]]
+    }
+    if { $View(router) } {
+	set s [format "%s %-16s" $s [Attr $id "router"]]
+    }
+    if { $View(port) } {
+	set s [format "%s %-10s" $s ""]
+    }
+    if { [AttrExists $id "lastevent"] && $View(descr) } {
+	set s [format "%s (%s)" $s [Attr $id "lastevent"]]
+    }
+
+    return [format "%-*s" [summaryLen] $s]
+}
+
 proc summaryStr { id } {
 
     set type [Attr $id "type"]
@@ -200,6 +242,8 @@ proc summaryStr { id } {
 	return [summarizeReach $id]
     } elseif { $type == "bgp" } {
 	return [summarizeBGP $id]
+    } elseif { $type == "alarm" } {
+	return [summarizeAlarm $id]
     } else {
 	puts stderr [format "Ignoring unknown case type: %s, id %s" $type $id]
     }

@@ -76,6 +76,10 @@ proc compareTypes { a b } {
     if { $a == "portstate" } { return -1; }
     if { $b == "portstate" } { return 1; }
 
+    # Alarm state ranks above BGP
+    if { $a == "alarm" } { return -1; }
+    if { $b == "alarm" } { return 1; }
+
     # BGP state ranks above reachability
     if { $a == "bgp" } { return -1; }
     if { $b == "bgp" } { return 1; }
@@ -91,9 +95,11 @@ proc compareReachability { a b } {
 
     if [catch { set ar [Attr $a "reachability"] }] {
 	puts "No reachability attr for $a" 
+	return 1
     }
     if [catch { set br [Attr $b "reachability"] }] {
 	puts "No reachability attr for $b"
+	return -1
     }
 
     if { $ar == $br } { return 0; }
@@ -106,30 +112,61 @@ proc compareBgp { a b } {
 
     if [catch { set ao [Attr $a "bgpOS"] }] {
 	puts "no bgpOS for $a"
-	return 0
+	return 1
     }
     if [catch { set bo [Attr $b "bgpOS"] }] {
 	puts "no bgpOS for $b"
-	return 1
+	return -1
     }
 
     if { $ao != $bo } {
-	if { $ao == "established" } { return -1; }
-	if { $bo == "established" } { return 1; }
+	if { $ao == "established" } { return 1; }
+	if { $bo == "established" } { return -1; }
     }
 
     if [catch { set aa [Attr $a "bgpAS"] }] {
 	puts "no bgpAS for $a"
-	return 0
+	return 1
     }
     if [catch { set ba [Attr $a "bgpAS"] }] {
 	puts "no bgpAS for $b"
-	return 1
+	return -1
     }
 
     if { $aa != $ba } {
 	if { $aa != "start" } { return 1; }
 	if { $ba != "start" } { return -1; }
+    }
+    return 0;
+}
+
+proc compareAlarms { a b } {
+
+    if [catch { set at [Attr $a "alarm-type"] }] {
+	puts "no alarm-type for $a"
+	return 1
+    }
+    if [catch { set bt [Attr $a "alarm-type"] }] {
+	puts "no alarm-type for $b"
+	return -1
+    }
+    
+    if { $at != $bt } {
+	if { $at == "red" } { return -1; }
+	if { $bt == "red" } { return 1; }
+    }
+
+    if [catch { set ac [Attr $a "alarm-count"] }] {
+	puts "no alarm-count for $a"
+	return 1
+    }
+    if [catch { set bc [Attr $a "alarm-count"] }] {
+	puts "no alarm-count for $b"
+	return -1
+    }
+
+    if { $ac != $bc } {
+	return $ac <=> $bc;
     }
     return 0;
 }
@@ -253,6 +290,9 @@ proc compareCases { a b } {
 	} elseif { $at == "bgp" } {
 	    set s [compareBgp $a $b]
 	    if { $s != 0 } { return $s; }
+	} elseif { $at == "alarm" } {
+	    set s [compareAlarms $a $b]
+	    if { $s != 0 } { return $s; }
 	}
     }
 
@@ -351,6 +391,17 @@ proc caseSeverity { id } {
 	} else {
 	    return "normal"
 	}
+    } elseif { $type == "alarm" } {
+	set colour [Attr $id "alarm-type"]
+	set count [Attr $id "alarm-count"]
+	if { $count == 0 } {
+	    return "normal"
+	}
+	if { $colour == "yellow" } {
+	    return "warning"
+	}
+	return "alarm"
+
     } elseif { $type == "bgp" } {
 	set as [Attr $id "bgpAS"]
 	if { $as == "start" } {
