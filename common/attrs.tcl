@@ -71,6 +71,17 @@ namespace eval ::attr {
 	return $state
     }
 
+    proc effectiveAlarmState { id } {
+
+	::set count [get $id "alarm-count"]
+	if { $count == 0 } {
+	    return "no-alarm"
+	} else {
+	    return "alarm"
+	}
+	
+    }
+
     proc priority { id } {
 	variable defaultPriority
 
@@ -85,6 +96,8 @@ namespace eval ::attr {
 	return [expr [clock seconds] - [get $id "opened"]]
     }
 
+    
+
     proc getOperState { id } {
 	
 	::set type [get $id "type"]
@@ -92,6 +105,8 @@ namespace eval ::attr {
 	    return [effectivePortState $id]
 	} elseif { $type == "reachability" } {
 	    return [get $id "reachability"]
+	} elseif { $type == "alarm" } {
+	    return [effectiveAlarmState $id]
 	} else {
 	    return "unknown"
 	}
@@ -103,7 +118,8 @@ namespace eval ::attr {
 		$state == "flapping" || \
 		$state == "no-response" || \
 		$state == "adminDown" || \
-		$state == "lowerLayerDown" } {
+		$state == "lowerLayerDown" || \
+		$state == "alarm" } {
 	    return 1
 	}
 	return 0
