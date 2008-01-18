@@ -73,7 +73,7 @@ proc checkJNXalarm { sh } {
 
     set qvl "jnxYellowAlarmCount.0 jnxRedAlarmCount.0"
 
-    log [format "debug: %s checking juniper alarms" $r]
+#    log [format "debug: %s checking juniper alarms" $r]
     $sh get $qvl {
 	if { "%E" != "noError" } {
 	    return
