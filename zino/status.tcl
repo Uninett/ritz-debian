@@ -466,6 +466,7 @@ proc schedPollRouter { sh } {
 # Poll BGP once every 5 rounds
 
 set delay_factor(checkBGP) 5
+set delay_factor(checkJNXalarm) 0
 
 proc pollRest { sh vbl } {
     global isCisco
@@ -492,7 +493,7 @@ proc pollRest { sh vbl } {
     }
 
     # Maybe add more later to this list
-    foreach p "checkBGP" {
+    foreach p { "checkBGP" "checkJNXalarm" } {
 	if { [info proc $p] == $p } {
 	    if [info exists delay_factor($sh,$p)] {
 		if { $delay_factor($sh,$p) <= 0 } {
