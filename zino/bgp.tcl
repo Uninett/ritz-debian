@@ -265,28 +265,26 @@ proc checkBGP { sh } {
     global localAS
 
     $sh get "bgpLocalAs.0 sysUpTime.0" {
+	# Judiciously avoid using "local" variables;
+	# the callback is executed in the global context!
+
 #	puts [format "%s %s %s" %S %E "%V"]
 	if { "%E" != "noError" } {
 	    return
 	}
-	set lasv [lindex "%V" 0]
-	set supv [lindex "%V" 1]
 
-	if { [lindex $lasv 1] == "noSuchObject" } {
+	if { [lindex [lindex "%V" 0] 1] == "noSuchObject" } {
 	    return
 	}
-	set as [lindex $lasv 2]
-	if { $as == 0 } {
+	if { [lindex [lindex "%V" 0] 2] == 0 } {
 	    return
 	}
-#	puts [format "localAS(%s) %s" %S $as]
-	set localAS(%S) $as
+	set localAS(%S) [lindex [lindex "%V" 0] 2]
+#	puts [format "localAS(%s) %s" %S $localAS(%S)]
 
-	set up100 [mib scan [lindex $supv 0] [lindex $supv 2]]
-	set up [expr $up100 / 100]
-
-#	puts [format "%s uptime %d secs (%s)" %S $up [lindex $supv 2]]
-
-	checkBGPpeers %S $up
+	checkBGPpeers %S [expr [mib scan \
+				    [lindex [lindex "%V" 1] 0] \
+				    [lindex [lindex "%V" 1] 2] \
+				   ] / 100]
     }
 }
