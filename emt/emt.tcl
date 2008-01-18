@@ -449,7 +449,7 @@ proc emt_alarm { ids } {
 		append body [single_subject $id] "\n"
 	    }
 	} else {
-	    log [format "Nope, not important enough, priority threshold : %s" $prilimit]
+	    log [format "Nope, %s not important enough, priority threshold : %s" $id $prilimit]
 	}
     }
     if { $body != "" } {
