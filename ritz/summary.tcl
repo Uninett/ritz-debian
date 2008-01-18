@@ -224,7 +224,7 @@ proc summarizeAlarm { id } {
 	set s [format "%s %-16s" $s [Attr $id "router"]]
     }
     if { $View(port) } {
-	set s [format "%s %-10s" $s ""]
+	set s [format "%s %-20s" $s ""]
     }
     if { [AttrExists $id "lastevent"] && $View(descr) } {
 	set s [format "%s (%s)" $s [Attr $id "lastevent"]]
