@@ -61,6 +61,8 @@ namespace eval ::sort {
 	if { $a == $b } { return 0; }
 	if { $a == "portstate" } { return -1; }
 	if { $b == "portstate" } { return 1; }
+	if { $a == "alarm" } { return 1; }
+	if { $b == "alarm" } { return -1; }
 	puts [format "resorting to string compare for %s <-> %s" $a $b]
 	return [string compare $a $b]; # last resort
     }
