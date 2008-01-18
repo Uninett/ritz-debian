@@ -495,16 +495,14 @@ proc pollRest { sh vbl } {
     # Maybe add more later to this list
     foreach p { "checkBGP" "checkJNXalarm" } {
 	if { [info proc $p] == $p } {
-	    if [info exists delay_factor($sh,$p)] {
-		if { $delay_factor($sh,$p) <= 0 } {
-		    set delay_factor($sh,$p) $delay_factor($p)
-		    # ...and fallthrough to actually do it
-		} else {
-		    set delay_factor($sh,$p) [expr $delay_factor($sh,$p) - 1]
-		    continue
-		}
-	    } else {
+	    if { ! [info exists delay_factor($sh,$p)] } {
 		set delay_factor($sh,$p) $delay_factor($p)
+	    }
+	    if { $delay_factor($sh,$p) <= 0 } {
+		set delay_factor($sh,$p) $delay_factor($p)
+		# ...and fallthrough to actually do it
+	    } else {
+		set delay_factor($sh,$p) [expr $delay_factor($sh,$p) - 1]
 		continue
 	    }
 #	    log [format "debug: %s: doing %s" $r $p]
