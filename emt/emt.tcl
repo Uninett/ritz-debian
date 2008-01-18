@@ -213,6 +213,16 @@ proc report_compact_reach { id } {
     return [format "%11s (%s) %s" $rs $as $r]
 }
 
+proc report_compact_alarm { id } {
+
+    set r  [::attr::get $id "router"]
+    set at [::attr::get $id "alarm-type"]
+    set ac [::attr::get $id "alarm-count"]
+    set as [::attr::get $id "state"]
+
+    return [format "%s alarms on %s: %s (%s)" $at $r $ac $as]
+}
+
 proc report_compact { id } {
 
     set type [::attr::get $id "type"]
@@ -222,6 +232,9 @@ proc report_compact { id } {
 	}
 	reachability {
 	    return [report_compact_reach $id]
+	}
+	alarm {
+	    return [report_compact_alarm $id]
 	}
 	default {
 	    puts stderr "Unknown type: $type for id $id"
@@ -280,6 +293,24 @@ proc report_single_reach { id } {
     return $rs
 }
 
+proc report_single_alarm { id } {
+
+    set r  [::attr::get $id "router"]
+    set at [::attr::get $id "alarm-type"]
+    set ac [::attr::get $id "alarm-count"]
+    set as [::attr::get $id "state"]
+    set ll [::attr::get $id "lastevent"]
+
+    set rs [format   "      router: %s\n" $r]
+    set rs [format "%s  alarm-type: %s\n" $rs $at]
+    set rs [format "%s alarm-count: %s\n" $rs $ac]
+    set rs [format "%s   lastevent: %s\n" $rs $ll]
+    set rs [format "%s  case-state: %s\n" $rs $as]
+    set rs [format "%s recent event history:\n%s\n" $rs [emt_hist $id]]
+
+    return $rs  
+}
+
 proc report_single { id } {
 
     set type [::attr::get $id "type"]
@@ -289,6 +320,9 @@ proc report_single { id } {
 	}
 	reachability {
 	    return [report_single_reach $id]
+	}
+	alarm {
+	    return [report_single_alarm $id]
 	}
 	default {
 	    puts stderr "Unknown type: $type for id $id"
