@@ -43,30 +43,37 @@ proc recordJNXalarms { sh vbl } {
     }
     set r [name $sh]
 
-    foreach c {"yellow" "red"} {
+    foreach c {yellow red} {
 	if { ! [info exists JNXalarms($r,$c)] } {
 	    set JNXalarms($r,$c) 0
 	}
     }
-    if { $jnxYellowAlarmCount != $JNXalarms($r,"yellow") } {
-	JNXalarm $r "yellow" $JNXalarms($r,"yellow") $jnxYellowAlarmCount
-	set JNXalarms($r,"yellow") $jnxYellowAlarmCount
+    if { $jnxYellowAlarmCount != $JNXalarms($r,yellow) } {
+	JNXalarm $r yellow $JNXalarms($r,yellow) $jnxYellowAlarmCount
+	set JNXalarms($r,yellow) $jnxYellowAlarmCount
     }
-    if { $jnxRedAlarmCount != $JNXalarms($r,"red") } {
-	JNXalarm $r "red" $JNXalarms($r,"red") $jnxRedAlarmCount
-	set JNXalarms($r,"red") $jnxRedAlarmCount
+    if { $jnxRedAlarmCount != $JNXalarms($r,red) } {
+	JNXalarm $r "red" $JNXalarms($r,red) $jnxRedAlarmCount
+	set JNXalarms($r,red) $jnxRedAlarmCount
     }
 }
 
 proc checkJNXalarm { sh } {
     global isJuniper
-
-    if { ! $isJuniper($sh) } {
+    
+    set r [name $sh]
+    if [info exists isJuniper($r)] {
+	if { ! $isJuniper($r) } {
+	    return
+	}
+    } else {
+	log [format "%s isJuniper could not be determined" $r]
 	return
     }
 
     set qvl "jnxYellowAlarmCount.0 jnxRedAlarmCount.0"
 
+    log [format "debug: %s checking juniper alarms" $r]
     $sh get $qvl {
 	if { "%E" != "noError" } {
 	    return
