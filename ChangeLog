@@ -4,6 +4,34 @@
 
 	* Makefile: Bump version number to 0.9.5.
 
+	* zino/jnx-alarm.tcl: Disable some debugging printout.
+
+	* common/attrs.tcl: Add handling of "alarm" events.
+
+	* emt/emt.tcl: Log case ID when rejecting due to priority threshold.
+
+	* common/sort.tcl: Add some minimal handling of alarm events.
+
+	* emt/emt.tcl:
+	Add support for triggering messages on "alarm" event types.
+
+	* ritz/summary.tcl: Correct length of "port" field.
+
+	* zino/jnx-alarm.tcl: Be consistent in quoting.
+	isJuniper() is indexed by router name; comply.
+	Add some minor debugging output.
+
+	* zino/status.tcl:
+	Ensure that delay_factor == 0 makes the poll run in the first round.
+
+	* zino/status.tcl: Use proper list notation.
+
+	* zino/jnx-alarm.tcl: Terminate with a newline.
+
+	* zino/Makefile: Add new juniper alarm module.
+
+	* zino/load-mibs.tcl: Correctly spell the Juniper MIB file names.
+
 	* mibs/Makefile:
 	Add MIB files required to support the Juniper chassis alarm handling.
 
