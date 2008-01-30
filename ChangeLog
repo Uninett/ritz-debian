@@ -1,3 +1,11 @@
+2008-01-30  vegardv  <vegardv@uninett.no>
+
+	* ritz/debian/changelog: New upstream version
+
+2008-01-20  Havard Eidnes  <he@uninett.no>
+
+	* ChangeLog: Some more changes for 0.9.5.
+
 2008-01-18  Havard Eidnes  <he@uninett.no>
 
 	* ChangeLog: Update for version 0.9.5.
