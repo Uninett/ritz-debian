@@ -1,8 +1,20 @@
+ritz (0.9-05) gutsy; urgency=low
+
+  * New upstream version
+
+ -- Vegard Vesterheim <vegardv@voll.uninett.no>  Wed, 30 Jan 2008 14:20:18 +0100
+
 ritz (0.9-03ubuntu1) feisty; urgency=low
 
   * New upstream version
 
  -- Vegard Vesterheim <vegardv@voll.uninett.no>  Wed, 29 Aug 2007 15:25:31 +0200
+
+ritz (0.9-02) unstable; urgency=low
+
+  * New upstream version
+
+ -- Vegard Vesterheim <vegardv@voll.uninett.no>  Mon, 12 Feb 2007 15:42:49 +0100
 
 ritz (0.9-01) unstable; urgency=low
 
