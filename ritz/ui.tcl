@@ -10,16 +10,23 @@ proc initUi { } {
     global View
     global uiLabelFilter
 
-    set View(id) 0
-    set View(opstate) 1
-    set View(admstate) 1
-    set View(priority) 0
-    set View(age) 1
-    set View(downtime) 1
-    set View(updated) 0
-    set View(router) 1
-    set View(port) 1
-    set View(descr) 1
+    set def_View(id) 0
+    set def_View(opstate) 1
+    set def_View(admstate) 1
+    set def_View(priority) 0
+    set def_View(age) 1
+    set def_View(downtime) 1
+    set def_View(updated) 0
+    set def_View(router) 1
+    set def_View(port) 1
+    set def_View(descr) 1
+
+    foreach ix {id opstate admstate priority age \
+		    downtime updated router port descr } {
+	if { ! [info exists View($ix)] } {
+	    set View($ix) $def_View($ix)
+	}
+    }
 
     set uiLabelFilter(selected)		"Selected"
     set uiLabelFilter(type)		"Case type"
