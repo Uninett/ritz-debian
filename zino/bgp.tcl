@@ -53,6 +53,47 @@ proc bgpAdminDown { sh ix vbl } {
     eventCommit $eid
 }
 
+proc bgpAdminUp { sh ix vbl } {
+
+    foreach vb $vbl {
+	set oid [lindex $vb 0]
+	set val [lindex $vb 2]
+	set var [lrange [split [mib name $oid] "."] 0 0]
+	set $var $val
+    }
+    set r [name $sh]
+
+    set old [eventIxExists $ix bgp]
+    
+    if { ! $old } {
+	return ;			# not noted, so no need to bother
+    }
+
+    set eid [eventId $ix bgp]
+
+    if { [getEventAttr $eid "bgpAS"] == $bgpPeerAdminStatus } {
+	return ;			# already noted
+    }
+
+    setEventAttr $eid "router" $r
+    setEventAttr $eid "polladdr" [::config::conf $r address]
+    setEventAttr $eid "priority" [::config::conf $r priority]
+
+    setEventAttr $eid "bgpOS" $bgpPeerState
+    setEventAttr $eid "bgpAS" $bgpPeerAdminStatus
+    setEventAttr $eid "remote-addr" $bgpPeerRemoteAddr
+    setEventAttr $eid "remote-AS" $bgpPeerRemoteAs
+    setEventAttr $eid "peer-uptime" 0
+    setEventAttr $eid "lastevent" "peer is now admin turned on"
+
+    set s [format "%s peer %s AS %s is now turned on (%s)" \
+	       $r $bgpPeerRemoteAddr $bgpPeerRemoteAs $bgpPeerAdminStatus]
+    log $s
+    eventLog $eid $s
+
+    eventCommit $eid
+}
+
 proc bgpOperDown { sh ix vbl } {
 
     foreach vb $vbl {
@@ -201,6 +242,13 @@ proc recordBGPpeer { sh uptime vbl } {
 			 $r $bgpPeerRemoteAddr $bgpPeerRemoteAs]
 	    }
 	} else {
+	    if { ! [info exists bgpPeerAdminState($ix)] } {
+		set bgpPeerAdminState($ix) "unknown"
+	    }
+	    if { $bgpPeerAdminState($ix) != $bgpPeerAdminStatus && \
+		     $localAS($sh) != $bgpPeerRemoteAs } {
+		bgpAdminUp $sh $ix $vbl
+	    }
 	    if { ! [info exists bgpPeerOperState($ix)] } {
 		set bgpPeerOperState($ix) "established"
 	    }
