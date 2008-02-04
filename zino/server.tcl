@@ -341,6 +341,12 @@ proc doQuitCmd { chan l } {
     closeClient $chan "Normal quit from client, closing down"
 }
 
+proc doVersionCmd { chan l } {
+    global Version
+
+    ClientResponse $chan [format "200 zino version is %s" $Version]
+}
+
 proc doHelpCmd { chan l } {
     global User
     global OpenServerAccess
@@ -350,14 +356,16 @@ proc doHelpCmd { chan l } {
 	ClientResponse $chan \
 		"200- CASEIDS GETATTRS GETHIST"
 	ClientResponse $chan\
-		"200  GETLOG HELP NSOCKET QUIT USER"
+		"200  GETLOG HELP NSOCKET QUIT USER VERSION"
     } elseif { [info exists User($chan)] } {
 	ClientResponse $chan \
 		"200- ADDHIST CASEIDS CLEARFLAP COMMUNITY GETATTRS GETHIST"
 	ClientResponse $chan \
-		"200   GETLOG HELP NSOCKET POLLINTF POLLRTR QUIT SETSTATE"
+		"200-  GETLOG HELP NSOCKET POLLINTF POLLRTR QUIT SETSTATE"
+	ClientResponse $chan \
+	        "200   VERSION"
     } else {
-	ClientResponse $chan "200  HELP QUIT USER"
+	ClientResponse $chan "200  HELP QUIT USER VERSION"
     }
 }
 
@@ -406,6 +414,9 @@ proc ServerCmd { chan line } {
 	}
 	help {
 	    doHelpCmd $chan $l
+	}
+	version {
+	    doVersionCmd $chan $l
 	}
 	default {
 	    errResponse $chan \
