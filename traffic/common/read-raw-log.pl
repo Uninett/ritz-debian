@@ -38,6 +38,7 @@
 # Read a single daily log, suck in data, do not summarize
 # but just fetch interval values.
 #
+# Times are hours in offset from 00:00 local time
 
 # Return data in globals:
 #   $count{$v, $i}	Delta for counter $v in interval $i
@@ -45,20 +46,32 @@
 #			Also used to compute delta for each interval/sample
 #   $sample_time{$v, $i} Sample time in hrs for counter $v, end of sample $i
 #   $sample_time{$i}	Sample time in hrs for end of sample $i
+#                       offset from the start of the log
+#   $firsttime{$v}      The first time in hrs counter $v is seen in the log
 #   $date		Date string of log
 #   $ifspeed, $iftype, $ifdescr		As picked from log
 #   $max_sample		Max number of samples
+#   $lasttime{$v}       Last sample time for counter $v
+#   $dstcomp{$v}        Daylight savings time compensation for counter $v
+
+use Time::Local;
+use Date::Parse;
 
 sub read_log {
     my($fh, $disable_23_handling) = @_;
     my($h, $m, $s, $sample_no, %sample_no, $sno);
     my($v, $dummy);
     my($delta, $lasttime, $day, $reboot_day, $reboot_time);
-    my($now);
+    my($now, $dstcomp, %dstcomp);
     my($starter);
     my(@f);
     my($h0_seen) = 0;
+    my(%data_seen, %lasttime_uncomp);
+    our(%count, %base, %sample_time);
+    our(%lasttime, %firsttime);
+    our($date, $ifspeed, $iftype, $ifdescr, $max_sample);
 
+    $dstcomp = 0;
     $sample_no = -1;
     while (<$fh>) {
         chop;
@@ -92,6 +105,22 @@ sub read_log {
 	    if ($h == 23 && !$h0_seen) {
 		$now -= 24 * 3600;
 	    } elsif ($h < 23) {
+		if ( ! $h0_seen ) {
+		    # Is this day switching to or from daylight savings time?
+		    # (executed only once)
+		    my($t0, $t1);
+		    $t0 = timelocal(strptime(sprintf("%s %s %s 00:00:00",
+						     $f[1], $f[2], $f[4])));
+		    $t1 = timelocal(strptime(sprintf("%s %s %s 23:30:00",
+						     $f[1], $f[2], $f[4])));
+		    my($diff) = $t1 - $t0;
+		    if ($diff < 23 * 3600) {
+			$dstcomp = (-3600);
+		    }
+		    if ($diff > 24 * 3600) {
+			$dstcomp = 3600;
+		    }
+		}
 		$h0_seen = 1;
 	    }
 	}
@@ -120,10 +149,46 @@ sub read_log {
 
         ($v, $dummy) = split(/\./, $f[5]);
 
+	if (!defined($data_seen{$v})) {
+	    if (defined($lasttime{$v})) {
+		$firsttime{$v} = ($lasttime{$v} / 3600.0) - 24;
+	    } else {
+		$firsttime{$v} = $now / 3600.0;
+	    }
+	    $data_seen{$v} = 1;
+	}
 	if (!defined($base{$v})) {
 	    $base{$v} = $f[6];
+	    $lasttime{$v} = $now;
+	    $dstcomp{$v} = 0;
 	    next;
 	}
+
+	# old "compressed" logs appear to have a single
+	# "stray" sample which goes back in time when shifting
+	# from daylight savings time.  Trigger DST compensation
+	# based on this
+	if (defined($lasttime_uncomp{$v})) {
+	    my $delta_t = $now - $lasttime_uncomp{$v};
+	    if ($delta_t < 0) {
+		foreach my $k (keys %base) {
+		    $dstcomp{$k} = $dstcomp;
+		}
+		next;
+	    }
+	}
+
+	# switch to or from daylight savings time?
+	# Note, this only compensates if the data file hasn't
+	# already been "fixed".
+	if ($dstcomp != 0 &&
+	    (($lasttime{$v} > $now) ||
+	     ($now - $lasttime{$v} > 3600)))
+	{
+	    $dstcomp{$v} = $dstcomp;
+	}
+
+	$now += $dstcomp{$v};
 
 	if (defined($sample_no{$now})) {
 	    $sno = $sample_no{$now};
@@ -135,6 +200,8 @@ sub read_log {
 	}
 
 	$lasttime = $now;
+	$lasttime{$v} = $now;
+	$lasttime_uncomp{$v} = $now - $dstcomp{$v};
 
 	$delta = ($f[6] - $base{$v});
 	if ($delta < 0 && !($v =~ /ifHC/o)) {
@@ -144,8 +211,8 @@ sub read_log {
 	    $delta = 0;		# to another port
 	}
 
-	$count{$v, $sno} = $delta;
-	$sample_time{$v, $sno} = $now / 3600.0;
+	$count{$v,$sno} = $delta;
+	$sample_time{$v,$sno} = $now / 3600.0;
 
 	$base{$v} = $f[6];
 	if ($sample_no == 10 && $h0_seen) {
