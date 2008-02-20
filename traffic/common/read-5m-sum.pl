@@ -77,7 +77,10 @@ sub read_5m_sum {
     my($tick, $tt, $lasttick, $ltt, $sno, $f1, $k);
     my($err) = "";
     my(%mycount, %mybase, %mysample_time, $myspeed, $my_max_sample);
-    my($reverse, $mv);
+    our($max_sample, $min_sample);
+    my($reverse, $mv, $firstsampletime);
+    our(%save_base, %save_lasttime, %save_varnames);
+    our(%base, %lasttime, %firsttime, %leftover);
 
     undef %base;
     $myspeed = 0;
@@ -99,10 +102,29 @@ sub read_5m_sum {
 	    $err .= "Could not find data file for $base / $date\n";
 	    next;
 	}
+
+	# if we saved stuff for this line, restore
+	# to gain an extra (required!) sample
+	if (defined($save_base{$line,"ifInOctets"})) {
+	    foreach my $v (keys %save_varnames) {
+		$l = $line;
+		if (defined($save_base{$l,$v})) {
+		    $base{$v} = $save_base{$l,$v};
+		    $lasttime{$v} = $save_lasttime{$l,$v};
+		}
+	    }
+	}
+
 	open(DAYLOG, "$cat $f |") ||
 	    die "Could not open \"$cat $f\": $!\n";
 	&read_log(DAYLOG);
 	close(DAYLOG);
+
+	foreach my $v (keys %base) {
+	    $save_base{$line,$v} = $base{$v};
+	    $save_lasttime{$line,$v} = $lasttime{$v};
+	    $save_varnames{$v} = 1;
+	}
 
 	foreach $v (keys %base) {
 	    $mybase{$v} = $base{$v};
@@ -112,13 +134,22 @@ sub read_5m_sum {
 		$mv = $v;
 	    }
 
-	    $sno = 1;
-	    $lasttime{$v} = $sample_time{0};
-	    $lasttick = &floor_int($lasttime{$v} * 60/5.0);
+	    if (defined($firsttime{$v}) && $fisttime{$v} != $sample_time{0}) {
+		$lasttime{$v} = $firsttime{$v};
+		$sno = 0;
+	    } else {
+		$lasttime{$v} = $sample_time{0};
+		$sno = 1;
+	    }
 
-	    for ($tick = &floor_int($sample_time{1} * 60/5.0);
-		 $tick < 24 * 60/5;
-		 $tick++)
+	    $firstsampletime = $sample_time{$sno};
+	    $lasttick = &floor_int($lasttime{$v} * 60/5.0);
+	    $min_sample = 0;
+	    $my_max_sample = &floor_int($sample_time{$max_sample} * 60/5.0);
+
+	    for ($tick = $min_sample;
+		 $tick <= $my_max_sample;
+		 $lasttick = $tick, $tick++)
 	    {
 		$tt = $tick * 5.0/60;
 		$mysample_time{$mv,$tick} = $tt;
@@ -129,7 +160,12 @@ sub read_5m_sum {
 		if (! defined($mycount{$mv,$tick})) {
 		    $mycount{$mv,$tick} = 0;
 		}
-		# First include remainder of last sample in this tick
+		# First any partial sample from previous files
+		if ($leftover{$line,$v} != 0) {
+		    $mycount{$mv,$tick} += $leftover{$line,$v};
+		    $leftover{$line,$v} = 0;
+		}
+		# Then include remainder of last sample in this tick
 		if (defined($sample_time{$sno}) && defined($lasttime{$v}) &&
 		    ($sample_time{$sno} != $lasttime{$v}))
 		{
@@ -154,8 +190,18 @@ sub read_5m_sum {
 		    $f1 = ($tt - &max($ltt, $lasttime{$v})) /
 			($sample_time{$sno} - $lasttime{$v});
 		    $mycount{$mv,$tick} += $count{$v,$sno} * $f1;
-		    $lasttick = $my_max_sample = $tick;
 		}
+	    }
+	    while(defined($sample_time{$sno})) {
+		if ($ltt > $lasttime{$v}) {
+		    $f1 = ($sample_time{$sno} - $ltt) /
+			($sample_time{$sno} - $lasttime{$v});
+		    $leftover{$line,$v} += $count{$v,$sno} * $f1;
+		} else {
+		    $leftover{$line,$v} += $count{$v,$sno};
+		}
+		$lasttime{$v} = $sample_time{$sno};
+		$sno++;
 	    }
 	}
 	$myspeed += $ifspeed;
@@ -164,6 +210,8 @@ sub read_5m_sum {
 	undef %count;
 	undef %base;
 	undef %sample_time;
+	undef %firsttime;
+	undef %lasttime;
 	undef $max_sample;
     }
 
