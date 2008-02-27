@@ -68,6 +68,7 @@ sub restore_vars {
     my($b) = @_;
     my($p);
     our($fd);
+    our(%base, %lasttime, %sample_time, %dstcomp);
 
     if (!defined($fd->{$b})) {
 	my $f = &save_file($b);
@@ -82,9 +83,13 @@ sub restore_vars {
 
     if (defined($p)) {
 	# Set up to read tail of log
-	foreach my $v (keys %{ $p->{"base"} }) {
-	    $base{$v} = $p->{"base"}->{$v};
-	    $sample_time{$v,-1} = $p->{"last_sample"};
+	foreach my $a ("base", "lasttime", "dstcomp") {
+	    foreach my $v (keys %{ $p->${"$a"} }) {
+		${$a}{$v} = $p->${$a}->{$v};
+	    }
+	}
+	foreach my $v (keys %lasttime) {
+	    $sample_time{$v,-1} = $lasttime{$v};
 	}
 	$date = $p->{"date_string"};
 	$ifspeed = $p->{"ifspeed"};
@@ -98,10 +103,14 @@ sub save_vars {
     my($p) = $fd->{$b};
     our(%count, %base, %sample_time);
     our($date, $ifspeed, $iftype, $ifdescr, $max_sample);
+    our(%lasttime, %dstcomp);
     
-    foreach my $v (keys %base) {
-	$p->{"base"}->{$v} = $base{$v};
+    foreach my $a ("base", "lasttime", "dstcomp") {
+	foreach my $v (keys %$a) {
+	    $p->{$a}->{$v} = ${$a}{$v};
+	}
     }
+
     $p->{"date_string"} = $date;
     $p->{"ifspeed"} = $ifspeed;
     $p->{"iftype"} = $iftype;
@@ -118,6 +127,8 @@ sub save_vars {
     undef %count;
     undef %base;
     undef %sample_time;
+    undef %lasttime;
+    undef %dstcomp;
     undef $date;
     undef $ifspeed;
     undef $iftype;
@@ -142,8 +153,8 @@ sub convert_times {
     our($opt_d);
     my($start_secs);
 
-    # Handle the stupidity that the time scale is in hours
-    # for the "current day", and handle rollover at midnight
+    # Handle that the time scale is in hours for the "current day",
+    # and handle rollover at midnight
     if(defined($sample_time{$start-1})) {
 	$s = $start-1;
     } else {
