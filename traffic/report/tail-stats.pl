@@ -82,10 +82,12 @@ sub restore_vars {
     }
 
     if (defined($p)) {
+	no strict 'refs';
+
 	# Set up to read tail of log
 	foreach my $a ("base", "lasttime", "dstcomp") {
-	    foreach my $v (keys %{ $p->${"$a"} }) {
-		${$a}{$v} = $p->${$a}->{$v};
+	    foreach my $v (keys %{ $p->{$a} }) {
+		$$a{$v} = $p->{$a}->{$v};
 	    }
 	}
 	foreach my $v (keys %lasttime) {
@@ -105,9 +107,11 @@ sub save_vars {
     our($date, $ifspeed, $iftype, $ifdescr, $max_sample);
     our(%lasttime, %dstcomp);
     
+    no strict 'refs';
+
     foreach my $a ("base", "lasttime", "dstcomp") {
 	foreach my $v (keys %$a) {
-	    $p->{$a}->{$v} = ${$a}{$v};
+	    $p->{$a}->{$v} = $$a{$v};
 	}
     }
 
