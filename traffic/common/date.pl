@@ -162,7 +162,6 @@ sub wday {
 @wdays = ("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat");
 @months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
 	   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
-$timezone = 1; # Timezone - should be from somewhere else... XXX
 
 sub pretty_date {
     my($yyyymmdd) = @_;
@@ -259,10 +258,23 @@ sub firstinweek {
    $time;
 }
 
-# This should account for leap-years as well
+# This should now account for leap-years
 sub days_in_month {
     my($year, $month) = @_;
-    return $daysinmonth[$month-1];
+    my($leapday) = 0;
+
+    if ($month == 2) {		# February
+	if ($year % 4 == 0) {
+	    if ($year % 100 == 0) {
+		if ($year % 400 == 0) {
+		    $leapday = 1;
+		}
+	    } else {
+		$leapday = 1;
+	    }
+	}
+    }
+    return $daysinmonth[$month-1] + $leapday;
 }
 
 # Check and decode a datespec
