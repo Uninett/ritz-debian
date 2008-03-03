@@ -28,7 +28,7 @@ sub run {
     print strftime("[%Y-%m-%d %H:%M:%S] Checking zino...\n", localtime);
     my $result;
     my $zino = init($host, $port);
-    login($zino, $user, $secret);
+    login($zino, $user, $secret) || die "Failed to login";
     # Get single element from returned id array
     my @caseids = caseids($zino);
     die "Zino didn't return any caseids" unless @caseids;
@@ -66,6 +66,10 @@ sub login {
     my ($zino, $user, $secret) = @_;
     my $challenge_line = $zino->getline;
 
+    if (!defined($challenge_line)) {
+	return undef;
+    }
+
     if ($challenge_line =~ m/^200 (\w+) /) {
         $zino->print("user $user " . sha1_hex("$1 $secret"));
 
@@ -73,7 +77,7 @@ sub login {
 
         return 1 if $auth_result =~ m/^200/;
     }
-    return 0;
+    return undef;
 }
 
 sub caseids {
