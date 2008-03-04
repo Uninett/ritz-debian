@@ -47,6 +47,7 @@
 #   $date		Date string of log
 #   $ifspeed, $iftype, $ifdescr	   $ifspeed is sum of capacity
 #   $max_sample		Max number of samples
+#   $position{$base}    Reposition to here, save position at end of file
 #
 
 push(@INC, "%LIBDIR%");
@@ -80,7 +81,7 @@ sub read_5m_sum {
     our($max_sample, $min_sample);
     my($reverse, $mv, $firstsampletime);
     our(%save_base, %save_lasttime, %save_varnames);
-    our(%base, %lasttime, %firsttime, %leftover);
+    our(%base, %lasttime, %firsttime, %leftover, %position);
 
     undef %base;
     $myspeed = 0;
@@ -117,7 +118,17 @@ sub read_5m_sum {
 
 	open(DAYLOG, "$cat $f |") ||
 	    die "Could not open \"$cat $f\": $!\n";
+	if (defined($position{$base})) {
+	    my($mtime, $size) = (stat(DAYLOG))[9,7];
+	    my($pos) = $position{$base};
+	    if ($pos < $size) {
+		seek(DAYLOG, $pos, SEEK_SET);
+	    } else {
+		$position{$base} = 0;
+	    }
+	}
 	&read_log(DAYLOG);
+	$position{$base} = tell(DAYLOG);
 	close(DAYLOG);
 
 	foreach my $v (keys %base) {
