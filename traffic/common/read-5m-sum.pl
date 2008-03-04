@@ -76,7 +76,7 @@ require 'read-raw-log.pl';
 
 
 sub read_5m_sum {
-    my($lines, $date) = @_;
+    my($lines, $d) = @_;
     my(@lines) = split(/\+/, $lines);
     my($line, $base, $cat, $f, $v);
     my($tick, $tt, $lasttick, $ltt, $sno, $f1, $k);
@@ -98,13 +98,13 @@ sub read_5m_sum {
 	    $reverse = 0;
 	}
 
-	if (! defined($base = &name_to_file($line, $date))) {
-	    $err .= "Could not find base file name for $line / $date\n";
+	if (! defined($base = &name_to_file($line, $d))) {
+	    $err .= "Could not find base file name for $line / $d\n";
 	    next;
 	}
-	($cat, $f) = &find_cat_and_file($base, $date);
+	($cat, $f) = &find_cat_and_file($base, $d);
 	if (! defined($f)) {
-	    $err .= "Could not find data file for $base / $date\n";
+	    $err .= "Could not find data file for $base / $d\n";
 	    next;
 	}
 
