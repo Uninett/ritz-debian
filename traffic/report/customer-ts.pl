@@ -95,7 +95,8 @@ sub save_vars {
     }
 
     my $f = &save_file($c);
-    open(OUT, ">" . $f . ".new");
+    open(OUT, ">" . $f . ".new") ||
+	die "Could not open $f.new for write: $!";
     print OUT Data::Dumper->Dump([$p], ["p"]);
     close(OUT);
     rename($f . ".new", $f);
@@ -110,8 +111,9 @@ sub restore_vars {
     my($c) = @_;
     our($root);
     our(%save_hashes, @save_vars);
+    my($p) = $root->{$c};
 
-    if (!defined($root->{$c})) {
+    if (!defined($p->{"date"})) {
 	my $f = &save_file($c);
 	if (open(IN, $f)) {
 	    my @lines = <IN>;
@@ -120,19 +122,15 @@ sub restore_vars {
 	    eval $var_settings;
 	    $root->{$c} = $p;
 	}
-    }
-
-    foreach my $v (keys %save_vars) {
-	my($vp) = $save_vars{$v};
-	${ $vp } = $p->{$v};
-    }
-
-    if (defined($p)) {
 	foreach my $h (keys %save_hashes) {
 	    my($hp) = $save_hashes{$h};
 	    foreach my $v (keys %{ $p->{$h} }) {
 		$hp->{$v} = $p->{$h}->{$v};
 	    }
+	}
+	foreach my $v (keys %save_vars) {
+	    my($vp) = $save_vars{$v};
+	    ${ $vp } = $p->{$v};
 	}
     }
 }
@@ -215,6 +213,7 @@ sub process_data {
     my($p) = $root->{$c};
     my($iov, $oov);
     my(@in_kbps, @out_kbps, @in_pps, @out_pps, @times);
+    our(%sample_secs);
     
     # Prefer 64-bit counters
     if (defined($p->{"base"}->{"ifHCInOctets"})) {
@@ -259,6 +258,7 @@ sub process_data {
     if (defined($opt_R)) {
 	&update_rrd($c, $desc, $tm0);
     }
+    undef %sample_secs;
 }
 
 sub create_rrd {
@@ -284,10 +284,10 @@ sub create_rrd {
     $cmd .= "RRA:AVERAGE:0.5:288:730 ";
 
     if ($opt_V) {
-	printf(STDERR "$cmd\n", $n, $s);
+	printf(STDERR "$cmd\n", $name, $s);
     }
-    if (system(sprintf($cmd, $n, $s)) != 0) {
-	printf(STDERR "rrdtool create %s.rrd failed: %s", $n, $?);
+    if (system(sprintf($cmd, $name, $s)) != 0) {
+	printf(STDERR "rrdtool create %s.rrd failed: %s", $name, $?);
 	return undef;
     }
     return 1;
@@ -343,6 +343,8 @@ sub do_one_customer {
 	$root->{$c} = {};
     }
 
+    &restore_vars($c);
+
     foreach my $day (0 .. $nd-1) {
 	my($tm) = $base_tm + 3600 * 24 * $day;
 	my($d) = &tm_to_date($tm);
@@ -361,6 +363,8 @@ sub do_one_customer {
 	
 	&process_data($c, 0, $max_sample, $tm);
     }
+
+    &save_vars($c);
 }
 
 sub do_all_customers {
