@@ -47,7 +47,11 @@
 #   $date		Date string of log
 #   $ifspeed, $iftype, $ifdescr	   $ifspeed is sum of capacity
 #   $max_sample		Max number of samples
+#
 #   $position{$base}    Reposition to here, save position at end of file
+#   $save_base{$l,$v}   Restore $base{$v} from this, and save afterwards
+#   $save_lasttime{$l,$v} Restore $lasttime{$v} from this, and save afterwards
+#   $save_varnames{$v}  Used to keep track of variables seen
 #
 
 push(@INC, "%LIBDIR%");
