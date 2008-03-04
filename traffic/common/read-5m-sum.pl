@@ -44,7 +44,7 @@
 #   $base{$v}		Convenience tester for existence of variable in data
 #   $sample_time{$v,$i}	Sample time in hrs for counter $v, end of sample $i
 #   $sample_time{$i}	Sample time in hrs for end of sample $i
-#   $date		Date string of log
+#   $date		Date string of log, also input to detect "same date"
 #   $ifspeed, $iftype, $ifdescr	   $ifspeed is sum of capacity
 #   $max_sample		Max number of samples
 #
@@ -124,8 +124,11 @@ sub read_5m_sum {
 	    die "Could not open \"$cat $f\": $!\n";
 	if (defined($position{$base})) {
 	    my($mtime, $size) = (stat(DAYLOG))[9,7];
+	    my $mod_date = &tm_to_date($mtime);
 	    my($pos) = $position{$base};
-	    if ($pos < $size) {
+	    if (defined($date) && $date ne $mod_date) {
+		$position{$base} = 0;
+	    } elsif ($pos < $size) {
 		seek(DAYLOG, $pos, SEEK_SET);
 	    } else {
 		$position{$base} = 0;
