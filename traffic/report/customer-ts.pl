@@ -68,12 +68,12 @@ sub save_file {
     return $DATATREE . "/c-tail/" . $c . ".pl";
 }
 
-@save_hashes = ("position",
-		"dstcomp",
-		"leftover",
-		"save_base",
-		"save_lasttime",
-		"save_varnames",
+%save_hashes = ("position" => \%position,
+		"dstcomp" => \%dstcomp,
+		"leftover" => \%leftover,
+		"save_base" => \%save_base,
+		"save_lasttime" => \%save_lasttime,
+		"save_varnames" => \%save_varnames,
     );
 @save_vars = ("date");
 
@@ -81,16 +81,16 @@ sub save_file {
 sub save_vars {
     my($c) = @_;
     my($p);
+    our(%save_hashes, @save_vars);
 
-    no strict 'refs';
-
-    foreach my $h (@save_hashes) {
-	our(%$h);
-	foreach my $v (keys %$h) {
-	    $p->{$h}->{$v} = $$h{$v};
+    foreach my $h (keys %save_hashes) {
+	my($hp) = $save_hashes{$h};
+	foreach my $v (keys %{ $hp }) {
+	    $p->{$h}->{$v} = $hp->{$v};
 	}
     }
     foreach my $v (@save_vars) {
+	no strict 'refs';
 	our($$v);
 	$p->{$v} = $v;
     }
@@ -101,18 +101,19 @@ sub save_vars {
     close(OUT);
     rename($f . ".new", $f);
 
-    foreach my $h (@save_hashes) {
-	our(%$h);
-	undef %$h;
+    foreach my $h (keys %save_hashes) {
+	my($hp) = $save_hashes{$h};
+	undef %{ $hp };
     }
 }
 
 sub restore_vars {
     my($c) = @_;
     our($root);
+    our(%save_hashes, @save_vars);
 
     if (!defined($root->{$c})) {
-	my $f = $save_file($c);
+	my $f = &save_file($c);
 	if (open(IN, $f)) {
 	    my @lines = <IN>;
 	    close(IN);
@@ -123,15 +124,16 @@ sub restore_vars {
     }
 
     foreach my $v (@save_vars) {
+	no strict 'refs';
 	our($$v);
 	$v = $p->{$v};
     }
 
     if (defined($p)) {
-	foreach my $h (@save_hashes) {
-	    our(%$h);
+	foreach my $h (keys %save_hashes) {
+	    my($hp) = $save_hashes{$h};
 	    foreach my $v (keys %{ $p->{$h} }) {
-		$$h{$v} = $p->{$h}->{$v};
+		$hp->{$v} = $p->{$h}->{$v};
 	    }
 	}
     }
@@ -309,7 +311,7 @@ sub update_rrd {
     my($name);
 
     if (-f $c . ".lock") { return; }
-    if (! -f $c . ".rrd" && !defined($opt_N))) {
+    if (! -f $c . ".rrd" && !defined($opt_N)) {
 	&create_rrd($c) || return;
     }
     my($eoa) = $#{ $d->{"sample_times"}->{"values"} };
