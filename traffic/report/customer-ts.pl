@@ -47,7 +47,7 @@ require "date.pl";
 require "search.pl";
 require "db-lookup.pl";
 require "utils.pl";
-require "read-5m-log.pl";
+require "read-5m-sum.pl";
 require "conn-common.pl";
 
 require "config.pl";
@@ -75,7 +75,7 @@ sub save_file {
 		"save_lasttime" => \%save_lasttime,
 		"save_varnames" => \%save_varnames,
     );
-@save_vars = ("date");
+%save_vars = ("date" => \$date);
 
 
 sub save_vars {
@@ -89,10 +89,9 @@ sub save_vars {
 	    $p->{$h}->{$v} = $hp->{$v};
 	}
     }
-    foreach my $v (@save_vars) {
-	no strict 'refs';
-	our($$v);
-	$p->{$v} = $v;
+    foreach my $v (keys %save_vars) {
+	my($vp) = $save_vars{$v};
+	$p->{$v} = ${ $vp };
     }
 
     my $f = &save_file($c);
@@ -123,10 +122,9 @@ sub restore_vars {
 	}
     }
 
-    foreach my $v (@save_vars) {
-	no strict 'refs';
-	our($$v);
-	$v = $p->{$v};
+    foreach my $v (keys %save_vars) {
+	my($vp) = $save_vars{$v};
+	${ $vp } = $p->{$v};
     }
 
     if (defined($p)) {
@@ -186,15 +184,15 @@ sub convert_times {
 }
 
 sub compute_basic_values {
-    my($d, $start, $end, $tap) = @_;
+    my($d, $start, $end) = @_;
     my($i);
-    our($max_sample, %count);
+    our($max_sample, %count, %sample_secs);
 
     for ($i = $start; $i <= $end; $i++) {
-	if (!defined($tap->[$i-1])) {
+	if (!defined($sample_secs{$i-1})) {
 	    next;
 	}
-	$delta_t = $tap->[$i] - $tap->[$i-1];
+	$delta_t = $sample_secs{$i} - $sample_secs{$i-1};
 
 	foreach my $k (keys %$d) {
 	    my($ap) = $d->{$k}->{"values"};
@@ -252,7 +250,7 @@ sub process_data {
 	},
     };
     
-    &compute_basic_values($desc, $start, $end, \@times);
+    &compute_basic_values($desc, $start, $end);
 
     $desc->{"sample_times"}->{"values"} = \@times;
 
@@ -320,13 +318,13 @@ sub update_rrd {
     my($oap) = $d->{"okbps"}->{"values"};
     for ($i = 0; $i <= $eoa; $i++) {
 	if (!defined($opt_N)) {
-	    printf(RRD "update $s.rrd %d:%f:$f\n",
+	    printf(RRD "update %s.rrd %d:%f:%f\n",
 		   $c, $tap->[$i],
 		   $iap->[$i] / 1000.0,
 		   $oap->[$i] / 1000.0);
 	}
 	if ($opt_V) {
-	    printf(STDERR "RRD-update %s $f $f $s.rrd\n",
+	    printf(STDERR "RRD-update %s %f %f %s.rrd\n",
 		   &time_str($tap->[$i]),
 		   $iap->[$i] / 1000.0,
 		   $oap->[$i] / 1000.0,
