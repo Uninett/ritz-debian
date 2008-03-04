@@ -8,6 +8,13 @@
 #   categories (comma-separated list of categories this is a member of)
 #   portlist   (comma-separated list of logical ports this customer /
 #   	        connection has had over the entire history)
+#
+# read_desc leaves results in following hashes:
+#   fullname{shortname}   Full name of customer / connection
+#   types{shortname}      Member of these categories
+#   ports{shortname}      List of logical port names this customer /
+#                         connection has or has had up through its history
+#
 
 sub trimws
 {
