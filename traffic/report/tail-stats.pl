@@ -69,6 +69,7 @@ sub restore_vars {
     my($p);
     our($fd);
     our(%base, %lasttime, %sample_time, %dstcomp);
+    our($date, $ifspeed, $iftype, $ifdescr);
 
     if (!defined($fd->{$b})) {
 	my $f = &save_file($b);
@@ -102,6 +103,7 @@ sub restore_vars {
 
 sub save_vars {
     my($b) = @_;
+    our($fd);
     my($p) = $fd->{$b};
     our(%count, %base, %sample_time);
     our($date, $ifspeed, $iftype, $ifdescr, $max_sample);
@@ -150,7 +152,7 @@ sub convert_time {
 }
 
 sub convert_times {
-    my($times, $start, $end) = @_;
+    my($times, $start, $end, $tm) = @_;
     my($s, $i);
     our(%sample_time, %base);
     our(%sample_secs, $max_sample);
@@ -171,8 +173,8 @@ sub convert_times {
 	}
     }
 
-    if(defined($opt_d)) {
-	$start_secs = str2time($opt_d);
+    if(defined($tm)) {
+	$start_secs = $tm;
     } else {
 	$start_secs = &date_to_tm(&today());
     }
@@ -296,7 +298,7 @@ sub accumulate_stats {
 }
 
 sub flag_deviations {
-    my($cv, $b, $fp, $dp) = @_;
+    my($cv, $b, $fp, $dp, $tm) = @_;
     my($i);
     our($opt_l, $opt_u, $opt_i);
     my($report) = "";
@@ -317,7 +319,12 @@ sub flag_deviations {
 
     my($up_thresh) = $opt_u * $astdd;
     my($down_tresh) = $opt_l * $astdd;
-    my($name) = &file_to_name($b, &today);
+    my($name);
+    if (defined($tm)) {
+	$name = &file_to_name($b, &tm_to_date($tm));
+    } else {
+	$name = &file_to_name($b, &today);
+    }
     if (!defined($name) && defined($opt_i)) {
 	return "";
     }
@@ -334,7 +341,7 @@ sub flag_deviations {
 		$report .=
 		    sprintf("%s %s %5s dev: cur %d avg %d stdd %d * %s\n",
 			    time2str("%d %h %T", $$tp[$i]),
-			    &file_to_name($b, &today),
+			    $name,
 			    $cv,
 			    $$vp[$i],
 			    $aavg,
@@ -350,17 +357,17 @@ sub flag_deviations {
 		if ($dhp->{$cv}) {
 		    $report .=
 			sprintf("%s %s %5s clearing deviation\n",
-			       time2str("%d %h %T", $$tp[$i]),
-			       &file_to_name($b, &today),
-			       $cv);
+				time2str("%d %h %T", $$tp[$i]),
+				$name,
+				$cv);
 		    $report .=
 			sprintf("%s %s %5s values: cur %d avg %d stdd %d\n",
-			       time2str("%d %h %T", $$tp[$i]),
-			       &file_to_name($b, &today),
-			       $cv,
-			       $$vp[$i],
-			       $aavg,
-			       $astdd);
+				time2str("%d %h %T", $$tp[$i]),
+				$name,
+				$cv,
+				$$vp[$i],
+				$aavg,
+				$astdd);
 		}
 		$dhp->{$cv} = 0;
 	    }
@@ -389,9 +396,9 @@ sub mail_report {
 # incorporated in the saved values.
 
 sub process_values {
-    my($b, $d) = @_;
+    my($b, $d, $tm) = @_;
     my($i, $report);
-    our($fd, $opt_m, $stat_report);
+    our($fd, $opt_m, $stat_report, $opt_N);
 
     if (!defined($fd->{$b})) {
 	$fd->{$b} = {};
@@ -399,12 +406,14 @@ sub process_values {
 
     foreach $cv ("okbps", "ikbps", "ipps", "opps", "obpp", "ibpp") {
 	&accumulate_stats($cv, $fd->{$b});
-	$report = &flag_deviations($cv, $b, $fd->{$b}, $d);
-	if ($report ne "") {
-	    if (defined($opt_m)) {
-		$stat_report .= $report;
-	    } else {
-		printf(STDOUT $report);
+	if (!defined($opt_N)) {
+	    $report = &flag_deviations($cv, $b, $fd->{$b}, $d, $tm);
+	    if ($report ne "") {
+		if (defined($opt_m)) {
+		    $stat_report .= $report;
+		} else {
+		    printf(STDOUT $report);
+		}
 	    }
 	}
     }
@@ -456,13 +465,14 @@ sub trim_data {
 
 
 sub process_data {
-    my($b, $start, $end) = @_;
+    my($b, $start, $end, $tm) = @_;
     my($i);
     my(@in_kbps, @out_kbps, @in_pps, @out_pps);
     my(@ibpp, @obpp, @times);
     my($iov, $oov);
+    our($fd);
     my($p) = $fd->{$b};
-    our(%sample_secs);
+    our(%sample_secs, $opt_R);
 
     # Prefer 64-bit counters
     if (defined($p->{"base"}->{"ifHCInOctets"})) {
@@ -473,7 +483,7 @@ sub process_data {
 	$oov = "ifOutOctets";
     }
 
-    &convert_times(\@times, $start, $end);
+    &convert_times(\@times, $start, $end, $tm);
 
     my($desc) = {
 	"ikbps" => {
@@ -500,6 +510,14 @@ sub process_data {
 
     &compute_basic_values($b, $desc, $start, $end);
 
+    $desc->{"sample_times"}->{"values"} = \@times;
+
+    # This used only in-kbps, out-kbps and sample times
+    # so do this now before we destroy the values in $desc
+    if (defined($opt_R)) {
+	&update_rrd($b, $desc, $tm);
+    }
+
     # bytes per packet derived from values computed above.
 
     my($delta) = $end - $start;
@@ -524,15 +542,93 @@ sub process_data {
     
     $desc->{"ibpp"}->{"values"} = \@ibpp;
     $desc->{"obpp"}->{"values"} = \@obpp;
-    $desc->{"sample_times"}->{"values"} = \@times;
 
-    &process_values($b, $desc);
+    &process_values($b, $desc, $tm);
     &save_data($b, $desc);
     undef %sample_secs;
 }
 
+sub create_rrd {
+    my($n) = @_;
+    my($cmd);
+    our($opt_V);
+
+    # 3 years (and then some) in the past as starting point
+    my($s) = time - (4 * 365) * 24 * 3600;
+
+    $cmd = "rrdtool create %s.rrd ";
+    $cmd .= "--start %d ";
+    $cmd .= "-s 300 ";
+    $cmd .= "DS:In:GAUGE:600:0:U ";
+    $cmd .= "DS:Out:GAUGE:600:0:U ";
+    # 72 hours of 5-minute intervals
+    $cmd .= "RRA:AVERAGE:0.5:1:864 ";
+    # 21 days of 30-minute intervals
+    $cmd .= "RRA:AVERAGE:0.5:6:1008 ";
+    # 62 days of 2-hour intervals
+    $cmd .= "RRA:AVERAGE:0.5:24:744 ";
+    # 1095 days (3 years) of 24-hour intervals
+    $cmd .= "RRA:AVERAGE:0.5:288:730 ";
+
+    if ($opt_V) {
+	printf(STDERR "$cmd\n", $n, $s);
+    }
+    if (system(sprintf($cmd, $n, $s)) != 0) {
+	printf(STDERR "rrdtool create %s.rrd failed: %s", $n, $?);
+	return undef;
+    }
+    return 1;
+}
+
+sub update_rrd {
+    my($b, $d, $tm) = @_;
+    my($i);
+    our($opt_V);
+    my($name);
+
+    if (defined($tm)) {
+	$name = &file_to_name($b, &tm_to_date($tm));
+    } else {
+	$name = &file_to_name($b, &today);
+    }
+    if (!defined($name)) { return; }
+    if (-f $name . ".lock") { return; }
+    if (! -f $name . ".rrd") {
+	&create_rrd($name) || return;
+    }
+
+    my($eoa) = $#{ $d->{"sample_times"}->{"values"} };
+    my($tap) = $d->{"sample_times"}->{"values"};
+    my($iap) = $d->{"ikbps"}->{"values"};
+    my($oap) = $d->{"okbps"}->{"values"};
+    for ($i = 0; $i <= $eoa; $i++) {
+	printf(RRD "update %s.rrd %d:%f:%f\n",
+	       $name, $tap->[$i],
+	       $iap->[$i] / 1000.0,
+	       $oap->[$i] / 1000.0);
+	if ($opt_V) {
+	    printf(STDERR "RRD-update %s %f %f %s.rrd\n",
+		   &time_str($tap->[$i]),
+		   $iap->[$i] / 1000.0,
+		   $oap->[$i] / 1000.0,
+		   $name);
+	}
+    }
+}
+
+sub time_str {
+    my($t) = @_;
+    my($s, $m, $h, $md, $mon, $y, $wd, $yd, $dst) = gmtime($t);
+
+    return sprintf("%d-%02d-%02d %02d:%02d:%02d",
+		   $y + 1900, $mon+1, $md,
+		   $h, $m, $s);
+}
+
+
 sub position_file {
     my($fh, $b) = @_;
+    our($fd);
     my $p = $fd->{$b};
 
     my($mtime, $size) = (stat($fh))[9,7];
@@ -640,43 +736,89 @@ sub do_one_file {
     my($dsp, $name) = @_;
     my($i);
     our($max_sample, %sample_time, $fd, %base, $date);
-    my($d) = &get_date($dsp);
 
-    my($b) = &name_to_file($name, $d);
-    if (! defined($b)) {
-	die "Could not find file name for $name / $d\n";
-    }
+    my($base_tm, $nd) = &decode_datespec($dsp);
 
-    my($cat, $f) = &find_cat_and_file($b, $d);
-    if (! defined($f)) {
-	die "Could not find data file for $base / $d\n";
-    }
+    foreach my $day (0 .. $nd-1) {
+	my($tm) = $base_tm + 3600 * 24 * $day;
+	my($d) = &tm_to_date($tm);
 
-    open(DAYLOG, "$cat $f |") ||
-	die "Could not open \"$cat $f\": $!\n";
-    &read_log(\*DAYLOG);
-    close(DAYLOG);
+	my($b) = &name_to_file($name, $d);
+	if (! defined($b)) {
+	    printf(STDERR "Could not find file name for %s / %s\n",
+		   $name, $d);
+	    next;
+	}
+
+	my($cat, $f) = &find_cat_and_file($b, $d);
+	if (! defined($f)) {
+	    printf(STDERR "Could not find data file for %s / %s\n",
+		   $base, $d);
+	    next;
+	}
+
+	if (!open(DAYLOG, "$cat $f |")) {
+	    printf(STDERR "Could not open \"|%s %s\": %s\n", $cat, $f, $!);
+	    next;
+	}
+	&read_log(\*DAYLOG);
+	close(DAYLOG);
     
-    # for type of octet counter detection in process_data()
-    foreach my $v (keys %base) {
-	$fd->{$b}->{"base"}->{$v} = $base{$v};
-    }
+	if ($max_sample == 0) {
+	    next;
+	}
+	# for type of octet counter detection in process_data()
+	foreach my $v (keys %base) {
+	    $fd->{$b}->{"base"}->{$v} = $base{$v};
+	}
 
-    my($t0) = str2time($date);
+	my($t0) = str2time($date);
 
-    # set up to process 1/2 hour at a time
-    my($samples_per_go) = int($max_sample / (24 * 2));
+	# set up to process 1 hour at a time, but at least 4 samples
+	# on each go-around
+	my($samples_per_go) = &max(4, int($max_sample / 24));
 
-    for($i = 0; $i < $max_sample; $i += $samples_per_go) {
-	my $top = &min($i + $samples_per_go - 1, $max_sample);
+	for($i = 0; $i < $max_sample; $i += $samples_per_go) {
+	    my $top = &min($i + $samples_per_go - 1, $max_sample);
 
-	&process_data($b, $i, $top);
-	&trim_data($b, (&convert_time($sample_time{$top}, $t0) -
-			$retention_time));
+	    &process_data($b, $i, $top, $tm);
+	    &trim_data($b, (&convert_time($sample_time{$top}, $t0) -
+			    $retention_time));
+	}
     }
 }
 
 sub do_all_files {
+    my($dsp) = @_;
+    my($i);
+    our($max_sample, %sample_time, $fd, %base, $date, $opt_v);
+
+    my($base_tm, $nd) = &decode_datespec($dsp);
+    if (!defined($base_tm)) {
+	die "Could not decode datespec: $dsp";
+    }
+
+    foreach my $day (0 .. $nd-1) {
+	my($tm) = $base_tm + $day * 3600 * 24;
+	my($d) = &tm_to_date($tm);
+	my($dsp) = &date_to_datespec($d, "day");
+	my($dir) = &find_data_dir($d);
+	my(@files) = &directory_files($dir);
+	
+	foreach my $f (@files) {
+	    $f =~ s/.gz$//;
+	    my($b) = basename($f);
+	    my($name) = &file_to_name($b, $d);
+	    if (!defined($name)) { next; }
+	    if (defined($opt_v)) {
+		printf(STDERR "Doing %s / %s / %s\n", $d, $name, $f);
+	    }
+	    &do_one_file($dsp, $name);
+	}
+    }
+}
+
+sub do_all_files_today {
     my($dir) = &find_data_dir(&today());
     my(@files) = &directory_files($dir);
     our($stat_report);
@@ -704,26 +846,30 @@ sub do_all_files {
 
 sub usage {
 
-    printf(STDERR "usage: tail-stats [-n name] [-d datestr] [-u up-limit]\n");
+    printf(STDERR "usage: tail-stats [-n name] [-d datespec] [-u up-limit]\n");
     printf(STDERR "    [-l low-limit] [-p percent] [-r outfile] [-i]\n");
-    printf(STDERR "    [-m mailto -M mailfrom]\n");
+    printf(STDERR "    [-m mailto -M mailfrom] [-R rrddir] [-v] [-V]\n");
     printf(STDERR "\n");
     printf(STDERR "Option descriptions:\n");
     printf(STDERR "-n name      logical name of port to be analyzed\n");
     printf(STDERR "             (default is all logical ports, but see -i)\n");
-    printf(STDERR "-d datestr   date which should be analyzed\n");
+    printf(STDERR "-d datespec  date(s) which should be analyzed\n");
     printf(STDERR "             (default is current day, ");
     printf(STDERR "start from end of last run)\n");
     printf(STDERR "-u up-limit  factor on an up-transition for flagging\n");
     printf(STDERR "-l low-limit factor to go below when de-flagging\n");
     printf(STDERR "-p percent   how many percent should data from new");
     printf(STDERR " interval count\n");
+    printf(STDERR "-R rrddir    update RRD databases in the given directory\n");
     printf(STDERR "-r outfile   produce report about current load\n");
     printf(STDERR "             only applicable when doing current day\n");
     printf(STDERR "-i           ignore unnamed logical ports when");
     printf(STDERR " making report\n");
     printf(STDERR "-m mailto    mail statistical deviations report to addr\n");
     printf(STDERR "-M mailfrom  set from address for stat dev. reports\n");
+    printf(STDERR "-N           no deviation processing\n");
+    printf(STDERR "-v           output some verbose debugging info\n");
+    printf(STDERR "-V           output extra-verbose debugging info\n");
 
     exit 1;
 }
@@ -732,7 +878,7 @@ sub usage {
 # Main
 #
 
-&Getopts("d:hil:M:m:n:p:r:u:");
+&Getopts("d:hil:M:m:Nn:p:R:r:u:vV");
 
 # -n name	logical name of port to be analyzed
 # -d datestr	date which should be analyzed
@@ -744,16 +890,9 @@ sub usage {
 #		only applicable if doing all files of current day
 # -i		ignore unnamed logical ports when making report
 # -m mailto	address to mail stats deviations report to
+# -R rrddir	update rrd databases for named connections in this dir
 
 if (defined($opt_h)) {
-    &usage();
-}
-if (defined($opt_n) && !defined($opt_d)) {
-    printf(STDERR "Must specify both -n and -d value\n");
-    &usage();
-}
-if (defined($opt_d) && !defined($opt_n)) {
-    printf(STDERR "Must specify both -n and -d value\n");
     &usage();
 }
 if (defined($opt_m) && !defined($opt_M)) {
@@ -775,6 +914,19 @@ if (!defined($opt_p)) {
     $opt_p = 20;
 }
 
+if (defined($opt_R)) {
+    if (! -d $opt_R) {
+	printf(STDERR "Must specify an existing dir with -R\n");
+	&usage();
+    }
+    chdir($opt_R) || die "Could not chdir to $opt_$: $!";
+    open(RRD, "|rrdtool - 2>&1 | egrep -v '^OK'") ||
+	die "Could not open rrdtool";
+}
+
+# Make STDERR flush output immediately
+$oldfh = select(STDERR); $| = 1; select($oldfh);
+
 if (defined($opt_d) && defined($opt_n)) {
     if (defined($opt_r)) {
 	printf(STDERR "-r cannot be used while procesing old stats\n");
@@ -782,5 +934,12 @@ if (defined($opt_d) && defined($opt_n)) {
     }
     &do_one_file($opt_d, $opt_n);
 } else {
-    &do_all_files();
+    if (defined($opt_d)) {
+	&do_all_files($opt_d);
+    } else {
+	&do_all_files_today();
+    }
+}
+if ($opt_R) {
+    close(RRD);
 }
