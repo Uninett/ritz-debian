@@ -11,8 +11,8 @@
 #
 # read_desc leaves results in following hashes:
 #   fullname{shortname}   Full name of customer / connection
-#   types{shortname}      Member of these categories
-#   ports{shortname}      List of logical port names this customer /
+#   types{shortname}      Ref to array listing categories it is member of
+#   ports{shortname}      Ref to array of logical port names this customer /
 #                         connection has or has had up through its history
 #
 
