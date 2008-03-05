@@ -83,7 +83,7 @@ sub floor_int {
     my($v) = @_;
 
     if ($v < 0) {
-	$v--;
+	$v -= 0.99999999999999;	# close enough
     }
     return int($v);
 }
