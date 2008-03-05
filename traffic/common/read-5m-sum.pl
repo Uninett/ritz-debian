@@ -46,7 +46,8 @@
 #   $sample_time{$i}	Sample time in hrs for end of sample $i
 #   $date		Date string of log, also input to detect "same date"
 #   $ifspeed, $iftype, $ifdescr	   $ifspeed is sum of capacity
-#   $max_sample		Max number of samples
+#   $min_sample		Lowest valid sample index
+#   $max_sample		Highest valid sample index
 #
 #   $position{$base}    Reposition to here, save position at end of file
 #   $save_base{$l,$v}   Restore $base{$v} from this, and save afterwards
@@ -83,11 +84,18 @@ sub read_5m_sum {
     my($err) = "";
     my(%mycount, %mybase, %mysample_time, $myspeed, $my_max_sample);
     our($max_sample, $min_sample);
-    my($reverse, $mv, $firstsampletime);
+    my($reverse, $mv);
     our(%save_base, %save_lasttime, %save_varnames);
     our(%base, %lasttime, %firsttime, %leftover, %position);
+    my($seekable) = 0;
+    my($end_tick) = 0;
 
     undef %base;
+    undef %count;
+    undef %mybase;
+    undef %mycount;
+    undef %mysample_time;
+    $my_max_sample = 0;
     $myspeed = 0;
 
     foreach $line (@lines) {
@@ -120,22 +128,45 @@ sub read_5m_sum {
 	    }
 	}
 
-	open(DAYLOG, "$cat $f |") ||
-	    die "Could not open \"$cat $f\": $!\n";
-	if (defined($position{$base})) {
-	    my($mtime, $size) = (stat(DAYLOG))[9,7];
-	    my $mod_date = &tm_to_date($mtime);
-	    my($pos) = $position{$base};
-	    if (defined($date) && $date ne $mod_date) {
-		$position{$base} = 0;
-	    } elsif ($pos < $size) {
-		seek(DAYLOG, $pos, SEEK_SET);
-	    } else {
-		$position{$base} = 0;
+	if ($cat eq "cat") {
+	    $seekable = 1;
+	    if (! open(DAYLOG, $f)) {
+		$err .= "Could not open $f\": $!\n";
+		next;
+	    }
+	    if (defined($position{$base})) {
+		my($mtime, $size) = (stat(DAYLOG))[9,7];
+		my($mod_date) = &tm_to_date($mtime);
+		my($pos) = $position{$base};
+
+		if (defined($date)) {
+		    my($date_tm) = timelocal(strptime($date));
+		    my($date_str) = &tm_to_date($date_tm);
+		    if ($date_str eq $mod_date) {
+			if ($pos < $size) {
+			    seek(DAYLOG, $pos, SEEK_SET);
+			} elsif ($pos == $size) {
+			    close(DAYLOG);
+			    next;
+			} else {
+			    $err .= "File $f shrunk?!?\n";
+			    next;
+			}
+		    } else {
+			$position{$base} = 0;
+		    }
+		}
+	    }
+	} else {
+	    if (!open(DAYLOG, "$cat $f |")) {
+		$err .= "Could not open \"$cat $f\": $!\n";
+		next;
 	    }
 	}
 	&read_log(DAYLOG);
-	$position{$base} = tell(DAYLOG);
+	if ($seekable) {
+	    $position{$base} = tell(DAYLOG);
+	}
 	close(DAYLOG);
 
 	foreach my $v (keys %base) {
@@ -152,7 +183,7 @@ sub read_5m_sum {
 		$mv = $v;
 	    }
 
-	    if (defined($firsttime{$v}) && $fisttime{$v} != $sample_time{0}) {
+	    if (defined($firsttime{$v}) && $firsttime{$v} != $sample_time{0}) {
 		$lasttime{$v} = $firsttime{$v};
 		$sno = 0;
 	    } else {
@@ -160,13 +191,16 @@ sub read_5m_sum {
 		$sno = 1;
 	    }
 
-	    $firstsampletime = $sample_time{$sno};
 	    $lasttick = &floor_int($lasttime{$v} * 60/5.0);
-	    $min_sample = 0;
-	    $my_max_sample = &floor_int($sample_time{$max_sample} * 60/5.0);
+	    $end_tick = &floor_int($sample_time{$max_sample} * 60/5.0);
+
+	    $min_sample = $lasttick + 1;
+
+	    $mysample_time{$lasttick} = $lasttick * 5.0/60;
+	    $mysample_time{$mv,$lasttick} = $lasttick * 5.0/60;
 
 	    for ($tick = $min_sample;
-		 $tick <= $my_max_sample;
+		 $tick <= $end_tick;
 		 $lasttick = $tick, $tick++)
 	    {
 		$tt = $tick * 5.0/60;
@@ -210,6 +244,7 @@ sub read_5m_sum {
 		    $mycount{$mv,$tick} += $count{$v,$sno} * $f1;
 		}
 	    }
+	    $ltt = $lasttick * 5.0/60;
 	    while(defined($sample_time{$sno})) {
 		if ($ltt > $lasttime{$v}) {
 		    $f1 = ($sample_time{$sno} - $ltt) /
@@ -232,6 +267,13 @@ sub read_5m_sum {
 	undef %lasttime;
 	undef $max_sample;
     }
+    # And a final cleanup:
+    undef %count;
+    undef %base;
+    undef %sample_time;
+    undef %firsttime;
+    undef %lasttime;
+    undef $max_sample;
 
     # Copy data into expected globals
     foreach $k (keys %mycount) {
@@ -243,7 +285,7 @@ sub read_5m_sum {
     foreach $k (keys %mysample_time) {
 	$sample_time{$k} = $mysample_time{$k};
     }
-    $max_sample = $my_max_sample;
+    $max_sample = $end_tick;
     $ifspeed = $myspeed;
 
     return $err;
