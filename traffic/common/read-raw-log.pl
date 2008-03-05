@@ -93,6 +93,9 @@ sub read_log {
         }
 
         ($h, $m, $s) = split(/:/, $f[3]);
+	# Some extra robustness
+	if (!defined($m) || !defined($s)) { next; }
+
         $now = $h * 3600 + $m * 60 + $s;
 
 	if (!defined($disable_23_handling)) {
@@ -151,7 +154,7 @@ sub read_log {
 
 	if (!defined($data_seen{$v})) {
 	    if (defined($lasttime{$v})) {
-		$firsttime{$v} = ($lasttime{$v} / 3600.0) - 24;
+		$firsttime{$v} = $lasttime{$v} / 3600.0;
 	    } else {
 		$firsttime{$v} = $now / 3600.0;
 	    }
@@ -219,6 +222,13 @@ sub read_log {
 	    $date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
 	}
     }
+    foreach my $k (keys %firsttime) {
+	# Handle day rollover
+	if ($h0_seen && $firsttime{$k} > 23) {
+	    $firsttime{$k} -= 24;
+	}
+    }
+    
     if (!defined $date) {
 	$date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
     }
