@@ -184,7 +184,7 @@ sub convert_times {
 sub compute_basic_values {
     my($d, $start, $end) = @_;
     my($i);
-    our($max_sample, %count, %sample_secs);
+    our(%count, %sample_secs);
 
     for ($i = $start; $i <= $end; $i++) {
 	if (!defined($sample_secs{$i-1})) {
@@ -338,9 +338,15 @@ sub do_one_customer {
     my($base_tm, $nd) = &decode_datespec($dsp);
     my($i);
     our($root, %base);
+    our($opt_v, $opt_N);
+    our($min_sample, $max_sample);
 
     if (!defined($root->{$c})) {
 	$root->{$c} = {};
+    }
+
+    if ($opt_v) {
+	printf(STDERR "Doing %s / %s\n", $dsp, $c);
     }
 
     &restore_vars($c);
@@ -356,15 +362,21 @@ sub do_one_customer {
 	if ($max_sample == 0) {
 	    next;
 	}
+	if ($opt_v) {
+	    printf(STDERR "Processing %s / %s\n", $d, $c);
+	}
+
 	# for type of octet counter detection in process_data()
 	foreach my $v (keys %base) {
 	    $root->{$c}->{"base"}->{$v} = $base{$v};
 	}
 	
-	&process_data($c, 0, $max_sample, $tm);
+	&process_data($c, $min_sample, $max_sample, $tm);
     }
 
-    &save_vars($c);
+    if (!defined($opt_N)) {
+	&save_vars($c);
+    }
 }
 
 sub do_all_customers {
@@ -375,10 +387,6 @@ sub do_all_customers {
 	&do_one_customer($dsp, $c);
     }
 }
-
-sub do_all_customers_today {
-}
-
 
 sub usage {
 
@@ -422,7 +430,7 @@ if (defined($opt_d) && defined($opt_n)) {
     if (defined($opt_d)) {
 	&do_all_customers($opt_d);
     } else {
-	&tail_all_customers();
+	&do_all_customers(&today_spec());
     }
 }
 if ($opt_R) {
