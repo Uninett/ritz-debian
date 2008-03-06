@@ -85,7 +85,7 @@ sub read_5m_sum {
     my(%mycount, %mybase, %mysample_time, $myspeed, $my_max_sample);
     our($max_sample, $min_sample);
     my($reverse, $mv);
-    our(%save_base, %save_lasttime, %save_varnames);
+    our(%save_base, %save_lasttime, %save_varnames, $date);
     our(%base, %lasttime, %firsttime, %leftover, %position);
     my($seekable) = 0;
     my($end_tick) = 0;
@@ -116,18 +116,12 @@ sub read_5m_sum {
 	    next;
 	}
 
-	# if we saved stuff for this line, restore
-	# to gain an extra (required!) sample
-	if (defined($save_base{$line,"ifInOctets"})) {
-	    foreach my $v (keys %save_varnames) {
-		$l = $line;
-		if (defined($save_base{$l,$v})) {
-		    $base{$v} = $save_base{$l,$v};
-		    $lasttime{$v} = $save_lasttime{$l,$v};
-		}
-	    }
+	my($date_tm, $date_str, $prev_d);
+	if (defined($date)) {
+	    $date_tm = timelocal(strptime($date));
+	    $date_str = &tm_to_date($date_tm);
+	    $prev_d = &tm_to_date(timelocal(strptime($d)) - 24 * 3600);
 	}
-
 	if ($cat eq "cat") {
 	    $seekable = 1;
 	    if (! open(DAYLOG, $f)) {
@@ -140,8 +134,6 @@ sub read_5m_sum {
 		my($pos) = $position{$base};
 
 		if (defined($date)) {
-		    my($date_tm) = timelocal(strptime($date));
-		    my($date_str) = &tm_to_date($date_tm);
 		    if ($date_str eq $mod_date) {
 			if ($pos < $size) {
 			    seek(DAYLOG, $pos, SEEK_SET);
@@ -163,6 +155,26 @@ sub read_5m_sum {
 		next;
 	    }
 	}
+
+	if (defined($date) && (($seekable && $date_str eq $d) ||
+			       ($date_str eq $prev_d)))
+	{
+	    # if we saved stuff for this line, restore
+	    # to gain an extra (required!) sample,
+	    # either at midnight (log rollover) or when
+	    # repeatedly looking at data for "today",
+	    # but only for those instances(!)
+	    if (defined($save_base{$line,"ifInOctets"})) {
+		foreach my $v (keys %save_varnames) {
+		    $l = $line;
+		    if (defined($save_base{$l,$v})) {
+			$base{$v} = $save_base{$l,$v};
+			$lasttime{$v} = $save_lasttime{$l,$v};
+		    }
+		}
+	    }
+	}
+
 	&read_log(DAYLOG);
 	if ($seekable) {
 	    $position{$base} = tell(DAYLOG);
