@@ -4,7 +4,7 @@
 
 SCRIPTS=	get-5m-perc.pl get-perc.pl re-report-day.pl report-day.pl \
 		report-mon-sp.pl report-month.pl report-week.pl \
-		sel-report.pl tail-stats.pl
+		sel-report.pl tail-stats.pl customer-ts.pl
 
 SUBST=	${.CURDIR}/../../subst
 
