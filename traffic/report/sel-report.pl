@@ -48,7 +48,7 @@ require 'search.pl';
 
 push(@INC, "%CONFDIR%");
 
-require "config.pl";
+require "zino-config.pl";
 
 if (!defined($load_now)) {
     $load_now = "%TOPDIR%" . "/reports/load-now.txt";
