@@ -11,7 +11,7 @@
 push(@INC, "%LIBDIR%");
 push(@INC, "%TOPDIR%/conf");
 
-require 'config.pl';
+require 'zino-config.pl';
 require 'pretty-ios.pl';
 
 sub get_start_software {

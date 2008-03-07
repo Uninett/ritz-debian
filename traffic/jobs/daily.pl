@@ -41,7 +41,7 @@
 
 push(@INC, "%TOPDIR%/conf");
 
-require 'config.pl';
+require 'zino-config.pl';
 
 sub get_date_strings {
     local($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);

@@ -42,7 +42,7 @@ require "db-lookup.pl";
 require "utils.pl";
 require "read-raw-log.pl";
 
-require "config.pl";
+require "zino-config.pl";
 
 use Data::Dumper;
 use File::Basename;

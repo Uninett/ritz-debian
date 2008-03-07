@@ -50,7 +50,7 @@ require "utils.pl";
 require "read-5m-sum.pl";
 require "conn-common.pl";
 
-require "config.pl";
+require "zino-config.pl";
 
 use Data::Dumper;
 use File::Basename;
