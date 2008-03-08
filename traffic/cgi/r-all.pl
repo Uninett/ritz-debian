@@ -1,0 +1,459 @@
+#!%PERL%
+#
+# $Id$
+#
+
+# Copyright (c) 2008
+#      UNINETT and NORDUnet.  All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. Neither the name of UNINETT or NORDUnet nor the names
+#    of its contributors may be used to endorse or promote
+#    products derived from this software without specific prior
+#    written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY UNINETT AND NORDUnet ``AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL UNINETT OR NORDUnet OR
+# THEIR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+package Zino::rrd;
+
+use CGI ();
+CGI->compile();
+use IPC::Shareable ();
+use RRDs;
+use File::Basename;
+
+use strict;
+use warnings;
+
+$^T = time;			# -M etc. relative to this invocation
+
+my %img_size;
+tie %img_size, 'IPC::Shareable', "Zpng", { mode => 0666,
+					   create => 1,
+};
+
+my %xgrid = (
+    "day"  => "HOUR:1:HOUR:3:HOUR:6:0:%H:%M %a",
+    "week" => "HOUR:12:DAY:1:DAY:3:0:%a %d %h",
+    "month"=> "DAY:1:DAY:7:DAY:7:0:%d %h",
+    "year" => "MONTH:1:MONTH:3:MONTH:3:0:%h %Y",
+    "2year"=> "MONTH:1:MONTH:3:MONTH:6:0:%h %Y",
+);
+
+my %sample_len = (
+    "day"  => "5 minutes",
+    "week" => "30 minutes",
+    "month"=> "2 hours",
+    "year" => "24 hours",
+    "2year"=> "24 hours",
+);
+
+my %refresh = (
+    "day"  => 5 * 60,
+    "week" => 30 * 60,
+    "month"=> 2 * 60 * 60,
+    "year" => 24 * 60 * 60,
+    "2year"=> 24 * 60 * 60,
+);
+
+my %delta_t = (
+    "day"  => "-1day",
+    "week" => "-7days",
+    "month"=> "-31days",
+    "year" => "-1year",
+    "2year"=> "-2year",
+);
+
+my @order = ("day", "week", "month", "year", "2year");
+
+my($isp) = "%ISPNAME%";
+my($rrddir) = "%RRDDIR%";
+my($pngdir) = "%IMGDIR%";
+
+
+sub small_png_file {
+    my($name, $type) = @_;
+
+    my $png = $pngdir . "/" . $name . "-" . $type . "-small.png";
+    return $png;
+}
+
+sub big_png_file {
+    my($name, $type) = @_;
+
+    my $png = $pngdir . "/" . $name . "-" . $type . ".png";
+    return $png;
+}
+
+sub make_plot {
+    my($name, $type, $rrd, $png, $w, $h, @fonts) = @_;
+    my($avg, $x, $y);
+
+    my(@l) = ($png,
+	      "-a", "PNG",
+	      "-w", $w,
+	      "-h", $h,
+	);
+    push(@l, ("-s", "end" . $delta_t{$type}));
+    push(@l, ("--color", "MGRID#000000",
+	      "-v", "Mbit/s",
+	      "--alt-autoscale-max",
+	      "--alt-y-grid",
+	      "-l", 0,
+	 ));
+    push(@l, ("-x", $xgrid{$type}));
+    push(@l, ("-t", sprintf("%s traffic with %s", $isp, $name)));
+    if (@fonts) {
+	push(@l, @fonts);
+    }
+    push(@l, (sprintf("DEF:in=%s:In:AVERAGE", $rrd),
+	      sprintf("DEF:out=%s:Out:AVERAGE", $rrd),
+	      "VDEF:avg_in=in,AVERAGE",
+	      "VDEF:avg_out=out,AVERAGE",
+	      "VDEF:max_in=in,MAXIMUM",
+	      "VDEF:max_out=out,MAXIMUM",
+	      "VDEF:cur_in=in,LAST",
+	      "VDEF:cur_out=out,LAST",
+	 ));
+    push(@l, (sprintf("COMMENT:Into %s\\:", $isp) . "\\t\\tAvg\\:",
+	      "GPRINT:avg_in:%4.0lf%s",
+	      "COMMENT:Max\\:",
+	      "GPRINT:max_in:%4.0lf%s",
+	      "COMMENT:Last\\:",
+	      "GPRINT:cur_in:%4.0lf%s",
+	      "COMMENT:\\n",
+	 ));
+    push(@l, (sprintf("COMMENT:Out from %s\\:", $isp) . "\\tAvg\\:",
+	      "GPRINT:avg_out:%4.0lf%s",
+	      "COMMENT:Max\\:",
+	      "GPRINT:max_out:%4.0lf%s",
+	      "COMMENT:Last\\:",
+	      "GPRINT:cur_out:%4.0lf%s",
+	      "COMMENT:\\n",
+	 ));
+    push(@l, (sprintf("COMMENT:Each data point is average over %s",
+		      $sample_len{$type})));
+    push(@l, ("AREA:in#33cccc:Into " . $isp,
+	      "LINE2:out#006699:Out from " . $isp,
+	 ));
+    
+    ($avg, $x, $y) = RRDs::graph(@l);
+
+    my $err = RRDs::error;
+    if ($err) {
+	return (undef, undef, $err);
+    } else {
+	return ($png, $x, $y);
+    }
+}
+
+sub make_small_plot {
+    my($name, $type) = @_;
+
+    my $rrd = $rrddir . "/" . $name . ".rrd";
+    my $png = &small_png_file($name, $type);
+
+    if (!-f $rrd) {
+	&err(sprintf("Cannot find data for '%s'", $name));
+    }
+
+    return &make_plot($name, $type, $rrd, $png, 400, 200);
+}
+
+sub make_big_plot {
+    my($name, $type) = @_;
+
+    my $rrd = $rrddir . "/" . $name . ".rrd";
+    my $png = &big_png_file($name, $type);
+
+    if (!-f $rrd) {
+	&err(sprintf("Cannot find data for '%s'", $name));
+    }
+
+    my @fonts = (
+	"--font", "AXIS:11:/usr/X11R6/lib/X11/fonts/TTF/Vera.ttf",
+	"--font", "UNIT:11:/usr/X11R6/lib/X11/fonts/TTF/Vera.ttf",
+	"--font", "TITLE:13:/usr/X11R6/lib/X11/fonts/TTF/VeraBd.ttf",
+	"--font", "LEGEND:10:/usr/X11R6/lib/X11/fonts/TTF/Vera.ttf",
+	);
+
+    return &make_plot($name, $type, $rrd, $png, 800, 600, @fonts);
+}
+
+sub ensure_img_exists {
+    my($name, $type, $size) = @_;
+    my($png);
+    my($x, $y);
+    our($q);
+
+    if ($size eq "big") {
+	$png = &big_png_file($name, $type);
+    } else {
+	$png = &small_png_file($name, $type);
+	$size="small";
+    }
+
+    if (! -f $png || (-M _)*24*3600 < $refresh{$type} || $q->param("force")) {
+	if ($size eq "big") {
+	    ($png, $x, $y) = &make_big_plot($name, $type);
+	} else {
+	    ($png, $x, $y) = &make_small_plot($name, $type);
+	}
+	if (!defined($png)) {
+	    &err(sprintf("Error making plot for %s / %s: %s",
+			 $name, $type, $y));
+	    return undef;
+	}
+	if (!defined($img_size{$type,$size,"x"})) {
+	    $img_size{$type,$size,"x"} = $x;
+	    $img_size{$type,$size,"y"} = $y;
+	} elsif ($img_size{$type,$size,"x"} != $x &&
+		 $img_size{$type,$size,"y"} != $y) {
+	    $img_size{$name,$type,$size,"x"} = $x;
+	    $img_size{$name,$type,$size,"y"} = $y;
+	}
+    } else {
+	# return cached size
+	if (defined($img_size{$name,$type,$size,"x"})) {
+	    $x = $img_size{$name,$type,$size,"x"};
+	    $y = $img_size{$name,$type,$size,"y"};
+	} else {
+	    $x = $img_size{$type,$size,"x"};
+	    $y = $img_size{$type,$size,"y"};
+	}
+    }
+    # Now $png exists with size $x, $y
+    return($png, $x, $y);
+}
+
+sub start_doc {
+    my($q, $type, $title) = @_;
+    
+    my $text = $q->header(-type => "text/html; charset=iso-8859-1",
+			  -expires => sprintf("+%ds", $refresh{$type}),
+			  -refresh => $refresh{$type},
+	);
+
+    my $style = <<EOF
+  <style type="text/css">
+    body, h1, h2, h3, p, span, div { 
+	font-family: verdana, helvetica, arial, sans-serif;
+	font-size: small;
+    }
+    body { 
+	background-color: #ffffff;
+        color: #000000;
+    }    
+    table.invisiblebox {
+        border-width: thin;
+        border-top: 0px;
+        border-bottom: 0px;
+        border-left: 0px;
+        border-right: 0px;
+        border-color: #999;
+        border-style: solid;
+        padding: 0px 0px 0px 0px;
+	margin: 0px 0px 0px 0px;
+	white-space: nowrap;
+	width: 1%;
+    }
+    .ruler {
+	background-color: #999999;
+        border: 0px;
+        height: 1px;
+    }
+  </style>
+  <title>
+EOF
+;
+    $text .= $q->start_html(-title => $title,
+			    -style => { -code => $style },
+			    -meta=> { "robots" => "noindex, nofollow" },
+    );
+    return $text;
+}
+
+sub show_all {
+    my($name, $url) = @_;
+    my($png, $x, $y);
+    my($n) = 0;
+
+    my $text = <<EOF
+  <table cellpadding="3" border="0">
+    <tr>
+      <td>
+EOF
+;
+    $text .= sprintf("        <h2>%s traffic with %s</h2>", $isp, $name);
+    $text .= <<EOF
+
+      </td>
+    </tr>
+  </table>
+  <table class="invisiblebox">
+    <tr>
+      <td colspan="2"><hr class="ruler" /></td>
+    </tr>
+EOF
+;
+
+    foreach my $type (@order) {
+	($png, $x, $y) = &ensure_img_exists($name, $type, "small");
+	if ($n % 2 == 0) {
+	    $text .= "    <tr>\n";
+	}
+	my($bpng) = basename($png);
+	$text .= sprintf("      <td><a href=\"%s?q=one&amp;name=%s&amp;type=%s\">",
+	       $url, $name, $type);
+	$text .= sprintf("<img src=\"%s?q=img&amp;img=%s&amp;type=%s\" ",
+	       $url, $bpng, $type);
+	$text .= sprintf("alt=\"small %s %s graph\" ", $name, $type);
+	$text .= sprintf("width=\"%d\" height=\"%d\" /></a></td>\n", $x, $y);
+	$n++;
+	if ($n % 2 == 0) {
+	    $text .= "    </tr>\n";
+	}
+    }
+    if ($n % 2 != 0) {
+	$text .= "    </tr>\n";
+    }
+    $text .= "  </table>\n";
+    return $text;
+}
+
+sub show_one {
+    my($name, $type, $url) = @_;
+    my($png, $x, $y);
+
+    my $text = <<EOF
+   <table cellpadding="3" border="0">
+     <tr>
+       <td>
+EOF
+;
+    $text .= sprintf("        <h2>%s traffic with %s last %s</h2>",
+		     $isp, $name, $type);
+    $text .= <<EOF
+
+      </td>
+    </tr>
+  </table>
+  <table class="invisiblebox">
+    <tr>
+      <td colspan="2"><hr class="ruler" /></td>
+    </tr>
+EOF
+;
+
+    ($png, $x, $y) = &ensure_img_exists($name, $type, "big");
+    my($bpng) = basename($png);
+    $text .= "    <tr>\n      <td>";
+    $text .= sprintf("<img src=\"%s?q=img&amp;img=%s&amp;type=%s\" ",
+		     $url, $bpng, $type);
+    $text .= sprintf("alt=\"big %s %s graph\" ", $name, $type);
+    $text .= sprintf("width=\"%d\" height=\"%d\" /></td>\n", $x, $y);
+    $text .= <<EOF
+   </tr>
+  </table>
+EOF
+;
+    return $text;
+}
+
+sub err {
+    my($msg) = @_;
+    our($q);
+
+    print $q->header("text/html");
+    print $q->start_html("Error");
+    printf("<h2>%s</h2>", $msg);
+    print $q->end_html();
+    exit 0;
+}
+
+sub send_img {
+    my($q, $bpng, $type) = @_;
+
+    $bpng = basename($bpng);
+    my $png = $pngdir . "/" . $bpng;
+
+    print $q->header(-type => "image/png",
+		     -expires => sprintf("+%ds", $refresh{$type}),
+		     -refresh => $refresh{$type},
+	);
+
+    open(IN, $png);
+    my $bytes = "";
+    while(my $n = sysread(IN, $bytes, 1024)) {
+	syswrite(STDOUT, $bytes, $n);
+    }
+    close(IN);
+}
+
+
+#
+# Main
+#
+
+local our $q = new CGI;
+my $qt = $q->param("q");
+my $me = $q->url(-relative => 1);
+
+select(STDOUT); $| = 1;		# unbuffer, we only print once
+
+if (!defined($qt)) {
+    &err("No query type");
+}
+if ($qt eq "img") {
+    &send_img($q, $q->param("img"), $q->param("type"));
+} elsif ($qt eq "all") {
+    my $name = $q->param("name");
+    if (!defined($name)) {
+	&err("No name given");
+    }
+    my $text = &start_doc($q, "day",
+			  sprintf("%s traffic with %s",
+				  $isp, $name));
+    $text .= &show_all($name, $me);
+    $text .= $q->end_html();
+    $text .= "\n";
+    print $text;
+} elsif ($qt eq "one") {
+    my $name = $q->param("name");
+    my $type = $q->param("type");
+
+    if (!defined($name)) {
+	&err("No name given");
+    }
+    if (!defined($type)) {
+	&err("No type given");
+    }
+    if (!defined($refresh{$type})) {
+	&err(sprintf("Plot type '%s' unrecognized", $type));
+    }
+    my $text = &start_doc($q, $type,
+			  sprintf("%s traffic with %s",
+				  $isp, $name));
+    $text .= &show_one($name, $type, $me);
+    $text .= $q->end_html();
+    $text .= "\n";
+    print $text;
+}
