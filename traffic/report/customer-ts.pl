@@ -407,7 +407,9 @@ sub usage {
 # Main
 #
 
-&Getopts("c:d:Nn:R:vV");
+&Getopts("c:d:hNn:R:vV");
+
+if ($opt_h) { &usage(); }
 
 &read_desc($opt_c);
 
@@ -426,6 +428,8 @@ $oldfh = select(STDERR); $| = 1; select($oldfh);
 
 if (defined($opt_d) && defined($opt_n)) {
     &do_one_customer($opt_d, $opt_n);
+} elsif (!defined($opt_d) && defined($opt_n)) {
+    &do_one_customer(&today_spec(), $opt_n);
 } else {
     if (defined($opt_d)) {
 	&do_all_customers($opt_d);
