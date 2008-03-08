@@ -23,7 +23,8 @@ DATA_ROOTS="${TOPDIR}/data"
 PERL=/usr/bin/perl
 #
 CGIPFX=/stat-q
-WEBSRVR=betong.veidekke.no
+WEBSRVR=stats.nordu.net
+ISPNAME=NORDUnet
 HTMLDIR=${TOPDIR}/html
 # HTMLPFX has to be only one path component (due to cgi/ex-png.pl).
 HTMLPFX=/stats
@@ -61,6 +62,7 @@ BINDIR=${TOPDIR}/bin
 CGIDIR=${TOPDIR}/cgi
 CONFDIR=${TOPDIR}/conf
 DATADIR=${TOPDIR}/data
+RRDDIR=${DATADIR}/conn-rrd
 BACKUPDIR=${TOPDIR}/data/backup
 DBDIR=${TOPDIR}/db
 EMTDIR=${TOPDIR}/emt
