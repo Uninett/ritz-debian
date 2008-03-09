@@ -211,7 +211,7 @@ sub ensure_img_exists {
 	$size="small";
     }
 
-    if (! -f $png || (-M _)*24*3600 < $refresh{$type} || $q->param("force")) {
+    if (! -f $png || (-M _)*24*3600 > $refresh{$type} || $q->param("force")) {
 	if ($size eq "big") {
 	    ($png, $x, $y) = &make_big_plot($name, $type);
 	} else {
@@ -395,12 +395,14 @@ sub send_img {
     $bpng = basename($bpng);
     my $png = $pngdir . "/" . $bpng;
 
+    open(IN, $png) ||
+	&err(sprintf("Could not open image file %s: $!", $bpng));
+
     print $q->header(-type => "image/png",
 		     -expires => sprintf("+%ds", $refresh{$type}),
 		     -refresh => $refresh{$type},
 	);
 
-    open(IN, $png);
     my $bytes = "";
     while(my $n = sysread(IN, $bytes, 1024)) {
 	syswrite(STDOUT, $bytes, $n);
@@ -423,7 +425,12 @@ if (!defined($qt)) {
     &err("No query type");
 }
 if ($qt eq "img") {
-    &send_img($q, $q->param("img"), $q->param("type"));
+    my $img = $q->param("img");
+    my $type = $q->param("type");
+    if (!defined($refresh{$type})) {
+	&err(sprintf("Unrecognized type: %s", $type));
+    }
+    &send_img($q, $img, $type);
 } elsif ($qt eq "all") {
     my $name = $q->param("name");
     if (!defined($name)) {
