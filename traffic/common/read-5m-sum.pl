@@ -142,7 +142,7 @@ sub read_5m_sum {
 			    next;
 			} else {
 			    $err .= "File $f shrunk?!?\n";
-			    next;
+			    $position{$base} = 0;
 			}
 		    } else {
 			$position{$base} = 0;
@@ -211,10 +211,11 @@ sub read_5m_sum {
 	    $mysample_time{$lasttick} = $lasttick * 5.0/60;
 	    $mysample_time{$mv,$lasttick} = $lasttick * 5.0/60;
 
-	    while($sample_time{$sno} < $lasttime{$v}) {
-		# may accidentally have read whole log,
-		# and but have seen data for the day
-		# earlier
+	    while(defined($sample_time{$sno}) &&
+		  $sample_time{$sno} < $lasttime{$v})
+	    {
+		# may accidentally have read whole log, but have seen
+		# partial data for the day earlier
 		$sno++;
 	    }
 
