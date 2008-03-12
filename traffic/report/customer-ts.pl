@@ -274,6 +274,12 @@ sub create_rrd {
     # 1095 days (3 years) of 24-hour intervals
     $cmd .= "RRA:AVERAGE:0.5:288:730 ";
 
+    # And similar for the max values:
+    $cmd .= "RRA:MAX:0.5:1:864 ";
+    $cmd .= "RRA:MAX:0.5:6:1008 ";
+    $cmd .= "RRA:MAX:0.5:24:744 ";
+    $cmd .= "RRA:MAX:0.5:288:730 ";
+
     if ($opt_V) {
 	printf(STDERR "$cmd\n", $name, $s);
     }
@@ -307,18 +313,19 @@ sub update_rrd {
     my($tap) = $d->{"sample_times"}->{"values"};
     my($iap) = $d->{"ikbps"}->{"values"};
     my($oap) = $d->{"okbps"}->{"values"};
+    # report to RRD in bit/s
     for ($i = 0; $i <= $eoa; $i++) {
 	if (!defined($opt_N)) {
 	    printf(RRD "update %s.rrd %d:%f:%f\n",
 		   $c, $tap->[$i],
-		   $iap->[$i] / 1000.0,
-		   $oap->[$i] / 1000.0);
+		   $iap->[$i] * 1000.0,
+		   $oap->[$i] * 1000.0);
 	}
 	if ($opt_V) {
 	    printf(STDERR "RRD-update %s %f %f %s.rrd\n",
 		   &time_str($tap->[$i]),
-		   $iap->[$i] / 1000.0,
-		   $oap->[$i] / 1000.0,
+		   $iap->[$i] * 1000.0,
+		   $oap->[$i] * 1000.0,
 		   $c);
 	}
     }
