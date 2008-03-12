@@ -51,17 +51,19 @@ tie %img_size, 'IPC::Shareable', "Zpng", { mode => 0666,
 };
 
 my %xgrid = (
-    "day"  => "HOUR:1:HOUR:3:HOUR:6:0:%H:%M %a",
-    "week" => "HOUR:12:DAY:1:DAY:3:0:%a %d %h",
-    "month"=> "DAY:1:DAY:7:DAY:7:0:%d %h",
-    "year" => "MONTH:1:MONTH:3:MONTH:3:0:%h %Y",
-    "2year"=> "MONTH:1:MONTH:3:MONTH:6:0:%h %Y",
+    "day"   => "HOUR:1:HOUR:3:HOUR:6:0:%H:%M %a",
+    "week"  => "HOUR:12:DAY:1:DAY:3:0:%a %d %h",
+    "month" => "DAY:1:DAY:7:DAY:7:0:%d %h",
+    "3month"=> "DAY:7:MONTH:1:MONTH:1:0:%h %Y",
+    "year"  => "MONTH:1:MONTH:3:MONTH:3:0:%h %Y",
+    "2year" => "MONTH:1:MONTH:3:MONTH:6:0:%h %Y",
 );
 
 my %sample_len = (
     "day"  => "5 minutes",
     "week" => "30 minutes",
     "month"=> "2 hours",
+    "3month"=>"24 hours",
     "year" => "24 hours",
     "2year"=> "24 hours",
 );
@@ -70,6 +72,7 @@ my %refresh = (
     "day"  => 5 * 60,
     "week" => 30 * 60,
     "month"=> 2 * 60 * 60,
+    "3month"=>24 * 60 * 60,
     "year" => 24 * 60 * 60,
     "2year"=> 24 * 60 * 60,
 );
@@ -78,11 +81,18 @@ my %delta_t = (
     "day"  => "-1day",
     "week" => "-7days",
     "month"=> "-31days",
+    "3month"=>"-3months",
     "year" => "-1year",
     "2year"=> "-2year",
 );
 
-my @order = ("day", "week", "month", "year", "2year");
+my %do_max = (
+    "3month" => 1,
+    "year"   => 1,
+    "2year"  => 1,
+    );
+
+my @order = ("day", "week", "month", "3month", "year", "2year");
 
 my($isp) = "%ISPNAME%";
 my($rrddir) = "%RRDDIR%";
@@ -132,8 +142,11 @@ sub make_plot {
 	      "VDEF:max_out=out,MAXIMUM",
 	      "VDEF:cur_in=in,LAST",
 	      "VDEF:cur_out=out,LAST",
+	      sprintf("DEF:inmax=%s:In:MAX", $rrd),
+	      sprintf("DEF:outmax=%s:Out:MAX", $rrd),
+	      "VDEF:last=in,LAST",
 	 ));
-    push(@l, (sprintf("COMMENT:Into %s\\:", $isp) . "\\t\\tAvg\\:",
+    push(@l, ("COMMENT:In \\:\\tAvg\\:",
 	      "GPRINT:avg_in:%6.2lf%s",
 	      "COMMENT:Max\\:",
 	      "GPRINT:max_in:%6.2lf%s",
@@ -141,7 +154,7 @@ sub make_plot {
 	      "GPRINT:cur_in:%6.2lf%s",
 	      "COMMENT:\\n",
 	 ));
-    push(@l, (sprintf("COMMENT:Out from %s\\: ", $isp) . "\\tAvg\\:",
+    push(@l, ("COMMENT:Out\\:\\tAvg\\:",
 	      "GPRINT:avg_out:%6.2lf%s",
 	      "COMMENT:Max\\:",
 	      "GPRINT:max_out:%6.2lf%s",
@@ -149,11 +162,23 @@ sub make_plot {
 	      "GPRINT:cur_out:%6.2lf%s",
 	      "COMMENT:\\n",
 	 ));
-    push(@l, (sprintf("COMMENT:Each data point is average over %s",
+    push(@l, (sprintf("COMMENT:Each data point is averaged over %s",
 		      $sample_len{$type})));
-    push(@l, ("AREA:in#33cccc:Into " . $isp,
-	      "LINE2:out#006699:Out from " . $isp,
+    push(@l, ("COMMENT:\\n"));
+    push(@l, (sprintf("COMMENT:Direction is as seen from %s", $isp)));
+    push(@l, ("COMMENT:\\n",
+	      "PRINT:last:Last updated %H\\:%M\\:%S %a %d %b %Y\\r:strftime",
 	 ));
+
+    push(@l, ("AREA:in#33cccc:In ",
+	      "LINE2:out#006699:Out ",
+	 ));
+
+    if (defined($do_max{$type})) {
+	push(@l, ("LINE1:inmax#ff6699:Max in ",
+		  "LINE1:outmax#800000:Max out ",
+	     ));
+    }
     
     ($avg, $x, $y) = RRDs::graph(@l);
 
@@ -418,6 +443,7 @@ sub send_img {
 local our $q = new CGI;
 my $qt = $q->param("q");
 my $me = $q->url(-relative => 1);
+my($text, $name, $type, $img);
 
 select(STDOUT); $| = 1;		# unbuffer, we only print once
 
@@ -425,18 +451,18 @@ if (!defined($qt)) {
     &err("No query type");
 }
 if ($qt eq "img") {
-    my $img = $q->param("img");
-    my $type = $q->param("type");
+    $img = $q->param("img");
+    $type = $q->param("type");
     if (!defined($refresh{$type})) {
 	&err(sprintf("Unrecognized type: %s", $type));
     }
     &send_img($q, $img, $type);
 } elsif ($qt eq "all") {
-    my $name = $q->param("name");
+    $name = $q->param("name");
     if (!defined($name)) {
 	&err("No name given");
     }
-    my $text = &start_doc($q, "day",
+    $text = &start_doc($q, "day",
 			  sprintf("%s traffic with %s",
 				  $isp, $name));
     $text .= &show_all($name, $me);
@@ -444,8 +470,8 @@ if ($qt eq "img") {
     $text .= "\n";
     print $text;
 } elsif ($qt eq "one") {
-    my $name = $q->param("name");
-    my $type = $q->param("type");
+    $name = $q->param("name");
+    $type = $q->param("type");
 
     if (!defined($name)) {
 	&err("No name given");
@@ -456,9 +482,9 @@ if ($qt eq "img") {
     if (!defined($refresh{$type})) {
 	&err(sprintf("Plot type '%s' unrecognized", $type));
     }
-    my $text = &start_doc($q, $type,
-			  sprintf("%s traffic with %s",
-				  $isp, $name));
+    $text = &start_doc($q, $type,
+		       sprintf("%s traffic with %s",
+			       $isp, $name));
     $text .= &show_one($name, $type, $me);
     $text .= $q->end_html();
     $text .= "\n";
