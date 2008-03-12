@@ -67,7 +67,7 @@ sub read_log {
     my(@f);
     my($h0_seen) = 0;
     my($h0_sample) = 0;
-    my(%data_seen, %lasttime_uncomp);
+    my(%data_seen, %lasttime_uncomp, %sample_no);
     our(%count, %base, %sample_time);
     our(%lasttime, %firsttime);
     our($date, $ifspeed, $iftype, $ifdescr, $max_sample);
@@ -124,7 +124,7 @@ sub read_log {
 		    }
 		}
 		$h0_seen = 1;
-		$h0_sample = $sample_no;
+		$h0_sample = $sample_no+1;
 	    }
 	}
 	
@@ -173,7 +173,8 @@ sub read_log {
 	# based on this
 	if (defined($lasttime_uncomp{$v})) {
 	    my $delta_t = $now - $lasttime_uncomp{$v};
-	    if ($delta_t < 0) {
+	    # but when going from hour 23 to 0...
+	    if ($delta_t < 0 && $delta_t > -4000) {
 		foreach my $k (keys %base) {
 		    $dstcomp{$k} = $dstcomp;
 		}
