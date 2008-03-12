@@ -66,6 +66,7 @@ sub read_log {
     my($starter);
     my(@f);
     my($h0_seen) = 0;
+    my($h0_sample) = 0;
     my(%data_seen, %lasttime_uncomp);
     our(%count, %base, %sample_time);
     our(%lasttime, %firsttime);
@@ -105,9 +106,7 @@ sub read_log {
 	    if ($h < 23) {
 		$day = $f[0] . " " . $f[1] . " " . $f[2];
 	    }
-	    if ($h == 23 && !$h0_seen) {
-		$now -= 24 * 3600;
-	    } elsif ($h < 23) {
+	    if ($h == 0) {
 		if ( ! $h0_seen ) {
 		    # Is this day switching to or from daylight savings time?
 		    # (executed only once)
@@ -125,6 +124,7 @@ sub read_log {
 		    }
 		}
 		$h0_seen = 1;
+		$h0_sample = $sample_no;
 	    }
 	}
 	
@@ -222,10 +222,22 @@ sub read_log {
 	    $date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
 	}
     }
-    foreach my $k (keys %firsttime) {
-	# Handle day rollover
-	if ($h0_seen && $firsttime{$k} > 23) {
-	    $firsttime{$k} -= 24;
+    # Handle day rollover
+    if ($h0_seen) {
+	foreach my $k (keys %firsttime) {
+	    if ($firsttime{$k} > 23) {
+		$firsttime{$k} -= 24;
+	    }
+	}
+	for (my $sno = 0; $sno < $h0_sample; $sno++) {
+	    foreach my $v (keys %base) {
+		if ($sample_time{$v,$sno} > 23) {
+		    $sample_time{$v,$sno} -= 24;
+		}
+		if ($sample_time{$sno} > 23) {
+		    $sample_time{$sno} -= 24;
+		}
+	    }
 	}
     }
     
