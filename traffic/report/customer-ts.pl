@@ -151,19 +151,10 @@ sub convert_times {
     our(%sample_secs, $max_sample);
     my($start_secs);
 
-    # Handle that the time scale is in hours for the "current day",
-    # and handle rollover at midnight, and that we may have some data
-    # from "yesterday" at the start of the log file
     if(defined($sample_time{$start-1})) {
 	$s = $start-1;
     } else {
 	$s = $start;
-    }
-    for($i = $s; $sample_time{$i} > $sample_time{$max_sample}; $i++) {
-	$sample_time{$i} -= 24;
-	foreach my $k (keys %base) {
-	    $sample_time{$k,$i} -= 24;
-	}
     }
 
     if(defined($tm0)) {
@@ -352,8 +343,9 @@ sub do_one_customer {
     &restore_vars($c);
 
     foreach my $day (0 .. $nd-1) {
-	my($tm) = $base_tm + 3600 * 24 * $day;
-	my($d) = &tm_to_date($tm);
+	my($tm) = $base_tm + 3600 * 24 * ($day);
+	my($d) = &tm_to_date($tm + 12*3600);
+	$tm = &date_to_tm($d);
 
 	my(@lines) = @{ $ports{$c} };
 	my($ls) = join("+", @lines);
@@ -427,9 +419,15 @@ if (defined($opt_R)) {
 $oldfh = select(STDERR); $| = 1; select($oldfh);
 
 if (defined($opt_d) && defined($opt_n)) {
-    &do_one_customer($opt_d, $opt_n);
+    my(@n) = split(/,/, $opt_n);
+    foreach my $cust (@n) {
+	&do_one_customer($opt_d, $cust);
+    }
 } elsif (!defined($opt_d) && defined($opt_n)) {
-    &do_one_customer(&today_spec(), $opt_n);
+    my(@n) = split(/,/, $opt_n);
+    foreach my $cust (@n) {
+	&do_one_customer(&today_spec(), $cust);
+    }
 } else {
     if (defined($opt_d)) {
 	&do_all_customers($opt_d);
