@@ -134,7 +134,7 @@ sub make_plot {
 	);
     push(@l, ("-s", "end" . $delta_t{$type}));
     push(@l, ("--color", "MGRID#000000",
-	      "-v", "Mbit/s",
+	      "-v", "bit/s",
 	      "--alt-autoscale-max",
 	      "--alt-y-grid",
 	      "-l", 0,
@@ -174,9 +174,8 @@ sub make_plot {
     push(@l, (sprintf("COMMENT:Each data point is averaged over %s",
 		      $sample_len{$type})));
     push(@l, ("COMMENT:\\n"));
-    push(@l, (sprintf("COMMENT:Direction is as seen from %s", $isp)));
-    push(@l, ("COMMENT:\\n",
-	      "PRINT:cur_in:Last updated %H\\:%M\\:%S %a %d %b %Y\\r:strftime",
+    push(@l, (sprintf("COMMENT:Direction is as seen from %s\\j", $isp)));
+    push(@l, ("GPRINT:cur_in:Updated %H\\:%M %a %d %b %Y\\r:strftime",
 	 ));
 
     push(@l, ("AREA:in#33cccc:In ",
