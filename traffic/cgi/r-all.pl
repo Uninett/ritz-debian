@@ -68,6 +68,16 @@ my %sample_len = (
     "2year"=> "24 hours",
 );
 
+my %title = (
+    "day"   => "Last 24 hours",
+    "week"  => "Last week",
+    "month" => "Last 31 days",
+    "3month"=> "Last 3 months",
+    "year"  => "Last year",
+    "2year" => "Last 2 years",
+    
+    );
+
 my %refresh = (
     "day"  => 5 * 60,
     "week" => 30 * 60,
@@ -144,7 +154,6 @@ sub make_plot {
 	      "VDEF:cur_out=out,LAST",
 	      sprintf("DEF:inmax=%s:In:MAX", $rrd),
 	      sprintf("DEF:outmax=%s:Out:MAX", $rrd),
-	      "VDEF:last=in,LAST",
 	 ));
     push(@l, ("COMMENT:In \\:\\tAvg\\:",
 	      "GPRINT:avg_in:%6.2lf%s",
@@ -167,7 +176,7 @@ sub make_plot {
     push(@l, ("COMMENT:\\n"));
     push(@l, (sprintf("COMMENT:Direction is as seen from %s", $isp)));
     push(@l, ("COMMENT:\\n",
-	      "PRINT:last:Last updated %H\\:%M\\:%S %a %d %b %Y\\r:strftime",
+	      "PRINT:cur_in:Last updated %H\\:%M\\:%S %a %d %b %Y\\r:strftime",
 	 ));
 
     push(@l, ("AREA:in#33cccc:In ",
@@ -345,13 +354,25 @@ EOF
 	if ($n % 2 == 0) {
 	    $text .= "    <tr>\n";
 	}
+	$text .= "      <td>\n";
+	$text .= "      <table class=\"invisiblebox\">\n";
+	$text .= "        <tr>\n";
+	$text .= sprintf("          " .
+			 "<td><h3>%s</h3></td>\n", $title{$type});
+	$text .= "        </tr>\n";
+
+	$text .= "        <tr>\n";
 	my($bpng) = basename($png);
-	$text .= sprintf("      <td><a href=\"%s?q=one&amp;name=%s&amp;type=%s\">",
+	$text .= sprintf("          " .
+			 "<td><a href=\"%s?q=one&amp;name=%s&amp;type=%s\">",
 	       $url, $name, $type);
 	$text .= sprintf("<img src=\"%s?q=img&amp;img=%s&amp;type=%s\" ",
 	       $url, $bpng, $type);
 	$text .= sprintf("alt=\"small %s %s graph\" ", $name, $type);
 	$text .= sprintf("width=\"%d\" height=\"%d\" /></a></td>\n", $x, $y);
+	$text .= "        </tr>\n";
+	$text .= "      </table>\n";
+	$text .= "      </td>\n";
 	$n++;
 	if ($n % 2 == 0) {
 	    $text .= "    </tr>\n";
