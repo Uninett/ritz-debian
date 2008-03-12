@@ -230,12 +230,12 @@ sub read_log {
 	    }
 	}
 	for (my $sno = 0; $sno < $h0_sample; $sno++) {
+	    if ($sample_time{$sno} > 23) {
+		$sample_time{$sno} -= 24;
+	    }
 	    foreach my $v (keys %base) {
 		if ($sample_time{$v,$sno} > 23) {
 		    $sample_time{$v,$sno} -= 24;
-		}
-		if ($sample_time{$sno} > 23) {
-		    $sample_time{$sno} -= 24;
 		}
 	    }
 	}
