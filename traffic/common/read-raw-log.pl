@@ -68,6 +68,7 @@ sub read_log {
     my($h0_seen) = 0;
     my($h0_sample) = 0;
     my(%data_seen, %lasttime_uncomp, %sample_no);
+    my($skip_h);
     our(%count, %base, %sample_time);
     our(%lasttime, %firsttime);
     our($date, $ifspeed, $iftype, $ifdescr, $max_sample);
@@ -106,22 +107,20 @@ sub read_log {
 	    if ($h < 23) {
 		$day = $f[0] . " " . $f[1] . " " . $f[2];
 	    }
-	    if ($h == 0) {
-		if ( ! $h0_seen ) {
-		    # Is this day switching to or from daylight savings time?
-		    # (executed only once)
-		    my($t0, $t1);
-		    $t0 = timelocal(strptime(sprintf("%s %s %s 00:00:00",
-						     $f[1], $f[2], $f[4])));
-		    $t1 = timelocal(strptime(sprintf("%s %s %s 23:30:00",
-						     $f[1], $f[2], $f[4])));
-		    my($diff) = $t1 - $t0;
-		    if ($diff < 23 * 3600) {
-			$dstcomp = (-3600);
-		    }
-		    if ($diff > 24 * 3600) {
-			$dstcomp = 3600;
-		    }
+	    if ($h == 0 && !$h0_seen) {
+		# Is this day switching to or from daylight savings time?
+		# (executed only once)
+		my($t0, $t1);
+		$t0 = timelocal(strptime(sprintf("%s %s %s 00:00:00",
+						 $f[1], $f[2], $f[4])));
+		$t1 = timelocal(strptime(sprintf("%s %s %s 23:30:00",
+						 $f[1], $f[2], $f[4])));
+		my($diff) = $t1 - $t0;
+		if ($diff < 23 * 3600) {
+		    $dstcomp = (-3600); # switch to daylight savings time
+		}
+		if ($diff > 24 * 3600) {
+		    $dstcomp = 3600; # switch back to normal local time
 		}
 		$h0_seen = 1;
 		$h0_sample = $sample_no+1;
@@ -178,7 +177,17 @@ sub read_log {
 		foreach my $k (keys %base) {
 		    $dstcomp{$k} = $dstcomp;
 		}
+		$skip_h = $h;	# and skip subsequent samples in same hour
 		next;
+	    }
+	}
+	# Once we've gone back in time one time, skip any remaining
+	# subsequent samples from the same hour
+	if (defined($skip_h)) {
+	    if ($skip_h == $h) {
+		next;
+	    } else {
+		undef $skip_h;
 	    }
 	}
 
@@ -186,11 +195,12 @@ sub read_log {
 	# Note, this only compensates if the data file hasn't
 	# already been "fixed".
 	if ($dstcomp != 0 &&
-	    ((($lasttime{$v} - $now) > 3600 &&
-	      ($lasttime{$v} - $now) < 7200) ||
-	     ($now - $lasttime{$v} > 3600)))
+	    (abs($now - $lasttime{$v}) > 3600 &&
+	     abs($now - $lasttime{$v}) < 7200))
 	{
-	    $dstcomp{$v} = $dstcomp;
+	    foreach my $k (keys %base) {
+		$dstcomp{$k} = $dstcomp;
+	    }
 	}
 
 	$now += $dstcomp{$v};
