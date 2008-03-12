@@ -186,7 +186,8 @@ sub read_log {
 	# Note, this only compensates if the data file hasn't
 	# already been "fixed".
 	if ($dstcomp != 0 &&
-	    (($lasttime{$v} > $now) ||
+	    ((($lasttime{$v} - $now) > 3600 &&
+	      ($lasttime{$v} - $now) < 7200) ||
 	     ($now - $lasttime{$v} > 3600)))
 	{
 	    $dstcomp{$v} = $dstcomp;
