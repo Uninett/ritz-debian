@@ -240,6 +240,8 @@ sub read_log {
     }
     # Handle day rollover
     my($log_date, $prev_date, $t_now, $last_t);
+    # DST tweak:
+    if ($h >= 24) { $h -= 1; }
     $last_t = timelocal(strptime($date . sprintf(" %02d:%02d:%02d",
 						 $h, $m, $s)));
     $log_date = &tm_to_date($last_t);
