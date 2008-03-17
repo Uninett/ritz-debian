@@ -239,18 +239,19 @@ sub read_log {
 	$date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
     }
     # Handle day rollover
-    my($t_now, $last_t, $prev_date);
+    my($log_date, $prev_date, $t_now, $last_t);
     $last_t = timelocal(strptime($date . sprintf(" %02d:%02d:%02d",
 						 $h, $m, $s)));
-    $t_now  = timelocal(time);
-    $prev_date = strftime("%a %d %b %Y", $t_now - 24*3600);
+    $log_date = &tm_to_date($last_t);
+    $t_now  = time;
+    $prev_date = &tm_to_date($t_now - 24*3600);
     
     # if we've seen hours other than 23,
     # or we've *only* seen hour 23 from *yesterday*,
     #  and it's less than an hour ago (looking at "current" data),
     # compute (hopefully) correct offset from 00:00:00 today
     if ($non_h23_seen ||
-	(!$non_h23_seen && $t_now - $last_t < 3600 && $prev_date eq $date))
+	(!$non_h23_seen && $t_now - $last_t < 3600 && $prev_date eq $log_date))
     {
 	foreach my $k (keys %firsttime) {
 	    if ($firsttime{$k} > 23) {
