@@ -66,7 +66,7 @@ sub read_log {
     my($starter);
     my(@f);
     my($non_h23_seen) = 0;
-    my($non_h23_sample) = 0;
+    my($computed_dst) = 0;
     my(%data_seen, %lasttime_uncomp, %sample_no);
     my($skip_h);
     our(%count, %base, %sample_time);
@@ -104,10 +104,9 @@ sub read_log {
 	    # log turnover happens late in hour 23 so that some records can be
 	    # logged in hour 23 of the previous day.  We need to see the date
 	    # covering most of the log here...
-	    if ($h < 23) {
-		$day = $f[0] . " " . $f[1] . " " . $f[2];
-	    }
-	    if ($h != 23 && !$non_h23_seen) {
+	    $day = join(" ", @f[0..2]);
+	    
+	    if (!$computed_dst) {
 		# Is this day switching to or from daylight savings time?
 		# (executed only once)
 		my($t0, $t1);
@@ -122,8 +121,10 @@ sub read_log {
 		if ($diff > 24 * 3600) {
 		    $dstcomp = 3600; # switch back to normal local time
 		}
+		$computed_dst = 1;
+	    }
+	    if ($h != 23 && !$non_h23_seen) {
 		$non_h23_seen = 1;
-		$non_h23_sample = $sample_no+1;
 	    }
 	}
 	
@@ -234,28 +235,40 @@ sub read_log {
 	    $date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
 	}
     }
+    if (!defined $date) {
+	$date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
+    }
     # Handle day rollover
-    if ($non_h23_seen) {
+    my($t_now, $last_t, $prev_date);
+    $last_t = timelocal(strptime($date . sprintf(" %02d:%02d:%02d",
+						 $h, $m, $s)));
+    $t_now  = timelocal(time);
+    $prev_date = strftime("%a %d %b %Y", $t_now - 24*3600);
+    
+    # if we've seen hours other than 23,
+    # or we've *only* seen hour 23 from *yesterday*,
+    #  and it's less than an hour ago (looking at "current" data),
+    # compute (hopefully) correct offset from 00:00:00 today
+    if ($non_h23_seen ||
+	(!$non_h23_seen && $t_now - $last_t < 3600 && $prev_date eq $date))
+    {
 	foreach my $k (keys %firsttime) {
 	    if ($firsttime{$k} > 23) {
 		$firsttime{$k} -= 24;
 	    }
 	}
-	for (my $sno = 0; $sno < $non_h23_sample; $sno++) {
-	    if ($sample_time{$sno} > 23) {
-		$sample_time{$sno} -= 24;
-	    }
+	for (my $sno = 0;
+	     defined($sample_time{$sno}) &&
+	     $sample_time{$sno} > 23;
+	     $sno++)
+	{
+	    $sample_time{$sno} -= 24;
 	    foreach my $v (keys %base) {
-		if ($sample_time{$v,$sno} > 23) {
-		    $sample_time{$v,$sno} -= 24;
-		}
+		$sample_time{$v,$sno} -= 24;
 	    }
 	}
     }
     
-    if (!defined $date) {
-	$date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
-    }
     $max_sample = $sample_no;
 }
 
