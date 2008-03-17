@@ -95,6 +95,8 @@ sub read_5m_sum {
     undef %mybase;
     undef %mycount;
     undef %mysample_time;
+    undef %sample_time;
+
     $my_max_sample = 0;
     $myspeed = 0;
 
@@ -156,7 +158,7 @@ sub read_5m_sum {
 	    }
 	}
 
-	if (defined($date) && (($seekable && $date_str eq $d) ||
+	if (defined($date) && (($date_str eq $d) ||
 			       ($date_str eq $prev_d)))
 	{
 	    # if we saved stuff for this line, restore
@@ -170,6 +172,15 @@ sub read_5m_sum {
 		    if (defined($save_base{$l,$v})) {
 			$base{$v} = $save_base{$l,$v};
 			$lasttime{$v} = $save_lasttime{$l,$v};
+			# When we compensate for daylight savings change...
+			if ($lasttime{$v} > 24*3600) {
+			    $lasttime{$v} -= 3600;
+			}
+			if ($date_str eq $prev_d) {
+			    # lasttime is seconds relative to 00:00
+			    # this is for the previous day...
+			    $lasttime{$v} -= 3600*24;
+			}
 		    }
 		}
 	    }
@@ -238,42 +249,46 @@ sub read_5m_sum {
 		    $leftover{$line,$v} = 0;
 		}
 		# Then include remainder of last sample in this tick
-		if (defined($sample_time{$sno}) && defined($lasttime{$v}) &&
-		    ($sample_time{$sno} != $lasttime{$v}))
+		if (defined($sample_time{$v,$sno}) && defined($lasttime{$v}) &&
+		    ($sample_time{$v,$sno} != $lasttime{$v}))
 		{
-		    if ($tt > $sample_time{$sno}) {
-			$f1 = ($sample_time{$sno} - $ltt) /
-			    ($sample_time{$sno} - $lasttime{$v});
+		    if ($tt > $sample_time{$v,$sno}) {
+			$f1 = ($sample_time{$v,$sno} - $ltt) /
+			    ($sample_time{$v,$sno} - $lasttime{$v});
 			$mycount{$mv,$tick} += $count{$v,$sno} * $f1;
 		    }
 		}
-		# ...then include any full samples in this tick
-		while ($tt > $sample_time{$sno} && $sno <= $max_sample) {
-		    $lasttime{$v} = $sample_time{$sno};
+		# If no sample for this var, skip ahead
+		while (!defined($sample_time{$v,$sno}) && $sno <= $max_sample) {
 		    $sno++;
-		    if ($sample_time{$sno} < $tt) {
+		}
+		# ...then include any full samples in this tick
+		while ($tt > $sample_time{$v,$sno} && $sno <= $max_sample) {
+		    $lasttime{$v} = $sample_time{$v,$sno};
+		    $sno++;
+		    if ($sample_time{$v,$sno} < $tt) {
 			$mycount{$mv,$tick} += $count{$v,$sno};
 		    }
 		}
-		if (defined($sample_time{$sno}) && defined($lasttime{$v}) &&
-		    ($sample_time{$sno} != $lasttime{$v}))
+		if (defined($sample_time{$v,$sno}) && defined($lasttime{$v}) &&
+		    ($sample_time{$v,$sno} != $lasttime{$v}))
 		{
 		    # ...and add any remaining partial sample in this tick
 		    $f1 = ($tt - &max($ltt, $lasttime{$v})) /
-			($sample_time{$sno} - $lasttime{$v});
+			($sample_time{$v,$sno} - $lasttime{$v});
 		    $mycount{$mv,$tick} += $count{$v,$sno} * $f1;
 		}
 	    }
 	    $ltt = $lasttick * 5.0/60;
-	    while(defined($sample_time{$sno})) {
+	    while(defined($sample_time{$v,$sno})) {
 		if ($ltt > $lasttime{$v}) {
-		    $f1 = ($sample_time{$sno} - $ltt) /
-			($sample_time{$sno} - $lasttime{$v});
+		    $f1 = ($sample_time{$v,$sno} - $ltt) /
+			($sample_time{$v,$sno} - $lasttime{$v});
 		    $leftover{$line,$v} += $count{$v,$sno} * $f1;
 		} else {
 		    $leftover{$line,$v} += $count{$v,$sno};
 		}
-		$lasttime{$v} = $sample_time{$sno};
+		$lasttime{$v} = $sample_time{$v,$sno};
 		$sno++;
 	    }
 	}
