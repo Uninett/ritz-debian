@@ -108,7 +108,6 @@ sub read_log {
 	    
 	    if (!$computed_dst) {
 		# Is this day switching to or from daylight savings time?
-		# (executed only once)
 		my($t0, $t1);
 		$t0 = timelocal(strptime(sprintf("%s %s %s 00:00:00",
 						 $f[1], $f[2], $f[4])));
@@ -121,7 +120,10 @@ sub read_log {
 		if ($diff > 24 * 3600) {
 		    $dstcomp = 3600; # switch back to normal local time
 		}
-		$computed_dst = 1;
+		# Possibly recompute later, when/if we see hour 0
+		if ($h != 23) {
+		    $computed_dst = 1;
+		}
 	    }
 	    if ($h != 23 && !$non_h23_seen) {
 		$non_h23_seen = 1;
@@ -205,6 +207,8 @@ sub read_log {
 	}
 
 	$now += $dstcomp{$v};
+
+	# Now we've committed to accumulate the sample
 
 	if (defined($sample_no{$now})) {
 	    $sno = $sample_no{$now};
