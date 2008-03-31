@@ -127,6 +127,11 @@ sub read_log {
 	    }
 	    if ($h != 23 && !$non_h23_seen) {
 		$non_h23_seen = 1;
+		foreach my $k (keys %lasttime) {
+		    if ($lasttime{$k} > 23*3600) {
+			$lasttime{$k} -= 24*3600;
+		    }
+		}
 	    }
 	}
 	
@@ -207,6 +212,11 @@ sub read_log {
 	}
 
 	$now += $dstcomp{$v};
+
+	# if we're re-reading the log after log rotation in "tail" mode...
+	if (defined($lasttime{$v}) && $lasttime{$v} > $now) {
+	    next;
+	}
 
 	# Now we've committed to accumulate the sample
 
