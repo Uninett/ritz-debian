@@ -42,6 +42,9 @@ TACHOST=betong.veidekke.no
 TCLSH=/usr/pkg/bin/tclsh8.0
 WISH=/usr/pkg/bin/wish
 #
+# Trail data files by this many seconds
+TAILDELAY=600
+#
 NOTIFY=he
 CHECKINTV=400
 MAIL=/usr/bin/mail
