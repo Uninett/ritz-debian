@@ -717,7 +717,7 @@ sub tail_process_file {
 
     open(IN, $f) || return undef;
     &position_file(\*IN, $b);
-    &read_log(\*IN, 1);
+    &read_log(\*IN);
     &save_position(\*IN, $b);
     close(IN);
 
