@@ -44,7 +44,8 @@ push(@INC, "%TOPDIR%/conf");
 require 'zino-config.pl';
 
 sub get_date_strings {
-    local($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
+    my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
+    our($ym_str, $day_str, $yyyymmdd);
 
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
 	localtime($^T);		# script start time
@@ -54,8 +55,10 @@ sub get_date_strings {
     $yyyymmdd = sprintf("%04d-%02d-%02d", $year+1900, $mon+1, $mday);
 }
 
-sub save_and_compress_files {
-    local($top,$savedir, $today, $cmd);
+sub save_files {
+    our($ym_str, $day_str, $yyyymmdd);
+    my($top, $savedir, $today, $cmd);
+    my($mdir, $cmd, $ret);
 
     $top = $DATATREE;
     $mdir = $top . "/" . $ym_str;
@@ -101,18 +104,6 @@ sub save_and_compress_files {
     if ($ret != 0) {
 	die "Could not compress backup files\n";
     }
-
-    $cmd = "%TOPDIR%/bin/fixup-data $savedir/*";
-    $ret = system($cmd) / 256;
-    if ($ret != 0) {
-	die "Could not fix up data files\n";
-    }
-
-    $cmd = "$gzip $savedir/*";
-    $ret = system($cmd) / 256;
-    if ($ret != 0) {
-	die "Could not compress files\n";
-    }
 }
 
 sub do_report {
@@ -122,5 +113,5 @@ sub do_report {
 # Main
 
 &get_date_strings();
-&save_and_compress_files();
+&save_files();
 &do_report();
