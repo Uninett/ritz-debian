@@ -143,6 +143,7 @@ sub date_to_tm {
 	$yy = $1 - 1900;
 	$mm = $2 - 1;
 	$dd = $3;
+	# 1 minute after midnight
 	$time = &timelocal(0, 1, 0, $dd, $mm, $yy);
     }
     $time;
@@ -396,7 +397,7 @@ sub pretty_datespec {
 sub today_spec {
     my($yyyy, $mm, $dd);
 
-    ($dd, $mm, $yyyy) = (localtime(time))[3,4,5];
+    ($dd, $mm, $yyyy) = (localtime($^T))[3,4,5];
     $mm += 1;
     $yyyy += 1900;
     sprintf("%04d-%02d--%02d", $yyyy, $mm, $dd);
@@ -407,7 +408,7 @@ sub yesterday_spec {
     my($yyyy, $mm, $dd);
     my($time);
 
-    $time = time - 60*60*24;
+    $time = $^T - 60*60*24;
     ($dd, $mm, $yyyy) = (localtime($time))[3,4,5];
     $mm += 1;
     $yyyy += 1900;
