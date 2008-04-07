@@ -1,0 +1,85 @@
+#!%PERL%
+#
+# $Id$
+#
+
+# Copyright (c) 2008
+#      UNINETT and NORDUnet.  All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. All advertising materials mentioning features or use of this software
+#    must display the following acknowledgement:
+#      This product includes software developed by UNINETT and NORDUnet.
+# 4. Neither the name of UNINETT or NORDUnet nor the names
+#    of its contributors may be used to endorse or promote
+#    products derived from this software without specific prior
+#    written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY UNINETT AND NORDUnet ``AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL UNINETT OR NORDUnet OR
+# THEIR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+#
+# Run this sometime during the day to compress the previous day's logs.
+# Done as a separate step to ease "tail-stat"-like programs to handle
+# log file rollover better.
+#
+
+push(@INC, "%TOPDIR%/conf");
+
+require 'zino-config.pl';
+
+sub get_date_strings {
+    my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
+    our($ym_str, $day_str, $yyyymmdd);
+
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+	localtime($^T - 24*3600); # script start time minus 24 hours
+    
+    $ym_str = sprintf("%4d-%02d", $year+1900, $mon+1);
+    $day_str = sprintf("%02d", $mday);
+    $yyyymmdd = sprintf("%04d-%02d-%02d", $year+1900, $mon+1, $mday);
+}
+
+sub compress_files {
+    our($ym_str, $day_str, $yyyymmdd, $DATATREE);
+    our($gzip);
+    my($mdir, $savedir, $cmd, $ret);
+
+    $top = $DATATREE;
+    $mdir = $top . "/" . $ym_str;
+    $savedir = $mdir . "/" . $day_str;
+    
+    $cmd = "%TOPDIR%/bin/fixup-data $savedir/*";
+    $ret = system($cmd) / 256;
+    if ($ret != 0) {
+	die "Could not fix up data files in $savedir\n";
+    }
+
+    $cmd = "$gzip $savedir/*";
+    $ret = system($cmd) / 256;
+    if ($ret != 0) {
+	die "Could not compress files in $savedir\n";
+    }
+}    
+
+# Main
+
+&get_date_strings();
+&compress_files();
