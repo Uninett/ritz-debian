@@ -38,7 +38,7 @@ RAWSENDMAIL=/usr/sbin/sendmail -oi
 SCOTTY=/usr/pkg/bin/scotty
 SHA=/usr/pkg/bin/sha1
 SNMPNETSTAT=/local/bin/snmpnetstat
-TACHOST=betong.veidekke.no
+TACHOST=server.nordu.net
 TCLSH=/usr/pkg/bin/tclsh8.0
 WISH=/usr/pkg/bin/wish
 #
