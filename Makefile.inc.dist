@@ -22,6 +22,7 @@ DATA_ROOTS="${TOPDIR}/data"
 # Must be Perl v5
 PERL=/usr/bin/perl
 #
+DESCFILE=${TOPDIR}/ndn.dsc
 CGIPFX=/stat-q
 WEBSRVR=stats.nordu.net
 ISPNAME=NORDUnet
