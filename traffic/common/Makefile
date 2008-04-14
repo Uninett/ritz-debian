@@ -7,6 +7,8 @@ SCRIPTS=date.pl newtimelocal.pl plot.pl read-5m-sum.pl read-day-report.pl \
 	scaling.pl search.pl timelocal.pl tmpfiles.pl utils.pl \
 	conn-common.pl
 
+MODULES=conn.pm
+
 SUBST=	${.CURDIR}/../../subst
 
 all:
@@ -17,6 +19,20 @@ install:
 		tmp=/tmp/comtmp.$$$$; \
 		echo sed -f ${SUBST} '<' $$s '>' $$tmp; \
 		sed -f ${SUBST} < $$s > $$tmp; \
+		echo install -c -m 444 $$tmp $$dst; \
+		install -c -m 444 $$tmp $$dst; \
+		echo rm -f $$tmp; \
+		rm -f $$tmp; \
+	done
+	@if [ ! -d ${LIBDIR}/Zino ]; then \
+		echo mkdir -p ${LIBDIR}/Zino; \
+		mkdir -p ${LIBDIR}/Zino; \
+	fi
+	@for m in ${MODULES}; do \
+		dst=${LIBDIR}/Zino/$$m; \
+		tmp=/tmp/comtmp.$$$$; \
+		echo sed -f ${SUBST} '<' $$m '>' $$tmp; \
+		sed -f ${SUBST} <$$s >$$tmp; \
 		echo install -c -m 444 $$tmp $$dst; \
 		install -c -m 444 $$tmp $$dst; \
 		echo rm -f $$tmp; \
