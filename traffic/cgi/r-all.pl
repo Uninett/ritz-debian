@@ -34,11 +34,15 @@
 
 package Zino::rrd;
 
+use lib "%LIBDIR%";
+
 use CGI ();
 CGI->compile();
 use IPC::Shareable ();
 use RRDs;
 use File::Basename;
+
+use Zino::conn qw(read_desc %fullname);
 
 use strict;
 use warnings;
@@ -50,19 +54,44 @@ tie %img_size, 'IPC::Shareable', "Zpng", { mode => 0666,
 					   create => 1,
 };
 
+my($descfile);
+my($lastread_desc);
+
+$descfile = "%DESCFILE%";
+$lastread_desc = 0;
+    
+sub modtime {
+    my($f) = @_;
+    my(@a);
+    (@a = stat($f)) || return undef;
+    return $a[9];
+}
+
+if (&modtime($descfile) > $lastread_desc) {
+    &read_desc($descfile);
+    $lastread_desc = $^T;
+}
+
+
 my %xgrid = (
-    "day"   => "HOUR:1:HOUR:3:HOUR:6:0:%H:%M %a",
-    "week"  => "HOUR:12:DAY:1:DAY:3:0:%a %d %h",
-    "month" => "DAY:1:DAY:7:DAY:7:0:%d %h",
-    "3month"=> "DAY:7:MONTH:1:MONTH:1:0:%h %Y",
-    "year"  => "MONTH:1:MONTH:3:MONTH:3:0:%h %Y",
-    "2year" => "MONTH:1:MONTH:3:MONTH:6:0:%h %Y",
+    "day"   => "HOUR:1:HOUR:3:HOUR:3:0:%H:%M",
+    "daymax"=> "HOUR:1:HOUR:3:HOUR:3:0:%H:%M",
+    "week"  => "HOUR:12:DAY:1:DAY:1:86400:%a %d",
+    "weekmax"=> "HOUR:12:DAY:1:DAY:1:86400:%a %d",
+    "month" => "DAY:1:WEEK:1:WEEK:1:604800:Week %V",
+    "monthmax" => "DAY:1:WEEK:1:WEEK:1:604800:Week %V",
+    "3month"=> "DAY:7:MONTH:1:MONTH:1:2592000:%h %Y",
+    "year"  => "MONTH:1:MONTH:3:MONTH:1:2592000:%h",
+    "2year" => "MONTH:1:MONTH:3:MONTH:3:2592000:%h",
 );
 
 my %sample_len = (
     "day"  => "5 minutes",
+    "daymax"=> "5 minutes",
     "week" => "30 minutes",
+    "weekmax" => "30 minutes",
     "month"=> "2 hours",
+    "monthmax"=> "2 hours",
     "3month"=>"24 hours",
     "year" => "24 hours",
     "2year"=> "24 hours",
@@ -70,8 +99,11 @@ my %sample_len = (
 
 my %title = (
     "day"   => "Last 24 hours",
+    "daymax"=> "Last 24 hours",
     "week"  => "Last week",
+    "weekmax"=> "Last week",
     "month" => "Last 31 days",
+    "monthmax"=> "Last 31 days",
     "3month"=> "Last 3 months",
     "year"  => "Last year",
     "2year" => "Last 2 years",
@@ -80,8 +112,11 @@ my %title = (
 
 my %refresh = (
     "day"  => 5 * 60,
+    "daymax"=> 5 * 60,
     "week" => 30 * 60,
+    "weekmax"=> 30 * 60,
     "month"=> 2 * 60 * 60,
+    "monthmax"=> 2 * 60 * 60,
     "3month"=>24 * 60 * 60,
     "year" => 24 * 60 * 60,
     "2year"=> 24 * 60 * 60,
@@ -89,20 +124,30 @@ my %refresh = (
 
 my %delta_t = (
     "day"  => "-1day",
+    "daymax"=> "-1day",
     "week" => "-7days",
+    "weekmax" => "-7days",
     "month"=> "-31days",
+    "monthmax"=> "-31days",
     "3month"=>"-3months",
     "year" => "-1year",
     "2year"=> "-2year",
 );
 
-my %do_max = (
-    "3month" => 1,
-    "year"   => 1,
-    "2year"  => 1,
+my %plot_type = (
+    "day"      => "avg",
+    "week"     => "avg",
+    "month"    => "avg",
+    "daymax"   => "max",
+    "weekmax"  => "max",
+    "monthmax" => "max",
+    "3month"   => "combined",
+    "year"     => "combined",
+    "2year"    => "combined",
     );
 
-my @order = ("day", "week", "month", "3month", "year", "2year");
+my @order = ("day", "daymax", "week", "weekmax",
+	     "month", "monthmax", "3month", "year", "2year");
 
 my($isp) = "%ISPNAME%";
 my($rrddir) = "%RRDDIR%";
@@ -126,6 +171,9 @@ sub big_png_file {
 sub make_plot {
     my($name, $type, $rrd, $png, $w, $h, @fonts) = @_;
     my($avg, $x, $y);
+    my($pt);
+
+    $pt = $plot_type{$type};
 
     my(@l) = ($png,
 	      "-a", "PNG",
@@ -155,6 +203,7 @@ sub make_plot {
 	      sprintf("DEF:inmax=%s:In:MAX", $rrd),
 	      sprintf("DEF:outmax=%s:Out:MAX", $rrd),
 	 ));
+    
     push(@l, ("COMMENT:In \\:\\tAvg\\:",
 	      "GPRINT:avg_in:%6.2lf%s",
 	      "COMMENT:Max\\:",
@@ -171,19 +220,41 @@ sub make_plot {
 	      "GPRINT:cur_out:%6.2lf%s",
 	      "COMMENT:\\n",
 	 ));
-    push(@l, (sprintf("COMMENT:Each data point is averaged over %s",
+    if ($pt eq "combined") {
+	push(@l,
+	     (sprintf("COMMENT:Each averaged data point is averaged over %s",
 		      $sample_len{$type})));
+    }
+    if ($pt eq "combined" || $pt eq "max") {
+	push(@l,
+	     (sprintf("COMMENT:Each max data point is 5min max in interval")));
+    } else {
+	push(@l,
+	     (sprintf("COMMENT:Each data point is averaged over %s",
+		      $sample_len{$type})));
+    }	
     push(@l, ("COMMENT:\\n"));
     push(@l, (sprintf("COMMENT:Direction is as seen from %s\\j", $isp)));
     push(@l, ("GPRINT:cur_in:Updated %H\\:%M %a %d %b %Y\\r:strftime",
 	 ));
 
-    push(@l, ("AREA:in#33cccc:In ",
-	      "LINE2:out#006699:Out ",
-	 ));
-
-    if (defined($do_max{$type})) {
+    if ($pt eq "combined") {
+	push(@l, ("AREA:in#33cccc:Avg In ",
+		  "LINE2:out#006699:Avg Out ",
+	     ));
+    }
+    if ($pt eq "avg") {
+	push(@l, ("AREA:in#33cccc:In ",
+		  "LINE2:out#006699:Out ",
+	     ));
+    }
+    if ($pt eq "combined") {
 	push(@l, ("LINE1:inmax#ff6699:Max in ",
+		  "LINE1:outmax#800000:Max out ",
+	     ));
+    }
+    if ($pt eq "max") {
+	push(@l, ("AREA:inmax#ff6699:Max in ",
 		  "LINE1:outmax#800000:Max out ",
 	     ));
     }
@@ -236,6 +307,9 @@ sub ensure_img_exists {
     my($png);
     my($x, $y);
     our($q);
+    my($img_size_unknown, $old_png_file);
+
+    $img_size_unknown = $old_png_file = 0;
 
     if ($size eq "big") {
 	$png = &big_png_file($name, $type);
@@ -244,7 +318,16 @@ sub ensure_img_exists {
 	$size="small";
     }
 
-    if (! -f $png || (-M _)*24*3600 > $refresh{$type} || $q->param("force")) {
+    if (!defined($img_size{$type,$size,"x"}) &&
+	!defined($img_size{$name,$type,$size,"x"}))
+    {
+	$img_size_unknown = 1;
+    }
+    if (! -f $png || (-M _)*24*3600 > $refresh{$type}) {
+	$old_png_file = 1;
+    }
+
+    if ($img_size_unknown || $old_png_file || $q->param("force")) {
 	if ($size eq "big") {
 	    ($png, $x, $y) = &make_big_plot($name, $type);
 	} else {
@@ -328,6 +411,8 @@ sub show_all {
     my($name, $url) = @_;
     my($png, $x, $y);
     my($n) = 0;
+    our(%fullname);
+    my($fn);
 
     my $text = <<EOF
   <table cellpadding="3" border="0">
@@ -335,7 +420,12 @@ sub show_all {
       <td>
 EOF
 ;
-    $text .= sprintf("        <h2>%s traffic with %s</h2>", $isp, $name);
+    $text .= sprintf("        <h2>%s traffic with %s", $isp, $name);
+    if (defined($fullname{$name})) {
+	$text .= " - ";
+	$text .= $fullname{$name};
+    }
+    $text .= "</h2>";
     $text .= <<EOF
 
       </td>
@@ -394,8 +484,14 @@ sub show_one {
        <td>
 EOF
 ;
-    $text .= sprintf("        <h2>%s traffic with %s last %s</h2>",
-		     $isp, $name, $type);
+    $text .= sprintf("        <h2>%s traffic with %s", $isp, $name);
+    if (defined($fullname{$name})) {
+	$text .= " - ";
+	$text .= $fullname{$name};
+    }
+    $text .= sprintf(", last %s</h2>", $type);
+
+    $text .= "</h2>";
     $text .= <<EOF
 
       </td>
