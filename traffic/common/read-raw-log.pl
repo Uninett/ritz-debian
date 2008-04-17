@@ -56,25 +56,55 @@
 
 use Time::Local;
 use Date::Parse;
+use Date::Format;
+
 
 sub read_log {
-    my($fh, $disable_23_handling) = @_;
+    my($fh, $zero_tm, $td) = @_;
     my($h, $m, $s, $sample_no, %sample_no, $sno);
     my($v, $dummy);
     my($delta, $lasttime, $day, $reboot_day, $reboot_time);
     my($now, $dstcomp, %dstcomp);
     my($starter);
     my(@f);
-    my($non_h23_seen) = 0;
     my($computed_dst) = 0;
     my(%data_seen, %lasttime_uncomp, %sample_no);
     my($skip_h);
     our(%count, %base, %sample_time);
     our(%lasttime, %firsttime);
-    our($date, $ifspeed, $iftype, $ifdescr, $max_sample);
+    our($date, $date_set, $ifspeed, $iftype, $ifdescr, $max_sample);
+    my($pos, $seekable);
+    my($upto_s, $upto_day);
+    my($first_tm, $first_day, $lasttime_comp, $day_comp);
 
+    $date_set = 0;
+
+    if (defined($td)) {
+	my($upto_t);
+	my($s, $m, $h, $md, $m, $y, $wd, $yd, $dst);
+	my($t0);
+	my(@a);
+
+	$upto_t = $^T - $td;
+	($s, $m, $h, $md, $m, $y, $wd, $yd, $dst) = localtime($upto_t);
+	@a = ($s, $m, $h, $md, $m, $y, $wd);
+	$upto_day = strftime("%a %b %d", @a);
+	$t0 = timelocal(0, 0, 0, $md, $m, $y);
+	$upto_s = $upto_t - $t0; # this means "after DST compensation"
+    }
+    $seekable = 1;		# always the optimist...
+
+    undef $day_comp;
     $dstcomp = 0;
     $sample_no = -1;
+    if (defined($td)) {
+	$pos = tell($fh);
+	if ($pos == -1) {
+	    $seekable = 0;	# didn't work out after all
+	}
+    }
+
+  loop:
     while (<$fh>) {
         chop;
 	@f = split;
@@ -100,37 +130,57 @@ sub read_log {
 
         $now = $h * 3600 + $m * 60 + $s;
 
-	if (!defined($disable_23_handling)) {
-	    # log turnover happens late in hour 23 so that some records can be
-	    # logged in hour 23 of the previous day.  We need to see the date
-	    # covering most of the log here...
-	    $day = join(" ", @f[0..2]);
-	    
-	    if (!$computed_dst) {
-		# Is this day switching to or from daylight savings time?
-		my($t0, $t1);
-		$t0 = timelocal(strptime(sprintf("%s %s %s 00:00:00",
-						 $f[1], $f[2], $f[4])));
-		$t1 = timelocal(strptime(sprintf("%s %s %s 23:30:00",
-						 $f[1], $f[2], $f[4])));
-		my($diff) = $t1 - $t0;
-		if ($diff < 23 * 3600) {
-		    $dstcomp = (-3600); # switch to daylight savings time
-		}
-		if ($diff > 24 * 3600) {
-		    $dstcomp = 3600; # switch back to normal local time
-		}
-		# Possibly recompute later, when/if we see hour 0
-		if ($h != 23) {
-		    $computed_dst = 1;
-		}
+	$day = join(" ", @f[0..2]);
+
+	if (!defined($first_tm)) {
+	    $first_tm = timelocal(strptime(sprintf("%s %s %s %02d:%02d:%02d",
+						   $f[1], $f[2], $f[4],
+						   $h, $m, $s)));
+	    $first_day = join(" ", @f[0..2]);
+	}
+
+	# log turnover happens late in hour 23 so that some records can be
+	# logged in hour 23 of the previous day.  We need to see the date
+	# covering most of the log here...
+	if (!$computed_dst) {
+	    # Is this day switching to or from daylight savings time?
+	    my($t0, $t1);
+	    $t0 = timelocal(strptime(sprintf("%s %s %s 00:00:00",
+					     $f[1], $f[2], $f[4])));
+	    $t1 = timelocal(strptime(sprintf("%s %s %s 23:30:00",
+					     $f[1], $f[2], $f[4])));
+	    my($diff) = $t1 - $t0;
+	    if ($diff < 23 * 3600) {
+		$dstcomp = (-3600); # switch to daylight savings time
 	    }
-	    if ($h != 23 && !$non_h23_seen) {
-		$non_h23_seen = 1;
-		foreach my $k (keys %lasttime) {
-		    if ($lasttime{$k} > 23*3600) {
-			$lasttime{$k} -= 24*3600;
-		    }
+	    if ($diff > 24 * 3600) {
+		$dstcomp = 3600; # switch back to normal local time
+	    }
+	    # Possibly recompute later, when/if we see hour 0
+	    if ($h != 23) {
+		$computed_dst = 1;
+	    }
+	}
+
+	# When $day_comp is set to 0, skip this test
+	if ((!defined($day_comp) || $day_comp != 0) &&
+	    ($first_tm < $zero_tm && $day eq $first_day))
+	{
+	    $day_comp = -24 * 3600;
+	} else {
+	    $day_comp = 0;
+	}
+
+	$now += $day_comp;
+
+	if (!defined($lasttime_comp) &&
+	    $first_tm < $zero_tm &&
+	    $day ne $first_day)
+	{
+	    $lasttime_comp = 1;
+	    foreach my $k (keys %lasttime) {
+		if ($lasttime{$k} > 23*3600) {
+		    $lasttime{$k} -= 24*3600;
 		}
 	    }
 	}
@@ -213,9 +263,22 @@ sub read_log {
 
 	$now += $dstcomp{$v};
 
-	# if we're re-reading the log after log rotation in "tail" mode...
+	# if we're re-reading the log after log rotation
+	# and compression in "tail" mode...
 	if (defined($lasttime{$v}) && $lasttime{$v} > $now) {
 	    next;
+	}
+
+	if (defined($td)) {
+	    if ($now > $upto_s &&
+		$day eq $upto_day)
+	    {
+		if ($seekable) {
+		    # Revert to last known position below mark
+		    seek($fh, $pos, SEEK_SET);
+		}
+		last loop;
+	    }
 	}
 
 	# Now we've committed to accumulate the sample
@@ -245,45 +308,16 @@ sub read_log {
 	$sample_time{$v,$sno} = $now / 3600.0;
 
 	$base{$v} = $f[6];
-	if ($sample_no == 10 && $non_h23_seen) {
+	if (!$date_set && $now > 0 && $now < 24*3600) {
 	    $date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
+	    $date_set = 1;
+	}
+	if ($seekable && defined($td)) {
+	    $pos = tell($fh);
 	}
     }
     if (!defined $date) {
 	$date = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
-    }
-    # Handle day rollover
-    my($log_date, $prev_date, $t_now, $last_t);
-    # DST tweak:
-    if ($h >= 24) { $h -= 1; }
-    $last_t = timelocal(strptime($date . sprintf(" %02d:%02d:%02d",
-						 $h, $m, $s)));
-    $log_date = &tm_to_date($last_t);
-    $t_now  = time;
-    $prev_date = &tm_to_date($t_now - 24*3600);
-    
-    # if we've seen hours other than 23,
-    # or we've *only* seen hour 23 from *yesterday*,
-    #  and it's less than an hour ago (looking at "current" data),
-    # compute (hopefully) correct offset from 00:00:00 today
-    if ($non_h23_seen ||
-	(!$non_h23_seen && $t_now - $last_t < 3600 && $prev_date eq $log_date))
-    {
-	foreach my $k (keys %firsttime) {
-	    if ($firsttime{$k} > 23) {
-		$firsttime{$k} -= 24;
-	    }
-	}
-	for (my $sno = 0;
-	     defined($sample_time{$sno}) &&
-	     $sample_time{$sno} > 23;
-	     $sno++)
-	{
-	    $sample_time{$sno} -= 24;
-	    foreach my $v (keys %base) {
-		$sample_time{$v,$sno} -= 24;
-	    }
-	}
     }
     
     $max_sample = $sample_no;
