@@ -77,7 +77,7 @@ require 'read-raw-log.pl';
 
 
 sub read_5m_sum {
-    my($lines, $d) = @_;
+    my($lines, $d, $td) = @_;
     my(@lines) = split(/\+/, $lines);
     my($line, $base, $cat, $f, $v);
     my($tick, $tt, $lasttick, $ltt, $sno, $f1, $k);
@@ -89,6 +89,7 @@ sub read_5m_sum {
     our(%base, %lasttime, %firsttime, %leftover, %position);
     my($seekable) = 0;
     my($end_tick) = 0;
+    my($zero_tm);
 
     undef %base;
     undef %count;
@@ -99,6 +100,8 @@ sub read_5m_sum {
 
     $my_max_sample = 0;
     $myspeed = 0;
+
+    $zero_tm = timelocal(strptime($d));
 
     foreach $line (@lines) {
 	if ($line =~ /([^:]*):r/) {
@@ -186,7 +189,7 @@ sub read_5m_sum {
 	    }
 	}
 
-	&read_log(DAYLOG);
+	&read_log(DAYLOG, $zero_tm, $td);
 	if ($seekable) {
 	    $position{$base} = tell(DAYLOG);
 	}
