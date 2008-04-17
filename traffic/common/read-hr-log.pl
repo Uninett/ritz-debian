@@ -53,7 +53,7 @@
 # Read a single daily log, suck in data.
 
 sub read_log {
-    my($fh) = @_;
+    my($fh, $zero_tm) = @_;
     my($h, $m, $s);
     my($v, $dummy);
     my($delta, $delta_time, $delta_rate);
