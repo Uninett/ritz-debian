@@ -48,10 +48,12 @@ require "search.pl";
 require "db-lookup.pl";
 require "utils.pl";
 require "read-5m-sum.pl";
-require "conn-common.pl";
 
 require "zino-config.pl";
 
+use lib qw(%LIBDIR%);
+
+use Zino::conn qw(read_desc %fullname %ports);
 use Data::Dumper;
 use File::Basename;
 use Fcntl qw(:seek);
@@ -359,6 +361,7 @@ sub do_one_customer {
     our($root, %base);
     our($opt_v, $opt_N);
     our($min_sample, $max_sample);
+    our(%ports);
 
     if (!defined($root->{$c})) {
 	$root->{$c} = {};
