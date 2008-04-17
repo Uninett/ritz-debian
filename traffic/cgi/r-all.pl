@@ -489,7 +489,7 @@ EOF
 	$text .= " - ";
 	$text .= $fullname{$name};
     }
-    $text .= sprintf(", last %s</h2>", $type);
+    $text .= sprintf(", %s</h2>", $title{$type});
 
     $text .= "</h2>";
     $text .= <<EOF
