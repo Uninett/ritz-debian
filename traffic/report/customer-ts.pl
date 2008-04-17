@@ -331,8 +331,29 @@ sub update_rrd {
     }
 }
 
+sub just_past_midnight {
+    my($td) = @_;
+
+    my($d1) = &tm_to_date($^T);
+    my($d2) = &tm_to_date($^T - $td);
+
+    return ($d1 ne $d2);
+}
+
 sub do_one_customer {
     my($dsp, $c) = @_;
+    our($tail_delay);
+    my($td) = $tail_delay;
+
+    # In "tail" mode, mop up the rest of yesterday's data
+    # if we're started just past midnight
+    if ($dsp eq &today_spec()) {
+	if (&just_past_midnight($td)) {
+	    $dsp = &yesterday_spec();
+	    undef $td;		# read until EOF now
+	}
+    }
+
     my($base_tm, $nd) = &decode_datespec($dsp);
     my($i);
     our($root, %base);
@@ -356,7 +377,7 @@ sub do_one_customer {
 
 	my(@lines) = @{ $ports{$c} };
 	my($ls) = join("+", @lines);
-	&read_5m_sum($ls, $d);
+	&read_5m_sum($ls, $d, $td);
 
 	if ($max_sample == 0) {
 	    next;
