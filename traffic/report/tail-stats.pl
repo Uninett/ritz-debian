@@ -710,6 +710,7 @@ sub tail_process_file {
     my($b) = basename($f);
     my($cat, $base) = &cat_and_base($f, &today());
     our($max_sample, $opt_r);
+    my($tm, $nd) = &decode_datespec(&today());
 
     if ($cat ne "cat") { return undef; }
 
@@ -717,7 +718,7 @@ sub tail_process_file {
 
     open(IN, $f) || return undef;
     &position_file(\*IN, $b);
-    &read_log(\*IN);
+    &read_log(\*IN, $tm);
     &save_position(\*IN, $b);
     close(IN);
 
@@ -761,7 +762,7 @@ sub do_one_file {
 	    printf(STDERR "Could not open \"|%s %s\": %s\n", $cat, $f, $!);
 	    next;
 	}
-	&read_log(\*DAYLOG);
+	&read_log(\*DAYLOG, $tm);
 	close(DAYLOG);
     
 	if ($max_sample == 0) {

@@ -277,13 +277,14 @@ sub get_file_data {
     my($cat, $file);
     my($name);
 
+    my($tm) = &date_to_tm($date);
     if (!defined ($name = &file_to_name($base, $date))) {
 	printf(STDERR "Could not find 'logical name' for $base / $date\n");
 	return undef;
     }
     ($cat, $file) = &find_cat_and_file($base, $date);
     open(IN, "$cat $file |") || die "$cat $file | $!\n";
-    &read_log(IN);
+    &read_log(IN, $tm);
     close(IN);
 
     &process_file_data($name);

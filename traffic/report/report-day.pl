@@ -85,10 +85,14 @@ require 'utils.pl';
 sub get_file_data {
     my($d, $cat, $f, $name) = @_;
     my($h, $errpct, $inpkts, $outpk, $discpct);
+    my($tm);
+
+    $tm = &date_to_tm($d);
+
 # Purposefully make $iov and $oov globals.
 
     open (IN, "$cat $d/$f |") || return undef;
-    &read_log(IN);
+    &read_log(IN, $tm);
     close(IN);
     
     $iov = &octets_var("in");

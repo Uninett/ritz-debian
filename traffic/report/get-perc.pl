@@ -120,12 +120,14 @@ sub get_percentile {
     my(@in, @out, @vars);
     my($in, $out);
     my($iov, $oov);
+    my($tm);
 
     return undef unless $base_tm;
 
     foreach $d (0 .. $no_days - 1) {
+	$tm = $base_tm + $d * 24 * 3600;
 	open(DAYLOG, &find_file($base_tm, $d, $name));
-	&read_log(DAYLOG);
+	&read_log(DAYLOG, $tm);
 	close(DAYLOG);
 
 	if (! defined $vars[0]) {

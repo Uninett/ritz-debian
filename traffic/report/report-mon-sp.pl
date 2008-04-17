@@ -101,8 +101,10 @@ sub get_file_data {
 	return undef;
     }
 
+    my($tm) = &date_to_tm($d);
+
     open (in, "$cat $d/$f |") || return undef;
-    &read_log (in);
+    &read_log (in, $tm);
     close(in);
 
     if ($ifspeed == 0) {
