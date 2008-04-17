@@ -32,7 +32,7 @@ install:
 		dst=${LIBDIR}/Zino/$$m; \
 		tmp=/tmp/comtmp.$$$$; \
 		echo sed -f ${SUBST} '<' $$m '>' $$tmp; \
-		sed -f ${SUBST} <$$s >$$tmp; \
+		sed -f ${SUBST} <$$m >$$tmp; \
 		echo install -c -m 444 $$tmp $$dst; \
 		install -c -m 444 $$tmp $$dst; \
 		echo rm -f $$tmp; \
