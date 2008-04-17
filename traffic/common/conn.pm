@@ -23,7 +23,7 @@ package Zino::conn;
 use Exporter ();
 @ISA = qw(Exporter);
 @EXPORT = qw(read_desc select_types);
-@EXPORT_OK = qw(fullname ports types);
+@EXPORT_OK = qw(%fullname %ports %types);
 
 # Local utility functions:
 
