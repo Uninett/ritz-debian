@@ -53,7 +53,7 @@ require "zino-config.pl";
 
 use lib qw(%LIBDIR%);
 
-use Zino::conn qw(read_desc %fullname %ports);
+use Zino::conn qw(read_desc select_types %fullname %ports);
 use Data::Dumper;
 use File::Basename;
 use Fcntl qw(:seek);
@@ -342,11 +342,11 @@ sub just_past_midnight {
     return ($d1 ne $d2);
 }
 
-sub do_one_customer {
-    my($dsp, $c) = @_;
+sub do_all_lines {
+    my($dsp, $c, @lines) = @_;
     our($tail_delay);
     my($td) = $tail_delay;
-
+    
     # In "tail" mode, mop up the rest of yesterday's data
     # if we're started just past midnight
     if ($dsp eq &today_spec()) {
@@ -361,8 +361,7 @@ sub do_one_customer {
     our($root, %base);
     our($opt_v, $opt_N);
     our($min_sample, $max_sample);
-    our(%ports);
-
+    
     if (!defined($root->{$c})) {
 	$root->{$c} = {};
     }
@@ -373,13 +372,12 @@ sub do_one_customer {
 
     &restore_vars($c);
 
+    my($ls) = join("+", @lines);
     foreach my $day (0 .. $nd-1) {
 	my($tm) = $base_tm + 3600 * 24 * ($day);
 	my($d) = &tm_to_date($tm + 12*3600);
 	$tm = &date_to_tm($d);
 
-	my(@lines) = @{ $ports{$c} };
-	my($ls) = join("+", @lines);
 	&read_5m_sum($ls, $d, $td);
 
 	if ($max_sample == 0) {
@@ -402,6 +400,13 @@ sub do_one_customer {
     }
 }
 
+sub do_one_customer {
+    my($dsp, $c) = @_;
+    our(%ports);
+
+    &do_all_lines($dsp, $c, @{ $ports{$c} });
+}
+
 sub do_all_customers {
     my($dsp) = @_;
     our(%fullname);
@@ -411,18 +416,33 @@ sub do_all_customers {
     }
 }
 
+sub do_category {
+    my($dsp, $c_name, $expr) = @_;
+    our(%fullname, %ports);
+    my(@c_list, @p_list);
+
+    @p_list = ();
+    @c_list = &select_types($expr, keys %fullname);
+    foreach my $cust (@c_list) {
+	push(@p_list, @{ $ports{$cust} });
+    }
+    &do_all_lines($dsp, $c_name, @p_list);
+}
+
 sub usage {
 
     printf(STDERR "usage: customer-ts -c config [-d datespec] [-n name]\n");
     printf(STDERR "       [-R rrd-dir] [-v] [-V]\n");
     printf(STDERR "Options:\n");
-    printf(STDERR "-c config      config file for customers / connections\n");
-    printf(STDERR "-d datespec    datespec for period to be analyzed\n");
-    printf(STDERR "-n name        logical name of customer to be analyzed\n");
-    printf(STDERR "-N             don't update anything -- dry-run\n");
-    printf(STDERR "-R rrddir      update RRD databases in this directory\n");
-    printf(STDERR "-v             output debugging output\n");
-    printf(STDERR "-V             output extra-verbose debugging output\n");
+    printf(STDERR "-c config     config file for customers / connections\n");
+    printf(STDERR "-d datespec   datespec for period to be analyzed\n");
+    printf(STDERR "-n name       logical name of customer to be analyzed\n");
+    printf(STDERR "-N            don't update anything -- dry-run\n");
+    printf(STDERR "-R rrddir     update RRD databases in this directory\n");
+    printf(STDERR "-v            output debugging output\n");
+    printf(STDERR "-V            output extra-verbose debugging output\n");
+    printf(STDERR "-e expr       a type-expression to be used with -C\n");
+    printf(STDERR "-C category   name the category implied by the -e option\n");
     exit(1);
 }
 
@@ -430,9 +450,16 @@ sub usage {
 # Main
 #
 
-&Getopts("c:d:hNn:R:vV");
+&Getopts("C:c:d:e:hNn:R:vV");
 
 if ($opt_h) { &usage(); }
+
+if (defined($opt_C) && !defined($opt_e)) {
+    die "-C needs -e option as well";
+}
+if (defined($opt_e) && !defined($opt_C)) {
+    die "-e needs -C option as well";
+}
 
 &read_desc($opt_c);
 
@@ -458,6 +485,12 @@ if (defined($opt_d) && defined($opt_n)) {
     my(@n) = split(/,/, $opt_n);
     foreach my $cust (@n) {
 	&do_one_customer(&today_spec(), $cust);
+    }
+} elsif (defined($opt_C) && defined($opt_e)) {
+    if (defined($opt_d)) {
+	&do_category($opt_d, $opt_C, $opt_e);
+    } else {
+	&do_category(&today_spec(), $opt_C, $opt_e);
     }
 } else {
     if (defined($opt_d)) {
