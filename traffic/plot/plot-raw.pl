@@ -529,7 +529,7 @@ sub make_plot_file  {
 	    }
 	    open(DAYLOG, "$catter $f |") ||
 		die "Could not open \"$catter $f\": $!\n";
-	    &read_log(DAYLOG);
+	    &read_log(DAYLOG, $base_tm);
 	    close(DAYLOG);	
 
 	    if (!defined($start_tm)) { # Record when we have first data

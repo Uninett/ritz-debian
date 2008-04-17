@@ -80,7 +80,7 @@ sub read_data {
     }
     open(DAYLOG, "$cat $f |") ||
 	die "Could not open \"$cat $f\": $!\n";
-    &read_log(DAYLOG);
+    &read_log(DAYLOG, $tm);
     close(DAYLOG);
 }
 
