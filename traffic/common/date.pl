@@ -53,7 +53,7 @@ sub get_date {
     my($today_str);
     
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
-	localtime(time);
+	localtime($^T);
     
     if ($date_str =~ /^(\d\d)$/) {
 	return sprintf("%04d%02d%02d", $year+1900, $mon+1, $1);
@@ -72,7 +72,7 @@ sub get_date {
 sub today {
     my($yyyy, $mm, $dd);
 
-    ($dd, $mm, $yyyy) = (localtime(time))[3,4,5];
+    ($dd, $mm, $yyyy) = (localtime($^T))[3,4,5];
     $mm += 1;
     $yyyy += 1900;
     sprintf("%04d%02d%02d", $yyyy, $mm, $dd);
@@ -84,7 +84,7 @@ sub yesterday {
     my($yyyy, $mm, $dd);
     my($time);
 
-    $time = time - 60*60*24;
+    $time = $^T - 60*60*24;
     ($dd, $mm, $yyyy) = (localtime($time))[3,4,5];
     $mm += 1;
     $yyyy += 1900;
@@ -312,7 +312,7 @@ sub decode_datespec {
     if ($datespec eq "epoch") {
 	$base_tm = &date_to_tm(%DATASTART%);
 	# Truncation takes care of that this only includes yesterday 
-	$no_days = int((time - $base_tm) / (60*60*24));
+	$no_days = int(($^T - $base_tm) / (60*60*24));
 	return ($base_tm, $no_days);
     }
 
@@ -365,7 +365,7 @@ sub pretty_datespec {
     $year = 1900 + $year if  ($year < 1900);
     if ($day) {
 	if (&is_today($datespec)) {
-	    ($s, $min, $hour, $d, $d, $d, $d, $d, $d, $d) = localtime(time);
+	    ($s, $min, $hour, $d, $d, $d, $d, $d, $d, $d) = localtime($^T);
 	    return sprintf("%s-%s-%s %02d:%02d",
 			   $year, $month, $day,
 			   $hour, $min);
@@ -377,7 +377,7 @@ sub pretty_datespec {
 	# that $week is really meant to be $day
 	$day = $week;
 	if (&is_today($datespec)) {
-	    ($s, $min, $hour, $d, $d, $d, $d, $d, $d, $d) = localtime(time);
+	    ($s, $min, $hour, $d, $d, $d, $d, $d, $d, $d) = localtime($^T);
 	    return sprintf("%s-%s-%s %02d:%02d",
 			   $year, $month, $day,
 			   $hour, $min);
@@ -432,10 +432,10 @@ sub make_datespec {
 
     if ($type eq "month") {
 	($month, $year) = reverse(split('-', $val));
-	$year = 1900 + (localtime(time))[5] unless $year;
+	$year = 1900 + (localtime($^T))[5] unless $year;
 	# This will break at the turn of the century
 	$year += 1900 if ($year < 1900);
-	$month = (localtime(time))[4] unless $month;
+	$month = (localtime($^T))[4] unless $month;
 	if ($month == 0) {
 	    $month = 12;
 	    $year -= 1;
@@ -444,13 +444,13 @@ sub make_datespec {
 
     } elsif ($type eq "year") {
 	$year = $val + 0;	# make numeric (?)
-	$year = 1900 - 1 + (localtime(time))[5] unless $year;
+	$year = 1900 - 1 + (localtime($^T))[5] unless $year;
 	$year += 1900 if ($year < 1900);
 	return (sprintf("%04d", $year));
 
     } elsif ($type eq "week") {
 	($week, $year) = reverse (split ('-', $val));
-	$year = 1900 + (localtime(time))[5] unless $year;
+	$year = 1900 + (localtime($^T))[5] unless $year;
 	# This will break at the turn of the century
 	$year += 1900 if ($year < 1900);
 	($week, $year) = &date_to_previous_week(&today())
@@ -462,10 +462,10 @@ sub make_datespec {
 	if (!defined($year)) {
 	    ($day, $month, $year) = reverse(split('-', $val));
 	}
-	$year = 1900 + (localtime(time))[5] unless $year;
+	$year = 1900 + (localtime($^T))[5] unless $year;
 	# This will break at the turn of the century
 	$year += 1900 if ($year < 1900);
-	$month = (localtime(time))[4]+1 unless $month;
+	$month = (localtime($^T))[4]+1 unless $month;
 	if ($day) {
 	    return (sprintf("%04d-%02d--%02d", $year, $month, $day));
 	} else {
@@ -637,14 +637,14 @@ sub expand_datespec {
     ($year, $month, $day) = unpack("a4a2a2", &tm_to_date($base_tm));
 
     if ($dsp_t eq "year") {
-	($m, $y) = &tm_to_month_and_year(time);
+	($m, $y) = &tm_to_month_and_year($^T);
 	foreach $i ($year .. $y) {
 	    push(@arr, sprintf("%04d", $i));
 	}
     } elsif ($dsp_t eq "month") {
 	$tm = $base_tm;
 	while ($tm < $base_tm + $ndays*$seconds_per_day &&
-	       $tm < time)
+	       $tm < $^T)
 	{
 	    push(@arr, sprintf("%04d-%02d", $year, $month));
 	    if (++$month > 12) {
@@ -658,7 +658,7 @@ sub expand_datespec {
 	($week, $year) = &tm_to_week_and_year($base_tm);
 	$tm = $base_tm;
 	while ($tm < $base_tm + $ndays*$seconds_per_day &&
-	       $tm < (time - $seconds_per_day))	# avoid mondays, no data yet
+	       $tm < ($^T - $seconds_per_day))	# avoid mondays, no data yet
 	{
 	    push(@arr, sprintf("%04d--%02d", $year, $week));
 	    if (++$week > 52) {
@@ -671,7 +671,7 @@ sub expand_datespec {
     } elsif ($dsp_t eq "day") {
 	$tm = $base_tm;
 	while ($tm < $base_tm + $ndays*$seconds_per_day &&
-	       $tm < time)	# stop on today
+	       $tm < $^T)	# stop on today
 	{
 	    push(@arr, sprintf("%04d-%02d-%02d",
 			       unpack("a4a2a2",
@@ -714,7 +714,7 @@ sub is_today {
     my($nd, $origin);
 
     ($origin, $nd) = &decode_datespec($dsp);
-    return (&same_day($origin,time) && $nd == 1);
+    return (&same_day($origin,$^T) && $nd == 1);
 }
 
 sub looking_at_today {
@@ -725,7 +725,7 @@ sub looking_at_today {
 
     if ($dsp_t eq "day" && &is_today($dsp)) { return 1; }
     if ($dsp_t eq "week" &&
-	&tm_in_datespec(time, $dsp) &&
+	&tm_in_datespec($^T, $dsp) &&
 	($res eq "raw" || $res eq "hr")) { return 1; }
 
     return undef;
@@ -803,11 +803,11 @@ sub secs_to_expiry {
     if (!defined($dsp_t = $res_to_dsp_t{$res})) {
 	return undef;
     }
-    $now_dsp = &tm_to_datespec(time, $dsp_t);
+    $now_dsp = &tm_to_datespec($^T, $dsp_t);
     $nx_dsp = &next_datespec($now_dsp);
     ($tm, $nd) = &decode_datespec($nx_dsp);
         
-    return ($tm - 2*60*60 - time);
+    return ($tm - 2*60*60 - $^T);
 }
 
 1;
