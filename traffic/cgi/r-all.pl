@@ -98,12 +98,12 @@ my %sample_len = (
 );
 
 my %title = (
-    "day"   => "Last 24 hours",
-    "daymax"=> "Last 24 hours",
-    "week"  => "Last week",
-    "weekmax"=> "Last week",
-    "month" => "Last 31 days",
-    "monthmax"=> "Last 31 days",
+    "day"   => "Last 24 hours average traffic",
+    "daymax"=> "Last 24 hours peak traffic",
+    "week"  => "Last week average traffic",
+    "weekmax"=> "Last week peak traffic",
+    "month" => "Last 31 days average traffic",
+    "monthmax"=> "Last 31 days peak traffic",
     "3month"=> "Last 3 months",
     "year"  => "Last year",
     "2year" => "Last 2 years",
@@ -194,32 +194,117 @@ sub make_plot {
     }
     push(@l, (sprintf("DEF:in=%s:In:AVERAGE", $rrd),
 	      sprintf("DEF:out=%s:Out:AVERAGE", $rrd),
-	      "VDEF:avg_in=in,AVERAGE",
-	      "VDEF:avg_out=out,AVERAGE",
-	      "VDEF:max_in=in,MAXIMUM",
-	      "VDEF:max_out=out,MAXIMUM",
-	      "VDEF:cur_in=in,LAST",
-	      "VDEF:cur_out=out,LAST",
 	      sprintf("DEF:inmax=%s:In:MAX", $rrd),
-	      sprintf("DEF:outmax=%s:Out:MAX", $rrd),
-	 ));
-    
-    push(@l, ("COMMENT:In \\:\\tAvg\\:",
-	      "GPRINT:avg_in:%6.2lf%s",
-	      "COMMENT:Max\\:",
-	      "GPRINT:max_in:%6.2lf%s",
-	      "COMMENT:Last\\:",
-	      "GPRINT:cur_in:%6.2lf%s",
-	      "COMMENT:\\n",
-	 ));
-    push(@l, ("COMMENT:Out\\:\\tAvg\\:",
-	      "GPRINT:avg_out:%6.2lf%s",
-	      "COMMENT:Max\\:",
-	      "GPRINT:max_out:%6.2lf%s",
-	      "COMMENT:Last\\:",
-	      "GPRINT:cur_out:%6.2lf%s",
-	      "COMMENT:\\n",
-	 ));
+	      sprintf("DEF:outmax=%s:Out:MAX", $rrd)));
+
+    if ($pt eq "max") {
+	push(@l, (
+		 "VDEF:avg_in=inmax,AVERAGE",
+		 "VDEF:avg_out=outmax,AVERAGE",
+		 "VDEF:max_in=inmax,MAXIMUM",
+		 "VDEF:max_out=outmax,MAXIMUM",
+		 "VDEF:cur_in=inmax,LAST",
+		 "VDEF:cur_out=outmax,LAST",
+	     ));
+	push(@l, ("AREA:inmax#ff6699:Max In "));
+	push(@l, ("COMMENT:\\tAvg\\:",
+		  "GPRINT:avg_in:%6.2lf%s",
+		  "COMMENT:Max\\:",
+		  "GPRINT:max_in:%6.2lf%s",
+		  "COMMENT:Last\\:",
+		  "GPRINT:cur_in:%6.2lf%s",
+		  "COMMENT:\\n",
+	     ));
+	push(@l, ("LINE1:outmax#800000:Max Out"));
+	push(@l, ("COMMENT:\\tAvg\\:",
+		  "GPRINT:avg_out:%6.2lf%s",
+		  "COMMENT:Max\\:",
+		  "GPRINT:max_out:%6.2lf%s",
+		  "COMMENT:Last\\:",
+		  "GPRINT:cur_out:%6.2lf%s",
+		  "COMMENT:\\n",
+	     ));
+    } elsif ($pt eq "avg") {
+	push(@l, (
+		 "VDEF:avg_in=in,AVERAGE",
+		 "VDEF:avg_out=out,AVERAGE",
+		 "VDEF:max_in=in,MAXIMUM",
+		 "VDEF:max_out=out,MAXIMUM",
+		 "VDEF:cur_in=in,LAST",
+		 "VDEF:cur_out=out,LAST",
+	     ));
+	push(@l, ("AREA:in#33cccc:Avg In "));
+	push(@l, ("COMMENT:\\tAvg\\:",
+		  "GPRINT:avg_in:%6.2lf%s",
+		  "COMMENT:Max\\:",
+		  "GPRINT:max_in:%6.2lf%s",
+		  "COMMENT:Last\\:",
+		  "GPRINT:cur_in:%6.2lf%s",
+		  "COMMENT:\\n",
+	     ));
+	push(@l, ("LINE2:out#006699:Avg Out"));
+	push(@l, ("COMMENT:\\tAvg\\:",
+		  "GPRINT:avg_out:%6.2lf%s",
+		  "COMMENT:Max\\:",
+		  "GPRINT:max_out:%6.2lf%s",
+		  "COMMENT:Last\\:",
+		  "GPRINT:cur_out:%6.2lf%s",
+		  "COMMENT:\\n",
+	     ));
+    } else {
+	push(@l, (
+		 "VDEF:max_avg_in=inmax,AVERAGE",
+		 "VDEF:max_avg_out=outmax,AVERAGE",
+		 "VDEF:max_max_in=inmax,MAXIMUM",
+		 "VDEF:max_max_out=outmax,MAXIMUM",
+		 "VDEF:cur_in=inmax,LAST",
+		 "VDEF:cur_out=outmax,LAST",
+	     ));
+	push(@l, (
+		 "VDEF:avg_avg_in=in,AVERAGE",
+		 "VDEF:avg_avg_out=out,AVERAGE",
+		 "VDEF:avg_max_in=in,MAXIMUM",
+		 "VDEF:avg_max_out=out,MAXIMUM",
+		 "VDEF:avg_cur_in=in,LAST",
+		 "VDEF:avg_cur_out=out,LAST",
+	     ));
+	push(@l, ("AREA:in#33cccc:Avg In "));
+	push(@l, ("COMMENT:\\tAvg\\:",
+		  "GPRINT:avg_avg_in:%6.2lf%s",
+		  "COMMENT:Max\\:",
+		  "GPRINT:avg_max_in:%6.2lf%s",
+		  "COMMENT:Last\\:",
+		  "GPRINT:avg_cur_in:%6.2lf%s",
+		  "COMMENT:\\n",
+	     ));
+	push(@l, ("LINE2:out#006699:Avg Out"));
+	push(@l, ("COMMENT:\\tAvg\\:",
+		  "GPRINT:avg_avg_out:%6.2lf%s",
+		  "COMMENT:Max\\:",
+		  "GPRINT:avg_max_out:%6.2lf%s",
+		  "COMMENT:Last\\:",
+		  "GPRINT:avg_cur_out:%6.2lf%s",
+		  "COMMENT:\\n",
+	     ));
+	push(@l, ("LINE1:inmax#ff6699:Max In "));
+	push(@l, ("COMMENT:\\tAvg\\:",
+		  "GPRINT:max_avg_in:%6.2lf%s",
+		  "COMMENT:Max\\:",
+		  "GPRINT:max_max_in:%6.2lf%s",
+		  "COMMENT:Last\\:",
+		  "GPRINT:cur_in:%6.2lf%s",
+		  "COMMENT:\\n",
+	     ));
+	push(@l, ("LINE1:outmax#800000:Max Out"));
+	push(@l, ("COMMENT:\\tAvg\\:",
+		  "GPRINT:max_avg_out:%6.2lf%s",
+		  "COMMENT:Max\\:",
+		  "GPRINT:max_max_out:%6.2lf%s",
+		  "COMMENT:Last\\:",
+		  "GPRINT:cur_out:%6.2lf%s",
+		  "COMMENT:\\n",
+	     ));
+    }
     if ($pt eq "combined") {
 	push(@l,
 	     (sprintf("COMMENT:Each averaged data point is averaged over %s",
@@ -227,7 +312,8 @@ sub make_plot {
     }
     if ($pt eq "combined" || $pt eq "max") {
 	push(@l,
-	     (sprintf("COMMENT:Each max data point is 5min max in interval")));
+	     (sprintf("COMMENT:Each max data point is 5min max in %s interval",
+		      $sample_len{$type})));
     } else {
 	push(@l,
 	     (sprintf("COMMENT:Each data point is averaged over %s",
@@ -238,27 +324,6 @@ sub make_plot {
     push(@l, ("GPRINT:cur_in:Updated %H\\:%M %a %d %b %Y\\r:strftime",
 	 ));
 
-    if ($pt eq "combined") {
-	push(@l, ("AREA:in#33cccc:Avg In ",
-		  "LINE2:out#006699:Avg Out ",
-	     ));
-    }
-    if ($pt eq "avg") {
-	push(@l, ("AREA:in#33cccc:In ",
-		  "LINE2:out#006699:Out ",
-	     ));
-    }
-    if ($pt eq "combined") {
-	push(@l, ("LINE1:inmax#ff6699:Max in ",
-		  "LINE1:outmax#800000:Max out ",
-	     ));
-    }
-    if ($pt eq "max") {
-	push(@l, ("AREA:inmax#ff6699:Max in ",
-		  "LINE1:outmax#800000:Max out ",
-	     ));
-    }
-    
     ($avg, $x, $y) = RRDs::graph(@l);
 
     my $err = RRDs::error;
