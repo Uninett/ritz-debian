@@ -41,15 +41,17 @@ CGI->compile();
 use IPC::Shareable ();
 use RRDs;
 use File::Basename;
+use Apache2::RequestIO ();
 
 use Zino::conn qw(read_desc %fullname);
 
 use strict;
 use warnings;
+no warnings qw(redefine);
 
 $^T = time;			# -M etc. relative to this invocation
 
-my %img_size;
+our %img_size;
 tie %img_size, 'IPC::Shareable', "Zpng", { mode => 0666,
 					   create => 1,
 };
@@ -73,7 +75,7 @@ if (&modtime($descfile) > $lastread_desc) {
 }
 
 
-my %xgrid = (
+our %xgrid = (
     "day"   => "HOUR:1:HOUR:3:HOUR:3:0:%H:%M",
     "daymax"=> "HOUR:1:HOUR:3:HOUR:3:0:%H:%M",
     "week"  => "HOUR:12:DAY:1:DAY:1:86400:%a %d",
@@ -85,7 +87,7 @@ my %xgrid = (
     "2year" => "MONTH:1:MONTH:3:MONTH:3:2592000:%h",
 );
 
-my %sample_len = (
+our %sample_len = (
     "day"  => "5 minutes",
     "daymax"=> "5 minutes",
     "week" => "30 minutes",
@@ -97,7 +99,7 @@ my %sample_len = (
     "2year"=> "24 hours",
 );
 
-my %title = (
+our %title = (
     "day"   => "Last 24 hours average traffic",
     "daymax"=> "Last 24 hours peak traffic",
     "week"  => "Last week average traffic",
@@ -110,7 +112,7 @@ my %title = (
     
     );
 
-my %refresh = (
+our %refresh = (
     "day"  => 5 * 60,
     "daymax"=> 5 * 60,
     "week" => 30 * 60,
@@ -122,7 +124,7 @@ my %refresh = (
     "2year"=> 24 * 60 * 60,
 );
 
-my %delta_t = (
+our %delta_t = (
     "day"  => "-1day",
     "daymax"=> "-1day",
     "week" => "-7days",
@@ -134,7 +136,7 @@ my %delta_t = (
     "2year"=> "-2year",
 );
 
-my %plot_type = (
+our %plot_type = (
     "day"      => "avg",
     "week"     => "avg",
     "month"    => "avg",
@@ -146,16 +148,17 @@ my %plot_type = (
     "2year"    => "combined",
     );
 
-my @order = ("day", "daymax", "week", "weekmax",
+our @order = ("day", "daymax", "week", "weekmax",
 	     "month", "monthmax", "3month", "year", "2year");
 
-my($isp) = "%ISPNAME%";
-my($rrddir) = "%RRDDIR%";
-my($pngdir) = "%IMGDIR%";
+our($isp) = "%ISPNAME%";
+our($rrddir) = "%RRDDIR%";
+our($pngdir) = "%IMGDIR%";
 
 
 sub small_png_file {
     my($name, $type) = @_;
+    our($pngdir);
 
     my $png = $pngdir . "/" . $name . "-" . $type . "-small.png";
     return $png;
@@ -163,6 +166,7 @@ sub small_png_file {
 
 sub big_png_file {
     my($name, $type) = @_;
+    our($pngdir);
 
     my $png = $pngdir . "/" . $name . "-" . $type . ".png";
     return $png;
@@ -172,6 +176,7 @@ sub make_plot {
     my($name, $type, $rrd, $png, $w, $h, @fonts) = @_;
     my($avg, $x, $y);
     my($pt);
+    our($isp, %delta_t, %plot_type, %sample_len, %xgrid);
 
     $pt = $plot_type{$type};
 
@@ -336,6 +341,7 @@ sub make_plot {
 
 sub make_small_plot {
     my($name, $type) = @_;
+    our($rrddir);
 
     my $rrd = $rrddir . "/" . $name . ".rrd";
     my $png = &small_png_file($name, $type);
@@ -349,6 +355,7 @@ sub make_small_plot {
 
 sub make_big_plot {
     my($name, $type) = @_;
+    our($rrddir);
 
     my $rrd = $rrddir . "/" . $name . ".rrd";
     my $png = &big_png_file($name, $type);
@@ -371,7 +378,7 @@ sub ensure_img_exists {
     my($name, $type, $size) = @_;
     my($png);
     my($x, $y);
-    our($q);
+    our($q, %img_size, %refresh);
     my($img_size_unknown, $old_png_file);
 
     $img_size_unknown = $old_png_file = 0;
@@ -427,6 +434,7 @@ sub ensure_img_exists {
 
 sub start_doc {
     my($q, $type, $title) = @_;
+    our(%refresh);
     
     my $text = $q->header(-type => "text/html; charset=iso-8859-1",
 			  -expires => sprintf("+%ds", $refresh{$type}),
@@ -434,10 +442,8 @@ sub start_doc {
 	);
 
     my $style = <<EOF
-  <style type="text/css">
     body, h1, h2, h3, p, span, div { 
 	font-family: verdana, helvetica, arial, sans-serif;
-	font-size: small;
     }
     body { 
 	background-color: #ffffff;
@@ -461,8 +467,6 @@ sub start_doc {
         border: 0px;
         height: 1px;
     }
-  </style>
-  <title>
 EOF
 ;
     $text .= $q->start_html(-title => $title,
@@ -476,7 +480,7 @@ sub show_all {
     my($name, $url) = @_;
     my($png, $x, $y);
     my($n) = 0;
-    our(%fullname);
+    our(%fullname, $isp, %title, @order);
     my($fn);
 
     my $text = <<EOF
@@ -522,6 +526,7 @@ EOF
 	       $url, $name, $type);
 	$text .= sprintf("<img src=\"%s?q=img&amp;img=%s&amp;type=%s\" ",
 	       $url, $bpng, $type);
+#	$text .= sprintf("<img src=\"/imgs/%s\" ", $bpng);
 	$text .= sprintf("alt=\"small %s %s graph\" ", $name, $type);
 	$text .= sprintf("width=\"%d\" height=\"%d\" /></a></td>\n", $x, $y);
 	$text .= "        </tr>\n";
@@ -542,6 +547,7 @@ EOF
 sub show_one {
     my($name, $type, $url) = @_;
     my($png, $x, $y);
+    our($isp, %title);
 
     my $text = <<EOF
    <table cellpadding="3" border="0">
@@ -574,6 +580,7 @@ EOF
     $text .= "    <tr>\n      <td>";
     $text .= sprintf("<img src=\"%s?q=img&amp;img=%s&amp;type=%s\" ",
 		     $url, $bpng, $type);
+#    $text .= sprintf("<img src=\"/imgs/%s\" ", $bpng);
     $text .= sprintf("alt=\"big %s %s graph\" ", $name, $type);
     $text .= sprintf("width=\"%d\" height=\"%d\" /></td>\n", $x, $y);
     $text .= <<EOF
@@ -596,24 +603,18 @@ sub err {
 }
 
 sub send_img {
-    my($q, $bpng, $type) = @_;
+    my($r, $q, $bpng, $type) = @_;
+    our($pngdir, %refresh);
 
     $bpng = basename($bpng);
     my $png = $pngdir . "/" . $bpng;
-
-    open(IN, $png) ||
-	&err(sprintf("Could not open image file %s: $!", $bpng));
 
     print $q->header(-type => "image/png",
 		     -expires => sprintf("+%ds", $refresh{$type}),
 		     -refresh => $refresh{$type},
 	);
 
-    my $bytes = "";
-    while(my $n = sysread(IN, $bytes, 1024)) {
-	syswrite(STDOUT, $bytes, $n);
-    }
-    close(IN);
+    $r->sendfile($png);
 }
 
 
@@ -621,7 +622,8 @@ sub send_img {
 # Main
 #
 
-local our $q = new CGI;
+our $r = shift;
+our $q = new CGI;
 my $qt = $q->param("q");
 my $me = $q->url(-relative => 1);
 my($text, $name, $type, $img);
@@ -637,7 +639,7 @@ if ($qt eq "img") {
     if (!defined($refresh{$type})) {
 	&err(sprintf("Unrecognized type: %s", $type));
     }
-    &send_img($q, $img, $type);
+    &send_img($r, $q, $img, $type);
 } elsif ($qt eq "all") {
     $name = $q->param("name");
     if (!defined($name)) {
