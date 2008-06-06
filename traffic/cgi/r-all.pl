@@ -524,9 +524,9 @@ EOF
 	$text .= sprintf("          " .
 			 "<td><a href=\"%s?q=one&amp;name=%s&amp;type=%s\">",
 	       $url, $name, $type);
-	$text .= sprintf("<img src=\"%s?q=img&amp;img=%s&amp;type=%s\" ",
-	       $url, $bpng, $type);
-#	$text .= sprintf("<img src=\"/imgs/%s\" ", $bpng);
+#	$text .= sprintf("<img src=\"%s?q=img&amp;img=%s&amp;type=%s\" ",
+#	       $url, $bpng, $type);
+	$text .= sprintf("<img src=\"/imgs/%s\" ", $bpng);
 	$text .= sprintf("alt=\"small %s %s graph\" ", $name, $type);
 	$text .= sprintf("width=\"%d\" height=\"%d\" /></a></td>\n", $x, $y);
 	$text .= "        </tr>\n";
@@ -578,9 +578,9 @@ EOF
     ($png, $x, $y) = &ensure_img_exists($name, $type, "big");
     my($bpng) = basename($png);
     $text .= "    <tr>\n      <td>";
-    $text .= sprintf("<img src=\"%s?q=img&amp;img=%s&amp;type=%s\" ",
-		     $url, $bpng, $type);
-#    $text .= sprintf("<img src=\"/imgs/%s\" ", $bpng);
+#    $text .= sprintf("<img src=\"%s?q=img&amp;img=%s&amp;type=%s\" ",
+#		     $url, $bpng, $type);
+    $text .= sprintf("<img src=\"/imgs/%s\" ", $bpng);
     $text .= sprintf("alt=\"big %s %s graph\" ", $name, $type);
     $text .= sprintf("width=\"%d\" height=\"%d\" /></td>\n", $x, $y);
     $text .= <<EOF
