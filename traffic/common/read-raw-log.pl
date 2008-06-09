@@ -75,7 +75,7 @@ sub read_log {
     our($date, $date_set, $ifspeed, $iftype, $ifdescr, $max_sample);
     my($pos, $seekable);
     my($upto_s, $upto_day);
-    my($first_tm, $first_day, $lasttime_comp, $day_comp);
+    my($first_tm, $first_day, $lasttime_comp, $day_comp, $date_now);
 
     $date_set = 0;
 
@@ -132,6 +132,8 @@ sub read_log {
 
 	$day = join(" ", @f[0..2]);
 
+	$date_now = sprintf("%s %02d %s %4d", $f[0], $f[2], $f[1], $f[4]);
+
 	if (!defined($first_tm)) {
 	    $first_tm = timelocal(strptime(sprintf("%s %s %s %02d:%02d:%02d",
 						   $f[1], $f[2], $f[4],
@@ -174,8 +176,8 @@ sub read_log {
 	$now += $day_comp;
 
 	if (!defined($lasttime_comp) &&
-	    $first_tm < $zero_tm &&
-	    $day ne $first_day)
+	    (($date_now ne $date) ||
+	     ($first_tm < $zero_tm))) # an indication we wrapped to next day
 	{
 	    $lasttime_comp = 1;
 	    foreach my $k (keys %lasttime) {
