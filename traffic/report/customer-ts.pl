@@ -83,7 +83,10 @@ sub save_file {
 sub save_vars {
     my($c) = @_;
     my($p);
+    our($root);
     our(%save_hashes, @save_vars);
+
+    $p = $root->{$c};
 
     foreach my $h (keys %save_hashes) {
 	my($hp) = $save_hashes{$h};
@@ -185,6 +188,8 @@ sub compute_basic_values {
 	}
 	$delta_t = $sample_secs{$i} - $sample_secs{$i-1};
 
+	if ($delta_t == 0) { next; }
+
 	foreach my $k (keys %$d) {
 	    my($ap) = $d->{$k}->{"values"};
 	    my(@vars) = @{ $d->{$k}->{"vars"} };
@@ -200,9 +205,90 @@ sub compute_basic_values {
     }
 }
 
+sub save_values {
+    my($d, $hp, $ns) = @_;
+
+    foreach my $k (keys %{ $d }) {
+	$hp->{$k} = {};
+	$hp->{$k}->{"values"} = ();
+	foreach my $n (0 .. $ns-1) {
+	    unshift(@{ $hp->{$k}->{"values"} },
+		    pop(@{ $d->{$k}->{"values"} }));
+	}
+    }
+}
+
+sub merge_values {
+    my($d, $sp) = @_;
+    my(@saved_times);
+    my($i) = 0;
+    my($tr, $shift);
+    our($opt_V);
+
+    @saved_times = @{ $sp->{"sample_times"}->{"values"} };
+    $tr = $d->{"sample_times"}->{"values"};
+    $shift = 0;
+
+    for (my $n = $#saved_times; $n >= 0; $n--) {
+	$ts = $saved_times[$n];
+	if ($ts < ${ $tr }[$0]) {
+	    $shift++;
+	    $i++;
+	    if ($opt_V) {
+		printf(STDERR "Shifting in sample at %d\n", $ts);
+	    }
+	    foreach my $k (keys %{ $sp }) {
+		unshift(@{ $d->{$k}->{"values"}},
+			${ $sp->{$k}->{"values"}}[$n]);
+		if ($opt_V) {
+		    printf(STDERR "%s: %s ", $k,
+			   ${ $sp->{$k}->{"values"}}[$n]);
+		}
+	    }
+	    if ($opt_V) {
+		printf(STDERR "\n");
+	    }
+	}
+    }
+    foreach my $n (1 .. $shift) {
+	foreach my $k (keys %{ $sp }) {
+	    shift(@{ $sp->{$k}->{"values"} });
+	}
+    }
+
+    @saved_times = @{ $sp->{"sample_times"}->{"values"} };
+
+    foreach my $ts (@saved_times) {
+	while($ts != ${ $tr }[$i] && defined(${ $tr }[$i])) {
+	    $i++;
+	}
+	if ($ts == ${ $tr }[$i]) {
+	    if ($opt_V) {
+		printf(STDERR "Merging sample at    %d\n", $ts);
+	    }
+	    foreach my $k (keys %{ $sp }) {
+		if ($k eq "sample_times") {
+		    shift(@{ $sp->{$k}->{"values"}});
+		    next;
+		}
+		my($add);
+		$add = shift(@{ $sp->{$k}->{"values"}});
+		${ $d->{$k}->{"values"} }[$i] += $add;
+		if ($opt_V) {
+		    printf(STDERR "%s: %s ", $k, $add);
+		}
+	    }
+	    if ($opt_V) {
+		printf(STDERR "\n");
+	    }
+	}
+	$i++;
+    }
+}
+
 sub process_data {
-    my($c, $start, $end, $tm0) = @_;
-    our($root);
+    my($c, $start, $end, $tm0, $save_count) = @_;
+    our($root, $opt_R);
     my($p) = $root->{$c};
     my($iov, $oov);
     my(@in_kbps, @out_kbps, @in_pps, @out_pps, @times);
@@ -243,8 +329,16 @@ sub process_data {
     };
     
     &compute_basic_values($desc, $start, $end);
-
     $desc->{"sample_times"}->{"values"} = \@times;
+
+    if (defined($p->{"saved_values"})) {
+	&merge_values($desc, $p->{"saved_values"});
+    }
+
+    if (defined($save_count)) {
+	$p->{"saved_values"} = {};
+	&save_values($desc, $p->{"saved_values"}, $save_count);
+    }
 
     # This used only in-kbps, out-kbps and sample times
     # so do this now before we destroy the values in $desc
@@ -260,7 +354,7 @@ sub create_rrd {
     our($opt_V);
 
     # 4 years in the past as starting point
-    my($s) = time - (4 * 365) * 24 * 3600;
+    my($s) = $^T - (4 * 365) * 24 * 3600;
 
     $cmd = "rrdtool create %s.rrd ";
     $cmd .= "--start %d ";
@@ -337,7 +431,8 @@ sub just_past_midnight {
     my($td) = @_;
 
     my($d1) = &tm_to_date($^T);
-    my($d2) = &tm_to_date($^T - $td);
+    # some extra slop, to pick up data at day roll-over
+    my($d2) = &tm_to_date($^T - $td - 360);
 
     return ($d1 ne $d2);
 }
@@ -345,6 +440,10 @@ sub just_past_midnight {
 sub do_all_lines {
     my($dsp, $c, @lines) = @_;
     our($tail_delay);
+    our($root, %base);
+    our($opt_v, $opt_N);
+    our($min_sample, $max_sample);
+    
     my($td) = $tail_delay;
     
     # In "tail" mode, mop up the rest of yesterday's data
@@ -352,16 +451,12 @@ sub do_all_lines {
     if ($dsp eq &today_spec()) {
 	if (&just_past_midnight($td)) {
 	    $dsp = &yesterday_spec();
-	    undef $td;		# read until EOF now
 	}
+    } else {
+	undef $td;
     }
 
     my($base_tm, $nd) = &decode_datespec($dsp);
-    my($i);
-    our($root, %base);
-    our($opt_v, $opt_N);
-    our($min_sample, $max_sample);
-    
     if (!defined($root->{$c})) {
 	$root->{$c} = {};
     }
@@ -381,6 +476,10 @@ sub do_all_lines {
 	&read_5m_sum($ls, $d, $td);
 
 	if ($max_sample == 0) {
+	    if ($opt_v) {
+		printf(STDERR "max_sample == 0, no data for %s / %s?\n",
+		       $d, $c);
+	    }
 	    next;
 	}
 	if ($opt_v) {
@@ -392,7 +491,9 @@ sub do_all_lines {
 	    $root->{$c}->{"base"}->{$v} = $base{$v};
 	}
 	
-	&process_data($c, $min_sample, $max_sample, $tm);
+	# Stitch together samples at the end of collected data.
+	# When processing many files, the edges become "ragged"...
+	&process_data($c, $min_sample, $max_sample, $tm, 2);
     }
 
     if (!defined($opt_N)) {
