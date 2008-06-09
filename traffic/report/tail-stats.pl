@@ -380,7 +380,7 @@ sub mail_report {
     my($from, $to, $report) = @_;
 
     my $subj = "Stat deviations ";
-    $subj .= time2str("%R", time);
+    $subj .= time2str("%R", $^T);
     open(OUT, "| %RAWSENDMAIL% -t");
     printf(OUT "From: %s\n", $from);
     printf(OUT "To: %s\n", $to);
@@ -554,7 +554,7 @@ sub create_rrd {
     our($opt_V);
 
     # 3 years (and then some) in the past as starting point
-    my($s) = time - (4 * 365) * 24 * 3600;
+    my($s) = $^T - (4 * 365) * 24 * 3600;
 
     $cmd = "rrdtool create %s.rrd ";
     $cmd .= "--start %d ";
@@ -569,6 +569,12 @@ sub create_rrd {
     $cmd .= "RRA:AVERAGE:0.5:24:744 ";
     # 1095 days (3 years) of 24-hour intervals
     $cmd .= "RRA:AVERAGE:0.5:288:730 ";
+
+    # And similar for the max values:
+    $cmd .= "RRA:MAX:0.5:1:864 ";
+    $cmd .= "RRA:MAX:0.5:6:1008 ";
+    $cmd .= "RRA:MAX:0.5:24:744 ";
+    $cmd .= "RRA:MAX:0.5:288:730 ";
 
     if ($opt_V) {
 	printf(STDERR "$cmd\n", $n, $s);
@@ -604,13 +610,13 @@ sub update_rrd {
     for ($i = 0; $i <= $eoa; $i++) {
 	printf(RRD "update %s.rrd %d:%f:%f\n",
 	       $name, $tap->[$i],
-	       $iap->[$i] / 1000.0,
-	       $oap->[$i] / 1000.0);
+	       $iap->[$i] * 1000.0,
+	       $oap->[$i] * 1000.0);
 	if ($opt_V) {
 	    printf(STDERR "RRD-update %s %f %f %s.rrd\n",
 		   &time_str($tap->[$i]),
-		   $iap->[$i] / 1000.0,
-		   $oap->[$i] / 1000.0,
+		   $iap->[$i] * 1000.0,
+		   $oap->[$i] * 1000.0,
 		   $name);
 	}
     }
@@ -706,11 +712,11 @@ sub report_tail_stats {
 }
 
 sub tail_process_file {
-    my($rfile, $f) = @_;
+    my($rfile, $f, $d) = @_;
     my($b) = basename($f);
-    my($cat, $base) = &cat_and_base($f, &today());
+    my($cat, $base) = &cat_and_base($f);
+    my($tm) = &date_to_tm($d);
     our($max_sample, $opt_r);
-    my($tm, $nd) = &decode_datespec(&today());
 
     if ($cat ne "cat") { return undef; }
 
@@ -722,7 +728,7 @@ sub tail_process_file {
     &save_position(\*IN, $b);
     close(IN);
 
-    &process_data($b, 0, $max_sample);
+    &process_data($b, 0, $max_sample, $tm);
     &trim_data($b, &timelocal(localtime) - $retention_time);
     &save_vars($b);
     if (defined($opt_r)) {
@@ -736,9 +742,13 @@ sub tail_process_file {
 sub do_one_file {
     my($dsp, $name) = @_;
     my($i);
-    our($max_sample, %sample_time, $fd, %base, $date);
+    our($max_sample, %sample_time, $fd, %base, $date, $opt_I);
 
     my($base_tm, $nd) = &decode_datespec($dsp);
+
+    if (defined($opt_I)) {
+	unlink(sprintf("%s.rrd", $name));
+    }
 
     foreach my $day (0 .. $nd-1) {
 	my($tm) = $base_tm + 3600 * 24 * $day;
@@ -819,8 +829,21 @@ sub do_all_files {
     }
 }
 
+sub just_past_midnight {
+    my($d1) = &tm_to_date($^T);
+    my($d2) = &tm_to_date($^T - 20*60);
+
+    return ($d1 ne $d2);
+}
+
 sub do_all_files_today {
-    my($dir) = &find_data_dir(&today());
+    my($d);
+    if (&just_past_midnight()) {
+	$d = &yesterday();
+    } else {
+	$d = &today();
+    }
+    my($dir) = &find_data_dir($d);
     my(@files) = &directory_files($dir);
     our($stat_report);
     our($opt_m, $opt_M, $opt_r);
@@ -833,7 +856,7 @@ sub do_all_files_today {
     }
 
     foreach $f (@files) {
-	&tail_process_file(\*REP, $dir . "/" . $f);
+	&tail_process_file(\*REP, $dir . "/" . $f, $d);
 #	printf(".");
     }
     if (defined($opt_r)) {
@@ -864,6 +887,7 @@ sub usage {
     printf(STDERR "-R rrddir    update RRD databases in the given directory\n");
     printf(STDERR "-r outfile   produce report about current load\n");
     printf(STDERR "             only applicable when doing current day\n");
+    printf(STDERR "-I           initialize RRD databases (delete old)\n");
     printf(STDERR "-i           ignore unnamed logical ports when");
     printf(STDERR " making report\n");
     printf(STDERR "-m mailto    mail statistical deviations report to addr\n");
@@ -879,7 +903,7 @@ sub usage {
 # Main
 #
 
-&Getopts("d:hil:M:m:Nn:p:R:r:u:vV");
+&Getopts("d:hiIl:M:m:Nn:p:R:r:u:vV");
 
 # -n name	logical name of port to be analyzed
 # -d datestr	date which should be analyzed
