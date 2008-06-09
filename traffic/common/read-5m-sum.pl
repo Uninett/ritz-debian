@@ -76,6 +76,18 @@ require 'read-raw-log.pl';
 	    );
 
 
+sub sprint_hms {
+    my($t) = @_;
+    my($s, $h, $m, $str);
+
+    $h = int($t);
+    $m = int(($t - $h) * 60);
+    $s = int(int(($t - $h) * 3600) - ($m * 60));
+
+    $str = sprintf("%02d:%02d:%02d", $h, $m, $s);
+    return $str;
+}
+
 sub read_5m_sum {
     my($lines, $d, $td) = @_;
     my(@lines) = split(/\+/, $lines);
@@ -84,12 +96,15 @@ sub read_5m_sum {
     my($err) = "";
     my(%mycount, %mybase, %mysample_time, $myspeed, $my_max_sample);
     our($max_sample, $min_sample);
+    my($my_min_sample, $my_max_sample);
     my($reverse, $mv);
     our(%save_base, %save_lasttime, %save_varnames, $date);
     our(%base, %lasttime, %firsttime, %leftover, %position);
+    our(%lastfilebase);
     my($seekable) = 0;
     my($end_tick) = 0;
-    my($zero_tm);
+    my($zero_tm, $save_date);
+    our($opt_v);
 
     undef %base;
     undef %count;
@@ -102,6 +117,8 @@ sub read_5m_sum {
     $myspeed = 0;
 
     $zero_tm = timelocal(strptime($d));
+
+    $save_date = $date;
 
     foreach $line (@lines) {
 	if ($line =~ /([^:]*):r/) {
@@ -121,9 +138,26 @@ sub read_5m_sum {
 	    next;
 	}
 
+	if (defined($lastfilebase{$line})) {
+	    if ($lastfilebase{$line} ne $base) {
+		# We switched to another file (and probably instance),
+		# so don't try to tie together the ends of the data
+		# across the day boundary
+		foreach my $v (keys %save_varnames) {
+		    undef $save_base{$line,$v};
+		    undef $save_lasttime{$line,$v};
+		}
+	    }
+	}
+	$lastfilebase{$line} = $base;
+
+#	if ($opt_v) {
+#	    printf(STDERR "Processing %s\n", $line);
+#	}
+
 	my($date_tm, $date_str, $prev_d);
-	if (defined($date)) {
-	    $date_tm = timelocal(strptime($date));
+	if (defined($save_date)) {
+	    $date_tm = timelocal(strptime($save_date));
 	    $date_str = &tm_to_date($date_tm);
 	    $prev_d = &tm_to_date(timelocal(strptime($d)) - 24 * 3600);
 	}
@@ -138,7 +172,7 @@ sub read_5m_sum {
 		my($mod_date) = &tm_to_date($mtime);
 		my($pos) = $position{$base};
 
-		if (defined($date)) {
+		if (defined($save_date)) {
 		    if ($date_str eq $mod_date) {
 			if ($pos < $size) {
 			    seek(DAYLOG, $pos, SEEK_SET);
@@ -161,8 +195,8 @@ sub read_5m_sum {
 	    }
 	}
 
-	if (defined($date) && (($date_str eq $d) ||
-			       ($date_str eq $prev_d)))
+	if (defined($save_date) && (($date_str eq $d) ||
+				    ($date_str eq $prev_d)))
 	{
 	    # if we saved stuff for this line, restore
 	    # to gain an extra (required!) sample,
@@ -201,6 +235,22 @@ sub read_5m_sum {
 	    $save_varnames{$v} = 1;
 	}
 
+#	if ($opt_v) {
+#	    my($lt, $h, $m, $s);
+#	    $lt = $lasttime{"ifHCInOctets"};
+#	    foreach my $v (keys %base) {
+#		if ($lasttime{$v} > -3600*24 &&
+#		    ($lasttime{$v} != $lt))
+#		{
+#		    printf(STDERR "lasttime diff for %s: %s vs %s (%s)\n",
+#			   $v, $lt, $lasttime{$v}, $line);
+#		}
+#	    }
+#	    
+#	    printf(STDERR "lasttime %s for %s\n",
+#		   &sprint_hms($lt / 3600.0), $line);
+#	}
+
 	foreach $v (keys %base) {
 	    $mybase{$v} = $base{$v};
 	    if ($reverse && defined($rev_ctr{$v})) {
@@ -210,8 +260,15 @@ sub read_5m_sum {
 	    }
 
 	    if (defined($firsttime{$v}) && $firsttime{$v} != $sample_time{0}) {
-		$lasttime{$v} = $firsttime{$v};
-		$sno = 0;
+		if ($firsttime{$v} < -10) {
+		    # Could be we changed router/interface
+		    # so disregard first sample.  I think.
+		    $lasttime{$v} = $sample_time{0};
+		    $sno = 1;
+		} else {
+		    $lasttime{$v} = $firsttime{$v};
+		    $sno = 0;
+		}
 	    } else {
 		$lasttime{$v} = $sample_time{0};
 		$sno = 1;
@@ -221,6 +278,12 @@ sub read_5m_sum {
 	    $end_tick = &floor_int($sample_time{$max_sample} * 60/5.0);
 
 	    $min_sample = $lasttick + 1;
+	    if (!defined($my_min_sample)) {
+		$my_min_sample = $min_sample;
+	    } else {
+		$my_min_sample = &min($min_sample, $my_min_sample);
+	    }
+	    $my_max_sample = &max($my_max_sample, $end_tick);
 
 	    $mysample_time{$lasttick} = $lasttick * 5.0/60;
 	    $mysample_time{$mv,$lasttick} = $lasttick * 5.0/60;
@@ -232,6 +295,22 @@ sub read_5m_sum {
 		# partial data for the day earlier
 		$sno++;
 	    }
+
+#	    if ($opt_v) {
+#		if ($mv =~ /ifHC.*Octets/) {
+#		    printf(STDERR
+#			   "Quantisizing between ticks %d and %d for %s\n",
+#			   $min_sample, $end_tick, $mv);
+#		    foreach my $n (0 .. 30) {
+#			if (defined($sample_time{$sno+$n})) {
+#			    printf(STDERR "sample_time{%d}: %s, value %s\n",
+#				   $sno+$n, &sprint_hms($sample_time{$sno+$n}),
+#				   $count{$mv,$sno+$n}
+#				);
+#			}
+#		    }
+#		}
+#	    }
 
 	    for ($tick = $min_sample;
 		 $tick <= $end_tick;
@@ -311,7 +390,6 @@ sub read_5m_sum {
     undef %sample_time;
     undef %firsttime;
     undef %lasttime;
-    undef $max_sample;
 
     # Copy data into expected globals
     foreach $k (keys %mycount) {
@@ -323,8 +401,15 @@ sub read_5m_sum {
     foreach $k (keys %mysample_time) {
 	$sample_time{$k} = $mysample_time{$k};
     }
-    $max_sample = $end_tick;
+    $max_sample = $my_max_sample;
+    $min_sample = $my_min_sample;
     $ifspeed = $myspeed;
+
+#    if ($opt_v) {
+#	if ($err ne "") {
+#	    printf(STDERR "Returning error string:\n%s", $err);
+#	}
+#    }
 
     return $err;
 }
