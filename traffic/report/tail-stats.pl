@@ -851,8 +851,9 @@ sub do_all_files_today {
 #    select(STDOUT); $| = 1;	# unbuffer
     $stat_report = "";
     if (defined($opt_r)) {
-	unlink($opt_r);		# ignore error
-	open(REP, ">" . $opt_r) || die "Could not open $opt_r for write";
+	unlink($opt_r . ".new"); # ignore error
+	open(REP, ">" . $opt_r . ".new") ||
+	    die "Could not open $opt_r.new for write";
     }
 
     foreach $f (@files) {
@@ -861,6 +862,7 @@ sub do_all_files_today {
     }
     if (defined($opt_r)) {
 	close(REP);
+	rename($opt_r . ".new", $opt_r); # atomic op on local file system
     }
     if ($stat_report != "" && defined($opt_m) && defined($opt_M)) {
 	&mail_report($opt_M, $opt_m, $stat_report);
