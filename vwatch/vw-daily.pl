@@ -70,7 +70,7 @@ sub report_and_mail {
 	printf(OUT "From: $MAILFROM\n");
 	printf(OUT "To: $MAILTO\n");
 	printf(OUT
-	       "Subject: $ym_str-$day_str router upgrade/restart report\n");
+	       "Subject: Device upgrade/restart report $ym_str-$day_str\n");
 	printf(OUT "\n");
 
 	open(IN, "$rfn");
