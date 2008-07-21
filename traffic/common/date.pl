@@ -246,17 +246,21 @@ sub firstdayfirstweek {
    $ret;
 }
 
-# Return timevalue for 2 hours into the day
-# (to avoid DST troubles). Year = 1900 ->
+# Return timevalue for midnight the first day of the given week
+# in the given year.  Year = 1900 ->
  
 sub firstinweek {
    my($weekno, $year) = @_;
-   # 2 hours into this year
+   # 2 hours into this year, to avoid DST problems...
    my($time) = &timelocal(0, 0, 2, 1, 0, $year - 1900);
    # Add number of days since start of year
    $time += (($weekno - 1) * 7 +
 	     &firstdayfirstweek($year-1900)) * 60 * 60 * 24;
-   $time;
+   my($s, $m, $h, $d, $mon, $y, $yd, $dst);
+
+   # ...and then get rid of the fractional day
+   ($s, $m, $h, $d, $mon, $y, $yd, $dst) = localtime($time);
+   $time = &timelocal(0, 0, 0, $d, $mon, $y);
 }
 
 # This should now account for leap-years
