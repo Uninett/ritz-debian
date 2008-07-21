@@ -143,8 +143,8 @@ sub date_to_tm {
 	$yy = $1 - 1900;
 	$mm = $2 - 1;
 	$dd = $3;
-	# 1 minute after midnight
-	$time = &timelocal(0, 1, 0, $dd, $mm, $yy);
+	# exactly midnight
+	$time = &timelocal(0, 0, 0, $dd, $mm, $yy);
     }
     $time;
 }
