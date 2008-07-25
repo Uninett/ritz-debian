@@ -350,7 +350,14 @@ sub make_small_plot {
 	&err(sprintf("Cannot find data for '%s'", $name));
     }
 
-    return &make_plot($name, $type, $rrd, $png, 400, 200);
+    my @fonts = (
+	"--font", "AXIS:7:'Bitstream Vera Sans:Style=Roman'",
+	"--font", "UNIT:7:'Bitstream Vera Sans:Style=Roman'",
+	"--font", "TITLE:10:'Bitstream Vera Sans:Style=Bold'",
+	"--font", "LEGEND:9:'Bitstream Vera Sans:Style=Roman'",
+	);
+
+    return &make_plot($name, $type, $rrd, $png, 400, 200, @fonts);
 }
 
 sub make_big_plot {
@@ -365,10 +372,10 @@ sub make_big_plot {
     }
 
     my @fonts = (
-	"--font", "AXIS:11:/usr/X11R6/lib/X11/fonts/TTF/Vera.ttf",
-	"--font", "UNIT:11:/usr/X11R6/lib/X11/fonts/TTF/Vera.ttf",
-	"--font", "TITLE:13:/usr/X11R6/lib/X11/fonts/TTF/VeraBd.ttf",
-	"--font", "LEGEND:10:/usr/X11R6/lib/X11/fonts/TTF/Vera.ttf",
+	"--font", "AXIS:11:'Bitstream Vera Sans:Style=Roman'",
+	"--font", "UNIT:11:'Bitstream Vera Sans:Style=Roman'",
+	"--font", "TITLE:13:'Bitstream Vera Sans:Style=Bold'",
+	"--font", "LEGEND:10:'Bitstream Vera Sans:Style=Roman'",
 	);
 
     return &make_plot($name, $type, $rrd, $png, 800, 600, @fonts);
