@@ -728,6 +728,14 @@ sub tail_process_file {
     &save_position(\*IN, $b);
     close(IN);
 
+    if ($max_sample == 0) {
+	next;
+    }
+    # for type of octet counter detection in process_data()
+    foreach my $v (keys %base) {
+	$fd->{$b}->{"base"}->{$v} = $base{$v};
+    }
+
     &process_data($b, 0, $max_sample, $tm);
     &trim_data($b, &timelocal(localtime) - $retention_time);
     &save_vars($b);
