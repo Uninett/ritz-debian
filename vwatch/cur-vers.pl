@@ -79,31 +79,71 @@ sub dissect_cisco_version {
     return undef;
 }
 
+sub dissect_junos_version {
+    my($v) = @_;
+    my(%v);
+
+    if ($v =~ /(\d+)\.(\d+)R(\d+)\.(\d+)/o) {
+	$v{"major"} = $1;
+	$v{"minor"} = $2;
+	$v{"rev"} = $3;
+	$v{"mrev"} = $4;
+	return %v;
+    }
+    return undef;
+}
+
 sub cmp_versions {
-    my($a, $b) = @_;
+    my($ta, $tb, $a, $b) = @_;
     my(%a, %b);
 
-    %a = &dissect_cisco_version($a);
-    %b = &dissect_cisco_version($b);
-    if (!defined(%a) || !defined(%b)) {
-	return $a <=> $b;
+    if ($ta ne $tb) {
+	return $ta cmp $tb;
     }
-    if ($a{"major"} == $b{"major"}) {
-	if ($a{"minor"} == $b{"minor"}) {
-	    if ($a{"train"} eq $b{"train"}) {
+
+    if ($ta eq "JunOS") {
+	%a = &dissect_junos_version($a);
+	%b = &dissect_junos_version($b);
+	if (!defined(%a) || !defined(%b)) {
+	    return $a <=> $b;
+	}
+	if ($a{"major"} == $b{"major"}) {
+	    if ($a{"minor"} == $b{"minor"}) {
 		if ($a{"rev"} == $b{"rev"}) {
-		    return $a{"trainrev"} <=> $b{"trainrev"};
+		    return $a{"mrev"} <=> $b{"mrev"};
 		} else {
 		    return $a{"rev"} <=> $b{"rev"};
 		}
 	    } else {
-		return $a{"train"} cmp $b{"train"};
+		return $a{"minor"} <=> $b{"minor"};
 	    }
 	} else {
-	    return $a{"minor"} <=> $b{"minor"};
+	    return $a{"major"} <=> $b{"major"};
 	}
+	
     } else {
-	return $a{"major"} <=> $b{"major"};
+	%a = &dissect_cisco_version($a);
+	%b = &dissect_cisco_version($b);
+	if (!defined(%a) || !defined(%b)) {
+	    return $a <=> $b;
+	}
+	if ($a{"major"} == $b{"major"}) {
+	    if ($a{"minor"} == $b{"minor"}) {
+		if ($a{"train"} eq $b{"train"}) {
+		    if ($a{"rev"} == $b{"rev"}) {
+			return $a{"trainrev"} <=> $b{"trainrev"};
+		    } else {
+			return $a{"rev"} <=> $b{"rev"};
+		    }
+		} else {
+		    return $a{"train"} cmp $b{"train"};
+		}
+	    } else {
+		return $a{"minor"} <=> $b{"minor"};
+	    }
+	} else {
+	    return $a{"major"} <=> $b{"major"};
+	}
     }
     return 0;
 }
@@ -115,7 +155,7 @@ sub cmp_lines {
     @a = split(/\s+/, $one);
     @b = split(/\s+/, $two);
 
-    my $r = &cmp_versions($a[2], $b[2]);
+    my $r = &cmp_versions($a[1], $b[1], $a[2], $b[2]);
     if ($r == 0) {
 	return $a[0] cmp $b[0];
     } else {
