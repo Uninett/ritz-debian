@@ -255,8 +255,8 @@ sub read_log {
 	# Note, this only compensates if the data file hasn't
 	# already been "fixed".
 	if ($dstcomp != 0 &&
-	    (abs($now - $lasttime{$v}) > 3600 &&
-	     abs($now - $lasttime{$v}) < 7200))
+	    (abs($now - $lasttime) > 3600 &&
+	     abs($now - $lasttime) < 7200))
 	{
 	    foreach my $k (keys %base) {
 		$dstcomp{$k} = $dstcomp;
