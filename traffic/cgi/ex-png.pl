@@ -76,9 +76,13 @@ if (defined($ai = &invalid_arg("[-A-Za-z0-9_./\+]*", @al))) {
     exit 1;
 }
 
-$ix = index(substr($refname, 1), "/");
-$bn = substr($refname, $ix+2);
-$rfn = sprintf("%HTMLDIR%/%s", $bn);
+if ("%HTMLPFX%" ne "") {
+    $ix = index(substr($refname, 1), "/");
+    $bn = substr($refname, $ix+2);
+} else {
+    $bn = $refname;
+}
+$rfn = "%HTMLDIR%" . $refname;
 
 if ($exp !~ /[0-9]+/) {
     $exp = &secs_to_expiry($exp);
