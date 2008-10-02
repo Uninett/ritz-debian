@@ -23,7 +23,13 @@ proc emt_config {} {
 
     foreach f "~/.ritz.tcl ~/.emt.tcl" {
 	if { [file exists $f] } {
-	    source $f
+	    if { [catch {
+		source $f
+	    } err]} {
+		puts stderr [format "Error sourcing %s: %s" $f $err]
+	    } else {
+		puts stderr [format "Successfully (re)read config file %s" $f]
+	    }
 	} else {
 	    error "File $f must exist but does not"
 	}
