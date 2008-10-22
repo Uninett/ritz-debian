@@ -5,6 +5,3 @@ $Id$	-*- Text -*-
  o Automatic reconnect on disconnect from server
 
  o Improved error handling
-
- o Add "Help" button, and "About" pane, possibly including RCS Ids of
-   "executable".
