@@ -47,6 +47,7 @@ proc uiResourceInit { } {
     tix resetoptions TixGray TK 21
 
     option add *text.alarmColor			"red"		startupFile
+    option add *text.alertColor			"yellow"	startupFile
     option add *text.warningColor		"orange"	startupFile
     option add *text.normalColor		"pale green"	startupFile
     option add *text.closedColor		"sea green"	startupFile
