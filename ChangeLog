@@ -1,3 +1,623 @@
+2008-10-22  Havard Eidnes  <he@uninett.no>
+
+	* ritz/TODO:
+	The Help -> About button has been implemented (a long time ago).
+
+	* Makefile: Bump to version 0.9.6.
+
+	* ritz/ui.tcl:
+	Make yellow the default colour for events with "alert" severity.
+
+	* ritz/sort.tcl:
+	Introduce a new caseSeverity, "alert", between "alarm" and "warning".
+	Use this to appropriately indicate severity of yellow chassis alarms
+	as seen on Juniper boxes.
+
+2008-10-02  Havard Eidnes  <he@uninett.no>
+
+	* emt/emt.tcl:
+	Put a catch around the sourcing of the config file, to catch and
+	report any errors which might occur.
+
+2008-09-26  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-raw-log.pl:
+	Instead of looking at the previous instance of a given variable (which
+	may have been filtered out as part of the log compression), just look
+	at the previous line, and if the time-difference is > 3600 and < 7200,
+	let daylight savings compensation kick in.
+
+	* traffic/cgi/ex-png.pl: Allow HTMLPFX to be empty.
+
+2008-09-15  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/customer-ts.pl: Use substitution for perl interpreter.
+
+2008-09-10  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/cur-vers.pl: Add sort handling for JunOS routers.
+
+2008-08-14  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Import a fix from another part of the code: enable proper octet
+	counter detection when doing "today's" stats as well.
+	Also, if there's no data, skip it.
+
+2008-07-25  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/r-all.pl:
+	Convert to using font specification compatible with the move
+	to Pango/Cairo/Fontconfig in rrdtool 1.3.0.
+	Also, add a font specification for the small plots.
+	Untested...
+
+2008-07-21  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/date.pl:
+	Now that we're a bit more picky about $tm values,
+	make "first in week" return the time of 00:00 the
+	first day of the week, not 02:00 or 03:00 depending
+	on whether DST is in effect.
+
+	* traffic/common/date.pl:
+	Don't use "1 minute after midnight", use instead "exactly midnight"
+	when returning the base $tm for the day.
+
+2008-06-25  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/vw-daily.pl:
+	Change subject of the mail to be more similar to the other messages
+	sent on a nightly basis by zino.
+
+2008-06-11  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Write report to an $opt_r.new file, rename to $opt_r after report is
+	finished.
+
+	* traffic/jobs/Makefile:
+	Add a check that no remaining to-be-substituted pattern remains
+	in the result file; exit otherwise.
+	This because we lately introduced a new top-level Makefile.inc
+	variable used in zino-config.pl, which if left un-substituted
+	will cause the daily jobs to fail due to perl parse errors.
+
+2008-06-09  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Replace use of "time" with $^T (script start time).
+	Add the "maximum" round-robin archive to the rrd database.
+
+	Log data values into the rrd database in bit/s, not Mbit/s;
+	newer RRDtool versions don't have problems with values > 2^32.
+
+	Fix it so that when we run just past midnight, we reach into the
+	previous day to pick up the last data from that log.
+
+	Pass the "date for time 0" to sub-scripts to eliminate ambiguity with
+	hour-based timestamps.
+
+	Add an -I option to unconditionally inialize the RRD database.
+
+	* traffic/report/customer-ts.pl:
+	In save_vars, make sure we save "computed and saved values" as well,
+	by initializing $p to our current "root".
+	During data processing, if we get delta_t=0, skip sample.
+
+	Make two functions to save and merge back in saved values.  This is to
+	fix problems which occur when you have data from many sources, and
+	they are collected asynchronously, and a few samples spill into the
+	"next" sample.  Saving a few samples lets us smooth over what would
+	otherwise be a "ragged edge".
+
+	Also introduce a configurable time-delay so that we stop reading data
+	sources when "now - time-dalay" is found.  This was an earlier attempt
+	at avoiding the problem fixed by the save+merge functions above, and
+	may now actually be redudant.  However, "don't change something which
+	works" will be the motto for now.
+
+	Always save 2 samples worth of data and merge it back when we're
+	re-run.
+
+	* traffic/common/read-raw-log.pl: Fix a bug related to day roll-over.
+
+	* traffic/common/read-5m-sum.pl:
+	Remember mapping logical-port-name -> logging-file-name, and if it
+	changes, we're probably looking at a different variable, so don't try
+	to diff the two.
+	Correct some issues having to do with day roll-over.
+	Add some commented-out debugging code.
+	Make sure we correctly compute $min_sample and $max_sample.
+
+	* traffic/report/Makefile: Install mk-customer-index.pl as well.
+
+	* traffic/report/mk-customer-index.pl:
+	Script to create a combined "per-customer" html index file
+	based on a description file (e.g. as used by customer-ts), and
+	a template file.
+
+2008-06-06  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/r-all.pl:
+	Actually... Go back to emitting direct pointers to the images.  It
+	turns out that even though we explicitly set an Expires: header, the
+	client will fetch the images anyway, possibly with an if-modified-
+	since header which we don't interpret or respond to.  Instead, let
+	apache deal with that itself -- this reduces the traffic from the web
+	server further.
+
+2008-06-05  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/r-all.pl:
+	It turns out that we can't use my() to share variables between the
+	"main" script and it's subroutines when using mod_perl, because the
+	outer script is being wrapped inside a subroutine, and..., well, it
+	doesn't work.  Use our() instead.
+
+	Turn off "redefine" warnings (these happen with all named subroutines
+	with mod_perl).
+
+	Use Apache2::RequestIO and pick up $r, so that we can use
+	$r->sendfile() to send the image files.
+
+	* traffic/cgi/r-all.pl: Re-do how we label the graphs.
+
+2008-04-23  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/date.pl:
+	Replace "time" with "$^T", so as to not skew results based
+	on how long time the script has been running.
+
+2008-04-18  Havard Eidnes  <he@uninett.no>
+
+	* traffic/plot/plot-raw.pl, traffic/plot/plot-hr.pl:
+	Use the correct time_t for 00:00.
+
+2008-04-17  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/customer-ts.pl:
+	Add a feature to collect all the ports from a "category", expressed
+	via a "select customers given their attributes/tags" expression.
+
+	* traffic/report/customer-ts.pl:
+	Convert to using the modularized version of conn-common.pl (Zino::conn).
+
+	* traffic/jobs/extract-value.pl, traffic/plot/plot-hr.pl,
+	  traffic/plot/plot-raw.pl, traffic/report/re-report-day.pl,
+	  traffic/report/get-perc.pl, traffic/report/report-day.pl,
+	  traffic/report/report-mon-sp.pl, traffic/report/tail-stats.pl:
+	Adapt to the changed signature of read_log().
+
+	* traffic/report/customer-ts.pl:
+	Use the new interface to read_5m_sum(), to pass in a time-delay so as
+	to ensure that we can collect all the samples which are part of a
+	5-minute quantization.
+	Handle midnight rollover a little better (hopefully!).
+
+	* traffic/common/read-hr-log.pl:
+	Accept an optional time_t for 00:00, though this code doesn't use it
+	(yet).
+
+	* traffic/common/conn.pm: Exported arrays need a % prefix.
+
+	* traffic/common/Makefile: Fix typo.
+
+	* traffic/common/read-raw-log.pl:
+	Change the interface and get rid of hairy and wrong heuristics for
+	handling day rollover.  Instead, accept a time_t for what's supposed
+	to be 00:00 on "this" day, and an optional "time-delay" to stop
+	reading when we've reached "now - time_delay".  This is in order
+	to ease quantization into 5-minute intervals done by read_5m_sum().
+
+	* traffic/common/read-5m-sum.pl:
+	Compute the time_t corresponding to 00:00 on the given day,
+	and pass it to read_log().
+	Accept an optional "time-delay" argument, stop reading at
+	now - time_delay, pass it also to read_log().
+
+	* traffic/cgi/r-all.pl: Improve title of page showing one plot.
+
+2008-04-14  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/r-all.pl:
+	Make it possible to use our own modules, take advantage of this to
+	display the full name of the connection.
+
+	Fix positioning of the X-labels in order to make the plots easier to
+	interpret.
+
+	Introduce 3 new plots, max for day, week and month.
+	Make it possible to produce "avg", "max", and "combined" plots,
+	dictated by type.
+
+	If image size is unknown (shared data has zeroed?), make sure we
+	regenerate the plots so that the size is once again known.
+
+	* Makefile.inc.dist: Add DESCFILE setting.
+
+	* Makefile.inc.dist: Use server.nordu.net as the tacacs host example.
+
+	* traffic/common/Makefile:
+	Add instructions for installation of Zino modules.
+
+	* traffic/common/conn.pm: Convert conn-common.pl into a module.
+
+2008-04-07  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	I *think* there should be no need to disable
+	hour-23 handling anymore.
+
+	* traffic/jobs/zino-config.pl: Add tail_delay.
+
+	* Makefile.inc.dist: Add default setting for TAILDELAY.
+
+	* traffic/common/date.pl: Use script beginning ($^T) instead of "time".
+
+	* traffic/jobs/daily.pl: Minor modernization -- use my() and our().
+	Split off the compression of yesterday's logs to ease the implementation
+	of "tail-stat"-like programs.
+
+	* traffic/jobs/Makefile: Add compress-data.pl.
+
+	* traffic/jobs/compress-data.pl:
+	Split out the "compress previous day's data" to a separate file,
+	so that it can be run a little later in the day, so as to make
+	it a little easier for "tail-stat"-like programs to handle log
+	rollover.
+
+	* traffic/doc/basic-inst.html: Note the need for a new crontab line.
+	This documentation stuff badly needs an update.
+
+	* traffic/jobs/Makefile: Add the onlyone.sh script, which uses shlock.
+
+2008-03-31  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-raw-log.pl:
+	Discard samples older than $lasttime{$v}.
+	Adjust the latter at day roll-over to maintain "relative to 00:00"
+	property.
+	This should allow us to read the remainder of the log from "yesterday"
+	without too many problems.
+
+	* traffic/common/read-raw-log.pl:
+	Don't mark "DST offset computed" during hour 23.
+	Fixes mis-computation of DST offset when there's a log entry from
+	yesterday in the data file.
+
+2008-03-17  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-raw-log.pl:
+	Add a cheesy workaround for "25 hour days" (as happens when we
+	compensate for daylight saving time).
+
+	* traffic/common/read-5m-sum.pl:
+	Remember to undef %sample_time before each new round.
+	Compensate %lasttime for daylight savings time for previous day,
+	and when having looked at previous day.
+	Instead of using the "global" $sample_time{$sno}, use the per-
+	variable $sample_time{$v,$sno}.  If a sample got lost (it happens),
+	this avoids a needless glitch.
+	Skip over undefined samples.
+
+	* traffic/common/read-raw-log.pl:
+	Um, fix prototype errors, use numeric dates for comparison instead.
+
+	* traffic/common/read-raw-log.pl:
+	Improve logic for handling day and log rollover, where we may end up
+	with a few samples from "yesterday", without seeing a sample from
+	today, even though we look at today's log.
+
+2008-03-12  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/r-all.pl: Y scale is now in bits/s.
+	Use GPRINT, not PRINT to print into graph...
+
+	* traffic/report/customer-ts.pl: Add a MAX round-robin archive.
+	Report to rrdtool in bits/s, not Mbit/s, to avoid "k Mbit/s".
+
+	* traffic/common/read-raw-log.pl:
+	Don't just test for whether we've seen hour 0; samples may be missing.
+	Instead, check for "any other hour than hour 23" (which could be
+	samples from the previous day).
+
+	* traffic/common/read-raw-log.pl: Combine a nested test + reindent.
+	Improve handling of daylight savings time switchover.
+	If we go back in time (switching to summertime), skip samples seen in
+	the same hour as they are spurious and create noise.
+	Also, when detecting DST shift, compensate for all variables, not just
+	one...
+
+	* traffic/cgi/r-all.pl:
+	Emit headers specifying the plot period above each plot.
+	Make another futile attempt at getting "last updated" into the plot.
+
+	* traffic/cgi/r-all.pl: Introduce a plot showing 3 months back.
+	Introduce max-value plotting, but only for a subset of the plots (the
+	ones with finer resolution ends up being rather cluttered).
+	Get rid of warnings / errors related to my() shadow declarations.
+
+	* traffic/report/customer-ts.pl:
+	Remove day rollover code from here; it's handled at a lower layer
+	(read-raw-log.pl).
+
+	Need to re-compute the "time in seconds since the epoch" for each day,
+	so that daylight savings time changes are handled smoothly when we
+	process a period longer than a single day.
+
+	Make it possible to process data for more than one customer; separate
+	customer short-names with comma in the -n option value.
+
+	* traffic/common/read-raw-log.pl:
+	Now that the day rollover handles at the end, we need to be a bit more
+	careful about when we apply the DST rollover fixup.
+
+	* traffic/common/read-raw-log.pl: Define another local variable.
+	When we moved the "hour 23" handling, we need to also make an
+	exception to the "trigger DST compensation" part of the code, or else
+	just the first sample (the one in hour 23) would be read(!)
+
+	* traffic/common/read-raw-log.pl:
+	Move some code out from an inner loop.
+
+	* traffic/common/read-raw-log.pl:
+	Move the "hour 23 is previous day" handling to a place where we can be
+	certain that we will see or have seen data for hour 0 the following
+	day.  Should fix incremental log processing when looking at today's
+	data and the hour is 23.
+
+2008-03-11  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/r-all.pl:
+	Allow a little more room for the values (when we pass 1k, we want the
+	decimals included...), and add a space which makes more font choices
+	result in aligned "Avg:" text.
+
+	* traffic/jobs/onlyone.sh:
+	Simple shell script wrapper using shlock to ensure that only one
+	instance of a script / process runs at any one time.
+
+	* traffic/common/read-5m-sum.pl:
+	Instead of going to the next file if the file has shrunk, read it anew
+	from the start instead.  However, avoid inspecting samples with a time
+	we've already inspected.
+
+2008-03-09  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/r-all.pl:
+	Correct the time comparison for "is it new enough".
+	Add some more parameter checking / error reporting.
+
+2008-03-08  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl:
+	If we ended up reading the entire day anyway (no longer seekable
+	or data has been touched since it was initially logged), throw away
+	samples up until the "last seen" point.
+
+	* traffic/cgi/Makefile: Add the r-all.pl script.
+
+	* traffic/cgi/r-all.pl:
+	Commit a CGI script which can be used to present data from
+	per-customer RRD databases.  Uses appropriate caching headers and
+	image sizes (remembers sizes via shared memory), and avoids
+	regenerating images if a sufficiently new one exists already.
+
+	It should be possible to run this script under mod_perl, but
+	that has so far not been tested.
+
+	* traffic/report/customer-ts.pl:
+	Add a help option (show usage and exit).
+	Make it possible to process data for one customer for "today",
+	i.e. when -d is left out.
+
+	* Makefile.inc.dist: Fix WEBSRVR to point to NORDUnet.
+	Introduce ISPNAME and RRDDIR, former is tweakable.
+
+2008-03-07  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/config.pl: Replaced by zino-config.pl.
+
+	* traffic/report/Makefile:
+	Add customer-ts.pl -- customer tail statistics processing script,
+	which is primarily used for sending data into RRD databases.
+
+	* traffic/common/Makefile:
+	Add conn-common.pl to process per-customer reports.
+
+	* traffic/jobs/Makefile:
+	Rename config.pl to zino-config.pl in order to avoid a name
+	collision with a file installed earlier in @INC.
+
+	* traffic/report/sel-report.pl:
+	Rename config.pl to zino-config.pl to avoid name collision with
+	one found earlier in @INC when a particular perl module is installed.
+
+	* traffic/cgi/load-map.pl, traffic/jobs/daily.pl,
+	  traffic/report/customer-ts.pl, traffic/report/tail-stats.pl,
+	  vwatch/cur-vers.pl, vwatch/uptimes.pl:
+	Rename config.pl to zino-config.pl to avoid conflict with one from
+	an installed package...
+
+	* traffic/jobs/zino-config.pl: Renamed from config.pl.
+
+2008-03-06  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl: Declare $date as a global as well.
+	Ensure that we only restore previous state in the two
+	cases where it's required (and gives correct results):
+	at log rollover close to midnight, or when repeatedly
+	looking at data for "today".
+
+2008-03-05  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/conn-common.pl:
+	Fix a comment to accurately describe the globals this puts
+	its data in.
+
+	* traffic/common/utils.pl:
+	Um, correct floor_int(-1), so that it doesn't return -2...
+
+	* traffic/report/tail-stats.pl: Use our() to declare globals some more.
+	Make convert_times() take an optional fourth argument: starting
+	seconds in the epoch, same for flag_deviations() and process_data().
+	Remove some more &today() assumptions, so that this script can
+	be run on historical data.
+	Add a gatewaying function into RRD databases, via the -R option
+	which should point to a directory for the RRD databases.
+	The create_rrd() function has hardwired parameters for the RRD
+	databases we'll create; perhaps re-visit that later.
+	Convert to requiring a date-spec as the -d value, and add handling
+	so that we can process stats for more than one day (as many days
+	as the date-spec specifies).
+	Add a few more options (this script has too many already...):
+	-v for some debugging output, -V outputs RRD updates as well.
+
+	* traffic/report/customer-ts.pl: Declare more globals with our().
+	Output some more progress information under -v.
+	Don't unconditionally process values from sample 0,
+	use the new $min_sample instead.
+	There's now no need for a separate do_all_customers_today(),
+	as the do_all_customers() function is sufficiently general.
+
+	* traffic/common/read-raw-log.pl:
+	Add some robustness, protecting against a bogus log file.
+	Re-do how we compensate for the log rotation event by fixing up
+	$firsttime{$v} -- only do the -24 subtraction after we've seen
+	"hour 0".
+
+	* traffic/common/read-5m-sum.pl:
+	Changes after adaptation and debugging, so that this actually
+	works as intended together with the new customer-plot script.
+	Conditionally position the log file file before reading it,
+	based on the value in $position{$base} (basename of log file),
+	suitable for reading the log for today, and continuing where
+	we left off the last time around.
+
+	Correct a typo which messed up the continuation from the last
+	session.
+	Re-do how we calculate the starting point for the internal 5m
+	clock we use to slice and sum the data.
+	Clean up before and after, so no "ghost data" is left behind.
+	Export $min_sample as the sample to start from (required for
+	repeated reading of today's log data).
+
+2008-03-04  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/customer-ts.pl:
+	Die if a new save-file could not be created.
+	Fix restore_vars() so that it actually does what was intended.
+	Fix rrd database creation function to use correct variables.
+	Add usage of restore_vars() and save_vars(), to save state
+	between subsequent runs.
+
+	* traffic/report/customer-ts.pl: Correct required file name.
+	Convert the saved variables also to use references.
+	Need to use %sample_secs in compute_basic_values()
+	for the "is defined" test to work.
+	Correct some format string botches.
+
+	* traffic/report/customer-ts.pl:
+	Convert save / restore routines to use a hash containing
+	names and hash references.
+
+	* traffic/report/customer-ts.pl:
+	Commit the start of a script to do per-customer "tail-stats",
+	primarily to feed data into RRD databases.
+
+	* traffic/common/read-5m-sum.pl:
+	Improve detection of wheter we are looking at the log file
+	from the same date we read before, if not, start reading
+	from the start.
+
+	* traffic/common/read-5m-sum.pl:
+	Do a simple replacement of local $date with $d.
+
+	* traffic/common/conn-common.pl:
+	Add a comment describing the interface / results.
+
+	* traffic/common/read-5m-sum.pl:
+	Add comment about more globals used to save/restore state.
+
+	* traffic/common/read-5m-sum.pl:
+	Restore and save position for each file in the global %position array.
+
+2008-03-03  Havard Eidnes  <he@uninett.no>
+
+	* zinomon/Zino.pm:
+	Do some more checking of OK result from login, avoid warning
+	about un-initialized value in pattern match.
+
+	* traffic/common/conn-common.pl: Initial version imported.
+
+2008-03-01  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/date.pl: Remove $timezone -- it's apparently not used.
+	Correct days_in_month() to account for leap years.
+
+2008-02-27  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Correct the new save/restore parts to fix syntax errors
+	and temporarily turn off "strict 'refs'", since we do
+	symbolic references here.
+
+	* traffic/report/tail-stats.pl:
+	Save some more values between each run, so that the processing doesn't
+	skip any samples.
+
+2008-02-20  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl: Declare global variables using our().
+
+	Use the globals %save_base, %save_lasttime, and %save_varnames to save
+	and restore data when the same surrounding script reads data for
+	multiple log files.  Use these to set up %lasttime and %base before
+	reading the raw data log, to ensure that we don't lose any samples..
+
+	Correctly handle the quantization into 5-minute intervals when data
+	from the previous day is available.  Also handle "leftover" data from
+	the previous day which didn't completely fill a 5-minute interval, and
+	similarly leave the remaining data at EOF in $leftover{$line,$var}, so
+	that this script can correctly stitch together data from multiple
+	days, and not lose any samples.
+
+	If the surrounding script terminates between subsequent runs (as would
+	be the case for a script to update statistics in near-real-time), it
+	ought to save and restore the %leftover array, and also the
+	%save_base, %save_lasttime, and %save_varnames arrays mentioned above.
+
+	* traffic/common/read-raw-log.pl:
+	Point out that time stamps are a relative offset from 00:00 local time.
+	Export a few more variables: %firsttime, %lasttime, and %dstcomp, the
+	latter only for debugging.
+	Declare global variables using our().
+
+	Introduce automatic compensation for daylight savings time, so that we
+	preserve a monotonically increasing time relative to 00:00 local time.
+	This makes it possible to convert the time stamps to UTC without
+	"hiccups" when entering or leaving daylight savings time.
+	This only handles daylight savings time changes with 1 hour.
+	This means that one day per year will appear to have 23 hours, while
+	another will appear to have 25.
+
+2008-02-04  Havard Eidnes  <he@uninett.no>
+
+	* zino/Makefile: Add the version.tcl file.
+
+	* zino/server.tcl:
+	Add a "version" command to display the running version of zino.
+
+	* zino/bgp.tcl:
+	We need a bgpAdminUp procedure, which notes when the admin state goes
+	from "stop" to "start".  Call it in the appropriate place.
+
+2008-01-31  Havard Eidnes  <he@uninett.no>
+
+	* ritz/ui.tcl:
+	Allow the user to provide default settings of the View() array.
+
 2008-01-30  Havard Eidnes  <he@uninett.no>
 
 	* ChangeLog: Final changes for 0.9.5.
