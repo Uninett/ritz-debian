@@ -1,9 +1,15 @@
 2008-10-22  Havard Eidnes  <he@uninett.no>
 
-	* ritz/TODO:
-	The Help -> About button has been implemented (a long time ago).
+	* ChangeLog: Record the changes for 0.9.6.
 
 	* Makefile: Bump to version 0.9.6.
+
+	* traffic/jobs/Makefile:
+	Check for any remaining substitution patterns in config files, to
+	prevent %TAILDELAY% from sneaking in unnoticed and un-substituted.
+
+	* ritz/TODO:
+	The Help -> About button has been implemented (a long time ago).
 
 	* ritz/ui.tcl:
 	Make yellow the default colour for events with "alert" severity.
