@@ -77,10 +77,7 @@ if (defined($ai = &invalid_arg("[-A-Za-z0-9_./\+]*", @al))) {
 }
 
 if ("%HTMLPFX%" ne "") {
-    $ix = index(substr($refname, 1), "/");
-    $bn = substr($refname, $ix+2);
-} else {
-    $bn = $refname;
+    $refname =~ s-%HTMLPFX%--;
 }
 $rfn = "%HTMLDIR%" . $refname;
 
