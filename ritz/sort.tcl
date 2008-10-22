@@ -237,7 +237,7 @@ proc compareSeverity { a b } {
     catch { set bs [caseSeverity $b] }
 
     if { $as == $bs } { return 0; }
-    foreach s {alarm warning normal unknown closed} {
+    foreach s {alarm alert warning normal unknown closed} {
 	if { $as == $s } { return -1; }
 	if { $bs == $s } { return 1; }
     }
@@ -344,7 +344,7 @@ proc sortCases { caseids } {
 }
 
 # Return severity of a given case.
-# One of alarm, warning, normal, unknown, or ignored.
+# One of alarm, alert, warning, normal, unknown, or ignored.
 
 proc caseSeverity { id } {
 
@@ -398,10 +398,17 @@ proc caseSeverity { id } {
 	    return "normal"
 	}
 	if { $colour == "yellow" } {
+	    if { $state == "open" } {
+		return "alert"
+	    } else {
+		return "warning"
+	    }
+	}
+	if { $state == "open" } {
+	    return "alarm"
+	} else {
 	    return "warning"
 	}
-	return "alarm"
-
     } elseif { $type == "bgp" } {
 	set as [Attr $id "bgpAS"]
 	if { $as == "start" } {
