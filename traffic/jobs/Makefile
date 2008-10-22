@@ -35,6 +35,10 @@ install:
 		tmp=/tmp/jtmp.$$$$; \
 		echo sed -f ${SUBST} '<' $$s '>' $$tmp; \
 		sed -f ${SUBST} < $$s > $$tmp; \
+		if egrep '%[A-Z_][A-Z_]*%' $$tmp; then \
+			echo "Missing substitution pattern!" >&2; \
+			exit 1; \
+		fi; \
 		echo install -c -m 444 $$tmp $$dst; \
 		install -c -m 444 $$tmp $$dst; \
 		echo rm -f $$tmp; \
