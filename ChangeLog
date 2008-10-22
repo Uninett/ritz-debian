@@ -4,6 +4,9 @@
 
 	* Makefile: Bump to version 0.9.6.
 
+	* traffic/cgi/ex-png.pl:
+	Properly handle the non-empty %HTMLPFX% case as well...
+
 	* traffic/jobs/Makefile:
 	Check for any remaining substitution patterns in config files, to
 	prevent %TAILDELAY% from sneaking in unnoticed and un-substituted.
