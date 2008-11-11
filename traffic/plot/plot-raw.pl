@@ -386,10 +386,10 @@ sub plot_eerrs {
 
 	$ipkts = ($count{"ifInUcastPkts",$i} +
 		  $count{"ifInNUcastPkts",$i} +
-		  $count{"ifInErorrs",$i});
+		  $count{"ifInErrors",$i});
 	$opkts = ($count{"ifOutUcastPkts",$i} +
 		  $count{"ifOutNUcastPkts",$i} +
-		  $count{"ifOutErorrs",$i});
+		  $count{"ifOutErrors",$i});
 	
 	if ($ipkts > 0) {
 	    &maxit($val = $count{"ifInErrors",$i} * 100.0 / $ipkts);
