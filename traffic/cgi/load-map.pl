@@ -1224,7 +1224,7 @@ sub getargs {
 	$dsp = &yesterday_spec();	# default is to show for previous day
 	$exp = &secs_to_expiry("day");
     } elsif (&is_today($dsp)) {
-	$exp = 15*60;		# when inspecting current load
+	$exp = 5*60;		# when inspecting current load
     } else {
 	$exp = 30*24*60*60;	# one month, really "eternally"
     }
