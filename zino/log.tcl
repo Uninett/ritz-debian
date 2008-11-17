@@ -28,6 +28,7 @@ proc log { str } {
     foreach chan [array names log_chans] {
 	if { [catch { puts $chan [log_str $str] }] } {
 	    unset log_chans($chan)
+	    close $chan
 	}
     }
 }
