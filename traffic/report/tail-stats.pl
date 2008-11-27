@@ -776,7 +776,7 @@ sub do_one_file {
 	my($cat, $f) = &find_cat_and_file($b, $d);
 	if (! defined($f)) {
 	    printf(STDERR "Could not find data file for %s / %s\n",
-		   $base, $d);
+		   $b, $d);
 	    next;
 	}
 
