@@ -762,6 +762,10 @@ sub do_one_file {
 	my($tm) = $base_tm + 3600 * 24 * $day;
 	my($d) = &tm_to_date($tm);
 
+	if ($opt_v) {
+	    printf(STDERR "Processing %s / %s\n", $name, $d);
+	}
+
 	my($b) = &name_to_file($name, $d);
 	if (! defined($b)) {
 	    printf(STDERR "Could not find file name for %s / %s\n",
