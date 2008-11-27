@@ -915,7 +915,7 @@ sub usage {
 
 &Getopts("d:hiIl:M:m:Nn:p:R:r:u:vV");
 
-# -n name	logical name of port to be analyzed
+# -n names	logical names of ports to be analyzed (comma-separated)
 # -d datestr	date which should be analyzed
 # -u up-limit	factor on an up-transition when flagging a deviation
 # -l low-limit	factor to pass when de-flagging a deviation
@@ -964,10 +964,14 @@ $oldfh = select(STDERR); $| = 1; select($oldfh);
 
 if (defined($opt_d) && defined($opt_n)) {
     if (defined($opt_r)) {
-	printf(STDERR "-r cannot be used while procesing old stats\n");
-	&usage();
+	printf(STDERR "-r ignored while procesing old stats\n");
+	undef $opt_r;
     }
-    &do_one_file($opt_d, $opt_n);
+    my @names;
+    @names = split(/,/, $opt_n);
+    foreach my $n (@names) {
+	&do_one_file($opt_d, $n);
+    }
 } else {
     if (defined($opt_d)) {
 	&do_all_files($opt_d);
