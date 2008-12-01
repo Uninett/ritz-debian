@@ -659,7 +659,7 @@ sub save_position {
 
 sub report_tail_stats {
     my($rfile, $b, $ofile) = @_;
-    our($fd, $opt_i);
+    our($fd, $opt_i, $opt_v);
     my($ikbps, $okbps, $n);
     my($sp) = $fd->{$b}->{"save_values"};
     my $ia = $sp->{"ikbps"};
@@ -690,6 +690,9 @@ sub report_tail_stats {
     my $name = &file_to_name($b, &today);
     if (!defined($name)) {
 	if (defined($opt_i)) {	# ignore unnamed logical ports
+	    if (defined($opt_v)) {
+		printf(STDERR "Skipping unnamed port for: %s\n", $b);
+	    }
 	    next;
 	}
 	$name = $b;
@@ -716,9 +719,14 @@ sub tail_process_file {
     my($b) = basename($f);
     my($cat, $base) = &cat_and_base($f);
     my($tm) = &date_to_tm($d);
-    our($max_sample, $opt_r);
+    our($max_sample, $opt_r, $opt_v);
 
-    if ($cat ne "cat") { return undef; }
+    if ($cat ne "cat") {
+	if ($opt_v) {
+	    printf(STDERR "No cat for %s, skipping\n", $f);
+	}
+	return undef;
+    }
 
     &restore_vars($b);
 
@@ -729,7 +737,10 @@ sub tail_process_file {
     close(IN);
 
     if ($max_sample == 0) {
-	next;
+	if (defined($opt_v)) {
+	    printf(STDERR "No new data from %s\n", $b);
+	}
+	return undef;
     }
     # for type of octet counter detection in process_data()
     foreach my $v (keys %base) {
@@ -850,6 +861,8 @@ sub just_past_midnight {
 
 sub do_all_files_today {
     my($d);
+    our($opt_v);
+
     if (&just_past_midnight()) {
 	$d = &yesterday();
     } else {
@@ -865,12 +878,14 @@ sub do_all_files_today {
     if (defined($opt_r)) {
 	unlink($opt_r . ".new"); # ignore error
 	open(REP, ">" . $opt_r . ".new") ||
-	    die "Could not open $opt_r.new for write";
+	    die "Could not open $opt_r.new for write: $!";
     }
 
     foreach $f (@files) {
 	&tail_process_file(\*REP, $dir . "/" . $f, $d);
-#	printf(".");
+	if (defined($opt_v)) {
+	    printf(".");
+	}
     }
     if (defined($opt_r)) {
 	close(REP);
@@ -879,7 +894,9 @@ sub do_all_files_today {
     if ($stat_report != "" && defined($opt_m) && defined($opt_M)) {
 	&mail_report($opt_M, $opt_m, $stat_report);
     }
-#    printf("\n");
+    if (defined($opt_v)) {
+	printf("\n");
+    }
 }
 
 sub usage {
