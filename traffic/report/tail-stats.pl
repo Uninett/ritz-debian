@@ -736,20 +736,20 @@ sub tail_process_file {
     &save_position(\*IN, $b);
     close(IN);
 
-    if ($max_sample == 0) {
-	if (defined($opt_v)) {
-	    printf(STDERR "No new data from %s\n", $b);
+    if ($max_sample != 0) {
+	# for type of octet counter detection in process_data()
+	foreach my $v (keys %base) {
+	    $fd->{$b}->{"base"}->{$v} = $base{$v};
 	}
-	return undef;
-    }
-    # for type of octet counter detection in process_data()
-    foreach my $v (keys %base) {
-	$fd->{$b}->{"base"}->{$v} = $base{$v};
-    }
 
-    &process_data($b, 0, $max_sample, $tm);
-    &trim_data($b, &timelocal(localtime) - $retention_time);
-    &save_vars($b);
+	&process_data($b, 0, $max_sample, $tm);
+	&trim_data($b, &timelocal(localtime) - $retention_time);
+	&save_vars($b);
+    } else {
+	if (defined($opt_v)) {
+	    printf(STDERR "No new data from %s, reporting old values\n", $b);
+	}
+    }
     if (defined($opt_r)) {
 	&report_tail_stats($rfile, $b, $opt_r);
     }
