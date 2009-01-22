@@ -51,13 +51,15 @@ require 'tmpfiles.pl';
 
 
 sub make_url {
-    my($sorttype, $sortby) = @_;
+    my($sorttype, $sortby, $datespec) = @_;
     my($url, $args);
 
     $url = $doc->url();
     $args = "?";
 
-    foreach $field ("datespec", "dsp-type", "type", "t-sort",
+    $args .= "datespec" . "=" . $datespec . "&amp;";
+
+    foreach $field ("dsp-type", "type", "t-sort",
 		    "tk-sort", "e-sort", "ee-sort", "filter")
     {
 	if ($field ne $sorttype) {
@@ -75,7 +77,7 @@ sub make_ref {
     my($fmt, $colhdr, $sorttype, $sortby) = @_;
 
     return sprintf("<a href=\"%s\">" . $fmt . "</a>",
-		   &make_url($sorttype, $sortby),
+		   &make_url($sorttype, $sortby,$in{"datespec"}),
 		   $colhdr);
 }
 
@@ -726,6 +728,34 @@ sub report {
 	}
     }
     printf("</h2>\n");
+
+    my $dsp = $in{"datespec"};
+    if ($dsp eq "") {
+	$dsp = &yesterday_spec(); # default is to show yesterday's
+				  # data (latest report)
+    }
+
+    printf("<table width=\"50%%\">\n");
+    printf(" <tr>\n");
+    printf("  <td align=\"left\">\n");
+    printf("   <a href=\"%s\">Previous</a>\n",
+	   &make_url($sortfield{$type},
+		     $in{$sortfield{$type}},
+		     &previous_datespec($dsp)));
+    printf("  </td>\n");
+    # Can't show report for today (not produed before after midnight)
+    if ($dsp ne &yesterday_spec()) {
+	printf("  <td align=\"right\">\n");
+	printf("   <a href=\"%s\">Next</a><br />\n",
+	   &make_url($sortfield{$type},
+		     $in{$sortfield{$type}},
+		     &next_datespec($dsp)));
+	printf("  </td>\n");
+    }
+    printf(" </tr>\n");
+    printf("</table>\n\n");
+
+    printf("<object>\n");
     printf("<hr />\n");
     printf("<pre>\n");
 
@@ -813,6 +843,7 @@ sub report {
 
     printf("</pre>\n");
     printf("<hr />\n");
+    printf("</object>\n");
 }
 
 
