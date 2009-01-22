@@ -81,6 +81,7 @@ proc pollSingleIf { sh ix } {
     if [catch {set res [$sh getnext $pl]} msg] {
 	log [format "%s: error polling single intf %s: %s" \
 		[name $sh] $ix $msg]
+	return
     }
     set fres [filterLowestMatching $sl $ix $res]
     if { "$fres" == "" } {
