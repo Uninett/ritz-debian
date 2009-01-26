@@ -348,6 +348,38 @@ proc scavengeClosedEvents { } {
     }
 }
 
+# We've seen instances where there exists events in "closed"
+# state but EventCloseTimes does not contain the event.
+# Paper over this problem by periodically checking for such events.
+
+if { [info exists addMissingClosedJob] } {
+    catch { $addMissingClosedJob destroy }
+}
+# Re-add missing events job runs each hour
+set addMissingClosedJob [job create \
+	-interval [expr 60 * 60 * 1000] \
+	-command addMissingClosedEvents]
+
+proc addMissingClosedEvents { } {
+    global EventCloseTimes
+    global EventId
+
+    foreach ix [array names EventId] {
+	set id $EventId($ix)
+	if [catch {set state [getAttr $id "state"]} msg] {
+	    puts [format "Could not get state of id %d" $id]
+	    continue
+	}
+	if [info exists EventCloseTimes($id)] {
+	    # This is the normal case
+	    continue
+	}
+	puts [format "Setting EventCloseTimes for %d" $id]
+	# Should be enough to trigger eventual closure/removal
+	set EventCloseTimes($id) [clock seconds]
+    }
+}
+
 # Finally ditch all remnants of an event, only done
 # by the scavenger job above
 
