@@ -76,6 +76,7 @@ sub save_file {
 		"save_base" => \%save_base,
 		"save_lasttime" => \%save_lasttime,
 		"save_varnames" => \%save_varnames,
+		"lastfilebase" => \%lastfilebase,
     );
 %save_vars = ("date" => \$date);
 
