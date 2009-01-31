@@ -366,8 +366,11 @@ proc addMissingClosedEvents { } {
 
     foreach ix [array names EventId] {
 	set id $EventId($ix)
-	if [catch {set state [getAttr $id "state"]} msg] {
-	    puts [format "Could not get state of id %d" $id]
+	if [catch {set state [getEventAttr $id "state"]} msg] {
+	    puts [format "Could not get state of id %d: %s" $id $msg]
+	    continue
+	}
+	if { $state != "closed" } {
 	    continue
 	}
 	if [info exists EventCloseTimes($id)] {
