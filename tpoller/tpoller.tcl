@@ -83,12 +83,26 @@ proc expectedUptime { name newup } {
     global cx uptimeSlop
 
     if { ! [info exists cx($name,uptime)] } { return 0; }
+    set lastuptime $cx($name,uptime)
+    set cx($name,uptime) $newup
+
+    # We don't know what to expect in this case
     if { ! [info exists cx($name,lastpoll)] } { return 0; }
-    set estup [expr $cx($name,uptime) + \
-	    100 * ( [clock seconds] - $cx($name,lastpoll) )]
-    
+
+    # Estimate new expected uptime
+    set estup [expr $lastuptime + \
+		   100 * ( [clock seconds] - $cx($name,lastpoll) )]
+
+    # 32-bit overflow, ignore; uptime counter wraparound
+    if { $estup > 0xffffffff } {
+	return 1
+    }
+
     if { $cx($name,uptime) == 0 } { return 0; }
+
     if { $newup < $estup - $uptimeSlop } { return 0; }
+
+    # Everything as expected
     return 1
 }
 
