@@ -1,3 +1,94 @@
+2009-02-23  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Bump to 0.9.7.
+
+2009-02-04  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Make an attempt at handling sysUpTime.0 counter wraparound
+	in a semi-sensible way.  If new estimated uptime would be
+	larger than 2^31-1, don't count it as a reboot event and instead
+	indicate "uptime is as expected".
+
+2009-01-31  Havard Eidnes  <he@uninett.no>
+
+	* zino/events.tcl:
+	Uhm, the "add missing closed events" function should not touch
+	events which are not closed(!)
+
+2009-01-27  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/customer-ts.pl:
+	Also save and restore %lastfilebase between invocations,
+	so that read-5m-sum can correctly handle a move of a
+	logical port name to a different interface.
+
+2009-01-26  Havard Eidnes  <he@uninett.no>
+
+	* zino/events.tcl:
+	It appears that sometimes zino manages to set some events to "closed"
+	state without the events being added to the list of closed but not
+	scavenged events.  Add a job run each hour which checks all events
+	and adds any missing closed events to the list.
+
+2009-01-22  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	In the case where no data arrived since the last time, don't skip
+	reporting for the port, but instead do a report based on the
+	previously collected values.  This fixes the problem that the stats
+	for some ports would be left out if you run this script more often
+	than your slowest poll interval...
+
+	* zino/status.tcl:
+	If we could not poll the interface, don't proceed and try
+	to use the variable which is now not set...
+
+	* traffic/cgi/tbl-report.pl:
+	Correct the computation of "Next" and "Previous" links
+	when the incoming datespec is empty, meaning that yesterday's
+	report is to be shown.
+	Don't output a "Next" link (to a nonexistent report) when
+	displaying yesterday's report.
+	Correct XHTML document compliance.
+
+2008-12-01  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Increase verbosity when given the -v option.
+
+2008-11-27  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Correct typo in printf list in error message (use the right variable).
+
+	* traffic/report/tail-stats.pl:
+	Add some more verbosity under the -v option:
+	output a line per day and name.
+
+	* traffic/report/tail-stats.pl:
+	Be a bit less verbose when both -r and -d are specified, and just
+	ignore -r option in that case.
+	Permit the specificaiton of more than one logical name via the -n
+	option, by supporting a comma-separated list of names.
+
+2008-11-17  Havard Eidnes  <he@uninett.no>
+
+	* zino/log.tcl:
+	Close the channels where we could no longer log information.
+	This was responsible for an FD leak in zino.
+
+2008-11-13  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Reduce expiry time to 5 minutes when looking at "today".
+
+2008-11-11  Havard Eidnes  <he@uninett.no>
+
+	* traffic/plot/plot-raw.pl:
+	In plot_eerrs, use the correct SNMP variable names to compute
+	the sum of OK + errored packets.
+
 2008-10-22  Havard Eidnes  <he@uninett.no>
 
 	* ChangeLog: Record the changes for 0.9.6.
