@@ -62,7 +62,7 @@ use Date::Format;
 sub read_log {
     my($fh, $zero_tm, $td) = @_;
     my($h, $m, $s, $sample_no, %sample_no, $sno);
-    my($v, $dummy);
+    my($v, $instance, %instance);
     my($delta, $lasttime, $day, $reboot_day, $reboot_time);
     my($now, $dstcomp, %dstcomp);
     my($starter);
@@ -209,7 +209,7 @@ sub read_log {
             next;
         }
 
-        ($v, $dummy) = split(/\./, $f[5]);
+        ($v, $instance) = split(/\./, $f[5]);
 
 	if (!defined($data_seen{$v})) {
 	    if (defined($lasttime{$v})) {
@@ -219,10 +219,16 @@ sub read_log {
 	    }
 	    $data_seen{$v} = 1;
 	}
-	if (!defined($base{$v})) {
+
+	# If we change instance for this variable, use current
+	# value as a baseline, and skip to next line.
+	# Do the same if we have not seen any data yet.
+	if ((defined($instance{$v}) && $instance{$v} != $instance) ||
+	    !defined($base{$v})) {
 	    $base{$v} = $f[6];
 	    $lasttime{$v} = $now;
 	    $dstcomp{$v} = 0;
+	    $instance{$v} = $instance;
 	    next;
 	}
 
