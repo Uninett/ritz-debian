@@ -55,7 +55,7 @@
 sub read_log {
     my($fh, $zero_tm) = @_;
     my($h, $m, $s);
-    my($v, $dummy);
+    my($v, $instance, %instance);
     my($delta, $delta_time, $delta_rate);
     my($lasttime, $day, $reboot_day, $reboot_time, $last_day);
     my($now, %base, %lasttime);
@@ -128,11 +128,13 @@ sub read_log {
             next;
         }
 
-        ($v, $dummy) = split(/\./, $f[5]);
+        ($v, $instance) = split(/\./, $f[5]);
 
-        if (!defined($base{$v})) {
+        if (!defined($base{$v}) ||
+	    (defined($instance{$v}) && $instance{$v} != $instance)) {
             $base{$v} = $f[6];
 	    $lasttime{$v} = $now;
+	    $instance{$v} = $instance;
 	    next;
 	}
 
