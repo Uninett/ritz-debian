@@ -161,7 +161,7 @@ sub printit {
 
 sub read_template {
     my($f) = @_;
-    our(@head_lines, @tail_lines);
+    our(@head_lines, @mid_lines, @tail_lines);
 
     open(IN, $f) || die "Could not open $f: $!";
     while(<IN>) {
@@ -175,6 +175,17 @@ sub read_template {
 		chomp;
 		if ($_ ne $marker) {
 		    push(@head_lines, $_);
+		}
+	    }
+	}
+
+	if (/^middle/) {
+	    my($marker) = $_[1];
+	    while ($_ ne $marker) {
+		$_ = <IN>;
+		chomp;
+		if ($_ ne $marker) {
+		    push(@mid_lines, $_);
 		}
 	    }
 	}
@@ -197,7 +208,7 @@ sub read_template {
 sub process_data {
     my($desc) = @_;
     my(%last_in, %last_out, %h_in, %h_out);
-    our(@head_lines, @tail_lines);
+    our(@head_lines, @mid_lines, @tail_lines);
 
     $now = &modtime_str("%TOPDIR%/reports/load-now.txt");
 
@@ -225,6 +236,13 @@ sub process_data {
     print OUT (join("\n", @head_lines));
     printf(OUT "<hr />\n");
     &printit(OUT, "top10-last", @last);
+    printf(OUT "<hr />\n");
+    if (defined($mid_lines[0])) {
+	print OUT (join("\n", @mid_lines));
+    } else {
+	print OUT "<p>An image indicating navigation areas can be seen\n";
+	print OUT "<a href=\"/pics/zoom-cur-top10.png\">here</a>.\n";
+    }
     printf(OUT "<hr />\n");
     &printit(OUT, "top10-1h", @last_h);
 
