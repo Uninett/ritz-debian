@@ -360,5 +360,24 @@ print("</map>\n");
 
 print $q->hr;
 
+my($tail_template) = "%TOPDIR%/top10.tail";
+my($img_help) = "/pics/zoom-top10.png";
+if (-f $tail_template) {
+    open(IN, $tail_template) || die "Could not open $tail_template: $!";
+    while(<IN>) {
+	if (/#ZOOMIMG#/) {
+	  s:#ZOOMIMG#:$img_help:;
+	}
+	print $_;
+    }
+} else {
+    printf("<p>\n");
+    printf("An image showing the various navigation areas\n");
+    printf("can be seen <a href=\"%s\">", $img_help);
+    printf("here</a>\n");
+}
+
+print $q->hr;
+
 print $q->end_html;
 
