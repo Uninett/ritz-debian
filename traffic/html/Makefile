@@ -4,7 +4,7 @@
 
 DOCS=	dsp.html img-doc.html intf-load.html map-doc.html tbl-report.html
 
-PICS=	map-zoom.gif zoom.gif
+PICS=	map-zoom.gif zoom.gif zoom-top10.png
 
 all: zoom.gif
 
