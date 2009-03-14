@@ -27,6 +27,7 @@ subst: Makefile.inc Makefile mk-subst.awk
 		echo mv subst.new ${.CURDIR}/subst; \
 		mv subst.new ${.CURDIR}/subst; \
 	fi
+	perl check-subst.pl -s subst -o Makefile.inc.dist
 
 new-vars: Makefile.inc Makefile.inc.dist
 	( awk -F= '/^#/{} /=/ { print $$1 }' Makefile.inc >/tmp/o.$$$$; \
