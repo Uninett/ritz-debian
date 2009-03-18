@@ -10,7 +10,8 @@ SCRIPTS=	emit-map.pl \
 		load-map.pl \
 		tbl-report.pl \
 		xf-load-map.pl \
-		r-all.pl
+		r-all.pl \
+		top10.pl
 
 SUBST=	${.CURDIR}/../../subst
 
