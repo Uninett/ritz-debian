@@ -27,8 +27,8 @@ require 'utils.pl';
 # Fields in traffic.kbit for average in and out
 our(%fields) = (
     "day" => {
-	"avg-in" => 4,
-	"avg-out" => 5,
+	"avg-in" => 5,
+	"avg-out" => 6,
 #	"busy-in" => 1,
 #	"busy-out" => 2,
 #	"busy-period" => "hour",
