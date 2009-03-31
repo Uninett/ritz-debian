@@ -762,6 +762,7 @@ sub do_one_file {
     my($dsp, $name) = @_;
     my($i);
     our($max_sample, %sample_time, $fd, %base, $date, $opt_I);
+    our(%lasttime, %firsttime, %dstcomp);
 
     my($base_tm, $nd) = &decode_datespec($dsp);
 
@@ -820,6 +821,9 @@ sub do_one_file {
 			    $retention_time));
 	}
     }
+    undef %lasttime;
+    undef %firsttime;
+    undef %dstcomp;
 }
 
 sub do_all_files {
