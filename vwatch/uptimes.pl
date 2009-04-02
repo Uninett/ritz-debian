@@ -165,7 +165,7 @@ sub report {
     my(@ll, @sl);
 
     foreach $rtr (keys %software) {
-	push(@ll, sprintf("%-25s %-36s %16s\n",
+	push(@ll, sprintf("%-25s %-36.36s %16s\n",
 			  $rtr,
 			  &pretty_desc($software{$rtr}),
 			  &uptime($rtr)
