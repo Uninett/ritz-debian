@@ -24,6 +24,7 @@ COMMON=	pretty-ios.pl \
 	unctime.pl
 
 PPROGS=	cur-vers \
+	uptimes \
 	vw-daily \
 	vw-day-report \
 	vw-month-rst \
