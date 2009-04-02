@@ -90,17 +90,31 @@ proc expectedUptime { name newup } {
     if { ! [info exists cx($name,lastpoll)] } { return 0; }
 
     # Estimate new expected uptime
+    set now [clock seconds]
     set estup [expr $lastuptime + \
-		   100 * ( [clock seconds] - $cx($name,lastpoll) )]
+		   100 * ( $now - $cx($name,lastpoll) )]
 
-    # 32-bit overflow, ignore; uptime counter wraparound
-    if { $estup > 0xffffffff } {
+    # 32-bit unsigned counter overflow (or too close), ignore;
+    # uptime counter wraparound has happened or is imminent
+    if { $estup > 0xffffffff - $uptimeSlop } {
+	set msg [format \
+"%s: uptime wraparound (or close), estup %s lastuptime %s lastpoll %s time %s" \
+		     $name $estup $lastuptime \
+		     $cx($name,lastpoll) $now]
+	logerr $msg
 	return 1
     }
 
     if { $cx($name,uptime) == 0 } { return 0; }
 
-    if { $newup < $estup - $uptimeSlop } { return 0; }
+    if { $newup < $estup - $uptimeSlop } {
+	set msg [format \
+"%s: unexpected uptime, newup %s estup %s lastuptime %s lastpoll %s time %s" \
+		     $name $newup $estup $uptimeSlop \
+		     $lastuptime $cx($name,lastpoll) $now]
+	logerr $msg
+	return 0
+    }
 
     # Everything as expected
     return 1
