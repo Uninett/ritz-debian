@@ -29,23 +29,14 @@ our(%fields) = (
     "day" => {
 	"avg-in" => 5,
 	"avg-out" => 6,
-#	"busy-in" => 1,
-#	"busy-out" => 2,
-#	"busy-period" => "hour",
     },
     "week" => {
 	"avg-in" => 7,
 	"avg-out" => 8,
-#	"busy-in" => 3,
-#	"busy-out" => 4,
-#	"busy-period" => "hour",
     },
     "month" => {
 	"avg-in" => 7,
 	"avg-out" => 8,
-#	"busy-in" => 3,
-#	"busy-out" => 5,
-#	"busy-period" => "day",
     },
     );
 
@@ -88,8 +79,6 @@ sub get_data {
     our(%avg_in, %avg_out);
     our(%ports);
     our(%fields);
-#    our(%b_in, %b_out);
-#    our(%busy_in, %busy_out);
     
     open(IN, $f) || &err("Could not open $f: $!");
     while(<IN>) {
@@ -97,8 +86,6 @@ sub get_data {
 	my $p = $_[0];
 	$a_in{$p} = $_[$fields{$dsp_t}->{"avg-in"}];
 	$a_out{$p} = $_[$fields{$dsp_t}->{"avg-out"}];
-#	$b_in{$p} = $_[$fields{$dsp_t}->{"busy-in"}];
-#	$b_out{$p} = $_[$fields{$dsp_t}->{"busy-in"}];
     }
     close(IN);
 
@@ -106,8 +93,6 @@ sub get_data {
 	foreach my $p (@{ $ports{$c} }) {
 	    $avg_in{$c} += $a_in{$p};
 	    $avg_out{$c} += $a_out{$p};
-#	    $busy_in{$c} += $b_in{$p};
-#	    $busy_out{$c} += $b_out{$p};
 	}
     }
     foreach my $c (keys %avg_in) {
@@ -167,10 +152,21 @@ EOF
 
     close(OUT);
 
-    system("gnuplot $plotfile");
+    my $errstr = "";
+    my $output = `%GNUPLOT% $plotfile 2>&1`;
 
-#    unlink($plotfile);
-#    unlink($datafile);
+    if ($? == -1) {
+	$errstr = "Failed to run %GNUPLOT%: $!";
+    } elsif ($? != 0) {
+	$errstr = sprintf("%GNUPLOT% exited with value %d\n", $? >> 8);
+	$errstr .= $output;
+    }
+    if ($errstr ne "") {
+	&err($errstr);
+    }
+
+    unlink($plotfile);
+    unlink($datafile);
 
     rename($imgfile . ".new", $imgfile);
 
@@ -228,16 +224,7 @@ our(%avg_in, %avg_out);
 
 &get_data($dsp);
 
-# my $bplotfn = "%IMGDIR%/" . &plotname($dsp, "busy") . ".png";
-# my (@busy) = &make_plot($bplotfn, &pretty_datespec($dsp),
-# 			$fields{$dsp_t}->{"busy-period"},
-# 			\%busy_in, \%busy_out);
-
 my $plotname = &plotname($dsp, "avg");
-
-my (@customers) = &make_plot($plotname,
-			     &pretty_datespec($dsp), "average",
-			     \%avg_in, \%avg_out);
 
 my($head_template) = "%TOPDIR%/top10.head";
 my($title) = sprintf("Top 10 customers in %s",
@@ -255,6 +242,10 @@ if (-f $head_template) {
 }
 
 print $q->hr;
+
+my (@customers) = &make_plot($plotname,
+			     &pretty_datespec($dsp), "average",
+			     \%avg_in, \%avg_out);
 
 my $mapname = $plotname;
 
