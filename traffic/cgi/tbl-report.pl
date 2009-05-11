@@ -731,8 +731,9 @@ sub report {
 
     my $dsp = $in{"datespec"};
     if ($dsp eq "") {
-	$dsp = &yesterday_spec(); # default is to show yesterday's
-				  # data (latest report)
+	$dsp = &make_datespec($dsp_t, "");
+				# default is to show previous "whatever"
+				# data (latest report)
     }
 
     printf("<table width=\"50%%\">\n");
@@ -744,7 +745,7 @@ sub report {
 		     &previous_datespec($dsp)));
     printf("  </td>\n");
     # Can't show report for today (not produed before after midnight)
-    if ($dsp ne &yesterday_spec()) {
+    if ($dsp ne &make_datespec($dsp_t, "")) {
 	printf("  <td align=\"right\">\n");
 	printf("   <a href=\"%s\">Next</a><br />\n",
 	   &make_url($sortfield{$type},
