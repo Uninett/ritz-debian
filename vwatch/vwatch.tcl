@@ -81,8 +81,20 @@ proc expectedUptime { sh newup } {
 
     if { ! [info exists lastpoll($sh)] } { return 0; }
 
+    # Estimate new expected uptime
+    set now [clock seconds]
     set estup [expr $uptime($sh) + \
-	    100 * ( [clock seconds] - $lastpoll($sh) ) ]
+	    100 * ( $now - $lastpoll($sh) ) ]
+
+    # 32-bit unsigned counter overflow (or too close), ignore;
+    # uptime counter wraparound has happened or is imminent
+    if { $estup > 0xffffffff - $uptimeSlop } {
+	set msg [format \
+"%s: uptime wraparound (or close), estup %s lastuptime %s lastpoll %s time %s" \
+		     [name $sh] $estup $uptime($sh) $lastpoll($sh) $now]
+	logMsg $msg
+	return 1
+    }
 
     if { $uptime($sh) == 0 } { return 0; }
     if { $newup < $estup - $uptimeSlop } { return 0; }
