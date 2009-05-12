@@ -641,7 +641,9 @@ sub position_file {
     my $mod_date = &tm_to_date($mtime);
     my $pos = $fd->{$b}->{"position"};
 
-    if (!defined($pos) || $mod_date ne $p->{"date"} || $pos > $size) {
+    if (!defined($pos) || $pos > $size ||
+	(($mod_date ne $p->{"date"}) &&
+	 ($mod_date ne &yesterday() && !&just_past_midnight()))) {
 	# stale data and/or file was rotated out
 	$fd->{$b}->{"position"} = 0;
 	return undef;
