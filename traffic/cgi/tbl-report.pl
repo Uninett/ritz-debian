@@ -85,14 +85,14 @@ sub make_ref {
 sub day_traffic_header {
 
     printf("%-25s %15s  %15s\n", "", "Busy hour", "Peak sample");
-    printf("%-25s %7s %7s  %7s %7s  %7s  %7s\n",
+    printf("%-25s %7s %7s  %7s %7s  %7s  %8s\n",
 	   &make_ref("%-25s", "Interface", "t-sort", "Name"),
 	   &make_ref("%7s", "input",  "t-sort", "Busy+hour+in"),
 	   &make_ref("%7s", "output", "t-sort", "Busy+hour+out"),
 	   &make_ref("%7s", "input",  "t-sort", "Peak+sample+in"),
 	   &make_ref("%7s", "output", "t-sort", "Peak+sample+out"),
 	   "average", "speed");
-    printf("%-25s %3s  %2s %3s  %2s  %3s  %2s %3s  %2s  %3s %3s  %7s\n", "",
+    printf("%-25s %3s  %2s %3s  %2s  %3s  %2s %3s  %2s  %3s %3s  %8s\n", "",
 	   "%", "hr", "%", "hr", "%", "hr", "%", "hr",
 	   &make_ref("%3s", "%in", "t-sort", "Average+in"),
 	   &make_ref("%3s", "out", "t-sort", "Average+out"),
@@ -102,7 +102,7 @@ sub day_traffic_header {
 sub day_traffic_line {
     my($dsp, @l) = @_;
 
-    printf("%-25.25s %3s  %2d %3s  %2d  %3s  %2d %3s  %2d  %3s %3s  %7d\n",
+    printf("%-25.25s %3s  %2d %3s  %2d  %3s  %2d %3s  %2d  %3s %3s  %8d\n",
 	   $l[0],
 	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic\">%3d</a>",
 		   $l[0], $dsp, $l[1]),
@@ -128,9 +128,9 @@ sub week_traffic_header {
 
     printf("%-25s %7s  %7s  %15s  %7s\n", "",
 	   "Peak", "Busy ", "Busy day  ", "Week");
-    printf("%-25s %7s  %7s  %7s %7s  %7s  %7s\n", "",
+    printf("%-25s %7s  %7s  %7s %7s  %7s  %8s\n", "",
 	   "sample", "hour ", "input", "output", "average", "speed");
-    printf("%-25s %3s %3s  %3s %3s  %3s %3s %3s %3s  %3s %3s  %6s\n",
+    printf("%-25s %3s %3s  %3s %3s  %3s %3s %3s %3s  %3s %3s  %8s\n",
 	   &make_ref("%-25s", "Port", "t-sort", "Name"),
 	   &make_ref("%3s", "%in", "t-sort", "Peak+sample+in"),
 	   &make_ref("%3s", "out", "t-sort", "Peak+sample+out"),
@@ -146,7 +146,7 @@ sub week_traffic_header {
 sub week_traffic_line {
     my($dsp, @l) = @_;
 
-    printf("%-25.25s %3s %3s  %3s %3s  %3s %3s %3s %3s  %3s %3s  %7s\n",
+    printf("%-25.25s %3s %3s  %3s %3s  %3s %3s %3s %3s  %3s %3s  %8s\n",
 	   $l[0],
 	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic\">%3d</a>",
 		   $l[0], $dsp, $l[1]),
@@ -174,9 +174,9 @@ sub month_traffic_header {
 
     printf("%-25s %7s  %16s  %7s\n", "",
 	   "Peak", "Busy day   ", "Month");
-    printf("%-25s %7s  %7s  %7s  %7s  %7s\n", "",
+    printf("%-25s %7s  %7s  %7s  %7s  %8s\n", "",
 	   "sample", "input", "output", "average", "Speeds");
-    printf("%-25s %3s %3s  %3s %3s  %3s %3s  %3s %3s  %6s\n",
+    printf("%-25s %3s %3s  %3s %3s  %3s %3s  %3s %3s  %8s\n",
 	   &make_ref("%-25s", "Port", "t-sort", "Name"),
 	   &make_ref("%3s", "%in", "t-sort", "Peak+sample+in"),
 	   &make_ref("%3s", "out", "t-sort", "Peak+sample+out"),
@@ -190,7 +190,7 @@ sub month_traffic_header {
 sub month_traffic_line {
     my($dsp, @l) = @_;
 
-    printf("%-25.25s %3s %3s  %3s %3s  %3s %3s  %3s %3s  %7s\n",
+    printf("%-25.25s %3s %3s  %3s %3s  %3s %3s  %3s %3s  %8s\n",
 	   $l[0],
 	   sprintf("<a href=\"plot-all/%s,%s,day,traffic\">%3d</a>",
 		   $l[0], $dsp, $l[1]),
@@ -211,9 +211,9 @@ sub month_traffic_line {
 
 sub day_traffic_kbit_header {
 
-    printf("%-25s %15s  %15s  %15s  %7s\n",
+    printf("%-25s %15s  %15s  %15s  %8s\n",
 	   "", "Busy hour", "Peak sample", "24hr average", "speed");
-    printf("%s %s %s  %s %s  %s %s  %7s\n",
+    printf("%s %s %s  %s %s  %s %s  %8s\n",
 	   &make_ref("%-25s", "Interface", "tk-sort", "Name"),
 	   &make_ref(  "%7s", "input",     "tk-sort", "Busy+hour+in"),
 	   &make_ref(  "%7s", "output",    "tk-sort", "Busy+hour+out"),
@@ -227,7 +227,7 @@ sub day_traffic_kbit_header {
 sub day_traffic_kbit_line {
     my($dsp, @l) = @_;
 
-    printf("%-25.25s %7s %7s  %7s %7s  %7s %7s  %7s\n",
+    printf("%-25.25s %7s %7s  %7s %7s  %7s %7s  %8s\n",
 	   $l[0],
 	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[1]),
@@ -246,11 +246,11 @@ sub day_traffic_kbit_line {
 
 sub week_traffic_kbit_header {
 
-    printf("%-25s %15s  %15s  %15s  %15s  %7s\n",
+    printf("%-25s %15s  %15s  %15s  %15s  %8s\n",
 	   &make_ref("%-25s", "Port", "tk-sort", "Name"),
 	   "Peak sample", "Busy hour", "Busy day(24h)",
 	   "Week average", "speed"); 
-    printf("%-25s %7s %7s  %7s %7s  %7s %7s  %7s %7s  %7s\n", "",
+    printf("%-25s %7s %7s  %7s %7s  %7s %7s  %7s %7s  %8s\n", "",
 	   &make_ref("%7s", "input",  "tk-sort", "Peak+sample+in"),
 	   &make_ref("%7s", "output", "tk-sort", "Peak+sample+out"),
 	   &make_ref("%7s", "input",  "tk-sort", "Busy+hour+in"),
@@ -265,7 +265,7 @@ sub week_traffic_kbit_header {
 sub week_traffic_kbit_line {
     my($dsp, @l) = @_;
 
-    printf("%-25.25s %7s %7s  %7s %7s  %7s %7s  %7s %7s  %7s\n",
+    printf("%-25.25s %7s %7s  %7s %7s  %7s %7s  %7s %7s  %8s\n",
 	   $l[0],
 	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[1]),
@@ -292,7 +292,7 @@ sub month_traffic_kbit_header {
 	   &make_ref("%-25s", "Port", "tk-sort", "Name"),
 	   "Peak sample", "-------Busy day------", "Month average",
 	   "speed(s)");
-    printf("%-25s %7s %7s  %7s %3s %7s %3s  %7s %7s  %7s\n", "",
+    printf("%-25s %7s %7s  %7s %3s %7s %3s  %7s %7s  %8s\n", "",
 	   &make_ref("%7s", "input",  "tk-sort", "Peak+sample+in"),
 	   &make_ref("%7s", "output", "tk-sort", "Peak+sample+out"),
 	   &make_ref("%7s", "input",  "tk-sort", "Busy+day+in"),
@@ -307,7 +307,7 @@ sub month_traffic_kbit_header {
 sub month_traffic_kbit_line {
     my($dsp, @l) = @_;
 
-    printf("%-25.25s %7s %7s  %7s %3s %7s %3s  %7s %7s  %7s\n",
+    printf("%-25.25s %7s %7s  %7s %3s %7s %3s  %7s %7s  %8s\n",
 	   $l[0],
 	   sprintf("<a href=\"plot-all/%s,%s,day,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[1]),
