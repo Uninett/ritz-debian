@@ -53,6 +53,7 @@ require 'tmpfiles.pl';
 sub make_url {
     my($sorttype, $sortby, $datespec) = @_;
     my($url, $args);
+    our(%in);
 
     $url = $doc->url();
     $args = "?";
@@ -75,6 +76,7 @@ sub make_url {
 
 sub make_ref {
     my($fmt, $colhdr, $sorttype, $sortby) = @_;
+    our(%in);
 
     return sprintf("<a href=\"%s\">" . $fmt . "</a>",
 		   &make_url($sorttype, $sortby,$in{"datespec"}),
@@ -689,6 +691,7 @@ sub report {
     my($title, $f, $sortargs, $ift_filter, $reg_filter);
     my($put_header, $filter_ift, $iftf, $filter_r, $put_line);
     my($tmpf, $cmd, $errf, $ret);
+    our(%in);
 
     if (!defined ($put_line = $put_line{$type}{$dsp_t})) {
 	&err("Sorry, no support for $type / $dsp_t report");
@@ -864,8 +867,12 @@ sub report {
 sub check_and_report {
     my($dsp, $dsp_t);
     my($tm, $nd, $dn, $find, $reporter, $sortfield);
+    our(%in);
 
     $dsp = &make_datespec($dsp_t = $in{"dsp-type"}, $in{"datespec"});
+    # Pretend that the unambiguated datespec returned was what
+    # was originally specified:
+    $in{"datespec"} = $dsp;
 
     ($tm, $nd) = &decode_datespec($dsp);
     if (! defined($tm)) {
