@@ -123,13 +123,18 @@ sub read_log {
 	    my $log_time = $hr * 3600 + $mr * 60 + $sr;
 	    if ($reboot_time > $log_time) { next; } # in the future?
             foreach $k (keys %base) {
-                $base{$k} = 0;
+                $base{$k} = undef;
             }
             next;
         }
 
         ($v, $instance) = split(/\./, $f[5]);
 
+	# If we change instance for this variable, use current
+	# value as a baseline, and skip to next line.
+	# Do the same if we have not seen any data yet, or
+	# if the management agent re-initialized (rebooted or
+	# the sysUpTime.0 counter wrapped).
         if (!defined($base{$v}) ||
 	    (defined($instance{$v}) && $instance{$v} != $instance)) {
             $base{$v} = $f[6];

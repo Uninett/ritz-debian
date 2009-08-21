@@ -204,7 +204,7 @@ sub read_log {
 	    if ($reboot_time < $lasttime) { next; } # ignore, too long ago
 	    if ($reboot_time > $log_time) { next; } # in the future?
             foreach $k (keys %base) {
-                $base{$k} = 0;
+                $base{$k} = undef;
             }
             next;
         }
@@ -222,7 +222,9 @@ sub read_log {
 
 	# If we change instance for this variable, use current
 	# value as a baseline, and skip to next line.
-	# Do the same if we have not seen any data yet.
+	# Do the same if we have not seen any data yet, or
+	# if the management agent re-initialized (rebooted or
+	# the sysUpTime.0 counter wrapped).
 	if ((defined($instance{$v}) && $instance{$v} != $instance) ||
 	    !defined($base{$v})) {
 	    $base{$v} = $f[6];
