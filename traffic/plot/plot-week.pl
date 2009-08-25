@@ -403,7 +403,7 @@ sub make_plot_file  {
 	    {
 		$last_w = $w;
 
-		$dsp = &make_datespec("week", $y . "-" . $w);
+		$dsp = &make_datespec("week", $y . "--" . $w);
 		$dn = &find_week_report_dir($dsp);
 		if (!defined($dn)) { next; } # oops...
 		if (!defined($plotit = $data_plotter{$plot})) {
