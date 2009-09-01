@@ -19,7 +19,7 @@ install:
 		tmp=/tmp/jtmp.$$$$; \
 		echo sed -f ${SUBST} '<' $$s '>' $$tmp; \
 		sed -f ${SUBST} < $$s > $$tmp; \
-		if egrep '%[A-Z_]*%' $$tmp; then \
+		if egrep '%[A-Z_][A-Z_][A-Z_]*%' $$tmp; then \
 			echo "Remaining substitution in $$s" >&2; \
 			echo "May need to update top-level Makefile.inc" >&2; \
 			rm -f $$tmp; \
