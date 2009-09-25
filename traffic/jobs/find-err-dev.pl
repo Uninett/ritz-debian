@@ -308,11 +308,11 @@ __END__
 
 =head1 NAME
 
-find_err_dev.pl - ...
+find-err-dev.pl - ...
 
 =head1 SYNOPSIS
 
-find_err_dev.pl [options] files
+find-err-dev.pl [options] files
 
 =head1 OPTIONS
 
