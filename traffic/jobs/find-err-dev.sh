@@ -21,9 +21,9 @@ COUNT=20  # Number of days to use
 ERRS_PERC_OPTIONS="--previous=%TOPDIR%/data/errors_perc.yaml --diff"
 EERRS_PERC_OPTIONS="--previous=%TOPDIR%/data/ether_errs_perc.yaml --diff"
 
-EMAIL_TEXT="
-Here follows a list of which logical ports have had statistically
-significant changes since the previous report was generated.
+EMAIL_TEXT=" Here follows a list of which logical ports have had
+statistically significant changes in input error rate since the
+previous report was generated.
 
 The analyzed data can be viewed here:
   http://%WEBSRVR%/%HTMLPFX%/tbl-report.html
