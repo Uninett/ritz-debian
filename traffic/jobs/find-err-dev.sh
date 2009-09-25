@@ -26,7 +26,7 @@ statistically significant changes in input error rate since the
 previous report was generated.
 
 The analyzed data can be viewed here:
-  http://%WEBSRVR%/%HTMLPFX%/tbl-report.html
+  http://%WEBSRVR%%HTMLPFX%/tbl-report.html
 "
 
 FIND_DEV="%TOPDIR%/bin/find-err-dev.pl"
