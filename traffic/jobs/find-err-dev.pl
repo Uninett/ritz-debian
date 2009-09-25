@@ -44,7 +44,7 @@ use Pod::Usage;
 # Following values can be tweaked
 my $n_dev        = 3;   # Number of standard deviations we can be off
 my $min_value    = 0.2; # Min value (if standard deviation = 0)
-my $storage_file = "%TOPDIR%/last_dev.yaml";
+my $storage_file = "%TOPDIR%/data/last_dev.yaml";
 
 # Leave these as they are :)
 my $help = 0;
@@ -265,10 +265,11 @@ if ($diff) {
 	if $resolved_problems;
 
     # Print yaml of stats to storage_file
-    DumpFile($storage_file, $problem);
+    DumpFile($storage_file, $problem) ||
+	warn "Could not DumpFile $storage_file: $!";
 } else {
     # Print yaml of stats to STDOUT
-    Dump($problem);
+    Dump($problem) || warn "Could not Dump: $!";
 }
 
 sub header_line {
