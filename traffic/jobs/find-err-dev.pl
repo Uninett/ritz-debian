@@ -350,7 +350,7 @@ Produce a diff against the previous results.
 
 Where to store the previous results, so that the recent result
 can be compared to the historical values.  The default value
-is %TOPDIR%/last_dev.yaml.
+is %TOPDIR%/data/last_dev.yaml.
 
 =back
 
