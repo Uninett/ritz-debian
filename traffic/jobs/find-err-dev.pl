@@ -249,7 +249,7 @@ if ($diff) {
 		    join (', ',  map qq('$_': $new{$_}), keys(%new)). "\n";
                 print header_line($errtype)
 		    unless $header_printed{$errtype}++;
-                print map {errs_line ($errtype, $iface, \%new)} keys %new;
+                print map {errs_line ($errtype, $iface, \%new)} (keys %new)[0];
             }
             if (keys(%resolved)) {
                 $resolved_problems .=
@@ -294,9 +294,9 @@ sub errs_line {
     my %line_format = 
         (
          'errors.perc'     =>
-	 "%-25.25s  %5s %5s %5s %5s %5s %5s  %5s %5s %5s\n",
-         'ether_errs.perc' =>
 	 "%-25.25s  %3s %3s %3s %5s %5s %5s %5s %5s  %5s %5s\n",
+         'ether_errs.perc' =>
+	 "%-25.25s  %5s %5s %5s %5s %5s %5s  %5s %5s %5s\n",
         ); 
         return(sprintf($line_format{$type}, $intf,
 		       map {defined $cols->{$_} ?
