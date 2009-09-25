@@ -1,4 +1,4 @@
-#/bin/sh
+#! /bin/sh
 #
 # $Id$
 #
@@ -27,7 +27,6 @@ significant changes since the previous report was generated.
 
 The analyzed data can be viewed here:
   http://%WEBSRVR%/%HTMLPFX%/tbl-report.html
-  
 "
 
 FIND_DEV="%TOPDIR%/bin/find-err-dev.pl"
@@ -48,7 +47,6 @@ ERRS_PERC_REPORT=`$FIND_DEV $ERRS_PERC_OPTIONS $ERRS_PERC_FILES`
 # Print nice informative message
 cat<<EOF
 $EMAIL_TEXT
-
 errors.perc
 ===========
 $ERRS_PERC_REPORT
