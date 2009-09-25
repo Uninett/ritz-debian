@@ -18,8 +18,8 @@ COUNT=20  # Number of days to use
 
 # Options for the two file types run
  # 'find_devation.pl --help' for more info
-ERRS_PERC_OPTIONS="--previous=errors_perc.yaml --diff"
-EERRS_PERC_OPTIONS="--previous=ether_errs_perc.yaml --diff"
+ERRS_PERC_OPTIONS="--previous=%TOPDIR%/data/errors_perc.yaml --diff"
+EERRS_PERC_OPTIONS="--previous=%TOPDIR%/data/ether_errs_perc.yaml --diff"
 
 EMAIL_TEXT="
 Here follows a list of which logical ports have had statistically
