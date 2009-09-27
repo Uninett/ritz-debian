@@ -233,6 +233,7 @@ sub read_log {
 	    $instance{$v} = $instance;
 	    next;
 	}
+	$instance{$v} = $instance;
 
 	# old "compressed" logs appear to have a single
 	# "stray" sample which goes back in time when shifting
