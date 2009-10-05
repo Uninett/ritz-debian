@@ -49,16 +49,20 @@
 # on Cisco devices; briefly "bla bla, logical-port-name, bla bla"
 # where the ", " is the field delimiter (note: two chars!).
 
+use strict;
 require 'getopts.pl';
+
 
 sub open_dbs {
     my($dbdir) = @_;
+    our(%ftn, %ntf);
 
     dbmopen(%ftn, "$dbdir/ftn", 0664);
     dbmopen(%ntf, "$dbdir/ntf", 0664);
 }
 
 sub close_dbs {
+    our(%ftn, %ntf);
 
     dbmclose(%ftn);
     dbmclose(%ntf);
@@ -67,6 +71,7 @@ sub close_dbs {
 sub read_config {
     my($f) = @_;
     my($dev, $poll_seen, $def_community);
+    our(%community, %polladdr, %device);
 
     open(IN, $f) || die "Could not open $f: $!\n";
     while(<IN>) {
@@ -108,6 +113,7 @@ sub read_config {
 
 sub read_manuals {
     my($fh) = @_;
+    our(%manual);
 
     while (<$fh>) {
 	if (/^;/) { next; }
@@ -118,6 +124,7 @@ sub read_manuals {
 
 sub alive {
     my($address) = @_;
+    our($opt_n, %device);
 
     if (defined($opt_n)) { return 1; }
     # XXX Name of command should go in a config file
@@ -135,6 +142,7 @@ sub alive {
 
 sub get_addrs {
     my($dev, $polladdr) = @_;
+    our(%dead, %address, %as, %max_ix, %community);
 
     if ($dead{$polladdr} || ! &alive($polladdr)) {
 	$dead{$polladdr} = 1;
@@ -164,6 +172,7 @@ sub get_addrs {
 sub get_line_names {
     my($dev, $polladdr) = @_;
     my(@a);
+    our(%dead, %line_name, %max_ix, %community);
 
     if ($dead{$polladdr} || ! &alive($polladdr)) {
 	$dead{$polladdr} = 1;
@@ -177,7 +186,7 @@ sub get_line_names {
 	    $dead{$polladdr} = 1;
 	    return undef;
 	}
-	if (/^(\d+)\s+\S+\s+\S+ "(.*)"$/) {
+	if (/^(\d+)\s+\S+\s+\S+\s+"(.*)"$/) {
 	    my($ix) = $1;
 	    @a = split(/,[ _]/,$2);
 	    if ($#a < 1) { next; }
@@ -202,11 +211,13 @@ sub get_line_names {
 sub get_current_state {
     my($k);
     my($fn);
+    our($out_d, %polladdr, %manual, %max_ix, %as, %address);
+    our(%file, %line, %line_name, $opt_d);
 
     if (defined($opt_d)) {
 	printf(STDERR "Getting current state\n");
     }
-    foreach $r (keys %polladdr) {
+    foreach my $r (keys %polladdr) {
 	if (defined($manual{$r})) {
 	    if (defined($opt_d)) {
 		printf(STDERR "Router %s - manual mapping\n", $r);
@@ -225,7 +236,7 @@ sub get_current_state {
 	    printf(STDERR "\n");
 	}
 
-	for $i (1 .. $max_ix{$r}) {
+	for my $i (1 .. $max_ix{$r}) {
 	    $k = $r . ":" . $i;
 	    if (!defined($address{$k})) {
 		next;		# skip holes in ifIndex space
@@ -279,8 +290,12 @@ sub closed_entry {
 
 sub update_dbs {
     my($now);
-    my(@a,@b);
+    my(@a, @b);
     my($fn, $ln, $r);
+    our(%file, %line);
+    our(%ftn, %ntf);
+    our($opt_d, $opt_v, $opt_D);
+    our(%polladdr, %dead);
     
     $now = &get_today_str();
 
@@ -289,6 +304,7 @@ sub update_dbs {
     }
     foreach $ln (keys %file) {
 	if (!defined $file{$ln}) { next; }
+	$r = &fn_to_rn($file{$ln});
 	if (defined $ntf{$ln}) {
 	    # separate entries in name-to-file database
 	    @a = split(/:/, $ntf{$ln});
@@ -296,6 +312,10 @@ sub update_dbs {
 	    @b = split(/ /, $a[$#a]);
 	    if ($b[0] eq $file{$ln} && !&closed_entry($ntf{$ln})) {
 		# same as before
+		if (defined($opt_D) && ($opt_D eq $r)) {
+		    printf(STDERR "%s: entry for %s as before: %s\n",
+			   $r, $ln, $b[0]);
+		}
 		next;
 	    }
 	    # Tack on new entry at the end
@@ -321,6 +341,7 @@ sub update_dbs {
     }
     foreach $fn (keys %line) {
 	if (!defined $line{$fn}) { next; }
+	$r = &fn_to_rn($fn);
 	if (defined $ftn{$fn}) {
 	    # separate entries in file-to-name database
 	    @a = split(/:/, $ftn{$fn});
@@ -328,6 +349,10 @@ sub update_dbs {
 	    @b = split(/ /, $a[$#a]);
 	    if ($b[0] eq $line{$fn} && !&closed_entry($ftn{$fn})) {
 		# same as before
+		if (defined($opt_D) && ($opt_D eq $r)) {
+		    printf(STDERR "%s: entry for %s as before: %s\n",
+			   $r, $fn, $b[0]);
+		}
 		next;
 	    }
 	    # Tack on new entry at the end
@@ -423,16 +448,20 @@ sub get_today_str {
 	localtime(time);
     
     $today_str = sprintf("%04d%02d%02d", $year+1900, $mon+1, $mday);
+    return $today_str;
 }
 
 sub usage {
     die "usage: $0 -t topdir\n";
 }
 
+#
+# Main
+#
 
-# Main (test)
+our($opt_t, $opt_v, $opt_d, $opt_n);
 
-&Getopts("dnt:v");
+&Getopts("D:dnt:v");
 
 if (!defined($opt_t)) { &usage(); }
 if (defined($opt_v) || defined($opt_d)) {
@@ -444,10 +473,11 @@ if (defined($opt_v) || defined($opt_d)) {
 &open_dbs($opt_t . "/db");
 &read_config($opt_t . "/conf/polldevs.cf");
 
-open(IN, "$opt_t/db/manual-devs") ||
+my($fh);
+open($fh, "$opt_t/db/manual-devs") ||
     die "Could not open $opt_t/db/manual-devs\n";
-&read_manuals(IN);
-close(IN);
+&read_manuals($fh);
+close($fh);
 
 &get_current_state();
 &update_dbs();
