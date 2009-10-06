@@ -420,7 +420,7 @@ sub ensure_img_exists {
 	if (!defined($img_size{$type,$size,"x"})) {
 	    $img_size{$type,$size,"x"} = $x;
 	    $img_size{$type,$size,"y"} = $y;
-	} elsif ($img_size{$type,$size,"x"} != $x &&
+	} elsif ($img_size{$type,$size,"x"} != $x ||
 		 $img_size{$type,$size,"y"} != $y) {
 	    $img_size{$name,$type,$size,"x"} = $x;
 	    $img_size{$name,$type,$size,"y"} = $y;
