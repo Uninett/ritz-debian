@@ -51,10 +51,9 @@ use Date::Parse;
 use Date::Format;
 
 use strict;
-no strict "vars";
 
 
-$retention_time = 3600;		# 1 hour
+our($retention_time) = 3600;		# 1 hour
 
 
 sub save_file {
@@ -190,7 +189,7 @@ sub convert_times {
 
 sub compute_basic_values {
     my($b, $d, $start, $end) = @_;
-    my($i);
+    my($i, $delta_t);
     our($max_sample, %count);
     our(%sample_secs);
 
@@ -404,7 +403,7 @@ sub process_values {
 	$fd->{$b} = {};
     }
 
-    foreach $cv ("okbps", "ikbps", "ipps", "opps", "obpp", "ibpp") {
+    foreach my $cv ("okbps", "ikbps", "ipps", "opps", "obpp", "ibpp") {
 	&accumulate_stats($cv, $fd->{$b});
 	if (!defined($opt_N)) {
 	    $report = &flag_deviations($cv, $b, $fd->{$b}, $d, $tm);
@@ -453,8 +452,8 @@ sub trim_data {
     my($sp) = $fd->{$b}->{"save_values"};
     if (!defined($sp)) { return; }
 
-    # Trim out samples older than $time_treshold
-    $stp = $sp->{"sample_times"};
+    # Trim out samples older than $time_threshold
+    my $stp = $sp->{"sample_times"};
     while (defined($$stp[0]) && $$stp[0] < $time_threshold) {
 	foreach my $k (keys %$sp) {
 	    my($ap) = $sp->{$k};
@@ -721,7 +720,7 @@ sub tail_process_file {
     my($b) = basename($f);
     my($cat, $base) = &cat_and_base($f);
     my($tm) = &date_to_tm($d);
-    our($max_sample, $opt_r, $opt_v);
+    our($max_sample, $opt_r, $opt_v, $retention_time, %base, $fd);
 
     if ($cat ne "cat") {
 	if ($opt_v) {
@@ -764,7 +763,7 @@ sub do_one_file {
     my($dsp, $name) = @_;
     my($i);
     our($max_sample, %sample_time, $fd, %base, $date, $opt_I);
-    our(%lasttime, %firsttime, %dstcomp);
+    our(%lasttime, %firsttime, %dstcomp, $retention_time, $opt_v);
 
     my($base_tm, $nd) = &decode_datespec($dsp);
 
@@ -887,7 +886,7 @@ sub do_all_files_today {
 	    die "Could not open $opt_r.new for write: $!";
     }
 
-    foreach $f (@files) {
+    foreach my $f (@files) {
 	&tail_process_file(\*REP, $dir . "/" . $f, $d);
 	if (defined($opt_v)) {
 	    printf(".");
@@ -921,6 +920,8 @@ sub usage {
     printf(STDERR "-l low-limit factor to go below when de-flagging\n");
     printf(STDERR "-p percent   how many percent should data from new");
     printf(STDERR " interval count\n");
+    printf(STDERR "-t time	retain data for this many seconds" .
+	   " (default 3600)\n");
     printf(STDERR "-R rrddir    update RRD databases in the given directory\n");
     printf(STDERR "-r outfile   produce report about current load\n");
     printf(STDERR "             only applicable when doing current day\n");
@@ -940,19 +941,10 @@ sub usage {
 # Main
 #
 
-&Getopts("d:hiIl:M:m:Nn:p:R:r:u:vV");
+our($opt_h, $opt_m, $opt_M, $opt_t, $opt_u, $opt_l, $opt_p, $opt_r,
+    $opt_R, $opt_n, $opt_d);
 
-# -n names	logical names of ports to be analyzed (comma-separated)
-# -d datestr	date which should be analyzed
-# -u up-limit	factor on an up-transition when flagging a deviation
-# -l low-limit	factor to pass when de-flagging a deviation
-# -p percent	how many percent should data from new interval
-#		influence averaged statistical values (avg, stddev)
-# -r outfile	produce report about current load to this file
-#		only applicable if doing all files of current day
-# -i		ignore unnamed logical ports when making report
-# -m mailto	address to mail stats deviations report to
-# -R rrddir	update rrd databases for named connections in this dir
+&Getopts("d:hiIl:M:m:Nn:p:R:r:t:u:vV");
 
 if (defined($opt_h)) {
     &usage();
@@ -964,6 +956,10 @@ if (defined($opt_m) && !defined($opt_M)) {
 if (defined($opt_M) && !defined($opt_m)) {
     printf(STDERR "Must specify both -m and -M values\n");
     &usage();
+}
+
+if (defined($opt_t) && $opt_t =~ /\d+/) {
+    $retention_time = $opt_t;
 }
 
 if (!defined($opt_u)) {
@@ -981,13 +977,13 @@ if (defined($opt_R)) {
 	printf(STDERR "Must specify an existing dir with -R\n");
 	&usage();
     }
-    chdir($opt_R) || die "Could not chdir to $opt_$: $!";
+    chdir($opt_R) || die "Could not chdir to $opt_R: $!";
     open(RRD, "|rrdtool - 2>&1 | egrep -v '^OK'") ||
 	die "Could not open rrdtool";
 }
 
 # Make STDERR flush output immediately
-$oldfh = select(STDERR); $| = 1; select($oldfh);
+my $oldfh = select(STDERR); $| = 1; select($oldfh);
 
 if (defined($opt_d) && defined($opt_n)) {
     if (defined($opt_r)) {
