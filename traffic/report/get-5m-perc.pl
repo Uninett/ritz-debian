@@ -33,124 +33,21 @@
 #
 push(@INC, "%LIBDIR%");
 
+use strict;
+
 require 'getopts.pl';
+require 'perc-5m.pl';
 
-require 'date.pl';
-require 'db-lookup.pl';
-require 'search.pl';
-require 'read-5m-sum.pl';
-require 'utils.pl';
-
-sub addup_values {
-    my($vref, $iref, $oref) = @_;
-    my($in, $out);
-    my(%then);
-    
-    foreach $i (0 .. $max_sample) {
-	if ($i == 0) {
-	    foreach $v (@{$vref}) {
-		$then{$v} = $sample_time{$v,0};
-	    }
-	    next;
-	}
-	if (!$started) {
-	    if ($sample_time{$vars[0],$i} > 23) {
-		next;
-	    }
-	}
-	$started = 1;
-
-	undef $in;
-	undef $out;
-
-	foreach $v (@{$vref}) {
-	    $now = $sample_time{$v,$i};
-	    $time_delta = 3600.0 * ($now - $then{$v});
-	    if ($time_delta < 0) { # Ignore samples before midnight the 
-		$add{$v} = 0;	# "previous" day (not sure this comes out
-		$then{$v} = $now; # exactly right...
-	    } elsif ($time_delta <= 30) { # Skip samples w. too small interval
-		$add{$v} += $count{$v,$i}; # But add data
-	    } else {
-		$then{$v} = $now;
-		# Specialized for kbit/s computation
-		$val = ($count{$v,$i} + $add{$v})
-		    * 8.0/1000 / $time_delta;
-		$add{$v} = 0;
-		if ($v =~ /In/) {
-		    $in = $val;
-		} else {
-		    $out = $val;
-		}
-	    }
-	}
-	if (defined($in) && defined($out)) {
-	    push(@{$iref}, $in);
-	    push(@{$oref}, $out);
-#	    printf("in %s out %s\n", $in, $out);
-	}
-    }
-    undef %count;
-    undef %max_rate;
-    undef $max_sample;
-    undef %sample_delta;
-    undef %sample_time;
-}
-
-
-sub get_percentile {
-    my($dsp, $name, $perc) = @_;
-    my($base_tm, $no_days) = &decode_datespec($dsp);
-    my(@in, @out, @vars);
-    my($in, $out);
-    my($iov, $oov);
-
-    return undef unless $base_tm;
-
-    foreach $d (0 .. $no_days - 1) {
-	$tm = $base_tm + ($d) * (60*60*24);
-	$date = &tm_to_date($tm);
-	&read_5m_sum($name, $date);
-
-	if (! defined $vars[0]) {
-	    $iov = &octets_var("in");
-	    $oov = &octets_var("out");
-
-	    push(@vars, $iov, $oov);
-	}
-
-	&addup_values(\@vars, \@in, \@out);
-    }
-
-    my $in  = &percentile($perc, @in);
-    my $out = &percentile($perc, @out);
-
-    if (defined($opt_v)) {
-	printf("Discarded values for input:\n");
-	foreach my $v (@in) {
-	    if ($v > $in) {
-		printf("%7.2f\n", $v);
-	    }
-	}
-	printf("Discarded values for output:\n");
-	foreach my $v (@out) {
-	    if ($v > $out) {
-		printf("%7.2f\n", $v);
-	    }
-	}
-    }
-
-    return ($in, $out, $no_days);
-}
 
 sub usage {
-    die "$0: usage: $0 [-v] [-N report-name] -d datespec -n portname -p percentile";
+    die "$0: usage: $0 [-N report-name] -d datespec -n portname -p percentile";
 }
-
 
 #
 # Main
 #
+
+our($opt_d, $opt_n, $opt_p);
 
 &Getopts("d:MN:n:p:v");
 
@@ -158,7 +55,7 @@ if (!defined($opt_d)) { &usage(); }
 if (!defined($opt_n)) { &usage(); }
 if (!defined($opt_p)) { &usage(); }
 
-($in, $out, $nd) = &get_percentile($opt_d, $opt_n, $opt_p);
+my($in, $out, $nd) = &get_percentile($opt_d, $opt_n, $opt_p);
 
 if (defined($opt_M)) {		# Output in Mbit/s instead of kbit/s
     $in /= 1000;
