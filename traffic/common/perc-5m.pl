@@ -10,6 +10,8 @@
 use strict;
 
 require 'date.pl';
+require 'search.pl';
+require 'db-lookup.pl';
 require 'read-5m-sum.pl';
 require 'utils.pl';
 require 'addup.pl';
@@ -19,15 +21,16 @@ sub get_percentile {
     my($dsp, $name, $perc) = @_;
     my($base_tm, $no_days) = &decode_datespec($dsp);
     my(@in, @out, @vars);
+    my($days) = 0;
     my($in, $out);
     my($iov, $oov);
     our($max_sample, %sample_delta, %sample_time, %max_rate, %count);
 
     return undef unless $base_tm;
 
-    foreach $d (0 .. $no_days - 1) {
-	$tm = $base_tm + ($d) * (60*60*24);
-	$date = &tm_to_date($tm);
+    foreach my $d (0 .. $no_days - 1) {
+	my $tm = $base_tm + ($d) * (60*60*24);
+	my $date = &tm_to_date($tm);
 	&read_5m_sum($name, $date);
 
 	if (! defined $vars[0]) {
@@ -36,6 +39,10 @@ sub get_percentile {
 
 	    push(@vars, $iov, $oov);
 	}
+	if ($max_sample == 0) {
+	    next;
+	}
+	$days++;
 
 	&addup_values(\@vars, \@in, \@out,
 	    $max_sample, \%count, \%sample_time);
@@ -50,7 +57,7 @@ sub get_percentile {
     my $in  = &percentile($perc, @in);
     my $out = &percentile($perc, @out);
 
-    return ($in, $out, $no_days);
+    return ($in, $out, $days);
 }
 
 1;
