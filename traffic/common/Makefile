@@ -2,7 +2,8 @@
 # $Id$
 #
 
-SCRIPTS=addup.pl date.pl newtimelocal.pl plot.pl read-5m-sum.pl \
+SCRIPTS=addup.pl date.pl newtimelocal.pl perc-5m.pl \
+	plot.pl read-5m-sum.pl \
 	read-day-report.pl read-hr-log.pl read-raw-log.pl \
 	read-week-report.pl \
 	scaling.pl search.pl timelocal.pl tmpfiles.pl utils.pl \
