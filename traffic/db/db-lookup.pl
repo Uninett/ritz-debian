@@ -72,9 +72,10 @@ sub find_entry {
 
 # Line name -> base of file name
 
-sub main'name_to_file {
+sub main::name_to_file {
     my($name, $date) = @_;
     my($entry, $base, $f);
+    our($ntf_open, %ntf_db);
 
     if ($date !~ /\d\d\d\d\d\d\d\d/) {
 	return undef;
@@ -92,9 +93,10 @@ sub main'name_to_file {
 
 # base of file name -> line name
 
-sub main'file_to_name {
+sub main::file_to_name {
     my($file, $date) = @_;
     my($entry, $val);
+    our($ftn_open, %ftn_db);
 
     if ($date !~ /\d\d\d\d\d\d\d\d/) {
 	return undef;
@@ -112,9 +114,10 @@ sub main'file_to_name {
 
 # Find data origin date for a logical port name
 
-sub main'data_origin {
+sub main::data_origin {
     my($port) = @_;
     my($entry, @a, @b, @c);
+    our($ntf_open, %ntf_db);
 
     if (!$ntf_open) {
 	dbmopen(%ntf_db, $NTF_DB, 0666);
@@ -130,9 +133,10 @@ sub main'data_origin {
     return $c[0];
 }
 
-sub main'all_port_names {
+sub main::all_port_names {
     my($date) = @_;
     my($k, $val, @l);
+    our($ntf_open, %ntf_db);
 
     if (!$ntf_open) {
 	dbmopen(%ntf_db, $NTF_DB, 0666);
