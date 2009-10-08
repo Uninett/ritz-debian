@@ -41,9 +41,11 @@
 
 package db_lookup;
 
-$ROOT = "%TOPDIR%";
-$FTN_DB = "$ROOT/db/ftn";
-$NTF_DB = "$ROOT/db/ntf";
+use strict;
+
+our($ROOT) = "%TOPDIR%";
+our($FTN_DB) = "$ROOT/db/ftn";
+our($NTF_DB) = "$ROOT/db/ntf";
 
 
 # Extract data value corresponding to the given date
@@ -75,7 +77,7 @@ sub find_entry {
 sub main::name_to_file {
     my($name, $date) = @_;
     my($entry, $base, $f);
-    our($ntf_open, %ntf_db);
+    our($ntf_open, %ntf_db, $NTF_DB);
 
     if ($date !~ /\d\d\d\d\d\d\d\d/) {
 	return undef;
@@ -96,7 +98,7 @@ sub main::name_to_file {
 sub main::file_to_name {
     my($file, $date) = @_;
     my($entry, $val);
-    our($ftn_open, %ftn_db);
+    our($ftn_open, %ftn_db, $FTN_DB);
 
     if ($date !~ /\d\d\d\d\d\d\d\d/) {
 	return undef;
@@ -117,7 +119,7 @@ sub main::file_to_name {
 sub main::data_origin {
     my($port) = @_;
     my($entry, @a, @b, @c);
-    our($ntf_open, %ntf_db);
+    our($ntf_open, %ntf_db, $NTF_DB);
 
     if (!$ntf_open) {
 	dbmopen(%ntf_db, $NTF_DB, 0666);
@@ -136,7 +138,7 @@ sub main::data_origin {
 sub main::all_port_names {
     my($date) = @_;
     my($k, $val, @l);
-    our($ntf_open, %ntf_db);
+    our($ntf_open, %ntf_db, $NTF_DB);
 
     if (!$ntf_open) {
 	dbmopen(%ntf_db, $NTF_DB, 0666);
