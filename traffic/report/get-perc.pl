@@ -44,23 +44,6 @@ require 'utils.pl';
 require 'perc.pl';
 
 
-sub find_file {
-    my($base_tm, $day, $name) = @_;
-
-    my $tm = $base_tm + $day * (60*60*24);
-    my $date = &tm_to_date($tm);
-    my $base = &name_to_file($name, $date);
-    if (!defined $base) {
-	die "Could not find base file name for $name / $date\n";
-    }
-    my($cat, $f) = &find_cat_and_file($base, $date);
-    if (!defined $f) {
-	die "Could not find data file for $base / $date\n";
-    }
-    return "$cat $f |";
-}
-
-
 sub usage {
     die "$0: usage: $0 -d datespec -n portname -p percentile";
 }
