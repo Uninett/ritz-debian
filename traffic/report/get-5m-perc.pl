@@ -48,8 +48,9 @@ sub usage {
 #
 
 our($opt_d, $opt_n, $opt_p);
+our($opt_N, $opt_M);
 
-&Getopts("d:MN:n:p:v");
+&Getopts("d:MN:n:p:");
 
 if (!defined($opt_d)) { &usage(); }
 if (!defined($opt_n)) { &usage(); }
