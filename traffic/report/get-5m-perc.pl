@@ -40,7 +40,7 @@ require 'perc-5m.pl';
 
 
 sub usage {
-    die "$0: usage: $0 [-N report-name] -d datespec -n portname -p percentile";
+    die "$0: usage: $0 [-N report-name] -d datespec -n (+-joined)portnames -p percentile";
 }
 
 #
