@@ -39,6 +39,8 @@
 # These have evolved over time with no major cleanup.  It shows...
 #
 
+use DateTime;
+
 # Might save some usecs by precomputing this
 $seconds_pr_day = 24*60*60;
 $seconds_per_day = $seconds_pr_day;
@@ -352,6 +354,14 @@ sub decode_datespec {
 	return undef;
     }
     return($base_tm, $no_days);
+}
+
+sub dsp_to_dt {
+    my($dsp) = @_;
+
+    my($tm, $nd) = &decode_datespec($dsp);
+    my($dt) = DateTime->from_epoch(epoch => $tm);
+    return $dt;
 }
 
 # Generate a string suitable for presentation
