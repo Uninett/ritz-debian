@@ -422,8 +422,14 @@ sub ensure_img_exists {
 	    $img_size{$type,$size,"y"} = $y;
 	} elsif ($img_size{$type,$size,"x"} != $x ||
 		 $img_size{$type,$size,"y"} != $y) {
+	    # Make an exception:
 	    $img_size{$name,$type,$size,"x"} = $x;
 	    $img_size{$name,$type,$size,"y"} = $y;
+	} elsif ($img_size{$type,$size,"x"} == $x &&
+		 $img_size{$type,$size,"y"} == $y) {
+	    # Remove the exception:
+	    delete $img_size{$name,$type,$size,"x"};
+	    delete $img_size{$name,$type,$size,"y"};
 	}
     } else {
 	# return cached size
