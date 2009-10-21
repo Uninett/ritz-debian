@@ -1,4 +1,344 @@
+2009-10-21  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Bump to version 0.9.8.
+
+	* traffic/cgi/r-all.pl:
+	Get rid of outdated exception entries in the img_size hash,
+	so that the renderer in the browser doesn't have to stretch
+	the images (which typically makes for lousy quality).
+
+2009-10-13  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/get-perc.pl:
+	Now that find_file() is where it belongs in this context (perc.pl),
+	remove the local copy and the files it requires again.
+
+	* traffic/common/perc.pl: Move find_file() here, where it belongs.
+
+	* traffic/report/get-perc.pl:
+	Actually... find_file() is still required.
+
+	* traffic/report/get-perc.pl:
+	Actually, don't need find_file() anymore either.
+
+	* traffic/report/get-perc.pl:
+	Farm out get_percentile(), use common function instead.
+	Don't do "hr" stats.
+
+	* traffic/report/get-5m-perc.pl: Slightly improve usage line.
+
+	* traffic/report/get-5m-perc.pl:
+	Declare $opt_N and $opt_M, and we don't do -v anymore.
+
+	* traffic/common/date.pl:
+	Introduce "use DateTime", implement dsp_to_dt()
+	to convert the start of a datespec period to a DateTime.
+
+2009-10-08  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/perc-5m.pl: Require the files we actually need.
+	Adapt to "use strict;" rules.
+	Count the actual number of days with data, so that
+	we can compute percentiles for e.g. the current month.
+
+	* traffic/common/Makefile: Add perc.pl script.
+
+	* traffic/common/perc.pl:
+	Farm out the "compute percentile values over individual sample intervals
+	for a single port" to a common script, for improved code reuse.
+
+	* traffic/db/db-lookup.pl: Comply to "use strict;" rules.
+
+	* traffic/db/db-lookup.pl:
+	Change syntax for package desination to adapt to emacs highlighting...
+	Get closer to "use strict;" rules.
+
+	* traffic/report/get-5m-perc.pl:
+	Farm out the get_percentile() sub in the 5minute-variant
+	for improved code reuse.
+
+	* traffic/common/Makefile: Add perc-5m.pl.
+
+	* traffic/common/perc-5m.pl:
+	Farm out the "compute percentile values over 5-minute sample intervals
+	for a number of ports" to a common script, for improved code reuse.
+
+	* traffic/report/get-perc.pl: Adapt to "use strict;" rules.
+	Farm out addup_values() subr to a common file.
+
+	* traffic/common/Makefile: Add addup.pl.
+
+	* traffic/common/addup.pl:
+	Split out the "add up values" subroutine from get-perc.
+	There's no sense in having two nearly-identical copies
+	in the get-perc and get-5m-perc scripts.
+
+2009-10-07  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Fix remaining 'no strict "vars"' problems.
+	Implement tweakable retention time via -t, default as before at 3600.
+
+2009-10-06  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/r-all.pl:
+	Correct the test for whether to update the shared-memory image-size
+	array -- it's sufficient for only one of x or y to be different.
+	This way, a plot done by appending "&force=1" tacked on at the end
+	will update the stored image size also if only the height differs
+	(which is typically what happens).
+
+2009-10-05  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/update-dbs.pl:
+	Adapt to "use strict;" rules, declare all globals with our().
+	Fix the regexp for picking out description fields, so that it's
+	a little bit more permissive.
+	Implement new option -D <router> for specific debugging of what's
+	related to the given router (could be expanded).
+
+2009-09-27  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-raw-log.pl:
+	Ensure that we always define the local $instance{$v} after checking
+	whether it's defined and the current instance is different from the
+	stored one.  This fixes a bug with producing "load-now.txt" from the
+	tail-stats script, which ended up as all-0(!) otherwise.
+
+2009-09-25  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/find-err-dev.pl: More documentation synchronization.
+
+	* traffic/jobs/find-err-dev.pl: Sync doc with code wrt. a path name.
+
+	* traffic/jobs/find-err-dev.sh: Omit a redundant /.
+
+	* traffic/jobs/find-err-dev.pl:
+	It's sufficient to print one line per interface.
+	Swap around the printf() formats, so that the coloumns end up aligned.
+
+	* traffic/jobs/find-err-dev.sh:
+	Modify e-mail text to be more explanatory and explicit.
+
+	* traffic/jobs/Makefile: Add a comment for the strange-looking pattern.
+
+	* traffic/jobs/find-err-dev.pl:
+	Put default save file in data/ subdirectory.
+	Print a warning of the YAML save functions didn't work.
+
+	* traffic/jobs/find-err-dev.sh:
+	Ensure the save-file goes to %TOPDIR%/data/
+
+	* traffic/jobs/find-err-dev.sh: Do a proper hash-bang...
+
+	* traffic/jobs/Makefile: Add find-err-dev.pl / find-err-dev.sh scripts.
+
+	* traffic/jobs/find-err-dev.sh, traffic/jobs/find-err-dev.pl:
+	Add a script and corresponding wrapper to report statistical
+	deviations in the error statistics report.
+
+2009-09-01  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/Makefile:
+	Only warn of remaining substitutions if there are more than two
+	normal characters in a row following the % sign, to allow the
+	date +%Y%m%d construct in daily to pass.
+
+2009-08-25  Havard Eidnes  <he@uninett.no>
+
+	* traffic/plot/plot-week.pl:
+	Adapt to the changed expected week datespec format, so that week-based
+	plots work again.
+
+2009-08-21  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
+	Instead of assuming that counters revert to 0 on agent re-
+	initialization (sysUpTime.0 goes to zero), adhere strictly to the
+	SMIv2 spec which says that counters do not have initial values.  This
+	means we have to throw away a sample on agent re-initialization.
+
+2009-08-15  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/daily.sh:
+	Set up to save any RRD data in data/cust-rrd on the first of each
+	month, after making sure that all the data from the preceding day
+	has been processed and stored into the RRD databases.
+
+2009-08-03  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/Makefile: Add warn-dups.pl.
+
+	* traffic/db/warn-dups.pl:
+	Add a simple script suitable to detect duplicate logical port names.
+	Can be run from cron periodically; reports on stderr if dups are found.
+
+2009-07-28  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/tbl-report.pl:
+	Declare the %in hash with our() (an ever so slight modernization of
+	the coding style).
+	Make the unambiguated and possibly incomplete input datespec
+	un-ambigous after taking the datespec type into account, and pretend
+	that the un-ambigous variant was specified in the first place.  Makes
+	references to e.g. plots which don't take a datespec-type as argument
+	work as could be expected.
+
+2009-06-17  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/tbl-report.pl:
+	Widen the "speed" field so that 10G links also line up with
+	lower-speed links.
+
+2009-05-15  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/date.pl:
+	Actually expect the canonical "week" datespec format in
+	make_datespec(), i.e. "2008--52", not "2008-52".
+
+2009-05-12  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/Makefile, traffic/report/cust-load-now.pl:
+	Add the cust-load-now script, used by the mk-top10 script.
+
+	The cust-load-now script processes the load-now.txt optionally
+	left by the tail-stats script, and produces a per-customer
+	report, in the process assuming that the description file marks
+	all customers with the 'cust' attribute.
+
+	* traffic/report/tail-stats.pl:
+	Right after midnight, don't set position to 0 if we're looking at a
+	file which has last-modified-date of yesterday, but instead allow us
+	to read the rest of the file to mop up any remaining data.  This
+	should get rid of the long e-mail sent by cron, triggered by rrdtool
+	trying to re-update the stats for all of yesterday.
+
+2009-05-11  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/tbl-report.pl:
+	Let the "previous" and "next" link computation and defaults
+	work for not just days but also other datespec types.
+
+	* vwatch/vwatch.tcl:
+	Add the modification to detect sysUpTime.0 32-bit counter wraparound,
+	and avoid it.  This means we go "deaf" to reloads or crashes which
+	happens to fall in the last few minutes before the counter wraparound.
+	Code adapted from the modification to the traffic poller.
+
+2009-04-15  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/top10.pl:
+	Remove traces of "peak plot", which can't be done sensibly
+	for any other time period than "right now".
+	Improve error handling for failure to run gnuplot.
+	Use %GNUPLOT% instead of gnuplot, to pick up the executable.
+	Shuffle some code around to simplify error handling (output
+	document header before making the plots).
+
+2009-04-02  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Fiddle a bit with the "expectedUptime" procedure:
+	 o Ignore expected uptime within "max" - uptimeSlop (3 minutes)
+	 o Log a message with details when we are close to wrapping
+	 o Log a message when we have an otherwise unexpected uptime
+	Hopefully this can get us to the bottom of why we don't avoid
+	logging messages when we have 32-bit uptime counter wraparound.
+
+	* vwatch/uptimes.pl: Use Getopt::Std and strict; adapt to "use strict".
+	Implement sorting of JunOS versions.
+	Allow sorting by uptime, default is by software version.
+
+	* vwatch/uptimes.pl: Limit the length of the router description field.
+
+	* vwatch/Makefile: Add the uptimes script.
+
+2009-03-31  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Ensure that we undef variables used to keep track of how
+	long we had read -- we might be processing more than one
+	file, as directed by the -n option.
+
+2009-03-18  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/Makefile: Add the top10.pl script.
+
+	* traffic/cgi/top10.pl:
+	Uhm, use the correct field numbers in the daily report.
+
+2009-03-14  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Add a small script to check that no new variables have
+	appeared in Makefile.inc.dist, since they need to be
+	manually merged.
+
+	* check-subst.pl:
+	A small script to verify that there are no variables in
+	Makefile.inc.dist which have not been picked up from Makefile.inc
+	and put into subst.  This might happen if a new variable
+	is added to Makefile.inc.dist.
+
+2009-03-13  Havard Eidnes  <he@uninett.no>
+
+	* traffic/html/zoom-cur-top10.fig, traffic/html/zoom-cur-top10.png:
+	Update to also show the pointers to the per-customer plots.
+
+	* traffic/report/mk-top10.pl:
+	Add the possibility to customize the text for the pointer to the
+	navigation help image via a "middle" section in the html template
+	file.
+
+	* traffic/html/Makefile, traffic/html/top10-last.png,
+	  traffic/html/zoom-cur-top10.fig, traffic/html/zoom-cur-top10.png:
+	Add a picture showing the two navigation areas in the
+	"show current top10" plots.
+
+	* traffic/cgi/top10.pl:
+	Add a pointer to an image displaying the various navigation areas.
+
+	* traffic/html/Makefile: Install zoom-top10.png.
+
+	* traffic/html/top10-2009--03-avg.png, traffic/html/zoom-top10.fig, 
+	  traffic/html/zoom-top10.png:
+	Add an image to explain the various zoom areas.
+
+	* traffic/cgi/top10.pl:
+	Add a CGI script to produce a "current top 10" histogram for
+	the top 10 customers for a given time period.
+
+	This depends on a number of optional features being turned on:
+
+	 o Needs the list of customers and their logical ports in
+	   %CUSTLIST% with all customers marked with the "cust" attribute
+	 o Needs to run the "make rrd plots per customer" script, so that
+	   the Apache module r-all can present the plots, pointed to by this
+	   script.
+
+	* traffic/report/mk-top10.pl:
+	Add script to produce a "current top 10" plot for the customers.
+
+	This (together with the top10 cgi script) depends on a number of
+	optional features being turned on:
+
+	 o Needs tail-stats to run periodically and leave result in
+	   %REPORTSDIR%/load-now.txt
+	 o Needs the list of customers and their logical ports in
+	   %CUSTLIST% with all customers marked with the "cust" attribute
+	 o Needs to run the "make rrd plots per customer" script
+
+2009-03-09  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
+	Add some code to handle the changing of an the instance of a
+	variable in the middle of a log, as might happen if you move
+	an IP address from one interface to another.  This code skips
+	computing a delta between the two instances, and instead uses
+	the value for the new instance as a new baseline.
+
 2009-02-23  Havard Eidnes  <he@uninett.no>
+
+	* ChangeLog: Update for 0.9.7.
 
 	* Makefile: Bump to 0.9.7.
 
