@@ -212,7 +212,7 @@ sub make_plot {
 		 "VDEF:cur_out=outmax,LAST",
 	     ));
 	push(@l, ("AREA:inmax#ff6699:Max In "));
-	push(@l, ("COMMENT:\\tAvg\\:",
+	push(@l, ("COMMENT:Avg\\:",
 		  "GPRINT:avg_in:%6.2lf%s",
 		  "COMMENT:Max\\:",
 		  "GPRINT:max_in:%6.2lf%s",
@@ -221,7 +221,7 @@ sub make_plot {
 		  "COMMENT:\\n",
 	     ));
 	push(@l, ("LINE1:outmax#800000:Max Out"));
-	push(@l, ("COMMENT:\\tAvg\\:",
+	push(@l, ("COMMENT:Avg\\:",
 		  "GPRINT:avg_out:%6.2lf%s",
 		  "COMMENT:Max\\:",
 		  "GPRINT:max_out:%6.2lf%s",
@@ -239,7 +239,7 @@ sub make_plot {
 		 "VDEF:cur_out=out,LAST",
 	     ));
 	push(@l, ("AREA:in#33cccc:Avg In "));
-	push(@l, ("COMMENT:\\tAvg\\:",
+	push(@l, ("COMMENT:Avg\\:",
 		  "GPRINT:avg_in:%6.2lf%s",
 		  "COMMENT:Max\\:",
 		  "GPRINT:max_in:%6.2lf%s",
@@ -248,7 +248,7 @@ sub make_plot {
 		  "COMMENT:\\n",
 	     ));
 	push(@l, ("LINE2:out#006699:Avg Out"));
-	push(@l, ("COMMENT:\\tAvg\\:",
+	push(@l, ("COMMENT:Avg\\:",
 		  "GPRINT:avg_out:%6.2lf%s",
 		  "COMMENT:Max\\:",
 		  "GPRINT:max_out:%6.2lf%s",
@@ -274,7 +274,7 @@ sub make_plot {
 		 "VDEF:avg_cur_out=out,LAST",
 	     ));
 	push(@l, ("AREA:in#33cccc:Avg In "));
-	push(@l, ("COMMENT:\\tAvg\\:",
+	push(@l, ("COMMENT:Avg\\:",
 		  "GPRINT:avg_avg_in:%6.2lf%s",
 		  "COMMENT:Max\\:",
 		  "GPRINT:avg_max_in:%6.2lf%s",
@@ -283,7 +283,7 @@ sub make_plot {
 		  "COMMENT:\\n",
 	     ));
 	push(@l, ("LINE2:out#006699:Avg Out"));
-	push(@l, ("COMMENT:\\tAvg\\:",
+	push(@l, ("COMMENT:Avg\\:",
 		  "GPRINT:avg_avg_out:%6.2lf%s",
 		  "COMMENT:Max\\:",
 		  "GPRINT:avg_max_out:%6.2lf%s",
@@ -292,7 +292,7 @@ sub make_plot {
 		  "COMMENT:\\n",
 	     ));
 	push(@l, ("LINE1:inmax#ff6699:Max In "));
-	push(@l, ("COMMENT:\\tAvg\\:",
+	push(@l, ("COMMENT:Avg\\:",
 		  "GPRINT:max_avg_in:%6.2lf%s",
 		  "COMMENT:Max\\:",
 		  "GPRINT:max_max_in:%6.2lf%s",
@@ -301,7 +301,7 @@ sub make_plot {
 		  "COMMENT:\\n",
 	     ));
 	push(@l, ("LINE1:outmax#800000:Max Out"));
-	push(@l, ("COMMENT:\\tAvg\\:",
+	push(@l, ("COMMENT:Avg\\:",
 		  "GPRINT:max_avg_out:%6.2lf%s",
 		  "COMMENT:Max\\:",
 		  "GPRINT:max_max_out:%6.2lf%s",
@@ -423,8 +423,14 @@ sub ensure_img_exists {
 	} elsif ($img_size{$type,$size,"x"} != $x ||
 		 $img_size{$type,$size,"y"} != $y) {
 	    # Make an exception:
-	    $img_size{$name,$type,$size,"x"} = $x;
-	    $img_size{$name,$type,$size,"y"} = $y;
+	    eval {
+		$img_size{$name,$type,$size,"x"} = $x;
+		$img_size{$name,$type,$size,"y"} = $y;
+	    };
+	    if ($@) {
+		printf(STDERR "Could not extend %%img_size: %s\n", $@);
+		# ...but continue anyway
+	    }
 	} elsif ($img_size{$type,$size,"x"} == $x &&
 		 $img_size{$type,$size,"y"} == $y) {
 	    # Remove the exception:
