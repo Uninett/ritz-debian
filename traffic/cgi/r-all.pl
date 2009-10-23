@@ -333,6 +333,8 @@ sub make_plot {
 
     my $err = RRDs::error;
     if ($err) {
+	printf(STDERR "Error making RRD graph: %s\n", $err);
+	printf(STDERR "Args to rrdgraph:\n%s\n", join("\n", @l));
 	return (undef, undef, $err);
     } else {
 	return ($png, $x, $y);
@@ -351,10 +353,10 @@ sub make_small_plot {
     }
 
     my @fonts = (
-	"--font", "AXIS:7:'Bitstream Vera Sans:Style=Roman'",
-	"--font", "UNIT:7:'Bitstream Vera Sans:Style=Roman'",
-	"--font", "TITLE:10:'Bitstream Vera Sans:Style=Bold'",
-	"--font", "LEGEND:9:'Bitstream Vera Sans:Style=Roman'",
+	"--font", "AXIS:7:Bitstream Vera Sans:Style=Roman",
+	"--font", "UNIT:7:Bitstream Vera Sans:Style=Roman",
+	"--font", "TITLE:10:Bitstream Vera Sans:Style=Bold",
+	"--font", "LEGEND:9",
 	);
 
     return &make_plot($name, $type, $rrd, $png, 400, 200, @fonts);
@@ -372,10 +374,10 @@ sub make_big_plot {
     }
 
     my @fonts = (
-	"--font", "AXIS:11:'Bitstream Vera Sans:Style=Roman'",
-	"--font", "UNIT:11:'Bitstream Vera Sans:Style=Roman'",
-	"--font", "TITLE:13:'Bitstream Vera Sans:Style=Bold'",
-	"--font", "LEGEND:10:'Bitstream Vera Sans:Style=Roman'",
+	"--font", "AXIS:11:Bitstream Vera Sans:Style=Roman",
+	"--font", "UNIT:11:Bitstream Vera Sans:Style=Roman",
+	"--font", "TITLE:13:Bitstream Vera Sans:Style=Bold",
+	"--font", "LEGEND:10",
 	);
 
     return &make_plot($name, $type, $rrd, $png, 800, 600, @fonts);
