@@ -428,7 +428,7 @@ sub ensure_img_exists {
 		$img_size{$name,$type,$size,"y"} = $y;
 	    };
 	    if ($@) {
-		printf(STDERR "Could not extend %%img_size: %s\n", $@);
+		printf(STDERR "Could not extend %%img_size: %s", $@);
 		# ...but continue anyway
 	    }
 	} elsif ($img_size{$type,$size,"x"} == $x &&
