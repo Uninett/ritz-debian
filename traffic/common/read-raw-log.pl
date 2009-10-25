@@ -68,7 +68,7 @@ sub read_log {
     my($starter);
     my(@f);
     my($computed_dst) = 0;
-    my(%data_seen, %lasttime_uncomp, %sample_no);
+    my(%data_seen, %sample_no, $lasttime_uncomp);
     my($skip_h);
     our(%count, %base, %sample_time);
     our(%lasttime, %firsttime);
@@ -235,43 +235,19 @@ sub read_log {
 	}
 	$instance{$v} = $instance;
 
-	# old "compressed" logs appear to have a single
-	# "stray" sample which goes back in time when shifting
-	# from daylight savings time.  Trigger DST compensation
-	# based on this
-	if (defined($lasttime_uncomp{$v})) {
-	    my $delta_t = $now - $lasttime_uncomp{$v};
-	    # but when going from hour 23 to 0...
-	    if ($delta_t < 0 && $delta_t > -4000) {
-		foreach my $k (keys %base) {
-		    $dstcomp{$k} = $dstcomp;
-		}
-		$skip_h = $h;	# and skip subsequent samples in same hour
-		next;
-	    }
-	}
-	# Once we've gone back in time one time, skip any remaining
-	# subsequent samples from the same hour
-	if (defined($skip_h)) {
-	    if ($skip_h == $h) {
-		next;
-	    } else {
-		undef $skip_h;
-	    }
-	}
-
 	# switch to or from daylight savings time?
 	# Note, this only compensates if the data file hasn't
 	# already been "fixed".
 	if ($dstcomp != 0 &&
-	    (abs($now - $lasttime) > 3600 &&
-	     abs($now - $lasttime) < 7200))
+	    (abs($now - $lasttime_uncomp) > 3000 &&
+	     abs($now - $lasttime_uncomp) < 7200))
 	{
 	    foreach my $k (keys %base) {
 		$dstcomp{$k} = $dstcomp;
 	    }
 	}
 
+	$lasttime_uncomp = $now;
 	$now += $dstcomp{$v};
 
 	# if we're re-reading the log after log rotation
@@ -305,7 +281,6 @@ sub read_log {
 
 	$lasttime = $now;
 	$lasttime{$v} = $now;
-	$lasttime_uncomp{$v} = $now - $dstcomp{$v};
 
 	$delta = ($f[6] - $base{$v});
 	if ($delta < 0 && !($v =~ /ifHC/o)) {
