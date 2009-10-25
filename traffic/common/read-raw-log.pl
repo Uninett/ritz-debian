@@ -64,14 +64,14 @@ sub read_log {
     my($h, $m, $s, $sample_no, %sample_no, $sno);
     my($v, $instance, %instance);
     my($delta, $lasttime, $day, $reboot_day, $reboot_time);
-    my($now, $dstcomp, %dstcomp);
+    my($now, $dstcomp);
     my($starter);
     my(@f);
     my($computed_dst) = 0;
     my(%data_seen, %sample_no, $lasttime_uncomp);
     my($skip_h);
     our(%count, %base, %sample_time);
-    our(%lasttime, %firsttime);
+    our(%lasttime, %firsttime, %dstcomp);
     our($date, $date_set, $ifspeed, $iftype, $ifdescr, $max_sample);
     my($pos, $seekable);
     my($upto_s, $upto_day);
@@ -154,9 +154,12 @@ sub read_log {
 	    my($diff) = $t1 - $t0;
 	    if ($diff < 23 * 3600) {
 		$dstcomp = (-3600); # switch to daylight savings time
-	    }
-	    if ($diff > 24 * 3600) {
+	    } elsif ($diff > 24 * 3600) {
 		$dstcomp = 3600; # switch back to normal local time
+	    } else {
+		foreach my $k (keys %dstcomp) {
+		    $dstcomp{$k} = 0; # Not a switch-over day, reset to 0.
+		}
 	    }
 	    # Possibly recompute later, when/if we see hour 0
 	    if ($h != 23) {
