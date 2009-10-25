@@ -76,6 +76,8 @@ sub read_log {
     my($pos, $seekable);
     my($upto_s, $upto_day);
     my($first_tm, $first_day, $lasttime_comp, $day_comp, $date_now);
+    my($was_dst) = 0;
+    my($was_comp);
 
     $date_set = 0;
 
@@ -158,6 +160,10 @@ sub read_log {
 		$dstcomp = 3600; # switch back to normal local time
 	    } else {
 		foreach my $k (keys %dstcomp) {
+		    if ($dstcomp{$k} != 0) {
+			$was_dst = 1;
+			$was_comp = $dstcomp{$k};
+		    }
 		    $dstcomp{$k} = 0; # Not a switch-over day, reset to 0.
 		}
 	    }
@@ -186,6 +192,9 @@ sub read_log {
 	    foreach my $k (keys %lasttime) {
 		if ($lasttime{$k} > 23*3600) {
 		    $lasttime{$k} -= 24*3600;
+		}
+		if ($was_dst) {
+		    $lasttime{$k} -= $was_comp;
 		}
 	    }
 	}
