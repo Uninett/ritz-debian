@@ -101,6 +101,7 @@ sub read_5m_sum {
     our(%save_base, %save_lasttime, %save_varnames, $date);
     our(%base, %lasttime, %firsttime, %leftover, %position);
     our(%lastfilebase);
+    our(%dstcomp, %save_dstcomp);
     my($seekable) = 0;
     my($end_tick) = 0;
     my($zero_tm, $save_date);
@@ -209,14 +210,10 @@ sub read_5m_sum {
 		    if (defined($save_base{$l,$v})) {
 			$base{$v} = $save_base{$l,$v};
 			$lasttime{$v} = $save_lasttime{$l,$v};
+			$dstcomp{$v} = $save_dstcomp{$l,$v};
 			# When we compensate for daylight savings change...
 			if ($lasttime{$v} > 24*3600) {
 			    $lasttime{$v} -= 3600;
-			}
-			if ($date_str eq $prev_d) {
-			    # lasttime is seconds relative to 00:00
-			    # this is for the previous day...
-			    $lasttime{$v} -= 3600*24;
 			}
 		    }
 		}
@@ -233,6 +230,7 @@ sub read_5m_sum {
 	    $save_base{$line,$v} = $base{$v};
 	    $save_lasttime{$line,$v} = $lasttime{$v};
 	    $save_varnames{$v} = 1;
+	    $save_dstcomp{$line,$v} = $dstcomp{$v};
 	}
 
 #	if ($opt_v) {
