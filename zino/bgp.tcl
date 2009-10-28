@@ -237,10 +237,11 @@ proc recordBGPpeer { sh uptime vbl } {
 		bgpAdminDown $sh $ix $vbl
 		log [format "debug: Router %s peer %s AS %s admin-down" \
 			 $r $bgpPeerRemoteAddr $bgpPeerRemoteAs]
-	    } else {
-		log [format "debug: Router %s peer %s AS %s admin-down (but known)" \
-			 $r $bgpPeerRemoteAddr $bgpPeerRemoteAs]
 	    }
+#	    } else {
+#		log [format "debug: Router %s peer %s AS %s admin-down (but known)" \
+#			 $r $bgpPeerRemoteAddr $bgpPeerRemoteAs]
+#	    }
 	} else {
 	    if { ! [info exists bgpPeerAdminState($ix)] } {
 		set bgpPeerAdminState($ix) "unknown"
@@ -268,11 +269,12 @@ proc recordBGPpeer { sh uptime vbl } {
 			     $r $bgpPeerRemoteAddr $bgpPeerRemoteAs \
 			     $bgpPeerState $uptime]
 		}
-	    } else {
-		log [format "debug: Router %s peer %s AS %s os %s (down), but known not-up" \
-			 $r $bgpPeerRemoteAddr \
-			 $bgpPeerRemoteAs $bgpPeerState]
 	    }
+#	    } else {
+#		log [format "debug: Router %s peer %s AS %s os %s (down), but known not-up" \
+#			 $r $bgpPeerRemoteAddr \
+#			 $bgpPeerRemoteAs $bgpPeerState]
+#	    }
 	}
     }
     set bgpPeerOperState($ix) $bgpPeerState
