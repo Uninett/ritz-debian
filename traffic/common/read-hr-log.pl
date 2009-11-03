@@ -49,8 +49,9 @@
 #   $sample_time{$v, $sno}   Timestamp (hour) for counter $v, sample $sno
 #   $max_sample		Maximum sample number for $sample_delta etc.
 
-
 # Read a single daily log, suck in data.
+
+use Date::Parse;
 
 sub read_log {
     my($fh, $zero_tm) = @_;
@@ -63,6 +64,8 @@ sub read_log {
     my($sample_no, $sno, %sample_no);
     my(@f);
     my($h0_seen) = 0;
+    my(%dstcomp);
+    my($lasttime_uncomp, $dstcomp, $computed_dst);
 
     $sample_no = 0;
     while (<$fh>) {
@@ -102,6 +105,28 @@ sub read_log {
 	    $h0_seen = 1;
 	}
 	
+	# log turnover happens late in hour 23 so that some records can be
+	# logged in hour 23 of the previous day.  We need to see the date
+	# covering most of the log here...
+	if (!$computed_dst) {
+	    # Is this day switching to or from daylight savings time?
+	    my($t0, $t1);
+	    $t0 = timelocal(strptime(sprintf("%s %s %s 00:00:00",
+					     $f[1], $f[2], $f[4])));
+	    $t1 = timelocal(strptime(sprintf("%s %s %s 23:30:00",
+					     $f[1], $f[2], $f[4])));
+	    my($diff) = $t1 - $t0;
+	    if ($diff < 23 * 3600) {
+		$dstcomp = (-3600); # switch to daylight savings time
+	    } elsif ($diff > 24 * 3600) {
+		$dstcomp = 3600; # switch back to normal local time
+	    }
+	    # Possibly recompute later, when/if we see hour 0
+	    if ($h != 23) {
+		$computed_dst = 1;
+	    }
+	}
+
 	# Be careful not to zero counters needlessly.  Check timetamp of
 	# reboot more carefully.  This is to work around a bug in Cisco IOS
 	# 10.2(2) where you have loopback interfaces configured (ifNumber.0
@@ -142,6 +167,22 @@ sub read_log {
 	    $instance{$v} = $instance;
 	    next;
 	}
+
+	# switch to or from daylight savings time?
+	# Note, this only compensates if the data file hasn't
+	# already been "fixed".
+	if ($dstcomp != 0 &&
+	    (abs($now - $lasttime_uncomp) > 3000 &&
+	     abs($now - $lasttime_uncomp) < 7200))
+	{
+	    foreach my $k (keys %base) {
+		$dstcomp{$k} = $dstcomp;
+	    }
+	}
+
+	$lasttime_uncomp = $now;
+	$now += $dstcomp{$v};
+	$h = int($now / 3600);
 
 	$lasttime = $now;
 	$last_day = $day;
