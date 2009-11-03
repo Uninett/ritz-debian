@@ -405,7 +405,7 @@ sub make_plot_file  {
 	open(DIP, ">$di_plotname") ||
 	    die "Could not open $di_plotname for write: $!\n";
 
-	printf(DIP &plot_set_xtics($base_tm, $data_days, $no_days));
+	printf(DIP &plot_set_xtics($start_tm, $data_days, $data_days));
 
 	if (!defined($decorate = $decorator{$plot})) {
 	    die "Could not find decorator for $plot\n";
