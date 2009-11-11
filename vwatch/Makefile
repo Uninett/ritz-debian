@@ -30,6 +30,8 @@ PPROGS=	cur-vers \
 	vw-month-rst \
 	vw-month-upgr
 
+NOMAN=	${PROGS}
+
 TPROGS=	vwatch
 
 PROGS=	${PPROGS} ${TPROGS} start-vwatch
