@@ -19,6 +19,14 @@ proc initStatus { } {
     initJNXalarm
 }
 
+proc isCisco { sh } {
+    global isCisco
+
+    if { [info exists isCisco([name $sh])] } {
+	return $isCisco([name $sh])
+    }
+    return 0
+}
 
 # Create mapping table address -> handle
 # and handle -> address-list
@@ -58,13 +66,10 @@ proc getAddrList { sh } {
 }
 
 proc basePollList { sh } {
-    global isCisco
 
-    set bl "ifIndex ifDescr ifAdminStatus ifOperStatus ifLastChange ifAlias"
-    if { [info exists isCisco([name $sh])] } {
-	if { $isCisco([name $sh]) } {
-	    lappend bl "locIfDescr" "locIfReason"
-	}
+    set bl "ifIndex ifDescr ifAdminStatus ifOperStatus ifLastChange"
+    if [isCisco $sh] {
+	lappend bl "locIfReason"
     }
     return $bl
 }
@@ -101,7 +106,7 @@ proc eventTime { uptime changetime } {
 }
 
 proc recordIntf { sh vbl } {
-    global portState portToIfDescr portToLocIfDescr
+    global portState portToIfDescr
     global lastPoll
 
     set lastPoll($sh) [clock seconds]
@@ -154,15 +159,6 @@ proc recordIntf { sh vbl } {
     set ix [format "%s,%s" $r $ifIndex]
 
     set portToIfDescr($ix) $ifDescr
-    if { [info exists locIfDescr] } {
-	if { $locIfDescr != "" } {
-	    set portToLocIfDescr($ix) $locIfDescr
-	}
-    } elseif [info exists ifAlias] {
-	if { $ifAlias != "" } {
-	    set portToLocIfDescr($ix) $ifAlias
-	}
-    }
 
     foreach v "ifAdminStatus ifOperStatus" {
 	if { ! [info exists $v] } {
@@ -229,8 +225,88 @@ proc recordIntf { sh vbl } {
     set portState($ix) $state
 }
 
+proc recordDescr { sh x descs } {
+    upvar $descs descriptions
+
+    foreach vb $x {
+	set n [mib name [lindex $vb 0]]
+	set v [lindex $vb 2]
+	set ix [lindex [split $n .] 1]
+	if {$v != ""} {
+	    set descriptions($ix) $v
+	}
+    }
+}
+
+
+proc getDescrFields { sh } {
+    global portToLocIfDescr
+
+    set bl "ifAlias"
+    set n [name $sh]
+    set varname [format "descs_%s" $n]
+    catch { unset $varname }
+    if { [catch {
+	$sh walk x $bl { recordDescr $sh $x $varname }
+    } msg] } {
+	set m [format "%s: %s" "getDescrFields" $msg]
+	error $m $m
+    }
+    # Do the same for locIfDescr for Cisco devices
+    # May return longer than 64 chars (ifAlias is limited to 64)
+    if [isCisco $sh] {
+	set bl "locIfDescr"
+	if { [catch {
+	    $sh walk x $bl { recordDescr $sh $x $varname }
+	} msg] } {
+	    set m [format "%s: %s" "getDescrFields" $msg]
+	    error $m $m
+	}
+    }
+
+    set n [name $sh]
+    foreach ifix [array names $varname] {
+	set ix [format "%s,%s" $n $ifix]
+	set newval [set [set varname]($ifix)]
+	set change 0
+	set new 0
+	if { ! [info exists portToLocIfDescr($ix)] } {
+	    set change 1
+	    set new 1
+	} else {
+	    if { $portToLocIfDescr($ix) != $newval } {
+		set change 1
+	    }
+	}
+	if { $change } {
+	    if { ! $new } {
+		log [format "changing desc for %s from %s to %s" \
+			 $ix $portToLocIfDescr($ix) $newval]
+	    } else {
+		log [format "setting desc for %s to %s" $ix $newval]
+	    }
+	    set portToLocIfDescr($ix) $newval
+	}
+    }
+    foreach ix [array names portToLocIfDescr] {
+	set l [split $ix ","]
+	set rp [lindex $l 0]
+	set ifix [lindex $l 1]
+	if {$rp == $n} {
+	    if {! [info exists [set varname]($ifix)]} {
+		log [format "unset desc for %s, was %s" \
+			 $ix $portToLocIfDescr($ix)]
+		unset portToLocIfDescr($ix)
+	    }
+	}
+    }
+    catch { unset [set varname] }
+}
+
 proc pollIfs { sh } {
     set vl [basePollList $sh]
+
+    getDescrFields $sh
     sparseWalk $sh $vl x [list eval recordIntf $sh {$x}]
 }
 
@@ -382,6 +458,21 @@ proc delayedNoResponse { sh } {
     }
 }
 
+proc reachable { sh } {
+    set rch "reachability"
+    set r [name $sh]
+
+    if { [eventIxExists $r $rch] } {
+	set eid [eventId $r $rch]
+	set status [getEventAttr $eid $rch]
+	if { $status == "no-response" } {
+	    return 0
+	}
+    }
+    # else assume all is well
+    return 1
+}
+
 proc noResponse { sh } {
     global responseCheckInProgress
     
@@ -389,22 +480,36 @@ proc noResponse { sh } {
 	log [format "no-response from %s but checking already" [name $sh]]
 	return
     }
-    log [format "no-response from %s, starting delayed check" [name $sh]]
+    # Quench messages if we know it's not reachable
+    if [reachable $sh] {
+	log [format "no-response from %s, starting delayed check" [name $sh]]
+    }
     after [expr 60 * 1000] delayedNoResponse $sh
     set responseCheckInProgress($sh) 1
 }
 
-proc doResponse { router eid } {
+proc doResponse { sh } {
 
+    set r [name $sh]
     set rch "reachability"
 
-    set reach [getEventAttr $eid $rch]
-    if { $reach != "reachable" } {
-	setEventAttr $eid $rch "reachable"
-	set s [format "%s reachable" $router]
-	eventLog $eid $s
-	eventCommit $eid
-	log $s
+    set eids ""
+    if [eventIxExists $r $rch] {
+	set eid [eventId $r $rch]
+	lappend eids $eid
+    }
+    if [closedEventIxExists $r $rch] {
+	set eid [closedEventId $r $rch]
+	lappend eids $eid
+    }
+    foreach eid $eids {
+	if { [getEventAttr $eid $rch] != "reachable" } {
+	    setEventAttr $eid $rch "reachable"
+	    set s [format "%s reachable" $r]
+	    eventLog $eid $s
+	    eventCommit $eid
+	    log $s
+	}
     }
 }
 
@@ -416,14 +521,9 @@ proc Response { sh } {
 
     set rch "reachability"
 
-    if {[eventIxExists $r $rch]} {
-	set eid [eventId $r $rch]
-	doResponse $r $eid
-	cleanupDelayedResponse $sh
-    }
-    if {[closedEventIxExists $r $rch]} {
-	set eid [closedEventId $r $rch]
-	doResponse $r $eid
+    if {[eventIxExists $r $rch] || \
+	    [closedEventIxExists $r $rch]} {
+	doResponse $sh
 	cleanupDelayedResponse $sh
     }
 }
