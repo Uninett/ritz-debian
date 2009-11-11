@@ -192,9 +192,9 @@ proc recordBGPpeer { sh uptime vbl } {
 
 #    if { $localAS($sh) != $bgpPeerRemoteAs } {
 #	log [format "debug: BGP r %s loc %s rem %s AS %s as %s os %s box-up %s peer-up %s" \
-		 $r $bgpPeerLocalAddr $bgpPeerRemoteAddr \
-		 $bgpPeerRemoteAs $bgpPeerAdminStatus $bgpPeerState \
-		 $uptime $bgpPeerFsmEstablishedTime]
+#		 $r $bgpPeerLocalAddr $bgpPeerRemoteAddr \
+#		 $bgpPeerRemoteAs $bgpPeerAdminStatus $bgpPeerState \
+#		 $uptime $bgpPeerFsmEstablishedTime]
 #    }
 
     # Bug in JunOS -- info from IPv6 BGP sessions spill over
@@ -238,10 +238,6 @@ proc recordBGPpeer { sh uptime vbl } {
 		log [format "debug: Router %s peer %s AS %s admin-down" \
 			 $r $bgpPeerRemoteAddr $bgpPeerRemoteAs]
 	    }
-#	    } else {
-#		log [format "debug: Router %s peer %s AS %s admin-down (but known)" \
-#			 $r $bgpPeerRemoteAddr $bgpPeerRemoteAs]
-#	    }
 	} else {
 	    if { ! [info exists bgpPeerAdminState($ix)] } {
 		set bgpPeerAdminState($ix) "unknown"
@@ -270,11 +266,6 @@ proc recordBGPpeer { sh uptime vbl } {
 			     $bgpPeerState $uptime]
 		}
 	    }
-#	    } else {
-#		log [format "debug: Router %s peer %s AS %s os %s (down), but known not-up" \
-#			 $r $bgpPeerRemoteAddr \
-#			 $bgpPeerRemoteAs $bgpPeerState]
-#	    }
 	}
     }
     set bgpPeerOperState($ix) $bgpPeerState
