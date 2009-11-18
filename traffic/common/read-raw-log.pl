@@ -68,7 +68,7 @@ sub read_log {
     my($starter);
     my(@f);
     my($computed_dst) = 0;
-    my(%data_seen, %sample_no, $lasttime_uncomp);
+    my(%data_seen, $lasttime_uncomp);
     my($skip_h);
     our(%count, %base, %sample_time);
     our(%lasttime, %firsttime, %dstcomp);
@@ -184,9 +184,20 @@ sub read_log {
 
 	$now += $day_comp;
 
+	my($largest_lasttime);
+	foreach my $k (keys %lasttime) {
+	    if (!defined($largest_lasttime) ||
+		$lasttime{$k} > $largest_lasttime)
+	    {
+		$largest_lasttime = $lasttime{$k};
+	    }
+	}
+
 	if (!defined($lasttime_comp) &&
 	    (($date_now ne $date) ||
-	     ($first_tm < $zero_tm))) # an indication we wrapped to next day
+	     ($first_tm < $zero_tm) ||
+	     ($largest_lasttime >= 23*3600 && $now < 1800)
+	    )) # an indication we wrapped to next day
 	{
 	    $lasttime_comp = 1;
 	    foreach my $k (keys %lasttime) {
