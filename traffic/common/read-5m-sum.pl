@@ -105,7 +105,7 @@ sub read_5m_sum {
     my($seekable) = 0;
     my($end_tick) = 0;
     my($zero_tm, $save_date);
-    our($opt_v);
+    our($opt_v, $opt_V);
 
     undef %base;
     undef %count;
@@ -185,6 +185,8 @@ sub read_5m_sum {
 			    $position{$base} = 0;
 			}
 		    } else {
+			$err .= "$line: date_str != mod_date:";
+			$err .= "$date_str vs. $mod_date\n";
 			$position{$base} = 0;
 		    }
 		}
@@ -233,21 +235,21 @@ sub read_5m_sum {
 	    $save_dstcomp{$line,$v} = $dstcomp{$v};
 	}
 
-#	if ($opt_v) {
-#	    my($lt, $h, $m, $s);
-#	    $lt = $lasttime{"ifHCInOctets"};
-#	    foreach my $v (keys %base) {
-#		if ($lasttime{$v} > -3600*24 &&
-#		    ($lasttime{$v} != $lt))
-#		{
-#		    printf(STDERR "lasttime diff for %s: %s vs %s (%s)\n",
-#			   $v, $lt, $lasttime{$v}, $line);
-#		}
-#	    }
-#	    
-#	    printf(STDERR "lasttime %s for %s\n",
-#		   &sprint_hms($lt / 3600.0), $line);
-#	}
+	if ($opt_V) {
+	    my($lt, $h, $m, $s);
+	    $lt = $lasttime{"ifHCInOctets"};
+	    foreach my $v (keys %base) {
+		if ($lasttime{$v} > -3600*24 &&
+		    ($lasttime{$v} != $lt))
+		{
+		    printf(STDERR "lasttime diff for %s: %s vs %s (%s)\n",
+			   $v, $lt, $lasttime{$v}, $line);
+		}
+	    }
+	    
+	    printf(STDERR "lasttime %s for %s\n",
+		   &sprint_hms($lt / 3600.0), $line);
+	}
 
 	foreach $v (keys %base) {
 	    $mybase{$v} = $base{$v};
@@ -294,21 +296,21 @@ sub read_5m_sum {
 		$sno++;
 	    }
 
-#	    if ($opt_v) {
-#		if ($mv =~ /ifHC.*Octets/) {
-#		    printf(STDERR
-#			   "Quantisizing between ticks %d and %d for %s\n",
-#			   $min_sample, $end_tick, $mv);
-#		    foreach my $n (0 .. 30) {
-#			if (defined($sample_time{$sno+$n})) {
-#			    printf(STDERR "sample_time{%d}: %s, value %s\n",
-#				   $sno+$n, &sprint_hms($sample_time{$sno+$n}),
-#				   $count{$mv,$sno+$n}
-#				);
-#			}
-#		    }
-#		}
-#	    }
+	    if ($opt_V) {
+		if ($mv =~ /ifHC.*Octets/) {
+		    printf(STDERR
+			   "Quantisizing between ticks %d and %d for %s\n",
+			   $min_sample, $end_tick, $mv);
+		    foreach my $n (0 .. 30) {
+			if (defined($sample_time{$sno+$n})) {
+			    printf(STDERR "sample_time{%d}: %s, value %s\n",
+				   $sno+$n, &sprint_hms($sample_time{$sno+$n}),
+				   $count{$mv,$sno+$n}
+				);
+			}
+		    }
+		}
+	    }
 
 	    for ($tick = $min_sample;
 		 $tick <= $end_tick;
