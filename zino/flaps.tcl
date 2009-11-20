@@ -307,7 +307,7 @@ proc ignoreTrap { r ifIndex updown } {
 
 proc linkTrans { router ifIndex descr updown reason } {
     global flapping
-    global portToLocIfDescr rtrPortToDescr
+    global rtrPortToDescr
     global portState
     
     set ix [format "%s,%s" $router $ifIndex]
@@ -329,6 +329,13 @@ proc linkTrans { router ifIndex descr updown reason } {
 	}
     }
 
+    # Ignore in-significant interfaces
+    if { ! [significantInterface $ix] } {
+	log [format "%s ignored link%s trap for in-significant interface %s" \
+		 $router $updown $descr]
+	return 0
+    }
+
     # Log details
     set fmt "%s: intf %s ix %d link%s"
     if { $reason != "" } {
@@ -337,10 +344,7 @@ proc linkTrans { router ifIndex descr updown reason } {
     detailLog $router $ifIndex [format $fmt $router $descr $ifIndex $updown]
     set rtrPortToDescr($ix) $descr
 
-    set ldescr ""
-    if { [info exists portToLocIfDescr($ix)] } {
-	set ldescr $portToLocIfDescr($ix)
-    }
+    set ldescr [description $ix]
 
     if { [ignoreTrap $router $ifIndex [string tolower $updown]] } {
 	return;			# just ignore
@@ -350,7 +354,7 @@ proc linkTrans { router ifIndex descr updown reason } {
 
     if { [flapping $ix] } {
 	if { ! [info exists flapping($ix)] } {
-	    # Not previously known to be flapping -- open a case for it
+	    # Not previously known to be flapping -- open an event for it
 	    set eid [eventId $ix "portstate"]
 
 	    setEventAttr $eid "router" $router
@@ -436,7 +440,7 @@ proc linkTrans { router ifIndex descr updown reason } {
 
 proc clearFlapInternal { router ifIndex user reason } {
     global flapping
-    global rtrPortToDescr portToLocIfDescr
+    global rtrPortToDescr
     
     set ix [format "%s,%s" $router $ifIndex]
 
@@ -454,10 +458,7 @@ proc clearFlapInternal { router ifIndex user reason } {
     if [info exists rtrPortToDescr($ix)] {
 	set descr $rtrPortToDescr($ix)
     }
-    set ldescr ""
-    if { [info exists portToLocIfDescr($ix)] } {
-	set ldescr $portToLocIfDescr($ix)
-    }
+    set ldescr [description $ix]
     eventHistoryAdd $eid $user $reason
     setEventAttr $eid "flapstate" "stable"
     set s [format "%s: intf \"%s\" ix %d (%s) %s" \
