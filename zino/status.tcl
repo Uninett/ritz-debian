@@ -196,13 +196,8 @@ proc recordIntf { sh vbl } {
 	    }
 
 	    set fmt "%s: port \"%s\" ix %s"
-	    if { [info exists locIfDescr] } {
-		setEventAttr $eid "descr" $locIfDescr
-		set fmt [format "%s (%s)" $fmt $locIfDescr]
-	    } elseif [info exists ifAlias] {
-		setEventAttr $eid "descr" $ifAlias
-		set fmt [format "%s (%s)" $fmt $ifAlias]
-	    }
+	    setEventAttr $eid "descr" [description $ix]
+	    set fmt [format "%s (%s)" $fmt [description $ix]]
 	    set fmt [format "%s %s" $fmt \
 		    "changed state from %s to %s on %s" ]
 	    if { [info exists locIfReason] } {
@@ -238,6 +233,14 @@ proc recordDescr { sh x descs } {
     }
 }
 
+proc description { ix } {
+    global portToLocIfDescr
+
+    if [info exists portToLocIfDescr($ix)] {
+	return $portToLocIfDescr($ix)
+    }
+    return ""
+}
 
 proc getDescrFields { sh } {
     global portToLocIfDescr
