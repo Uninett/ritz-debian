@@ -183,6 +183,7 @@ sub read_log {
 	$lasttime_uncomp = $now;
 	$now += $dstcomp{$v};
 	$h = int($now / 3600);
+	$h = sprintf("%02d", $h); # preserve format from log
 
 	$lasttime = $now;
 	$last_day = $day;
