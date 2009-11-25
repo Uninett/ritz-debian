@@ -12,6 +12,7 @@ proc initStatus { } {
     ::persist::add ::portState
     ::persist::add ::isCisco
     ::persist::add ::isJuniper
+    ::persist::add ::RunsOn
 
     setSWalkEhandler swalkErrorHandler
 
@@ -59,8 +60,12 @@ proc getAddrList { sh } {
     if { [catch {
 	$sh walk x "ipAdEntIfIndex ipAdEntAddr" { recordAddr $sh $x }
     } msg] } {
-	set m [format "%s: %s" "getAddrList" $msg]
-	error $m $m
+	if { $msg == "noResponse" } {
+	    noResponse $sh
+	} else {
+	    set m [format "%s: %s" "getAddrList" $msg]
+	    error $m $m
+	}
     }
     return
 }
@@ -182,39 +187,49 @@ proc recordIntf { sh vbl } {
 
     if { [info exists portState($ix)] } {
 	if { $portState($ix) != $state } {
-	    set eid [eventId $ix portstate]
-	    setEventAttr $eid "router" $r
-	    setEventAttr $eid "port" $ifDescr
-	    setEventAttr $eid "portstate" $state
-	    setEventAttr $eid "ifindex" $ifIndex
-	    setEventAttr $eid "polladdr" [::config::conf $r address]
-	    setEventAttr $eid "priority" [::config::conf $r priority]
+	    if [significantInterface $ix] {
+		set eid [eventId $ix portstate]
+		setEventAttr $eid "router" $r
+		setEventAttr $eid "port" $ifDescr
+		setEventAttr $eid "portstate" $state
+		setEventAttr $eid "ifindex" $ifIndex
+		setEventAttr $eid "polladdr" [::config::conf $r address]
+		setEventAttr $eid "priority" [::config::conf $r priority]
 
-	    set sysUpTime [getUptime $sh]
-	    if { $sysUpTime == 0 } {
-		set sysUpTime [mib scan ifLastChange $ifLastChange]
+		set sysUpTime [getUptime $sh]
+		if { $sysUpTime == 0 } {
+		    set sysUpTime [mib scan ifLastChange $ifLastChange]
+		}
+
+		set fmt "%s: port \"%s\" ix %s"
+		set fmt [format "%s (%s)" $fmt [description $ix]]
+		setEventAttr $eid "descr" [description $ix]
+
+		set fmt [format "%s %s" $fmt \
+			     "changed state from %s to %s on %s" ]
+		if { [info exists locIfReason] } {
+		    setEventAttr $eid "reason" $locIfReason
+		    set fmt [format "%s reason \"%s\"" $fmt $locIfReason]
+		}
+		set s [format $fmt $r $ifDescr $ifIndex \
+			   $portState($ix) $state \
+			   [eventTime $sysUpTime\
+				[mib scan ifLastChange $ifLastChange]]]
+		log $s
+		eventLog $eid $s
+
+		eventCommit $eid
+
+		# Re-verify state change after 2 minutes
+		after [expr 120 * 1000] pollSingleIf $sh $ifIndex
+	    } else {
+		set fmt "ignoring %s port \"%s\" ix %s"
+		set fmt [format "%s %s" $fmt "in-significant port changed"]
+		set fmt [format "%s %s" $fmt "state from %s to %s"]
+		set s [format $fmt $r $ifDescr $ifIndex \
+			   $portState($ix) $state]
+		log $s
 	    }
-
-	    set fmt "%s: port \"%s\" ix %s"
-	    setEventAttr $eid "descr" [description $ix]
-	    set fmt [format "%s (%s)" $fmt [description $ix]]
-	    set fmt [format "%s %s" $fmt \
-		    "changed state from %s to %s on %s" ]
-	    if { [info exists locIfReason] } {
-		setEventAttr $eid "reason" $locIfReason
-		set fmt [format "%s reason \"%s\"" $fmt $locIfReason]
-	    }
-	    set s [format $fmt $r $ifDescr $ifIndex \
-		    $portState($ix) $state \
-		    [eventTime $sysUpTime\
-		      [mib scan ifLastChange $ifLastChange]]]
-	    log $s
-	    eventLog $eid $s
-
-	    eventCommit $eid
-
-	    # Re-verify state change after 2 minutes
-	    after [expr 120 * 1000] pollSingleIf $sh $ifIndex
 	}
     }
     set portState($ix) $state
@@ -252,8 +267,12 @@ proc getDescrFields { sh } {
     if { [catch {
 	$sh walk x $bl { recordDescr $sh $x $varname }
     } msg] } {
-	set m [format "%s: %s" "getDescrFields" $msg]
-	error $m $m
+	if { $msg == "noResponse" } {
+	    noResponse $sh
+	} else {
+	    set m [format "%s: %s" "getDescrFields" $msg]
+	    error $m $m
+	}
     }
     # Do the same for locIfDescr for Cisco devices
     # May return longer than 64 chars (ifAlias is limited to 64)
@@ -262,8 +281,12 @@ proc getDescrFields { sh } {
 	if { [catch {
 	    $sh walk x $bl { recordDescr $sh $x $varname }
 	} msg] } {
-	    set m [format "%s: %s" "getDescrFields" $msg]
-	    error $m $m
+	    if { $msg == "noResponse" } {
+		noResponse $sh
+	    } else {
+		set m [format "%s: %s" "getDescrFields" $msg]
+		error $m $m
+	    }
 	}
     }
 
@@ -306,10 +329,120 @@ proc getDescrFields { sh } {
     catch { unset [set varname] }
 }
 
+proc recordStacking { sh vbl vn } {
+    upvar $vn runs_on
+
+    foreach vb $vbl {
+	set n [mib name [lindex $vb 0]]
+	set v [lindex $vb 2]
+	set l [split $n .]
+	set ul [lindex $l 1]; # upper layer
+	set ll [lindex $l 2]; # lower layer
+
+	if { $v != "active" } {
+	    continue
+	}
+	if { $ul == 0 || $ll == 0 } {
+	    continue
+	}
+	set runs_on($ul) $ll
+    }
+}
+
+proc getLayering { sh } {
+    global RunsOn
+
+    set r [name $sh]
+    set varname [format "runs_on_%s" $r]
+    catch { unset [set varname] }
+    if { [catch {
+	$sh walk x ifStackTable {
+	    recordStacking $sh $x $varname
+	}
+    } msg] } {
+	if { $msg == "noResponse" } {
+	    noResponse $sh
+	} else {
+	    set m [format "%s: %s" "getLayering" $msg]
+	    error $m $m
+	}
+    }
+
+    foreach ifix [array names $varname] {
+	set ix [format "%s,%s" $r $ifix]
+	set newval [set [set varname]($ifix)]
+	set change 0
+	set new 0
+	if { ! [info exists RunsOn($ix)] } {
+	    set new 1
+	} else {
+	    if { $RunsOn($ix) != $newval } {
+		set change 1
+	    }
+	}
+	if { $change || $new } {
+	    if { $new } {
+		log [format "interface %s runs on %s" $ix $newval]
+	    } elseif { $change } {
+		log [format "changing layering: %s runs on %s (was %s)" \
+			 $ix $newval $RunsOn($ix)]
+	    }
+	    set RunsOn($ix) $newval
+	}
+    }
+    foreach {ix val} [array get RunsOn [format "%s,*" $r]] {
+	set l [split $ix ","]
+	set rp [lindex $l 0]
+	set ifix [lindex $l 1]
+	if {! [info exists [set varname]($ifix)] } {
+	    log [format "unset layering for %s, was %s" \
+		     $ix $RunsOn($ix)]
+	    unset RunsOn($ix)
+	}
+    }
+    catch { unset [set varname] }
+}
+
+proc cleanupLayering { r } {
+    global RunsOn
+
+    array unset RunsOn "$r,*"
+}
+
+proc runsOn { ix } {
+    global RunsOn
+
+    if [info exists RunsOn($ix)] {
+	return $RunsOn($ix)
+    } else {
+	return ""
+    }
+}
+
+proc significantInterface { ix } {
+    global portToLocIfDescr
+    
+    # If a given interface runs on top of another,
+    # and has no description field set (or it's empty),
+    # it's deemed to not be "significant".  This is intended
+    # to get rid of alarms for e.g. "unit 0" sub-interfaces
+    # in Juniper routers.
+
+    if { [runsOn $ix] != "" } {
+	if { [description $ix] == "" } {
+	    return 0
+	}
+    }
+    return 1
+}
+
+
 proc pollIfs { sh } {
-    set vl [basePollList $sh]
 
     getDescrFields $sh
+    getLayering $sh
+
+    set vl [basePollList $sh]
     sparseWalk $sh $vl x [list eval recordIntf $sh {$x}]
 }
 
