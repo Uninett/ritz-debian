@@ -721,7 +721,7 @@ proc cleanupDBvars { r } {
     global portToIfDescr
     global portToLocIfDescr
     global portState
-    global isCisco
+    global isCisco isJuniper
 
     puts [format "Router %s removed, cleaning up" $r]
 
@@ -737,13 +737,12 @@ proc cleanupDBvars { r } {
 	}
     }
     foreach a "portToIfDescr portToLocIfDescr portState" {
-	foreach ix [array names $a] {
-	    set l [split $ix ","]
-	    if { [lindex $l 0] == $r } {
-		unset [set a]($ix)
-	    }
-	}
+	array unset $a "$r,*"
     }
     catch { unset isCisco($r) }
+    catch { unset isJuniper($r) }
+
+    cleanupBGPvars $r
+    cleanupLayering $r
 }
 
