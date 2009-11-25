@@ -14,6 +14,18 @@ proc initBGP {} {
     ::persist::add ::sawPeer
 }
 
+proc cleanupBGPvars { r } {
+    global localAS bgpPeers
+
+    foreach a { bgpPeerAdminState bgpOperState bgpPeerUpTime sawPeer } {
+	global $a
+	array unset $a "$r,*"
+    }
+    set h [handle $r]
+    catch { unset localAS($h) }
+    catch { unset bgpPeers($r) }
+}
+
 proc bgpAdminDown { sh ix vbl } {
 
     foreach vb $vbl {
