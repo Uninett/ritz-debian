@@ -368,6 +368,7 @@ proc getLayering { sh } {
 	    set m [format "%s: %s" "getLayering" $msg]
 	    error $m $m
 	}
+	return;			# Don't do the rest if we hit an error
     }
 
     foreach ifix [array names $varname] {
