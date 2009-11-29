@@ -273,6 +273,7 @@ proc getDescrFields { sh } {
 	    set m [format "%s: %s" "getDescrFields" $msg]
 	    error $m $m
 	}
+	return;			# don't do the rest with a partial table
     }
     # Do the same for locIfDescr for Cisco devices
     # May return longer than 64 chars (ifAlias is limited to 64)
@@ -288,6 +289,7 @@ proc getDescrFields { sh } {
 		error $m $m
 	    }
 	}
+	return;		      # don't do the rest with a partial table
     }
 
     set n [name $sh]
