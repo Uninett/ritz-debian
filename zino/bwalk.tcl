@@ -7,28 +7,47 @@
 # number of repetitions, with optional end-of-varlist and error handlers.
 #
 
-proc processBulk { sh vbl err start_oid reps action args } {
+proc processBulk { sh vbl err start_oids reps action args } {
 
     if { $err == "noError" } {
-	set himatch "";		# highest matching oid, use in next getbulk
 	set eov 0
 	set fvbl {};		# filtered variable binding list
+	set n 0
+	set numvar [llength $start_oids]
 	foreach vb $vbl {
+	    set match 0
 	    set oid [lindex $vb 0]
-	    if [oidPfxMatch $start_oid $oid] {
-		set himatch $oid
+	    set soid [lindex $start_oids [expr $n % $numvar]]
+	    if [oidPfxMatch $soid $oid] {
+		set himatch($soid) $oid
 		lappend fvbl $vb
-	    } else {
+		set match 1
+	    }
+	    set n [expr $n + 1]
+	    if { ! $match } {
 		set eov 1;	# end of matching variables
 	    }
 	}
-	foreach vb $fvbl {
-	    eval $action $sh {$vb}
+
+	# process filtered/matching list of variable bindings
+	# pass as many variable bindings per round as we were given
+	while { $fvbl != {} } {
+	    set vbl {}
+	    foreach v $start_oids { # just step through them, counting
+		lappend vbl [lindex $fvbl 0]
+		set fvbl [lrange $fvbl 1 end]; # pop off head
+	    }
+	    eval $action $sh {$vbl}
 	}
+
 	if { ! $eov } {
-	    $sh getbulk 0 $reps $himatch \
+	    set newvars {}
+	    foreach v $start_oids {
+		lappend newvars $himatch($v)
+	    }
+	    $sh getbulk 0 $reps $newvars \
 		[concat processBulk "%S" {"%V"} "%E" \
-		     $start_oid $reps $action $args]
+		     [list $start_oids] $reps $action $args]
 	} else {
 	    set eov_handler [lindex $args 0]
 	    if { $eov_handler != "" } {
@@ -43,11 +62,16 @@ proc processBulk { sh vbl err start_oid reps action args } {
     }
 }
 
-proc bulkWalk { sh var reps action args } {
+proc bulkWalk { sh vars reps action args } {
 
-    set start_oid [mib oid $var]
-    $sh getbulk 0 $reps $start_oid \
+    set oidl {}
+    foreach v $vars {
+	set oid [mib oid $v]
+	lappend oidl $oid
+    }
+
+    $sh getbulk 0 $reps $oidl \
 	[concat processBulk "%S" {"%V"} "%E" \
-	     $start_oid $reps $action $args]
+	     [list $oidl] $reps $action $args]
     return
 }
