@@ -235,64 +235,34 @@ proc recordIntf { sh vbl } {
     set portState($ix) $state
 }
 
-proc recordDescr { sh x descs } {
-    upvar $descs descriptions
+proc recordDescr { sh vb } {
 
-    foreach vb $x {
-	set n [mib name [lindex $vb 0]]
-	set v [lindex $vb 2]
-	set ix [lindex [split $n .] 1]
-	if {$v != ""} {
-	    set descriptions($ix) $v
-	}
+    set n [name $sh]
+    set vn [format "descs_%s" $n]
+    global $vn
+
+    set n [mib name [lindex $vb 0]]
+    set v [lindex $vb 2]
+    set ix [lindex [split $n .] 1]
+    if {$v != ""} {
+	set [set vn]($ix) $v
     }
 }
 
-proc description { ix } {
-    global portToLocIfDescr
+proc endDescrAll { sh } {
 
-    if [info exists portToLocIfDescr($ix)] {
-	return $portToLocIfDescr($ix)
+    if {! [isCisco $sh]} {
+	endDescr $sh; # cisco devices use endDescr directly
     }
-    return ""
 }
 
-proc getDescrFields { sh } {
+proc endDescr { sh } {
     global portToLocIfDescr
 
-    set bl "ifAlias"
     set n [name $sh]
     set varname [format "descs_%s" $n]
-    catch { unset $varname }
-    if { [catch {
-	$sh walk x $bl { recordDescr $sh $x $varname }
-    } msg] } {
-	if { $msg == "noResponse" } {
-	    noResponse $sh
-	} else {
-	    set m [format "%s: %s" "getDescrFields" $msg]
-	    error $m $m
-	}
-	return;			# don't do the rest with a partial table
-    }
-    # Do the same for locIfDescr for Cisco devices
-    # May return longer than 64 chars (ifAlias is limited to 64)
-    if [isCisco $sh] {
-	set bl "locIfDescr"
-	if { [catch {
-	    $sh walk x $bl { recordDescr $sh $x $varname }
-	} msg] } {
-	    if { $msg == "noResponse" } {
-		noResponse $sh
-	    } else {
-		set m [format "%s: %s" "getDescrFields" $msg]
-		error $m $m
-	    }
-	}
-	return;		      # don't do the rest with a partial table
-    }
-
-    set n [name $sh]
+    global $varname
+    
     foreach ifix [array names $varname] {
 	set ix [format "%s,%s" $n $ifix]
 	set newval [set [set varname]($ifix)]
@@ -331,48 +301,71 @@ proc getDescrFields { sh } {
     catch { unset [set varname] }
 }
 
-proc recordStacking { sh vbl vn } {
-    upvar $vn runs_on
+proc errBulk { sh err } {
 
-    foreach vb $vbl {
-	set n [mib name [lindex $vb 0]]
-	set v [lindex $vb 2]
-	set l [split $n .]
-	set ul [lindex $l 1]; # upper layer
-	set ll [lindex $l 2]; # lower layer
-
-	if { $v != "active" } {
-	    continue
-	}
-	if { $ul == 0 || $ll == 0 } {
-	    continue
-	}
-	set runs_on($ul) $ll
+    if { $err == "noResponse" } {
+	noResponse $sh
+    } else {
+	set m [format "getDescrFields: %s" $err]
+	error $m $m
     }
 }
 
-proc getLayering { sh } {
+proc description { ix } {
+    global portToLocIfDescr
+
+    if [info exists portToLocIfDescr($ix)] {
+	return $portToLocIfDescr($ix)
+    }
+    return ""
+}
+
+proc getDescrFields { sh } {
+    global portToLocIfDescr
+
+    set n [name $sh]
+    set varname [format "descs_%s" $n]
+    catch { unset $varname }
+
+    bulkWalk $sh "ifAlias" 10 recordDescr endDescrAll errBulk
+
+    # Do the same for locIfDescr for Cisco devices
+    # May return longer than 64 chars (ifAlias is limited to 64)
+    if [isCisco $sh] {
+	bulkWalk $sh "locIfDescr" 10 recordDescr endDescr errBulk
+    }
+}
+
+proc recordStacking { sh vb } {
+
+    set n [name $sh]
+    set varname [format "runs_on_%s" $n]
+    global $varname
+
+    set n [mib name [lindex $vb 0]]
+    set v [lindex $vb 2]
+    set l [split $n .]
+    set ul [lindex $l 1]; # upper layer
+    set ll [lindex $l 2]; # lower layer
+    
+    if { $v != "active" } {
+	return
+    }
+    if { $ul == 0 || $ll == 0 } {
+	return
+    }
+    set [set varname]($ul) $ll
+}
+
+proc endStacking { sh } {
     global RunsOn
 
-    set r [name $sh]
-    set varname [format "runs_on_%s" $r]
-    catch { unset [set varname] }
-    if { [catch {
-	$sh walk x ifStackTable {
-	    recordStacking $sh $x $varname
-	}
-    } msg] } {
-	if { $msg == "noResponse" } {
-	    noResponse $sh
-	} else {
-	    set m [format "%s: %s" "getLayering" $msg]
-	    error $m $m
-	}
-	return;			# Don't do the rest if we hit an error
-    }
-
+    set n [name $sh]
+    set varname [format "runs_on_%s" $n]
+    global $varname
+    
     foreach ifix [array names $varname] {
-	set ix [format "%s,%s" $r $ifix]
+	set ix [format "%s,%s" $n $ifix]
 	set newval [set [set varname]($ifix)]
 	set change 0
 	set new 0
@@ -393,7 +386,7 @@ proc getLayering { sh } {
 	    set RunsOn($ix) $newval
 	}
     }
-    foreach {ix val} [array get RunsOn [format "%s,*" $r]] {
+    foreach {ix val} [array get RunsOn [format "%s,*" $n]] {
 	set l [split $ix ","]
 	set rp [lindex $l 0]
 	set ifix [lindex $l 1]
@@ -404,6 +397,16 @@ proc getLayering { sh } {
 	}
     }
     catch { unset [set varname] }
+}
+
+proc getLayering { sh } {
+
+    set n [name $sh]
+    set varname [format "runs_on_%s" $n]
+    global $varname
+    catch { unset [set varname] }
+
+    bulkWalk $sh "ifStackTable" 20 recordStacking endStacking errBulk
 }
 
 proc cleanupLayering { r } {
