@@ -57,17 +57,8 @@ proc getAddrList { sh } {
     global RouterToAlist
 
     catch { unset RouterToAlist([name $sh]) }
-    if { [catch {
-	$sh walk x "ipAdEntIfIndex ipAdEntAddr" { recordAddr $sh $x }
-    } msg] } {
-	if { $msg == "noResponse" } {
-	    noResponse $sh
-	} else {
-	    set m [format "%s: %s" "getAddrList" $msg]
-	    error $m $m
-	}
-    }
-    return
+
+    bulkWalk $sh "ipAdEntIfIndex ipAdEntAddr" 10 recordAddr {} errBulk
 }
 
 proc basePollList { sh } {
