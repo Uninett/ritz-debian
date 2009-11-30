@@ -235,17 +235,19 @@ proc recordIntf { sh vbl } {
     set portState($ix) $state
 }
 
-proc recordDescr { sh vb } {
+proc recordDescr { sh vbl } {
 
     set n [name $sh]
     set vn [format "descs_%s" $n]
     global $vn
 
-    set n [mib name [lindex $vb 0]]
-    set v [lindex $vb 2]
-    set ix [lindex [split $n .] 1]
-    if {$v != ""} {
-	set [set vn]($ix) $v
+    foreach vb $vbl {
+	set n [mib name [lindex $vb 0]]
+	set v [lindex $vb 2]
+	set ix [lindex [split $n .] 1]
+	if {$v != ""} {
+	    set [set vn]($ix) $v
+	}
     }
 }
 
@@ -336,25 +338,27 @@ proc getDescrFields { sh } {
     }
 }
 
-proc recordStacking { sh vb } {
+proc recordStacking { sh vbl } {
 
     set n [name $sh]
     set varname [format "runs_on_%s" $n]
     global $varname
 
-    set n [mib name [lindex $vb 0]]
-    set v [lindex $vb 2]
-    set l [split $n .]
-    set ul [lindex $l 1]; # upper layer
-    set ll [lindex $l 2]; # lower layer
+    foreach vb $vbl {
+	set n [mib name [lindex $vb 0]]
+	set v [lindex $vb 2]
+	set l [split $n .]
+	set ul [lindex $l 1]; # upper layer
+	set ll [lindex $l 2]; # lower layer
     
-    if { $v != "active" } {
-	return
+	if { $v != "active" } {
+	    continue
+	}
+	if { $ul == 0 || $ll == 0 } {
+	    continue
+	}
+	set [set varname]($ul) $ll
     }
-    if { $ul == 0 || $ll == 0 } {
-	return
-    }
-    set [set varname]($ul) $ll
 }
 
 proc endStacking { sh } {
