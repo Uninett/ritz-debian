@@ -1,3 +1,221 @@
+2009-12-03  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Bump to version 0.9.8.1.
+
+2009-11-30  Havard Eidnes  <he@uninett.no>
+
+	* zino/status.tcl:
+	Convert getAddrList to use bulkWalk instead of "snmp walk", which
+	turns out to be more synchronous than we want here.  This can now be
+	done since bulkWalk has been generalized to handle a variable list
+	instead of just a single variable representing a single coloumn in a
+	table.
+
+	* zino/status.tcl:
+	Adapt to the generalized bulkWalk, which now passes a full var-bind
+	list, not just a single var-bind to the handler.
+
+	* zino/test-bwalk.tcl:
+	Add test fetching two variables at a time using bulkWalk.
+
+	* zino/bwalk.tcl:
+	Generalize this so that it can take a list of variables, not just
+	iterate over a single row.  Does not handle sparse tables, use swalk
+	instead if you need that.
+
+	* zino/status.tcl:
+	Convert the recently added fetch of the interface layering table
+	and the administrator-set interface description fields from using
+	the "walk" operation to use the "getbulk" operation, using the
+	newly added bulkWalk function.
+
+	Testing reveals that it's quite possible that the "walk" operation
+	is more synchronous than we really want, causing sluggish response
+	to other events, such as commands received over the network.
+
+	* zino/Makefile: Add the newly added bwalk.tcl file.
+
+	* zino/test-bwalk.tcl:
+	Add a simple test script for testing the newly added bulkWalk
+	function.
+
+	* zino/bwalk.tcl:
+	Add a function to do a single-variable get-bulk table row fetch,
+	with the given number of repetitions, with optional end-of-varlist
+	and error handlers.
+
+2009-11-29  Havard Eidnes  <he@uninett.no>
+
+	* zino/status.tcl:
+	Also return from the collection of the stacking table if we hit an
+	error.
+
+	* zino/status.tcl:
+	Return from the collection of description fields if we hit an error.
+
+2009-11-25  Havard Eidnes  <he@uninett.no>
+
+	* zino/events.tcl: Also clean up isJuniper state for a router.
+	Call cleanup functions for BGP and interface layering when
+	cleanup up after a router.  Also simplify some code by using
+	patterns with "array unset".
+
+	* zino/status.tcl:
+	Add code to fetch the interface layering table via the ifStackTable.
+	Use this to not create events for interfaces which run on top of
+	another interface, and don't themselves have a description field set
+	by the administrator.
+
+	Add a function to clean up the layering-related state for a router.
+	Add a few more checks for noResponse errors and call the noResponse
+	function in those cases.
+
+	* zino/bgp.tcl:
+	Add a function to clean up BGP-related state for a given router.
+
+2009-11-20  Havard Eidnes  <he@uninett.no>
+
+	* zino/status.tcl:
+	Ensure that the newly separately collected interface description
+	fields actually get used when detecting a change in interface
+	operational status.  We no longer collect ifAlias and locIfDescr
+	in the normal status poll round...
+
+	* zino/flaps.tcl:
+	Eliminate some uses of the global portToLocIfDescr, use the
+	description function instead.
+
+	Ignore traps (but log them) for in-significant interfaces,
+	as per earlier change.
+
+	* traffic/common/read-hr-log.pl:
+	Ensure that $h has a leading zero after having been computed on
+	(bug introduced in previous fix for DST compensation), so that the
+	format of $h remains the same as it was before, i.e.  with a leading
+	zero for the hours 0-9.
+
+2009-11-18  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl:
+	Turn on the extra-verbose debug output, but only enable it under
+	$opt_V.
+
+	Improve the diagnostic by prefixing with the logical port name being
+	analyzed at the moment when the anomaly was found.
+
+	* traffic/common/read-raw-log.pl:
+	There's no need to repeat the declaration of %sample_no.
+
+	Improve the test for whether we rolled over to the next day, so that
+	we handle log files which start at e.g. 00:00:00, and have no samples
+	in hour 23 logged before that.
+
+2009-11-11  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/Makefile:
+	Indicate that none of the programs have manual pages.
+	I really ought to convert this to use autoconf/automake...
+
+	* zino/bgp.tcl: Properly un-comment some debug logging.
+	Remove some commented-out debug code with unbalanced braces, so as to
+	avoid confusing tcl/scotty.
+
+	* zino/status.tcl:
+	Move the fetching of administrator-set interface description fields
+	into a function of it's own, where seen-from-tcl the operation is
+	synchronous (using the "snmp walk" operation, which in turn usually
+	tries to do SNMP Get-Bulk), so that after the information has been
+	gathered from the router we can delete items which are no longer valid
+	from the global table.  Log only changes in the debug log.  As a
+	result, recordIntf no longer deals with these interface description
+	fields.
+
+	Instead of open-coding the test for "isCisco", make a function which
+	does this, and use it where appropriate.
+
+	Make the debug logging for non-responsive devices only trigger on
+	changes in reachability.  This should significantly reduce the amount
+	of noise in the logs when we have non-responsive devices.
+
+	Re-do how doResponse is working, to simplify code at the calling site.
+
+2009-11-03  Havard Eidnes  <he@uninett.no>
+
+	* traffic/plot/plot-day.pl:
+	Don't start painting X tick marks for a time where we don't have any
+	actual data recorded for the given logical interface.
+
+	* traffic/common/read-hr-log.pl:
+	Apply minimal fixes to deal with switching to and from daylight
+	savings time.
+
+2009-10-28  Havard Eidnes  <he@uninett.no>
+
+	* zino/bgp.tcl: Drop the logging of "known state" for BGP sessions.
+
+2009-10-26  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl: Save and restore %dstcomp.
+	Remove code for switching to the next day -- that's now done
+	in read-raw-log instead.
+
+2009-10-25  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-raw-log.pl:
+	Add yet another kludge to deal with DST handling:
+
+	When going from the day with DST shift to the next one,
+	%lasttime also needs to be adjusted before processing the
+	stats.
+
+	* traffic/common/read-raw-log.pl:
+	Make %dstcomp global (as the comments state), so that incremental
+	reads which save / restore its contents can work.
+
+	Add code to reset %dstcomp members to 0 when we hit a date which does
+	not switch to or from DST.
+
+	* traffic/common/read-raw-log.pl:
+	Fix logic for switching to DST compensation so that it actually
+	only runs once.
+
+	Get rid of the code which was used to deal with old compressed logs,
+	which turned out to have errors in them...  ...Instead of skipping the
+	samples for the following hour, and masking the effect of the "real"
+	DST compensation code.
+
+2009-10-23  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/r-all.pl:
+	If we got an error during RRD-graphing, print it together with
+	the RRD-graph arguments to stderr, ends up in apache's error log.
+
+	Correct the font specification: there is no need for single quoting,
+	and it actually nulls out the font selection(!)
+
+	Also, be less specific about the legend font, and let rrdtool pick a
+	suitable monospace font (it defaults to monospace).
+
+	* traffic/cgi/r-all.pl:
+	Drop a superflous newline from an error message.
+
+	* traffic/cgi/r-all.pl:
+	Get rid of a tab in the legend.  It frequently pushed the end of the
+	line to wrap, causing different-sized images to be created.  This in
+	turn could cause overflow in the %img_size hash, because it's tied to
+	a fixed-size shared memory segment, defaulting (in my case) to 64KB.
+
+	Also protect the statements which add an exception to the %img_size
+	hash, so that if we try to exceed the shared memory segment size, the
+	error is not fatal.  Instead, emit a message in the error log, and
+	continue on.  The price to pay is to have the web client stretch or
+	compress the images, which may not look so pretty.
+
+	Ideally, we ought to figure out a better way of dimensioning the
+	shared memory segment, so that it's less likely to overflow.  We also
+	ought to devise a way to have the general image size be out-voted by
+	the number of exceptions for the given type of plot...
+
 2009-10-21  Havard Eidnes  <he@uninett.no>
 
 	* Makefile: Bump to version 0.9.8.
