@@ -180,6 +180,15 @@ proc setEventAttr { id attr value { user monitor } } {
     set [set Attrs]($attr) $value
 }
 
+# Allow shorthand...
+
+proc setEventAttrs { id args } {
+
+    foreach { attr value } $args {
+	setEventAttr $id $attr $value
+    }
+}
+
 # Commit changes to an event.
 # Commit attribute setting, and check for a possible change
 # of state from "embryonic" to "open".
