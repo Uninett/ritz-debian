@@ -11,6 +11,7 @@ FILES= 	../common/util.tcl \
 	jnx-alarm.tcl \
 	swalk.tcl bwalk.tcl trap.tcl utils.tcl \
 	flaps.tcl events.tcl server.tcl auth.tcl \
+	pm.tcl \
 	../version.tcl \
 	zino-main.tcl
 
