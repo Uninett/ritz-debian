@@ -6,7 +6,7 @@ catch { namespace delete ::pm }
 
 namespace eval ::pm {
 
-    namespace export add logadd ids details matching cancel log
+    namespace export add addlog ids details matching cancel log
 
     global ::pm::lasttime
     if { ! [info exists ::pm::lasttime] } {
@@ -33,10 +33,22 @@ namespace eval ::pm {
 	set [set name](match_expr) $match_expr
 
 	::persist::dump
+	return $id
     }
 
-    proc logadd { id text } {
+    proc preplog { entry user } {
 	
+	regsub -all "^" $entry " " entry
+	regsub -all "\n" $entry "\n " entry
+	regsub -all "\n \n" $entry "\n\n" entry
+	set e [format "%s %s\n%s" [clock seconds] $user $entry]
+	return $e
+    }
+
+    proc addlog { id text $user } {
+	
+	set text [preplog $text $user]
+
 	set name [attrs $id]
 	global $name
 	lappend [set name](log) $text
