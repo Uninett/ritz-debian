@@ -314,10 +314,10 @@ proc description { ix } {
 }
 
 proc getDescrFields { sh } {
-    global portToLocIfDescr
 
     set n [name $sh]
     set varname [format "descs_%s" $n]
+    global $varname
     catch { unset $varname }
 
     bulkWalk $sh "ifAlias" 10 recordDescr endDescrAll errBulk
