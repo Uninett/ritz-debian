@@ -356,18 +356,178 @@ proc doHelpCmd { chan l } {
 	ClientResponse $chan \
 		"200- CASEIDS GETATTRS GETHIST"
 	ClientResponse $chan\
-		"200  GETLOG HELP NSOCKET QUIT USER VERSION"
+		"200  GETLOG HELP NSOCKET QUIT USER PM VERSION"
     } elseif { [info exists User($chan)] } {
 	ClientResponse $chan \
 		"200- ADDHIST CASEIDS CLEARFLAP COMMUNITY GETATTRS GETHIST"
 	ClientResponse $chan \
-		"200-  GETLOG HELP NSOCKET POLLINTF POLLRTR QUIT SETSTATE"
+		"200- GETLOG HELP NSOCKET POLLINTF POLLRTR QUIT SETSTATE PM"
 	ClientResponse $chan \
-	        "200   VERSION"
+	        "200  VERSION"
     } else {
 	ClientResponse $chan "200  HELP QUIT USER VERSION"
     }
 }
+
+# Commands related to Planned Maintenance
+
+proc doPMadd { chan l } {
+
+    set from_t [lindex $l 2]
+    set to_t   [lindex $l 3]
+    set type   [string tolower [lindex $l 4]]
+    set m_type [string tolower [lindex $l 5]]
+    set m_expr [lindex $l 6]
+
+    if { ! [regexp {^[0-9][0-9]*$} $from_t] } {
+	errResponse $chan \
+	    [format "illegal from_t (param 1), must be only digits"]
+	return
+    }
+    if { ! [regexp {^[0-9][0-9]*$} $to_t] } {
+	errResponse $chan \
+	    [format "illegal to_t (param 2), must be only digits"]
+	return
+    }
+    if { $from_t > $to_t } {
+	errResponse $chan [format "ending time is before starting time"]
+	return
+    }
+    if { $from_t > [clock seconds] } {
+	errResponse $chan [format "starting time is in the past"]
+	return
+    }
+    if { $type != "portstate" && $type != "device" } {
+	errResponse $chan [format "unknown PM event type: %s" $type]
+	return
+    }
+    if { $m_type != "regexp" && $m_type != "str" && $m_type != "exact" } {
+	errResponse $chan [format "unknown match type: %s" $m_type]
+	return
+    }
+    set id [::pm::add $from_t $to_t $type $m_type $m_expr]
+    ClientResponse $chan \
+	[format "200 PM id %s successfully added" $id]
+}
+
+proc doPMlist { chan l } {
+
+    set ids [::pm::ids]
+    ClientResponse $chan "300 PM event ids follows, terminated with '.'"
+    foreach id $ids {
+	ClientResponse $chan $id
+    }
+    ClientResponse $chan "."
+}
+
+proc doPMcancel { chan l } {
+
+    set id [lindex $l 2]
+    ::pm::cancel $id
+
+    okResponse $chan
+}
+
+proc doPMdetails { chan l } {
+
+    set id [lindex $l 2]
+    if [catch {set det [::pm::details $id]} msg] {
+	errResponse $chan [format "Could not cancel id %d: %s" $id]
+	log $msg
+	return
+    }
+    ClientResponse $chan [format "200 %s" $det]
+}
+
+proc doPMmatching { chan l } {
+
+    set id [lindex $l 2]
+    set matches [::pm::matching $id]
+    ClientResponse $chan \
+	[format "300 Matching ports/devices follows, terminated with '.'"]
+    foreach m $matches {
+	ClientResponse $chan $m
+    }
+    ClientResponse $chan "."
+}
+
+proc doPMaddlog { chan l } {
+    global SaveHandler
+    global MultiEndCmd
+    
+    if { [llength $l] < 3 } {
+	errResponse $chan "PM add log needs PM id"
+	return
+    }
+    set id [lindex $l 2]
+
+    set SaveHandler($chan) [fileevent $chan readable]
+    set MultiEndCmd($chan) [list endPMaddlog $chan $id]
+    fileevent $chan readable [list multiRead $chan]
+    ClientResponse $chan \
+	"302 please provide new PM log entry, terminate with '.'"
+}
+
+proc endPMaddlog { chan id var } {
+    global User
+    upvar $var lines
+
+    if { [info exists User($chan)] } {
+	set user $User($chan)
+    } else {
+	set user "unknown"
+    }
+
+    ::pm::addlog $id $lines $user
+
+    okResponse $chan
+}
+
+proc doPMlog { chan $l } {
+
+    set id [lindex $l 2]
+    set l [::pm::log $id]
+    ClientResponse $chan "300 log follows, terminated with '.'"
+    foreach e $l {
+	ClintResponse $chan $e
+    }
+    ClientResponse $chan "."
+}
+
+proc doPM { chan l } {
+    global User
+    global OpenServerAccess
+
+    switch -exact [string tolower [lindex $l 1]] {
+	"add" {
+	    doPMadd $chan $l
+	}
+	"list" {
+	    doPMlist $chan $l
+	}
+	"cancel" {
+	    doPMcancel $chan $l
+	}
+	"details" {
+	    doPMdetails $chan $l
+	}
+	"matching" {
+	    doPMmatching $chan $l
+	}
+	"addlog" {
+	    doPMaddlog $chan $l
+	}
+	"log" {
+	    doPMlog $chan $l
+	}
+	default {
+	    errResponse $chan \
+		    [format "unknown PM command: \"%s\"" [lindex $l 1]]
+	}
+    }
+}
+
+# end of Planned Maintenance-related functions
 
 proc ServerCmd { chan line } {
 
@@ -408,6 +568,9 @@ proc ServerCmd { chan line } {
 	}
 	pollrtr {
 	    doPollRtrCmd $chan $l
+	}
+	pm {
+	    doPM $chan $l
 	}
 	quit {
 	    doQuitCmd $chan $l
