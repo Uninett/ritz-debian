@@ -393,7 +393,7 @@ proc doPMadd { chan l } {
 	errResponse $chan [format "ending time is before starting time"]
 	return
     }
-    if { $from_t > [clock seconds] } {
+    if { $from_t < [clock seconds] } {
 	errResponse $chan [format "starting time is in the past"]
 	return
     }
