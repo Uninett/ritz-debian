@@ -100,7 +100,7 @@ proc doUserCmd { chan l } {
 proc doNsocketCmd { chan l } {
     global ClientHost
 
-    if { ! [PermitROaccess] } {
+    if { ! [PermitROaccess $chan] } {
 	errResponse $chan "Not authenticated"
 	return
     }
