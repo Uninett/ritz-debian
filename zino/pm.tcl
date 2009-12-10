@@ -20,6 +20,15 @@ namespace eval ::pm {
     ::persist::add ::pm::events
     ::persist::add ::pm::pm_events
 
+    ::persist::after_restore ::pm::restore
+
+    proc restore { } {
+
+	# we need to ensure we continue remembering these
+	foreach var [info vars ::pm::event_*] {
+	    ::persist::add $var
+	}
+    }
 
     proc add { from_t to_t type match_type match_expr } {
 
@@ -32,6 +41,7 @@ namespace eval ::pm {
 	set [set name](match_type) $match_type
 	set [set name](match_expr) $match_expr
 
+	::persist::add $name
 	::persist::dump
 	return $id
     }
@@ -45,7 +55,7 @@ namespace eval ::pm {
 	return $e
     }
 
-    proc addlog { id text $user } {
+    proc addlog { id text user } {
 	
 	set text [preplog $text $user]
 
@@ -60,17 +70,14 @@ namespace eval ::pm {
 	return [array names ::pm::events]
     }
 
-    proc cancel { id } {
+    proc cancel { id user } {
 
-	::pm::close $id "PM cancelled"
+	::pm::close $id "PM cancelled" user
     }
 
     proc log { id } {
 
-	set name [attrs $id]
-	global $name
-
-	return [set [set name](log)]
+	return [attr $id log]
     }
 
     proc details { id } {
@@ -82,11 +89,11 @@ namespace eval ::pm {
 
 	set s ""
 	set s [format "%d" $id]
-	set s [format "%s %s" [set [set name](starttime)]]
-	set s [format "%s %s" [set [set name](endtime)]]
-	set s [format "%s %s" [set [set name](type)]]
-	set s [format "%s %s" [set [set name](match_type)]]
-	set s [format "%s %s" [set [set name](match_expr)]]
+	set s [format "%s %s" $s [set [set name](starttime)]]
+	set s [format "%s %s" $s [set [set name](endtime)]]
+	set s [format "%s %s" $s [set [set name](type)]]
+	set s [format "%s %s" $s [set [set name](match_type)]]
+	set s [format "%s %s" $s [set [set name](match_expr)]]
 
 	return $s
     }
@@ -126,15 +133,16 @@ namespace eval ::pm {
 
     proc attrs { id } {
 
-	return [format "::pm::event_%d" $n]
+	return [format "::pm::event_%d" $id]
     }
 
     proc attr { id attr } {
 
 	set varname [attrs $id]
-	global $name
+	global $varname
+
 	set val ""
-	catch { set val [set [set name]($attr)] }
+	catch { set val [set [set varname]($attr)] }
 	return $val
     }
 
@@ -147,6 +155,7 @@ namespace eval ::pm {
 	    set n 0
 	}
 	set lastid $n
+	set id $n
 
 	# Data structure for PM event
 	set name [attrs $id]
@@ -160,10 +169,10 @@ namespace eval ::pm {
 	return $n
     }
 
-    proc close { id reason } {
+    proc close { id reason user } {
 	global ::pm::pm_events
 
-	logadd $id $reason
+	addlog $id $reason $user
 
 	# Save for posterity
 	save $id
@@ -214,7 +223,7 @@ namespace eval ::pm {
 	set ixes {}
 	if { $match_type == "regexp" } {
 	    foreach ix [array names portToLocIfDescr] {
-		if [regxp $match_expr $portToLocIfDescr($ix)] {
+		if [regexp $match_expr $portToLocIfDescr($ix)] {
 		    lappend ixes $ix
 		}
 	    }
@@ -238,7 +247,7 @@ namespace eval ::pm {
 		lappend devs $dev
 	    }
 	} elseif { $match_type == "exact" } {
-	    if [info exists $isCisco($match_expr)] {
+	    if [info exists isCisco($match_expr)] {
 		lappend devs $match_expr
 	    }
 	}
@@ -295,11 +304,11 @@ namespace eval ::pm {
 		set rai [::eventId "$dev,red" "alarm"]
 		set yai [::eventId "$dev,yellow" "alarm"]
 
-		foreach eid {$rid $rai $yai} {
+		foreach eid [list $rid $rai $yai] {
 		    setEventAttrs $eid \
 			"router" $dev \
 			"polladdr" [::config::conf $dev address] \
-			"priority" [::config::conf $r priority]
+			"priority" [::config::conf $dev priority]
 
 		    # we assume things about the actual state,
 		    # may be auto-corrected by status polling
@@ -309,7 +318,7 @@ namespace eval ::pm {
 			set l "assumed reachable"
 			set l "$l, planned maintenance starts"
 		    } else {
-			if {$eid == $rid} {
+			if {$eid == $rai} {
 			    set colour "red"
 			} else {
 			    set colour "yellow"
@@ -327,8 +336,9 @@ namespace eval ::pm {
 
 		    setEventAttr $eid "state" "ignored"
 		    eventCommit $eid
+
+		    lappend ::pm::pm_events($id) $eid
 		}
-		lappend ::pm::pm_events($id) $eid
 	    }
 	}
     }
@@ -382,7 +392,7 @@ namespace eval ::pm {
 	set lasttime $now
 
 	foreach id [old_pms $now] {
-	    ::pm::close $id "timer expiry for old PMs"
+	    ::pm::close $id "timer expiry for old PMs" "zino"
 	}
 
 	after 60000 ::pm::periodic
