@@ -5,7 +5,7 @@
 catch { namespace delete ::persist }
 
 namespace eval ::persist {
-    namespace export setup add remove dump restore
+    namespace export setup add remove dump restore after_restore
     namespace export startPeriodicDump
 
     variable persistFile
@@ -33,10 +33,20 @@ namespace eval ::persist {
 
     proc restore { } {
 	variable persistFile
+	variable after_handlers
 
 	if { [catch { source $persistFile } msg] } {
 	    error [format "Error reading %s: %s" $persistFile $msg]
 	}
+	foreach handler [array names after_handlers] {
+	    catch { eval $handler }
+	}
+    }
+
+    proc after_restore { handler } {
+	variable after_handlers
+
+	set after_handlers($handler) 1
     }
 
     proc dump { { secs 0 } } {
