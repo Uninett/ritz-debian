@@ -78,7 +78,7 @@ proc okResponse { chan } {
 proc doUserCmd { chan l } {
     global User
 
-    if { [info exists User($chan)] } {
+    if { [Authenticated $chan] } {
 	errResponse $chan "already authenticated"
 	return
     }
@@ -98,11 +98,9 @@ proc doUserCmd { chan l } {
 }
 
 proc doNsocketCmd { chan l } {
-    global User
-    global OpenServerAccess
     global ClientHost
 
-    if { ! $OpenServerAccess && ! [info exists User($chan)] } {
+    if { ! [PermitROaccess] } {
 	errResponse $chan "Not authenticated"
 	return
     }
@@ -120,10 +118,8 @@ proc doNsocketCmd { chan l } {
 }
 
 proc doCaseidsCmd { chan l } {
-    global User
-    global OpenServerAccess
 
-    if { ! $OpenServerAccess && ! [info exists User($chan)] } {
+    if { ! [PermitROaccess $chan] } {
 	errResponse $chan "Not authenticated"
 	return
     }
@@ -137,10 +133,8 @@ proc doCaseidsCmd { chan l } {
 }
 
 proc doGetattrsCmd { chan l } {
-    global User
-    global OpenServerAccess
 
-    if { ! $OpenServerAccess && ! [info exists User($chan)] } {
+    if { ! [PermitROaccess $chan] } {
 	errResponse $chan "Not authenticated"
 	return
     }
@@ -160,10 +154,8 @@ proc doGetattrsCmd { chan l } {
 }
 
 proc doGetlogCmd { chan l } {
-    global User
-    global OpenServerAccess
 
-    if { ! $OpenServerAccess && ! [info exists User($chan)] } {
+    if { ! [PermitROaccess $chan] } {
 	errResponse $chan "Not authenticated"
 	return
     }
@@ -184,10 +176,9 @@ proc doGetlogCmd { chan l } {
 }
 
 proc doGethistCmd { chan l } {
-    global User
     global OpenServerAccess
 
-    if { ! $OpenServerAccess && ! [info exists User($chan)] } {
+    if { ! [PermitROaccess $chan] } {
 	errResponse $chan "Not authenticated"
 	return
     }
@@ -208,12 +199,10 @@ proc doGethistCmd { chan l } {
 }
 
 proc doAddhistCmd { chan l } {
-    global User
-    global OpenServerAccess
     global SaveHandler
     global MultiEndCmd
 
-    if { ! [info exists User($chan)] } {
+    if { ! [Authenticated $chan] } {
 	errResponse $chan "Not authenticated"
 	return
     }
@@ -232,7 +221,7 @@ proc doAddhistCmd { chan l } {
 proc doSetstateCmd { chan l } {
     global User
 
-    if { ! [info exists User($chan)] } {
+    if { ! [Authenticated $chan] } {
 	errResponse $chan "Not authenticated"
 	return
     }
@@ -255,9 +244,8 @@ proc doSetstateCmd { chan l } {
 }
 
 proc doCommunityCmd { chan l } {
-    global User
 
-    if { ! [info exists User($chan)] } {
+    if { ! [Authenticated $chan] } {
 	errResponse $chan "Not authenticated"
 	return
     }
@@ -271,9 +259,8 @@ proc doCommunityCmd { chan l } {
 }
 
 proc doPollIntfCmd { chan l } {
-    global User
 
-    if { ! [info exists User($chan)] } {
+    if { ! [Authenticated $chan] } {
 	errResponse $chan "Not authenticated"
 	return
     }
@@ -293,9 +280,8 @@ proc doPollIntfCmd { chan l } {
 }
 
 proc doPollRtrCmd { chan l } {
-    global User
 
-    if { ! [info exists User($chan)] } {
+    if { ! [Authenticated $chan] } {
 	errResponse $chan "Not authenticated"
 	return
     }
@@ -316,7 +302,7 @@ proc doPollRtrCmd { chan l } {
 proc doClearFlap { chan l } {
     global User
 
-    if { ! [info exists User($chan)] } {
+    if { ! [Authenticated $chan] } {
 	errResponse $chan "Not authenticated"
 	return
     }
@@ -348,30 +334,52 @@ proc doVersionCmd { chan l } {
 }
 
 proc doHelpCmd { chan l } {
-    global User
-    global OpenServerAccess
 
     ClientResponse $chan "200- commands are:"
-    if { $OpenServerAccess && ! [info exists User($chan)] } {
-	ClientResponse $chan \
-		"200- CASEIDS GETATTRS GETHIST"
-	ClientResponse $chan\
-		"200  GETLOG HELP NSOCKET QUIT USER PM VERSION"
-    } elseif { [info exists User($chan)] } {
+    if { [Authenticated $chan] } {
 	ClientResponse $chan \
 		"200- ADDHIST CASEIDS CLEARFLAP COMMUNITY GETATTRS GETHIST"
 	ClientResponse $chan \
 		"200- GETLOG HELP NSOCKET POLLINTF POLLRTR QUIT SETSTATE PM"
 	ClientResponse $chan \
 	        "200  VERSION"
+    } elseif [PermitROaccess $chan] {
+	ClientResponse $chan \
+		"200- CASEIDS GETATTRS GETHIST"
+	ClientResponse $chan\
+		"200  GETLOG HELP NSOCKET QUIT USER PM VERSION"
     } else {
 	ClientResponse $chan "200  HELP QUIT USER VERSION"
     }
 }
 
+proc PermitROaccess { chan } {
+    global User
+    global OpenServerAccess
+
+    if { $OpenServerAccess } {
+	return 1
+    }
+    if [Authenticated $chan] {
+	return 1
+    }
+    return 0
+}
+
+proc Authenticated { chan } {
+    global User
+
+    return [info exists User($chan)]
+}
+
 # Commands related to Planned Maintenance
 
 proc doPMadd { chan l } {
+
+    if { ! [Authenticated $chan] } {
+	errResponse $chan "Not authenticated"
+	return
+    }
 
     set from_t [lindex $l 2]
     set to_t   [lindex $l 3]
@@ -412,6 +420,10 @@ proc doPMadd { chan l } {
 
 proc doPMlist { chan l } {
 
+    if { ! [PermitROaccess $chan] } {
+	errResponse $chan "No permission"
+	return
+    }
     set ids [::pm::ids]
     ClientResponse $chan "300 PM event ids follows, terminated with '.'"
     foreach id $ids {
@@ -421,18 +433,34 @@ proc doPMlist { chan l } {
 }
 
 proc doPMcancel { chan l } {
+    global User
+
+    if { ! [Authenticated $chan] } {
+	errResponse $chan "Not authenticated"
+	return
+    }
+
+    if { [info exists User($chan)] } {
+	set user $User($chan)
+    } else {
+	set user "unknown"
+    }
 
     set id [lindex $l 2]
-    ::pm::cancel $id
+    ::pm::cancel $id $user
 
     okResponse $chan
 }
 
 proc doPMdetails { chan l } {
 
+    if { ! [PermitROaccess $chan] } {
+	errResponse $chan "No permission"
+	return
+    }
     set id [lindex $l 2]
     if [catch {set det [::pm::details $id]} msg] {
-	errResponse $chan [format "Could not cancel id %d: %s" $id]
+	errResponse $chan [format "Could not get details for id %d" $id]
 	log $msg
 	return
     }
@@ -441,6 +469,10 @@ proc doPMdetails { chan l } {
 
 proc doPMmatching { chan l } {
 
+    if { ! [PermitROaccess $chan] } {
+	errResponse $chan "No permission"
+	return
+    }
     set id [lindex $l 2]
     set matches [::pm::matching $id]
     ClientResponse $chan \
@@ -455,6 +487,11 @@ proc doPMaddlog { chan l } {
     global SaveHandler
     global MultiEndCmd
     
+    if { ! [Authenticated $chan] } {
+	errResponse $chan "Not authenticated"
+	return
+    }
+
     if { [llength $l] < 3 } {
 	errResponse $chan "PM add log needs PM id"
 	return
@@ -483,7 +520,12 @@ proc endPMaddlog { chan id var } {
     okResponse $chan
 }
 
-proc doPMlog { chan $l } {
+proc doPMlog { chan l } {
+
+    if { ! [PermitROaccess $chan] } {
+	errResponse $chan "No permission"
+	return
+    }
 
     set id [lindex $l 2]
     set l [::pm::log $id]
@@ -494,9 +536,20 @@ proc doPMlog { chan $l } {
     ClientResponse $chan "."
 }
 
+proc doPMhelp { chan l } {
+
+    ClientResponse $chan "200- PM subcommands are:"
+
+    if [Authenticated $chan] {
+	ClientResponse $chan "200  ADD LIST CANCEL DETAILS MATCHING ADDLOG LOG"
+    } elseif [PermitROaccess $chan] {
+	ClientResponse $chan "200  LIST DETAILS MATCHING LOG"
+    } else {
+	ClientResponse $chan "200  (none allowed)"
+    }
+}
+
 proc doPM { chan l } {
-    global User
-    global OpenServerAccess
 
     switch -exact [string tolower [lindex $l 1]] {
 	"add" {
@@ -519,6 +572,9 @@ proc doPM { chan l } {
 	}
 	"log" {
 	    doPMlog $chan $l
+	}
+	"help" {
+	    doPMhelp $chan $l
 	}
 	default {
 	    errResponse $chan \
