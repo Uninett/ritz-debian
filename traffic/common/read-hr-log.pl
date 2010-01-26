@@ -134,12 +134,12 @@ sub read_log {
 	# indexes return errors (so my poller will never reset the
 	# "rebooted" flag...).
         if (/Reboot/) {
-	    if (! defined($lasttime)) { next; } # use next sample as base
 	    $reboot_day = $f[7] . " " . $f[8] . " " . $f[9] . " " . $f[11];
 	    if ($day ne $reboot_day) { next; } # ignore, reboot too long ago
 	    my($hr, $mr, $sr) = split(/:/, $f[10]);
 	    $reboot_time = $hr * 3600 + $mr * 60 + $sr;
-	    if ($reboot_time < $lasttime &&
+	    if (defined($lasttime) &&
+		$reboot_time < $lasttime &&
 		$last_day eq $day)
 	    {
 		next; # ignore, too long ago

@@ -217,14 +217,17 @@ sub read_log {
 	# indexes return errors (so my poller will never reset the
 	# "rebooted" flag...).
         if (/Reboot/) {
-	    if (! defined($lasttime)) { next; } # use next sample as base
 	    $reboot_day = $f[7] . " " . $f[8] . " " . $f[9];
 	    if ($day ne $reboot_day) { next; } # ignore, reboot too long ago
 	    ($h, $m, $s) = split(/:/, $f[10]);
 	    $reboot_time = $h * 3600 + $m * 60 + $s;
 	    ($h, $m, $s) = split(/:/, $f[3]);
 	    my $log_time = $h * 3600 + $m * 60 + $s;
-	    if ($reboot_time < $lasttime) { next; } # ignore, too long ago
+	    if (defined($lasttime) &&
+		$reboot_time < $lasttime)
+	    {
+		next;	        # ignore, too long ago
+	    }
 	    if ($reboot_time > $log_time) { next; } # in the future?
             foreach $k (keys %base) {
                 $base{$k} = undef;
