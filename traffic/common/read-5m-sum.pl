@@ -217,6 +217,9 @@ sub read_5m_sum {
 			if ($lasttime{$v} > 24*3600) {
 			    $lasttime{$v} -= 3600;
 			}
+			if ($date_str eq $prev_d) {
+			    $lasttime{$v} -= 24 * 3600;
+			}
 		    }
 		}
 	    }
@@ -260,7 +263,7 @@ sub read_5m_sum {
 	    }
 
 	    if (defined($firsttime{$v}) && $firsttime{$v} != $sample_time{0}) {
-		if ($firsttime{$v} < -10) {
+		if ($firsttime{$v} < -0.25) { # firsttime is in hours...
 		    # Could be we changed router/interface
 		    # so disregard first sample.  I think.
 		    $lasttime{$v} = $sample_time{0};
