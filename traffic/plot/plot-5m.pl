@@ -485,7 +485,7 @@ sub make_plot_file  {
     my($plotf);
     my($h, $val, $maxy);
     my($houroffset);
-    my($save_tm);
+    my($save_tm, $date);
     my($di_plotname, $plotit, $decorate, $regen);
 
     # Look up filenames for plot-files for the given lines, date and
