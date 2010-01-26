@@ -178,10 +178,20 @@ sub convert_times {
     }
 }
 
+sub secs_to_hms {
+    my($secs) = @_;
+
+    return sprintf("%02d:%02d:%02d",
+		   ($secs % 86400) / 3600,
+		   ($secs - (int($secs / 3600) * 3600)) / 60,
+		   $secs % 60);
+}
+
 sub compute_basic_values {
     my($d, $start, $end) = @_;
     my($i);
     our(%count, %sample_secs);
+    our($opt_V);
 
     for ($i = $start; $i <= $end; $i++) {
 	if (!defined($sample_secs{$i-1})) {
@@ -191,7 +201,12 @@ sub compute_basic_values {
 
 	if ($delta_t == 0) { next; }
 
-	foreach my $k (keys %$d) {
+	if ($opt_V) {
+	    printf(STDERR "deltaT: %s", $delta_t);
+	    printf(STDERR " %s ", &secs_to_hms($sample_secs{$i}));
+	}
+
+	foreach my $k (sort keys %$d) {
 	    my($ap) = $d->{$k}->{"values"};
 	    my(@vars) = @{ $d->{$k}->{"vars"} };
 	    my($mult) = $d->{$k}->{"mult"};
@@ -202,6 +217,12 @@ sub compute_basic_values {
 	    }
 	    my($val) = $v * $mult / $delta_t;
 	    push(@$ap, $val);
+	    if ($opt_V) {
+		printf(STDERR " %s: %14f", $k, $val);
+	    }
+	}
+	if ($opt_V) {
+	    printf(STDERR "\n");
 	}
     }
 }
@@ -474,7 +495,10 @@ sub do_all_lines {
 	my($d) = &tm_to_date($tm + 12*3600);
 	$tm = &date_to_tm($d);
 
-	&read_5m_sum($ls, $d, $td);
+	my $err = &read_5m_sum($ls, $d, $td);
+	if ($opt_v && $err ne "") {
+	    printf(STDERR "read_5m_sum returned:\n%s", $err);
+	}
 
 	if ($max_sample == 0) {
 	    if ($opt_v) {
