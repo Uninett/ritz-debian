@@ -1079,7 +1079,7 @@ proc uiSetFilter { } {
 
 	switch -exact $item {
 	    type {
-		uiMkSimpleMenu $f $item {portstate reachability}
+		uiMkSimpleMenu $f $item {bfd bgp portstate reachability}
 	    }
 	    portstate {
 		uiMkSimpleMenu $f $item [possiblePortStates]
