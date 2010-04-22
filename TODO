@@ -81,3 +81,5 @@ $Id$		-*- Text -*-
  o Add detection of removed BGP peers(?)
 
  o Detect and report duplicate logical port names!
+
+ o Rewrite traffic poller to only do asynchronous SNMP requests.
