@@ -80,6 +80,10 @@ proc compareTypes { a b } {
     if { $a == "alarm" } { return -1; }
     if { $b == "alarm" } { return 1; }
 
+    # BFD state ranks above BGP
+    if { $a == "bfd" } { return -1; }
+    if { $b == "bfd" } { return 1; }
+
     # BGP state ranks above reachability
     if { $a == "bgp" } { return -1; }
     if { $b == "bgp" } { return 1; }
@@ -138,6 +142,25 @@ proc compareBgp { a b } {
 	if { $ba != "start" } { return -1; }
     }
     return 0;
+}
+
+proc compareBFD { a b } {
+
+    if [catch { set as [Attr $a "bfdState"] }] {
+	puts "no bfd-state for $a"
+	return 1
+    }
+    if [catch { set bs [Attr $b "bfdState"] }] {
+	puts "no bfd-state for $b"
+	return -1
+    }
+    if { $as != $bs } {
+	if { $as == "down" } { return -1; }
+	if { $bs == "down" } { return 1; }
+	if { $as == "up" } { return 1; }
+	if { $bs == "up" } { return -1; }
+    }
+    return 0
 }
 
 proc compareAlarms { a b } {
@@ -293,6 +316,9 @@ proc compareCases { a b } {
 	} elseif { $at == "alarm" } {
 	    set s [compareAlarms $a $b]
 	    if { $s != 0 } { return $s; }
+	} elseif { $at == "bfd" } {
+	    set s [compareBFD $a $b]
+	    if { $s != 0 } { return $s; }
 	}
     }
 
@@ -424,6 +450,19 @@ proc caseSeverity { id } {
 	    }
 	} else {
 	    return "unknown"
+	}
+    } elseif { $type == "bfd" } {
+	set s [Attr $id "bfdState"]
+	if { $s == "up" } {
+	    return "normal"
+	} elseif { $s == "down" } {
+	    if { $state == "open" } {
+		return "alarm"
+	    } else {
+		return "warning"
+	    }
+	} else {
+	    return "warning"
 	}
     } else {
 	return "unknown"

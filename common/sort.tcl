@@ -63,6 +63,8 @@ namespace eval ::sort {
 	if { $b == "portstate" } { return 1; }
 	if { $a == "alarm" } { return 1; }
 	if { $b == "alarm" } { return -1; }
+	if { $a == "bfd" } { return 1; }
+	if { $b == "bfd" } { return -1; }
 	puts [format "resorting to string compare for %s <-> %s" $a $b]
 	return [string compare $a $b]; # last resort
     }
@@ -147,6 +149,25 @@ namespace eval ::sort {
 	return [compareDowntime $b $a]
     }
 
+    proc compareBFD { a b } {
+
+	if [catch { set as [Attr $a "bfdState"] }] {
+	    puts "no bfd-state for $a"
+	    return 1
+	}
+	if [catch { set bs [Attr $b "bfdState"] }] {
+	    puts "no bfd-state for $b"
+	    return -1
+	}
+	if { $as != $bs } {
+	    if { $as == "down" } { return -1; }
+	    if { $bs == "down" } { return 1; }
+	    if { $as == "up" } { return 1; }
+	    if { $bs == "up" } { return -1; }
+	}
+	return 0
+    }
+
     # Return severity of a given case.
     # One of alarm, warning, normal, unknown.
 
@@ -181,6 +202,19 @@ namespace eval ::sort {
 	    } else {
 		return "normal"
 	    }
+	} elseif { $type == "bfd" } {
+	    set bs [::attr::get $id "bfdState"]
+	    if { $bs == "up" } {
+		return "normal"
+	    } elseif { $bs == "down" } {
+		if { $state == "open" } {
+		    return "alarm"
+		} else {
+		    return "warning"
+		}
+	    } else {
+		return "warning"
+	    }
 	} else {
 	    return "unknown"
 	}
@@ -196,13 +230,19 @@ namespace eval ::sort {
 	#    puts [format "types: %s" $s]
 	if { $s != 0 } { return $s; }
 
-	if { [::attr::get $a "type"] == "portstate" } {
+	# Types are the same
+
+	set at [::attr::get $a "type"]
+	if { $at == "portstate" } {
 	    set s [comparePortStates $a $b]
 	    #	puts [format "portstate: %s" $s]
 	    if { $s != 0 } { return $s; }
-	} elseif { [::attr::get $a "type"] == "reachability" } {
+	} elseif { $at == "reachability" } {
 	    set s [compareReachability $a $b]
 	    #	puts [format "reach: %s" $s]
+	    if { $s != 0 } { return $s; }
+	} elseif { $at == "bfd" } {
+	    set s [compareBFD $a $b]
 	    if { $s != 0 } { return $s; }
 	}
 	set s [comparePriority $a $b]

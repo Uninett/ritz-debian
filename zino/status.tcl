@@ -18,6 +18,7 @@ proc initStatus { } {
 
     initBGP
     initJNXalarm
+    initBFD
 }
 
 proc isCisco { sh } {
@@ -299,7 +300,7 @@ proc errBulk { sh err } {
     if { $err == "noResponse" } {
 	noResponse $sh
     } else {
-	set m [format "getDescrFields: %s" $err]
+	set m [format "%s: bulkWalk: %s" [name $sh] $err]
 	error $m $m
     }
 }
@@ -705,6 +706,7 @@ proc schedPollRouter { sh } {
 
 set delay_factor(checkBGP) 5
 set delay_factor(checkJNXalarm) 0
+set delay_factor(checkBFD) 0
 
 proc pollRest { sh vbl } {
     global isCisco
@@ -730,8 +732,7 @@ proc pollRest { sh vbl } {
 	return
     }
 
-    # Maybe add more later to this list
-    foreach p { "checkBGP" "checkJNXalarm" } {
+    foreach p [array names delay_factor] {
 	if { [info proc $p] == $p } {
 	    if { ! [info exists delay_factor($sh,$p)] } {
 		set delay_factor($sh,$p) $delay_factor($p)

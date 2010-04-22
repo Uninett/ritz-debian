@@ -155,6 +155,65 @@ proc summarizeBGP { id } {
     return [format "%-*s" [summaryLen] $s]
 }
 
+proc summarizeBFD { id } {
+    global View
+
+    set s ""
+    if { $View(id) } {
+	set s [format "%5s" $id]
+    }
+    set os [Attr $id "bfdState"]
+    if { $View(opstate) && $View(admstate) } {
+	set m [format "bfd %s" $os]
+	set l [string length $m]
+	set rl [expr 5 + 10 + 8 - $l]
+	set s [format "%s %s %*s" $s $m $rl [Attr $id "state"]]
+    } else {
+	if { $View(opstate) } {
+	    set s [format "%s bfd %-10s" $s $os]
+	}
+	if { $View(admstate) } {
+	    set s [format "%s %8s" $s [Attr $id "state"]]
+	}
+    }
+    if { $View(priority) } {
+	set s [format "%s %4s" $s [getPriority $id]]
+    }
+    if { $View(age) } {
+	set s [format "%s %16s" $s [mib format sysUpTime \
+	    [expr [getAge $id] * 100]]]
+    }
+    if { $View(downtime) } {
+	set s [format "%s %16s" $s ""]
+    }
+    if { $View(updated) } {
+	set secs [expr [clock seconds] - [Attr $id "updated"]]
+	set s [format "%s %16s" $s [mib format sysUpTime \
+		[expr $secs * 100]]]
+    }
+    if { $View(router) } {
+	set s [format "%s %-16s" $s [Attr $id "router"]]
+    }
+    if { $View(port) } {
+	if [AttrExists $id "bfdAddr"] {
+	    set s [format "%s %-20s" $s \
+		       [format "BFD w/%s" [Attr $id "bfdAddr"]]]
+	} elseif [AttrExists $id "bfdDiscr"] {
+	    set s [format "%s %-20s" $s \
+		       [format "BFD discr %d" [Attr $id "bfdDiscr"]]]
+	} elseif [AttrExists $id "bfdIx"] {
+	    set s [format "%s %-20s" $s \
+		       [format "BFD ix %s" [Attr $id "bfdIx"]]]
+	} else {
+	    set s [format "%s %-20s" $s "BFD unknown"]
+	}
+    }
+    if { [AttrExists $id "lastevent"] && $View(descr) } {
+	set s [format "%s (%s)" $s [Attr $id "lastevent"]]
+    }
+    return [format "%-*s" [summaryLen] $s]
+}
+
 proc summarizeReach { id } {
     global View
 
@@ -244,6 +303,8 @@ proc summaryStr { id } {
 	return [summarizeBGP $id]
     } elseif { $type == "alarm" } {
 	return [summarizeAlarm $id]
+    } elseif { $type == "bfd" } {
+	return [summarizeBFD $id]
     } else {
 	puts stderr [format "Ignoring unknown case type: %s, id %s" $type $id]
     }

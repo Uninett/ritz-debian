@@ -7,7 +7,7 @@ FILES= 	../common/util.tcl \
 	../common/polljob.tcl \
 	../common/config.tcl \
 	../common/persist.tcl \
-	load-mibs.tcl log.tcl status.tcl bgp.tcl \
+	load-mibs.tcl log.tcl status.tcl bgp.tcl bfd.tcl \
 	jnx-alarm.tcl \
 	swalk.tcl bwalk.tcl trap.tcl utils.tcl \
 	flaps.tcl events.tcl server.tcl auth.tcl \

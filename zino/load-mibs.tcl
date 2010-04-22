@@ -38,6 +38,8 @@ mib load ../mibs/mib.traps
 mib load ../mibs/cisco-10-mib.my
 mib load ../mibs/mib-jnx-smi.txt
 mib load ../mibs/mib-jnx-chassis-alarm.txt
+mib load ../mibs/mib-jnx-exp.txt
+mib load ../mibs/mib-jnx-bfd-exp-mod.txt
 mib load rfc1213.mib
 mib load rfc1573.mib
 mib load rfc1907.mib

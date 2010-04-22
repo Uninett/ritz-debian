@@ -229,6 +229,25 @@ proc report_compact_alarm { id } {
     return [format "%s alarms on %s: %s (%s)" $at $r $ac $as]
 }
 
+proc report_compact_bfd { id } {
+
+    set r  [::attr::get $id "router"]
+    set os [::attr::get $id "bfdState"]
+    set as [::attr::get $id "state"]
+
+    if [::attr::exists $id "bfdAddr"] {
+	set addr [::attr::get $id "bfdAddr"]
+	set add [format "addr %s" $addr]
+    } elseif [::attr::exists $id "bfdDiscr"] {
+	set add [format "bfdDiscr %s" [::attr::get $id "bfdDiscr"]]
+    } elseif [::attr::exists $id "bfdIx"] {
+	set add [format "bfdIx %s" [::attr::get $id "bfdIx"]]
+    }
+
+    return [format "bfd %s with %s on %s (%s)" $os $add $r $as]
+}
+
+
 proc report_compact { id } {
 
     set type [::attr::get $id "type"]
@@ -241,6 +260,9 @@ proc report_compact { id } {
 	}
 	alarm {
 	    return [report_compact_alarm $id]
+	}
+	bfd {
+	    return [report_compact_bfd $id]
 	}
 	default {
 	    puts stderr "Unknown type: $type for id $id"
@@ -317,6 +339,34 @@ proc report_single_alarm { id } {
     return $rs  
 }
 
+proc report_single_bfd { id } {
+
+    set r  [::attr::get $id "router"]
+    set os [::attr::get $id "bfdState"]
+    set ll [::attr::get $id "lastevent"]
+    set as [::attr::get $id "state"]
+
+    set rs [format   "      router: %s\n" $r]
+    set rs [format "%s    bfdState: %s\n" $rs $os]
+    set rs [format "%s   lastevent: %s\n" $rs $ll]
+
+    if [::attr::exists $id "bfdAddr"] {
+	set addr [::attr::get $id "bfdAddr"]
+	set rs [format "%s     bfdAddr: %s\n" $rs $addr]
+    }
+    if [::attr::exists $id "bfdDiscr"] {
+	set rs [format "%s    bfdDiscr: %s\n" $rs [::attr::get $id "bfdDiscr"]]
+    }
+    if [::attr::exists $id "bfdIx"] {
+	set rs [format "%s       bfdIx: %s\n" $rs [::attr::get $id "bfdIx"]]
+    }
+    set rs [format "%s       state: %s\n" $rs $as]
+    set rs [format "%s recent event history:\n%s\n" $rs [emt_hist $id]]
+
+    return $rs
+}
+
+
 proc report_single { id } {
 
     set type [::attr::get $id "type"]
@@ -329,6 +379,9 @@ proc report_single { id } {
 	}
 	alarm {
 	    return [report_single_alarm $id]
+	}
+	bfd {
+	    return [report_single_bfd $id]
 	}
 	default {
 	    puts stderr "Unknown type: $type for id $id"

@@ -129,6 +129,12 @@ proc doTrap { a type args } {
 	    # has to do something...
 	    set s glorp
 	}
+	BFD-STD-MIB!bfdSessUp {
+	    doBFDtrap $r up $args
+	}
+	BFD-STD-MIB!bfdSessDown {
+	    doBFDtrap $r down $args
+	}
 	SNMPv2-MIB!authenticationFailure {
 	    # has to do something...
 	    set s glorp

@@ -79,7 +79,11 @@ namespace eval ::attr {
 	} else {
 	    return "alarm"
 	}
-	
+    }
+
+    proc effectiveBFDstate { id } {
+	::set state [get $id "bfdState"]
+	return $state
     }
 
     proc priority { id } {
@@ -107,6 +111,8 @@ namespace eval ::attr {
 	    return [get $id "reachability"]
 	} elseif { $type == "alarm" } {
 	    return [effectiveAlarmState $id]
+	} elseif { $type == "bfd" } {
+	    return [effectiveBFDstate $id]
 	} else {
 	    return "unknown"
 	}
