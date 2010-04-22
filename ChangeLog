@@ -1,3 +1,112 @@
+2010-04-22  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Bump version to 0.9.8.2.
+
+	* zino/bfd.tcl, zino/trap.tcl, zino/status.tcl,
+	zino/load-mibs.tcl, zino/Makefile, ritz/summary.tcl,
+	ritz/sort.tcl, mibs/Makefile, emt/emt.tcl, common/sort.tcl,
+	common/attrs.tcl mibs/mib-jnx-exp.txt:
+	Add support for monitoring the state of BFD sessions, using the
+	Juniper BFD MIB, which is currently implanted in the Juniper
+	experimental MIB tree (but using the MIB variable names from the
+	draft of the standard MIB, sigh...).
+
+	Regrettably, Cisco has not implemented the BFD MIB on any of the
+	pieces of equipment we use, even though they have participated in
+	specifying the IETF standard, which is still in draft form, some
+	6 years after the initial draft.  Sigh!
+
+	* mibs/mib-jnx-bfd-exp-mod.txt:
+	Add support for monitoring the state of BFD sessions, using the
+	Juniper BFD MIB.
+	(This MIB is slightly modified compared to the original; it uses the
+	bfdDiag syntax for the bfdSessDiag instead of an Unsigned32.)
+
+	* TODO:
+	Add one more TODO item: traffic poller should do all-async requests.
+
+2010-04-20  Havard Eidnes  <he@uninett.no>
+
+	* ritz/ui.tcl: Add the bfd and bgp event types to the menu.
+
+2010-01-26  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
+	Allow a "Reboot" line to be the first one in a data file, so that
+	it will be acted on and a new baseline for the counters will be
+	established.
+
+	* traffic/common/read-5m-sum.pl:
+	If the last data we looked at was from "yesterday", compensate
+	the %lasttime hash before passing it on.
+	The %firsttime has is in hours, so use a more appropriate value
+	for comparison.
+
+	* traffic/report/customer-ts.pl:
+	Add some debugging code, only used under $opt_v or $opt_V.
+
+	* traffic/plot/plot-5m.pl:
+	Don't mess with the global $date used by the functions reading the
+	raw data log. (I really want to reimplement that stuff...)
+
+2009-12-10  Havard Eidnes  <he@uninett.no>
+
+	* zino/server.tcl: Correct a typo.
+
+	* zino/server.tcl:
+	Adapt to changes to the PM module: pass user information to various
+	functions related to logging and closing of PM events.
+
+	Implement two new functions to check authorization: Authenticated and
+	PermitROaccess, and use them instead of the old open-coded variants.
+
+	Implement the "pm help" command.
+
+	Add authorization checks to all the PM functions/commands.
+
+	* zino/pm.tcl:
+	Various bugfixes so that this now actually works the way it was
+	intended to work.
+
+	Use the newly added ::persist::after_restore procedure to register a
+	callback which registers the PM event arrays.
+
+	Pull along user ID information via the addlog, cancel and close
+	procedures.
+
+	* common/persist.tcl:
+	Add the possibility to register parameter-less callbacks to be invoked
+	right after the saved state has been restored.
+
+2009-12-08  Havard Eidnes  <he@uninett.no>
+
+	* zino/server.tcl: Correct the sense of the test for from_t.
+
+	* zino/Makefile:
+	Add the recently created module for dealing with Planned Maintenance.
+
+	* zino/server.tcl:
+	Add code to implement the server interface part related to planned
+	maintenance events.
+
+	* zino/pm.tcl:
+	Rename logadd to addlog, extend it to take a user parameter.
+	Shape the log entry associated with the event.
+
+	* zino/pm.tcl:
+	Add an initial "for testing/debugging" version of a module to handle
+	planned maintenance events.  The intention is to be able to specify
+	which events to ignore during a PM, be that portstate, reachability or
+	alarm events.
+
+	* zino/events.tcl:
+	Add setEventAttrs, which can set multiple attribute values in one
+	invocation.
+
+	* zino/status.tcl:
+	Ensure that we clear out the "new descriptions" array before
+	fetching the values.  Also get rid of a now-redundant declaration.
+
 2009-12-03  Havard Eidnes  <he@uninett.no>
 
 	* Makefile: Bump to version 0.9.8.1.
