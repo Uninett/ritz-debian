@@ -1078,6 +1078,10 @@ sub other_map_url {
     if ($mr =~ /^http:\/\//) {
 	return sprintf("%s,%s,%s,%s", $mr, $dsp, $type, $select);
     }
+    if ($mr =~ /^abs-http:\/\//) {
+	$mr =~ s/^abs-//;
+	return $mr;
+    }
     return &map_ref($mr, $dsp, $type, $select);
 }
 
