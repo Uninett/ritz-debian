@@ -242,8 +242,8 @@ proc recordIntf { sh vbl } {
     set cx($name,descr,$ix) $descr
     lappend cx($name,ifindexes) $ix
 
-    puts [format "Intf %s,%s type %s speed %s admin %s descr %s" \
-	    $name $ix $type $speed $admin $descr]
+#    puts [format "Intf %s,%s type %s speed %s admin %s descr %s" \
+#	    $name $ix $type $speed $admin $descr]
 }
 
 #
@@ -257,7 +257,7 @@ proc pollIntfs { sh } {
 	logVars %S $x
     } {
 	# no endscript
-	puts [format "finished polling %s" [name %S]]
+#	puts [format "finished polling %s" [name %S]]
     } {
 	logerr [format "%s poll FAILED: %s" [name %S] %E]
     }
