@@ -47,36 +47,76 @@ proc pollDev { sh } {
     if { [conf $dev "statistics"] != "yes" } {	return; }
 
 #    puts [format "polling %s" [name $sh]]
-    if [catch {
-	# determine reachability and whether it
-	# has rebooted/crashed since the last go-around
-	uptimeCheck $sh
-	# need to do this for each round
-	# since interfaces may have been turned
-	# on or cards can be hot-swapped
-	getConfig $sh
-	# do the walk...
-	pollIntfs $sh
-    } msg] {
-	if [regexp "FAILED" $msg] { return; }
-	puts stderr $errorInfo
+
+    $sh get sysUpTime.0 {
+	uptimeProcess "%S" "%E" "%V" pollDev_1
     }
+}
+
+proc pollDev_1 { sh } {
+    
+    $sh get sysObjectID.0 {
+	sysobjProcess "%S" "%E" "%V" pollDev_2
+    }
+}
+
+proc pollDev_2 { sh } {
+
+    forgetConfig $sh
+    bulkWalk $sh "ipAdEntIfIndex ipAdEntAddr" 10 \
+	recordAddr pollDev_3 errAddr
+}
+
+proc pollDev_3 { sh } {
+
+    set name [name $sh]
+
+    set vl "ifIndex ifType ifSpeed ifAdminStatus ifDescr"
+    if { [::config::conf $name "hcounters"] != "no" } {
+	lappend vl "ifHighSpeed"
+    }
+    asyncSparseTableWalk $sh x $vl { recordIntf "%S" $x } \
+	{ pollDev_4 "%S" } { errIntf "%S" "%E" }
+}
+
+proc pollDev_4 { sh } {
+
+    pollIntfs $sh
+}
+
+proc errAddr { sh err } {
+
+    set msg [format "Get address list FAILED for %s: %s" [name $sh] $err]
+    logerr $msg
+}
+
+proc errIntf { sh err } {
+
+    set msg [format "Get interface list FAILED for %s: %s" [name $sh] $err]
+    logerr $msg
 }
 
 #
 # Uptime checking
 #
 
-proc uptimeCheck { sh } {
-    global cx
+proc uptimeProcess { sh err vbl call_continue } {
 
-    set uptime [getUptime $sh]
-    set name [name $sh]
+    if { $err != "noError" } {
+	set msg [format "Uptime poll FAILED for %s: %s" [name $sh] $err]
+	logerr $msg
+	return
+    }
+    set name [lindex [lindex $vbl 0] 0]
+    set value [lindex [lindex $vbl 0] 2]
+    set uptime [mib scan $name $value]
     if { ! [expectedUptime $name $uptime] } {
 	# record timestamp for use later
 	set cx($name,reload) [expr [clock seconds] - $uptime / 100]
     }
     set cx($name,lastpoll) [clock seconds]
+
+    eval $call_continue $sh
 }
 
 proc expectedUptime { name newup } {
@@ -120,18 +160,6 @@ proc expectedUptime { name newup } {
     return 1
 }
 
-proc getUptime { sh } {
-
-    if { [catch {set vbl [$sh get "sysUpTime.0"]} msg] } {
-	set msg [format "Uptime poll FAILED for %s: %s" [name $sh] $msg]
-	logerr $msg
-	error $msg
-    }
-    set name [lindex [lindex $vbl 0] 0]
-    set value [lindex [lindex $vbl 0] 2]
-    return [mib scan $name $value]
-}
-
 #
 #
 #
@@ -139,33 +167,21 @@ proc getUptime { sh } {
 # Need to check config on each round, since interface
 # cards can nowadays be hot-swapped
 
-proc getConfig { sh } {
+proc sysobjProcess { sh err vbl call_continue } {
     global cx
 
-    set name [name $sh]
-    set cx($name,sysid) [getSysObjID $sh]
-    forgetConfig $sh
-    if [catch {getAddrList $sh} msg] {
-	set msg [format "Could not get AddrList from %s: %s" $name $msg]
+    if { $err != "noError" } {
+	set msg [format "sysObjectID poll FAILED for %s: %s" [name $sh] $err]
 	logerr $msg
 	return
-    }
-    if [catch {getIfList $sh} msg] {
-	set msg [format "Could not get IfList from %s: %s" $name $msg]
-	logerr $msg
-	return
-    }
-}
-
-proc getSysObjID { sh } {
-    if [catch {set vbl [$sh get "sysObjectID.0"]} msg] {
-	set msg [format "sysObjectID poll FAILED for %s: %s" [name $sh] $msg]
-	logerr $msg
-	error $msg
     }
     set name  [lindex [lindex $vbl 0] 0]
     set value [lindex [lindex $vbl 0] 2]
-    return [mib scan $name $value]
+    set sysobj [mib scan $name $value]
+
+    set cx([name $sh],sysid) $sysobj
+
+    eval $call_continue $sh
 }
 
 proc forgetConfig { sh } {
@@ -182,12 +198,6 @@ proc forgetConfig { sh } {
 	}
 	unset cx($name,ifindexes)
     }
-}
-
-proc getAddrList { sh } {
-
-    $sh walk x "ipAdEntIfIndex ipAdEntAddr" \
-	    { recordAddr $sh $x }
 }
 
 proc recordAddr { sh vbl } {
@@ -207,24 +217,6 @@ proc recordAddr { sh vbl } {
 #	puts [format "Address already seen for %s,%s: %s %s (new)" \
 #		$name $ix $cx($name,address,$ix) $ad]
 #
-}
-
-proc getIfList { sh } {
-
-    set name [name $sh]
-
-    set vl "ifIndex ifType ifSpeed ifAdminStatus ifDescr"
-    if { [::config::conf $name "hcounters"] != "no" } {
-	lappend vl "ifHighSpeed"
-    }
-    if [catch {
-	# This table may be sparsely populated
-	sparseTableWalk $sh x $vl { recordIntf $sh $x }
-    } msg] {
-	set msg [format "getIfList FAILED for %s: %s" [name $sh] $msg]
-	logerr $msg
-	error $msg
-    }
 }
 
 proc recordIntf { sh vbl } {
@@ -250,9 +242,8 @@ proc recordIntf { sh vbl } {
     set cx($name,descr,$ix) $descr
     lappend cx($name,ifindexes) $ix
 
-#    puts [format "Intf %s,%s type %s speed %s admin %s descr %s" \
-#	    $name $ix $type $speed $admin $descr]
-
+    puts [format "Intf %s,%s type %s speed %s admin %s descr %s" \
+	    $name $ix $type $speed $admin $descr]
 }
 
 #
@@ -266,11 +257,9 @@ proc pollIntfs { sh } {
 	logVars %S $x
     } {
 	# no endscript
-#	puts [format "finished polling %s" [name %S]]
+	puts [format "finished polling %s" [name %S]]
     } {
-	set msg [format "%s poll FAILED: %s" [name %S] %E]
-	logerr $msg
-#	error $msg
+	logerr [format "%s poll FAILED: %s" [name %S] %E]
     }
 }
 
