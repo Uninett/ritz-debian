@@ -83,7 +83,7 @@ sub dissect_junos_version {
     my($v) = @_;
     my(%v);
 
-    if ($v =~ /(\d+)\.(\d+)R(\d+)\.(\d+)/o) {
+    if ($v =~ /(\d+)\.(\d+)[RS](\d+)\.(\d+)/o) {
 	$v{"major"} = $1;
 	$v{"minor"} = $2;
 	$v{"rev"} = $3;
