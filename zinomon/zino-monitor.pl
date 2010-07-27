@@ -17,34 +17,58 @@ my ($host, $port) = @config{'Server', 'Port'};
 die "Unable to contact zino without username and password" 
     unless (defined $user and defined $secret);
 
-local $|;
+local $| = 1;
 print strftime("[%Y-%m-%d %H:%M:%S] Checking zino...\n", localtime);
 my $result;
+
 eval {
+    local $SIG{ALRM} = sub { die "alarm\n" };
+    alarm 30;			# reasonable(?) time-out value
+
     my $zino = Zino::init($host, $port);
 
     Zino::login($zino, $user, $secret);
 
-    # Get singel element from returned id array
+    # Get single element from returned id array
     my ($test_id) = Zino::caseids($zino);
 
-    die "Zino didn't return caseids" if not defined $test_id;
+    if (!defined($test_id)) {
+	my ($v) = Zino::version($zino);
+	if (!defined($v)) {
+	    die "Zino did not even return version number";
+	}
+	if ($v eq "") {
+	    die "Zino returned empty version number";
+	}
+	if ($v !~ /^[0-9]/) {
+	    die "Zino returned non-numeric first-digit version number: $v";
+	}
+	$result = "Zino: no open cases, version number returned is " . $v;
+    } else {
+	# Get scalar value of array, ie number of results
+	my $count = scalar Zino::getlog( $zino, $test_id);
 
-    # Get scalar value of array, ie number of results
-    $result = scalar Zino::getlog( $zino, $test_id);
+	die "Zino didn't return log for CASEID $test_id" if $count == 0;
 
-    die "Zino didn't return log for CASEID $test_id" if $result == 0;
-
+	$result = "Zino got " . $count . " logs";
+    }
     Zino::logout($zino);
+    alarm 0;
 };
 if ($@) {
-    printf STDERR ("[%s] Error: %s ", strftime("%Y-%m-%d %H:%M:%S", localtime), $@);
+    if ($@ eq "alarm\n") {
+	printf STDERR ("[%s] Error: Zino timed out"
+		       strftime("%Y-%m-%d %H:%M:%S", localtime));
+    } else {
+	printf STDERR ("[%s] Error: %s ",
+		       strftime("%Y-%m-%d %H:%M:%S", localtime), $@);
+    }
     exit 1;
 }
 if ($result) {
-    print "Got $result logs\n";
+    print $result;
     exit 0;
 } else {
-    printf STDERR ("Mangler fornuftig respons fra zino");
+    printf STDERR ("No reasonable response from Zino");
     exit 1;
 }

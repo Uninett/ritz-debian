@@ -31,17 +31,29 @@ sub run {
     login($zino, $user, $secret) || die "Failed to login";
     # Get single element from returned id array
     my @caseids = caseids($zino);
-    die "Zino didn't return any caseids" unless @caseids;
-    # Get scalar value of array, ie number of results
-    foreach my $case (@caseids) {
-        my %attrs = getattrs( $zino, $case);
-        if ($attrs{type} eq 'portstate' and $attrs{portstate} eq 'down') {
-            # print map "<$_>: $attrs{$_}\n", keys %attrs;
-            printf "Interface %s on router %s is down\n", $attrs{port}, $attrs{router};
-        }
-        if ($attrs{type} eq 'reachability' and $attrs{reachability} eq 'unreachable') {
-            printf "Router %s is unreachable\n", $attrs{router};
-        }
+    if (! @caseids) {		# not fatal, actually...
+	my $v = version($zino);
+	if (!defined($v)) {
+	    die "Zino did not even return version number";
+	}
+	if ($v eq "") {
+	    die "Zino returned empty version number";
+	}
+	if ($v !~ /^[0-9]/) {
+	    die "Zino returned non-numeric first-digit version number: $v";
+	}
+    } else {
+	# Get scalar value of array, ie number of results
+	foreach my $case (@caseids) {
+	    my %attrs = getattrs( $zino, $case);
+	    if ($attrs{type} eq 'portstate' and $attrs{portstate} eq 'down') {
+		# print map "<$_>: $attrs{$_}\n", keys %attrs;
+		printf "Interface %s on router %s is down\n", $attrs{port}, $attrs{router};
+	    }
+	    if ($attrs{type} eq 'reachability' and $attrs{reachability} eq 'unreachable') {
+		printf "Router %s is unreachable\n", $attrs{router};
+	    }
+	}
     }
     logout($zino);
 
@@ -130,6 +142,22 @@ sub getattrs {
     }
 
     return %attrs;
+}
+
+sub version {
+    my($zino) = @_;
+    my($v);
+
+    $zino->print('VERSION');
+    my $line = $zino->getline;
+    chomp $line;
+    if ($line !~ /^200 /) {
+	return undef;
+    }
+    if ($line =~ /^200 zino version is (.*)$/) {
+	$v = $1;
+    }
+    return $v;
 }
 
 sub logout {
