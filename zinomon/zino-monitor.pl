@@ -57,7 +57,7 @@ eval {
 };
 if ($@) {
     if ($@ eq "alarm\n") {
-	printf STDERR ("[%s] Error: Zino timed out"
+	printf STDERR ("[%s] Error: Zino timed out",
 		       strftime("%Y-%m-%d %H:%M:%S", localtime));
     } else {
 	printf STDERR ("[%s] Error: %s ",
