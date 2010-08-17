@@ -899,6 +899,7 @@ sub load_color {
 }
 
 # Try to swap around the names, in sequence:
+# xx-yy-l2vpn-whatever -> yy-xx-l2vpn-whatever
 # xx.yy-2 -> yy.xx-2 (xx and yy may contain hyphens)
 # xx.yy -> yy.xx
 # xx-nn  -> nn-xx
@@ -911,7 +912,9 @@ sub rev_name {
     my($name) = @_;
     my($rn);
 
-    if      ($name =~ /^([^.]+)\.([^.]+)-([0-9]+)$/) {
+    if      ($name =~ /^([^-]+)-([^-]+)-l2vpn(.*)$/) {
+	$rn = $2 . "-" . $1 . "-l2vpn" . $3;
+    } elsif ($name =~ /^([^.]+)\.([^.]+)-([0-9]+)$/) {
 	$rn = $2 . "." . $1 . "-" . $3;
     } elsif ($name =~ /^([^.]+)\.([^.]+)$/) {
 	$rn = $2 . "." . $1;
