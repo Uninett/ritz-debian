@@ -19,6 +19,20 @@ proc initStatus { } {
     initBGP
     initJNXalarm
     initBFD
+
+    global IgnoreAddrs
+    set IgnoreAddrs(10.0.0.4) 1
+    set IgnoreAddrs(127.0.0.1) 1
+    set IgnoreAddrs(128.0.0.4) 1
+
+    # UNINETTs anycast addresses (should be configurable)
+    set IgnoreAddrs(128.39.0.85) 1
+    set IgnoreAddrs(128.39.0.2) 1
+
+    global IgnoreAddrPatterns
+
+    set IgnoreAddrPatterns(a) "^127\."
+    set IgnoreAddrPatterns(b) "^128\.0\.0\."
 }
 
 proc isCisco { sh } {
@@ -30,26 +44,78 @@ proc isCisco { sh } {
     return 0
 }
 
-# Create mapping table address -> handle
-# and handle -> address-list
+# Maintain mapping table address -> router
+# and router -> address-list
 
 proc recordAddr { sh vbl } {
-    global AddrToRouter RouterToAlist
     global lastPoll
+
+    set vn [format "addrs_%s" [name $sh]]
+    global $vn
 
     set lastPoll($sh) [clock seconds]
 
+    foreach vb $vbl {
+	set v [lindex $vb 2]
+	if {$v != ""} {
+	    lappend $vn $v
+	}
+    }
+}
+
+proc ignoreAddress { a } {
+    global IgnoreAddrs
+    global IgnoreAddrPatterns
+
+#    puts [format "checking ignorable: %s" $a]
+    if [info exists IgnoreAddrs($a)] {
+#	puts [format "address ignorable: %s" $a]
+	return 1
+    }
+    foreach pix [array names IgnoreAddrPatterns] {
+	set pat $IgnoreAddrPatterns($pix)
+
+	if [regexp $pat $a] {
+#	    puts [format "address %s ignorable, matches %s" $a $pat]
+	    return 1
+	}
+    }
+
+    return 0
+}
+
+
+proc endAddr { sh } {
+    global AddrToRouter RouterToAlist
+
     ::persist::add ::AddrToRouter
 
-    set ixVbl [lindex $vbl 0]
-    set adVbl [lindex $vbl 1]
-    set ix [lindex $ixVbl 2]
-    set ad [lindex $adVbl 2]
+    set n [name $sh]
+    set vn [format "addrs_%s" $n]
+    global $vn
+    
+    foreach a [set $vn] {
+	if [ignoreAddress $a] {
+	    continue
+	}
 
-    set r [name $sh]
+	set seen($a) 1
 
-    set AddrToRouter($ad) $r
-    lappend RouterToAlist($r) $ad
+	if { ! [info exists AddrToRouter($a)] } {
+	    log [format "%s adds address %s" $n $a]
+	} elseif { $AddrToRouter($a) != $n } {
+	    log [format "Home of %s changed from %s to %s" \
+		     $a $AddrToRouter($a) $n]
+	}
+	set AddrToRouter($a) $n
+	lappend RouterToAlist($n) $a
+    }
+    foreach a [array names AddrToRouter] {
+	if { ! [info exists seen($a)] && $AddrToRouter($a) == $n } {
+	    array unset AddrToRouter $a
+	    log [format "%s no longer has address %s" $n $a]
+	}
+    }
 }
 
 # Get current list of IP addresses, store mapping(s)
@@ -57,9 +123,13 @@ proc recordAddr { sh vbl } {
 proc getAddrList { sh } {
     global RouterToAlist
 
-    catch { unset RouterToAlist([name $sh]) }
+    set n [name $sh]
+    set vn [format "addrs_%s" $n]
+    global $vn
+    catch { unset RouterToAlist($n) }
+    catch { unset $vn }
 
-    bulkWalk $sh "ipAdEntIfIndex ipAdEntAddr" 10 recordAddr {} errBulk
+    bulkWalk $sh "ipAdEntAddr" 10 recordAddr endAddr errBulk
 }
 
 proc basePollList { sh } {
