@@ -135,6 +135,11 @@ proc doTrap { a type args } {
 	BFD-STD-MIB!bfdSessDown {
 	    doBFDtrap $r down $args
 	}
+	jnxBgpM2Experiment {
+	    # Ignore for now ...
+	    # has to do something...
+	    set s glorp
+	}
 	SNMPv2-MIB!authenticationFailure {
 	    # has to do something...
 	    set s glorp
