@@ -135,7 +135,7 @@ proc doTrap { a type args } {
 	BFD-STD-MIB!bfdSessDown {
 	    doBFDtrap $r down $args
 	}
-	jnxBgpM2Experiment {
+	jnxBgpM2Experiment.1.1.0.2 {
 	    # Ignore for now ...
 	    # has to do something...
 	    set s glorp
