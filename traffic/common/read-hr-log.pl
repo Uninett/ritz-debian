@@ -53,6 +53,11 @@
 
 use Date::Parse;
 
+push(@INC, "%LIBDIR%");
+
+require 'new-read-hr-log.pl';
+
+
 sub read_log {
     my($fh, $zero_tm) = @_;
     my($h, $m, $s);
@@ -72,6 +77,9 @@ sub read_log {
         chop;
 	@f = split;
 
+	if (/^Version 1/o) {
+	    return &new_read_log($fh, $zero_tm);
+	}
         if (/ifSpeed/) {
             $ifspeed = $f[1];
             next;

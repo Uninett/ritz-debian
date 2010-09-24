@@ -58,6 +58,10 @@ use Time::Local;
 use Date::Parse;
 use Date::Format;
 
+push(@INC, "%LIBDIR%");
+
+require 'new-read-raw-log.pl';
+
 
 sub read_log {
     my($fh, $zero_tm, $td) = @_;
@@ -111,6 +115,15 @@ sub read_log {
         chop;
 	@f = split;
         
+	if (/^Version 1/o) {
+	    return &new_read_log($fh, $zero_tm, $td);
+	}
+	if (/^[0-9]/) {		# Another signal we're doing the new version
+	    if ($seekable) {
+		seek($fh, $pos, SEEK_SET);
+	    }
+	    return &new_read_log($fh, $zero_tm, $td);
+	}
         if (/ifSpeed/) {
             $ifspeed = $f[1];
             next;
