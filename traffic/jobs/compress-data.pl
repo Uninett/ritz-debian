@@ -66,13 +66,13 @@ sub compress_files {
     $mdir = $top . "/" . $ym_str;
     $savedir = $mdir . "/" . $day_str;
     
-    $cmd = "%TOPDIR%/bin/fixup-data $savedir/*";
+    $cmd = "find $savedir -type f | xargs %TOPDIR%/bin/fixup-data";
     $ret = system($cmd) / 256;
     if ($ret != 0) {
 	die "Could not fix up data files in $savedir\n";
     }
 
-    $cmd = "$gzip $savedir/*";
+    $cmd = "find $savedir -type f | xargs $gzip";
     $ret = system($cmd) / 256;
     if ($ret != 0) {
 	die "Could not compress files in $savedir\n";
