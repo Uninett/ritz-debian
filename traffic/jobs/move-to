@@ -1,0 +1,19 @@
+#! /bin/sh
+
+# $Id$
+
+if [ $# -lt 2 ]; then
+    echo "$0: usage: $0 to-dir files..." >&2
+    exit 1;
+fi
+
+d=$1
+shift
+
+if [ ! -d $d ]; then
+    echo "$0: first arg not a directory: $d" >&2
+    exit 2;
+fi
+
+mv "$@" $d
+exit $?
