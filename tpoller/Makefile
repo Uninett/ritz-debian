@@ -4,6 +4,8 @@
 
 SRC=	../common/util.tcl ../common/conffile.tcl ../common/polljob.tcl \
 	../common/config.tcl ../common/justSNMP.tcl tpoller.tcl main.tcl
+	../common/config.tcl ../common/justSNMP.tcl ../zino/bwalk.tcl \
+	tpoller.tcl main.tcl
 
 PROGS=	tpoller start-tpoll
 
