@@ -284,6 +284,16 @@ sub days_in_month {
     return $daysinmonth[$month-1] + $leapday;
 }
 
+sub days_in_year {
+    my($year) = @_;
+    my($days) = 0;
+
+    foreach my $m (1 .. 12) {
+	$days += &days_in_month($year, $m);
+    }
+    return $days;
+}
+
 # Check and decode a datespec
 # A datespec is a '-'-delimited string containing yy[yy]-[mm]-[ww]-[dd]
 # Ex.:
@@ -349,7 +359,7 @@ sub decode_datespec {
 	$no_days = &days_in_month($year, $month);
     } elsif ($year) {
 	$base_tm = &date_to_tm($year . "01" . "01");
-	$no_days = 365;
+	$no_days = &days_in_year($year);
     } else {
 	return undef;
     }
