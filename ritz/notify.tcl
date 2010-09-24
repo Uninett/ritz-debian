@@ -97,7 +97,6 @@ proc pullCases { } {
 # Update the display, consider changes caused by notification.
 
 proc scheduleUpdateDisplay { secs } {
-    global allCases filteredCases sortedCases
     
     after cancel updateDisplay
     after [expr $secs * 1000] updateDisplay
