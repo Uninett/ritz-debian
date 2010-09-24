@@ -579,7 +579,7 @@ sub create_rrd {
 	printf(STDERR "$cmd\n", $n, $s);
     }
     if (system(sprintf($cmd, $n, $s)) != 0) {
-	printf(STDERR "rrdtool create %s.rrd failed: %s", $n, $?);
+	printf(STDERR "rrdtool create %s.rrd failed: %s\n", $n, $!);
 	return undef;
     }
     return 1;
@@ -994,6 +994,18 @@ if (defined($opt_d) && defined($opt_n)) {
     @names = split(/,/, $opt_n);
     foreach my $n (@names) {
 	&do_one_file($opt_d, $n);
+    }
+} elsif (defined($opt_n)) {
+    my @names;
+    @names = split(/,/, $opt_n);
+    my $d;
+    if (&just_past_midnight()) {
+	$d = &yesterday_spec();
+    } else {
+	$d = &today_spec();
+    }
+    foreach my $n (@names) {
+	&do_one_file($d, $n);
     }
 } elsif (defined($opt_n)) {
     my @names;
