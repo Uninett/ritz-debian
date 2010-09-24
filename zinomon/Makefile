@@ -4,11 +4,12 @@
 
 FILES=	Zino.pm zino-monitor.pl emt-config.tcl
 
-PROGS=	zinomon zino-monitor.pl emt-config
+PPROGS=	zino-monitor.pl
+GPROGS= zinomon emt-config
 
 LIBS=	Zino.pm
 
-all: ${PROGS}
+all: ${GPROGS} ${PPROGS}
 
 zinomon: zinomon.sh
 	rm -f $@
@@ -20,18 +21,18 @@ emt-config: emt-config.tcl
 	sed -f ../subst $@.tcl > $@
 	chmod +x $@
 
-install: ${PROGS}
+install: ${GPROGS} ${PPROGS}
 	@for f in ${LIBS}; do \
 		echo install -c -m 555 $$f ${LIBDIR}; \
 		install -c -m 555 $$f ${LIBDIR}; \
 	done
-	@for f in ${PROGS}; do \
+	@for f in ${GPROGS} ${PPROGS}; do \
 		echo install -c -m 555 $$f ${BINDIR}; \
 		install -c -m 555 $$f ${BINDIR}; \
 	done
 
 clean:
-	rm -f ${PROGS}
+	rm -f ${GPROGS}
 
 .include "../Makefile.inc"
 
