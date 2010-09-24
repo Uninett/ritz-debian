@@ -7,7 +7,8 @@ CONFS=	zino-config.pl
 SCRIPTS=daily-clean.sh daily.sh daily.pl dst-shift.pl \
 	find-err-dev.pl find-err-dev.sh \
 	fixup-data.pl fixup-data.sh startup.sh onlyone.sh \
-	compress-data.pl
+	compress-data.pl split-new-data.pl move-to copy-to \
+	convert-data.pl
 
 SUBST=	${.CURDIR}/../../subst
 
