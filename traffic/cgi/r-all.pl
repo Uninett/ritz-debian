@@ -69,7 +69,12 @@ sub modtime {
     return $a[9];
 }
 
-if (&modtime($descfile) > $lastread_desc) {
+my($modtime) = &modtime($descfile);
+if (!defined($modtime)) {
+    &err(sprintf("Could not stat %s: %s", $descfile, $!));
+}
+
+if ($modtime > $lastread_desc) {
     &read_desc($descfile);
     $lastread_desc = $^T;
 }
