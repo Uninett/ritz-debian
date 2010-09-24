@@ -81,19 +81,27 @@ require 'search.pl';
 require 'date.pl';
 require 'utils.pl';
 
+use strict;
 
 sub get_file_data {
-    my($d, $cat, $f, $name) = @_;
+    my($date, $dir, $cat, $f, $name) = @_;
     my($h, $errpct, $inpkts, $outpk, $discpct);
     my($tm);
+    my($IN);
+    our($iov, $oov);
+    our(%ifspeed, %iftype);
+    our($ifspeed, $iftype, %sample_delta, %sample_time, %count);
+    our(%total, %max_r, %max_h, %peak_r, %peak_h);
+    our(%errhrs, %max_rate, %peak_disc_pct);
+    our($in_90perc_bps, $out_90perc_bps);
 
-    $tm = &date_to_tm($d);
+    $tm = &date_to_tm($date);
 
 # Purposefully make $iov and $oov globals.
 
-    open (IN, "$cat $d/$f |") || return undef;
-    &read_log(IN, $tm);
-    close(IN);
+    open ($IN, "$cat $dir/$f |") || return undef;
+    &read_log($IN, $tm);
+    close($IN);
     
     $iov = &octets_var("in");
     $oov = &octets_var("out");
@@ -101,18 +109,18 @@ sub get_file_data {
     $ifspeed{$name} = $ifspeed;
     $iftype{$name} = $iftype;
 
-    foreach $i (0 .. 23) {
+    foreach my $i (0 .. 23) {
 	$h = sprintf("%02d", $i);
-	foreach $v ($iov, $oov,
-		    "ifInNUcastPkts", "ifInUcastPkts",
-		    "ifOutNUcastPkts", "ifOutUcastPkts",
-		    "ifInDiscards", "ifOutDiscards",
-		    "ifInErrors", "ifOutErrors",
-		    "locIfInRunts", "locIfInCRC",
-		    "locIfInFrame", "locIfInOverrun",
-		    "locIfInIgnored", "locIfInAbort",
-		    "locIfResets", "locIfRestarts",
-		    "locIfCollisions") # Should this list be read from cf file?
+	foreach my $v ($iov, $oov,
+		       "ifInNUcastPkts", "ifInUcastPkts",
+		       "ifOutNUcastPkts", "ifOutUcastPkts",
+		       "ifInDiscards", "ifOutDiscards",
+		       "ifInErrors", "ifOutErrors",
+		       "locIfInRunts", "locIfInCRC",
+		       "locIfInFrame", "locIfInOverrun",
+		       "locIfInIgnored", "locIfInAbort",
+		       "locIfResets", "locIfRestarts",
+		       "locIfCollisions") # Should this list be read from cf file?
 	{
 	    if (defined $count{$v,$h}) {
 		if (!defined($total{$name,$v})) {
@@ -127,7 +135,7 @@ sub get_file_data {
 		}
 	    }
 	}
-	foreach $v ($iov, $oov) {
+	foreach my $v ($iov, $oov) {
 	    if (!defined($peak_r{$name,$v}) ||
 		$peak_r{$name,$v} < $max_rate{$v,$h})
 	    {
@@ -182,7 +190,9 @@ sub get_file_data {
 
 
 sub undef_file_data {
-    my($name) = @_;
+
+    our(%ifspeed, %iftype, %total, %max_r, %max_h);
+    our(%peak_r, %peak_h, %errhrs, %peak_disc_pct);
 
     undef %ifspeed;
     undef %iftype;
@@ -193,30 +203,39 @@ sub undef_file_data {
     undef %peak_h;
     undef %errhrs;
     undef %peak_disc_pct;
+
+    our(%count, %max_rate, %sample_delta, %sample_time, $max_sample);
+    
+    undef %count;
+    undef %max_rate;
+    undef %sample_delta;
+    undef %sample_time;
+    undef $max_sample;
 }
 
 
 sub report_one_port {
     my($n) = @_;
+    our($TOUT, $TKOUT, $EPOUT, $EEOUT);
 
-    &report_traffic(TOUT, $n);
-    &report_traffic_kbit(TKOUT, $n);
-    &report_error_percs(EPOUT, $n);
-    &report_ether_perc_errs(EEOUT, $n);
+    &report_traffic($TOUT, $n);
+    &report_traffic_kbit($TKOUT, $n);
+    &report_error_percs($EPOUT, $n);
+    &report_ether_perc_errs($EEOUT, $n);
 }
 
 
 sub do_one_file {
-    my($d, $f, $date) = @_;
+    my($dir, $f, $date) = @_;
     my($cat, $base) = &cat_and_base($f);
     my($name);
     
     if (!defined ($name = &file_to_name($base, $date))) {
 	return undef;
     }
-    &get_file_data($d, $cat, $f, $name);
+    &get_file_data($date, $dir, $cat, $f, $name);
     &report_one_port($name);
-    &undef_file_data($name);
+    &undef_file_data();
 }
 
 
@@ -230,7 +249,7 @@ sub do_all_files {
 	exit(1);
     }
     @files = &directory_files($dir);
-    foreach $f (@files) {
+    foreach my $f (@files) {
 	&do_one_file($dir, $f, $date);
     }
 }
@@ -250,6 +269,9 @@ sub sprint_percent {
 
 sub report_traffic {
     my($out, $n) = @_;
+    our(%ifspeed, %max_r, %peak_r, %total, %iftype);
+    our(%peak_h, %max_h, $iov, $oov);
+    our($in_90perc_bps, $out_90perc_bps);
 
 #    printf("%-20s %15s  %15s\n", "", "Busy hour", "Busy sample");
 #    printf("%-20s %7s %7s  %7s %7s  %7s  %6s  %3s  %3s\n",
@@ -284,6 +306,8 @@ sub report_traffic {
 
 sub report_traffic_kbit {
     my($out, $n) = @_;
+    our(%ifspeed, %max_r, %peak_r, %total, %iftype);
+    our($in_90perc_bps, $out_90perc_bps, $iov, $oov);
 
 #    printf($out "%-20s %13s  %13s  %13s %6s\n",
 #	   "", "Busy hour", "Busy sample", "24hr average", "speed");
@@ -314,6 +338,9 @@ sub report_error_percs {
     my($inpkts,$tot_in);
     my($outpkts,$tot_out);
 
+    our(%errhrs, %total, %iftype, %peak_disc_pct);
+
+
     printf($out "%-20s   %2d  %2d  %2d",
 	   $n,
 	   $errhrs{$n,"1.0"},
@@ -322,7 +349,7 @@ sub report_error_percs {
     $inpkts = ($total{$n,"ifInNUcastPkts"} +
 	       $total{$n,"ifInUcastPkts"});
     $tot_in = $inpkts + $total{$n,"ifInErrors"};
-    foreach $v ("ifInErrors", "locIfInCRC", "locIfInFrame",
+    foreach my $v ("ifInErrors", "locIfInCRC", "locIfInFrame",
 		"locIfInAbort", "locIfInIgnored")
     {
 	if ($tot_in > 0) {
@@ -348,8 +375,10 @@ sub report_error_percs {
 
 sub report_ether_perc_errs {
     my($out, $n) = @_;
-    my($inpkts, $outpkts);
-    
+    my($inpkts, $outpkts, $val);
+    our(%iftype, %total);
+
+
     if ($iftype{$n} != 6 &&	# ethernet-csmacd
 	$iftype{$n} != 7)	# iso88023-csmacd
     {
@@ -359,7 +388,7 @@ sub report_ether_perc_errs {
     $inpkts = ($total{$n,"ifInNUcastPkts"} +
 	       $total{$n,"ifInUcastPkts"} +
 	       $total{$n,"ifInErrors"}); # need these also
-    foreach $v ("ifInErrors", "locIfInCRC", "locIfInFrame",
+    foreach my $v ("ifInErrors", "locIfInCRC", "locIfInFrame",
 		"locIfInRunt", "locIfInGiants", "locIfInIgnored")
     {
 	if ($inpkts > 0) {
@@ -376,7 +405,7 @@ sub report_ether_perc_errs {
     printf($out " ");
     $outpkts = ($total{$n,"ifOutNUcastPkts"} +
 		$total{$n,"ifOutUcastPkts"});
-    foreach $v ("ifOutErrors", "ifOutDiscards", "locIfCollisions") {
+    foreach my $v ("ifOutErrors", "ifOutDiscards", "locIfCollisions") {
 	if ($outpkts > 0) {
 	    $val = $total{$n,$v}*100.0/($outpkts + $total{$n,$v});
 	} else {
@@ -391,22 +420,27 @@ sub report_ether_perc_errs {
 sub open_reports {
     my($date) = @_;
     my($repdir);
+    our($opt_t);
+    our($TOUT, $TKOUT, $EPOUT, $EEOUT);
 
     $repdir = &report_dir_create($date);
 
-    open(TOUT,  sprintf(">%s/traffic", $repdir)) || return undef;
-    open(TKOUT, sprintf(">%s/traffic.kbit", $repdir)) || return undef;
-    open(EPOUT, sprintf(">%s/errors.perc", $repdir)) || return undef;
-    open(EEOUT, sprintf(">%s/ether_errs.perc", $repdir)) || return undef;
+    my $p = defined($opt_t) ? ">" : "";
+
+    open($TOUT,  sprintf($p . ">%s/traffic", $repdir)) || return undef;
+    open($TKOUT, sprintf($p . ">%s/traffic.kbit", $repdir)) || return undef;
+    open($EPOUT, sprintf($p . ">%s/errors.perc", $repdir)) || return undef;
+    open($EEOUT, sprintf($p . ">%s/ether_errs.perc", $repdir)) || return undef;
 }
 
 sub close_reports {
     my($date) = @_;
+    our($TOUT, $TKOUT, $EPOUT, $EEOUT);
 
-    close(TOUT);
-    close(TKOUT);
-    close(EPOUT);
-    close(EEOUT);
+    close($TOUT);
+    close($TKOUT);
+    close($EPOUT);
+    close($EEOUT);
 }
 
 
@@ -421,15 +455,27 @@ require 'getopts.pl';
 
 # Main
 
-&Getopts("s:d:");
+&Getopts("s:d:t");
 
-if ($#ARGV != 0) {
-    &usage();
+our($opt_t);
+
+my $date_str = $ARGV[0];
+my $date = &get_date($date_str);
+
+shift @ARGV;
+
+if (defined($opt_t)) {
+    &open_reports($date);
+    my $dir = &find_data_dir($date);
+    foreach my $f (@ARGV) {
+	&do_one_file($dir, $f, $date);
+    }
+    &close_reports($date);
+    exit(0);
 }
 
-$date_str = $ARGV[0];
-if ($d = &get_date($date_str)) {
-    &open_reports($d);
-    &do_all_files($d);
-    &close_reports($d);
+if (defined($date)) {
+    &open_reports($date);
+    &do_all_files($date);
+    &close_reports($date);
 }
