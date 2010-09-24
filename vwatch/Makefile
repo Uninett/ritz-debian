@@ -18,7 +18,7 @@ TSRCS=	vwatch.tcl \
 	vwatch-head.tcl \
 	vwatch-main.tcl
 
-SRCS=	${PSRCS} ${TSRCS} start-vwatch.sh
+SSRCS=	${PSRCS} ${TSRCS} start-vwatch.sh
 
 COMMON=	pretty-ios.pl \
 	unctime.pl
@@ -34,11 +34,11 @@ NOMAN=	${PROGS}
 
 TPROGS=	vwatch
 
-PROGS=	${PPROGS} ${TPROGS} start-vwatch
+ALLPROGS=	${PPROGS} ${TPROGS} start-vwatch
 
 SUBST=	${.CURDIR}/../subst
 
-all: ${PROGS}
+all: ${ALLPROGS}
 
 start-vwatch: start-vwatch.sh ${SUBST}
 	rm -f $@
@@ -60,7 +60,7 @@ vwatch: vwatch.tcl vwatch-main.tcl ${SUBST} Makefile ${INCSRCS}
 	cat ${.CURDIR}/vwatch.tcl; \
 	sed -f ${SUBST} ${.CURDIR}/vwatch-main.tcl) > vwatch
 
-install: ${PROGS} ${COMMON}
+install: ${ALLPROGS} ${COMMON}
 	@for f in ${PROGS}; do \
 		echo install -c -m 555 $$f ${BINDIR}; \
 		install -c -m 555 $$f ${BINDIR}; \
