@@ -50,15 +50,27 @@ sub process {
     my($day, $reboot_day, $reboot_time);
     my($now, $lasttime, %lastval, %lasttime, $starter);
     my(%saveline, %saved, %lastline);
+    my($old);
 
     while (<>) {
 	chop;
 	@f = split;
 
-	if (/ifSpeed/ || /ifType/ || /ifDescr/) {
-	    printf("%s\n", $_);
+	if (/ifSpeed/ || /ifType/ || /ifDescr/ || /Version/) {
+	    print $_ . "\n";
+	    if (/Version 1/) {
+		return &new_process();
+	    }
 	    next;
 	}
+	if (!defined($old)) {
+	    if ($f[0] =~ /^[0-9]/o) {
+		return &new_process();
+	    } else {
+		$old = 1;
+	    }
+	}
+
 	($h, $m, $s) = split(/:/, $f[3]);
         $now = $h * 3600 + $m * 60 + $s;
 	
@@ -144,6 +156,8 @@ sub process {
 		# Save later occurrances
 		$lastline{$v} = $_;
 		next;
+	    } else {
+		undef $samevalseen{$v};
 	    }
 
 	    # time difference less than 5s; ignore (inaccurate)
@@ -168,6 +182,133 @@ sub process {
     foreach $v (keys %lastline) {
 	if (defined($lastline{$v})) {
 	    printf("%s\n", $lastline{$v});
+	}
+    }
+}
+
+sub new_process {
+    my($secs);
+    my($lasttime, %lastval, %lastline, %instance, %samevalseen);
+    my(%kw_vals);
+
+    if (seek(STDIN, 0, 0) != 1) {
+	printf(STDERR
+	       "new_process: warning: could not seek to position 0, continuing"
+	    );
+    }
+    while(<>) {
+	chomp;
+	split;
+
+	if (/ifSpeed/ || /ifType/ || /ifDescr/ || /Version/) {
+	    my $k = $_[0];
+	    my $v = join(' ', @_[1..$#_]);
+	    my $p = 0;
+	    
+	    # eliminate duplicate values
+	    if (defined($kw_vals{$k})) {
+		if ($kw_vals{$k} ne $v) {
+		    $p = 1;
+		}
+	    } else {
+		$p = 1;
+	    }
+	    $kw_vals{$k} = $v;
+	    if ($p) {
+		print $_ . "\n";
+	    }
+	    next;
+	}
+
+	$secs = $_[0];
+
+	# handle reboots, possibly undef lastval values
+	if (/Reboot/) {
+	    if (!defined($lasttime)) {
+		print $_ . "\n";
+		next;
+	    }
+
+	    my $reboot_time = $_[3];
+	    if ($reboot_time < $lasttime) {
+		print $_ . "\n";
+		next; 		# ignore, too long ago
+	    }
+	    if ($reboot_time > $secs) {
+		print $_ . "\n";
+		next;		# ignore, in the future
+	    }
+	    foreach my $k (keys %lastval) {
+		# Print all saved lines prior to reboot
+		if (defined($lastline{$k})) {
+		    print $lastline{$k} . "\n";
+		    undef $lastline{$k};
+		}
+		undef $lastval{$k};
+	    }
+	    print $_ . "\n";
+	    next;
+	}
+
+	$lasttime = $secs;
+
+	my($v, $instance) = split(/\./, $_[1]);
+
+	# If the instance changed, can't compare to previous value
+	if (defined($instance{$v})) {
+	    if ($instance{$v} != $instance) {
+		undef $lastval{$v};
+	    }
+	}
+	$instance{$v} = $instance;
+
+	my($value) = $_[2];
+
+	if (defined($lastval{$v})) {
+
+	    # time decreasing or same? ignore.
+	    if ($lasttime{$v} >= $secs) { next; }
+
+	    # value the same?  Print first, save later
+	    if ($lastval{$v} == $value) {
+		if (! defined($samevalseen{$v})) {
+		    # print first with same value to bring
+		    # delta($v) = 0.
+		    print $_ . "\n";
+		    $samevalseen{$v} = 1;
+		    next;
+		}
+		# Save later occurrances
+		$lastline{$v} = $_;
+		next;
+	    } else {
+		undef $samevalseen{$v};
+	    }
+	    
+	    # time difference less than 5s; ignore (inaccurate)
+	    if (($secs - $lasttime{$v}) < 5) { next; }
+	    
+	    # value decreasing by a smallish amount (5s 155Mbit/s octets)
+	    # and interval is small; ignore that as well.  XXX dubious
+	    if ($lastval{$v} > $value &&
+		abs($lastval{$v} - $f[2]) < 100e6 &&
+		($secs - $lasttime{$v}) <= 5)
+	    {
+		next;		# ignore
+	    }
+	}
+	# if defined, print last saved line
+	if (defined($lastline{$v})) {
+	    print $lastline{$v} . "\n";
+	    undef $lastline{$v};
+	}
+	$lastval{$v} = $value;
+	$lasttime{$v} = $secs;
+	print $_ . "\n";
+    }
+    foreach $v (keys %lastline) {
+	if (defined($lastline{$v})) {
+	    print $lastline{$v} . "\n";
 	}
     }
 }
