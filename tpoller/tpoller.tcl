@@ -408,12 +408,13 @@ proc logReload { fh name } {
     global cx
 
     puts $fh [format "%s Reboot at %s" \
-	    [getNowStamp] [getStamp $cx($name,reload)]]
+	    [getNowStamp] $cx($name,reload)]
 }
 
 proc logInfo { fh name ix } {
     global cx
 
+    puts $fh [format "Version 1"]
     puts $fh [format "ifSpeed %s" $cx($name,speed,$ix)]
     puts $fh [format "ifType %d"  $cx($name,type,$ix)]
     puts $fh [format "ifDescr \"%s\"" $cx($name,descr,$ix)]
@@ -424,18 +425,19 @@ proc logInfo { fh name ix } {
 #
 
 proc getNowStamp {} {
-    return [getStamp [clock seconds]]
+    return [clock seconds]
 }
 
-proc getStamp { secs } {
-    return [clock format $secs \
+proc dateNowStamp { } {
+    return [clock format [clock seconds] \
 	    -format "%a %b %d %H:%M:%S %Y"]
+    
 }
 
 proc logerr { msg } {
 
     # Could / should be improved to do syslog (?)
-    puts stderr [format "%s: %s" [getNowStamp] $msg]
+    puts stderr [format "%s: %s" [dateNowStamp] $msg]
 }
 
 #
