@@ -188,7 +188,7 @@ sub secs_to_hms {
 }
 
 sub compute_basic_values {
-    my($d, $start, $end) = @_;
+    my($d, $start, $end, $tm0) = @_;
     my($i);
     our(%count, %sample_secs);
     our($opt_V);
@@ -203,7 +203,7 @@ sub compute_basic_values {
 
 	if ($opt_V) {
 	    printf(STDERR "deltaT: %s", $delta_t);
-	    printf(STDERR " %s ", &secs_to_hms($sample_secs{$i}));
+	    printf(STDERR " %s ", &secs_to_hms($sample_secs{$i} - $tm0));
 	}
 
 	foreach my $k (sort keys %$d) {
@@ -241,7 +241,7 @@ sub save_values {
 }
 
 sub merge_values {
-    my($d, $sp) = @_;
+    my($d, $sp, $tm0) = @_;
     my(@saved_times);
     my($i) = 0;
     my($tr, $shift);
@@ -257,7 +257,8 @@ sub merge_values {
 	    $shift++;
 	    $i++;
 	    if ($opt_V) {
-		printf(STDERR "Shifting in sample at %d\n", $ts);
+		printf(STDERR "Shifting in sample at %s\n",
+		       &secs_to_hms($ts - $tm0));
 	    }
 	    foreach my $k (keys %{ $sp }) {
 		unshift(@{ $d->{$k}->{"values"}},
@@ -286,7 +287,8 @@ sub merge_values {
 	}
 	if ($ts == ${ $tr }[$i]) {
 	    if ($opt_V) {
-		printf(STDERR "Merging sample at    %d\n", $ts);
+		printf(STDERR "Merging sample at    %s\n",
+		       &secs_to_hms($ts - $tm0));
 	    }
 	    foreach my $k (keys %{ $sp }) {
 		if ($k eq "sample_times") {
@@ -310,7 +312,7 @@ sub merge_values {
 
 sub process_data {
     my($c, $start, $end, $tm0, $save_count) = @_;
-    our($root, $opt_R);
+    our($root, $opt_R, $opt_N, $opt_V);
     my($p) = $root->{$c};
     my($iov, $oov);
     my(@in_kbps, @out_kbps, @in_pps, @out_pps, @times);
@@ -325,7 +327,25 @@ sub process_data {
 	$oov = "ifOutOctets";
     }
     
+    if (defined($opt_V)) {
+	our(%sample_time);
+
+	printf(STDERR "Times before convert_times:\n");
+	foreach my $i ($start .. $end) {
+	    printf(STDERR "time: %f\n", $sample_time{$i});
+	}
+    }
+
     &convert_times(\@times, $start, $end, $tm0);
+
+    if (defined($opt_V)) {
+	printf(STDERR "Times after convert_times:\n");
+	foreach my $t (@times) {
+	    printf(STDERR "time: %s -- %s\n", $t,
+		   &secs_to_hms($t - $tm0));
+	}
+    }
+
 
     my($desc) = {
 	"ikbps" => {
@@ -350,14 +370,14 @@ sub process_data {
 	},
     };
     
-    &compute_basic_values($desc, $start, $end);
+    &compute_basic_values($desc, $start, $end, $tm0);
     $desc->{"sample_times"}->{"values"} = \@times;
 
     if (defined($p->{"saved_values"})) {
-	&merge_values($desc, $p->{"saved_values"});
+	&merge_values($desc, $p->{"saved_values"}, $tm0);
     }
 
-    if (defined($save_count)) {
+    if (defined($save_count) && !defined($opt_N)) {
 	$p->{"saved_values"} = {};
 	&save_values($desc, $p->{"saved_values"}, $save_count);
     }
@@ -410,7 +430,7 @@ sub create_rrd {
 
 sub time_str {
     my($t) = @_;
-    my($s, $m, $h, $md, $mon, $y, $wd, $yd, $dst) = gmtime($t);
+    my($s, $m, $h, $md, $mon, $y, $wd, $yd, $dst) = localtime($t);
 
     return sprintf("%d-%02d-%02d %02d:%02d:%02d",
 		   $y + 1900, $mon+1, $md,
