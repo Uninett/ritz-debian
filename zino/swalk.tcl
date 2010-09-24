@@ -62,13 +62,19 @@ proc filterLowestMatching { slist li vbl } {
     return $newList
 }
 
-proc processRow { sh vbl err slist var action } {
+proc processRow { sh vbl err slist var action args } {
     global swalkErrorHandler
+
+    set call_next [lindex $args 0]
+    set call_error [lindex $args 1]
 
     if { $err == "noError" } {
 	set li [getLowestMatch $slist $vbl]
 	set vbl [filterLowestMatching $slist $li $vbl]
 	if { [string compare "" $vbl] == 0 } {
+	    if { $call_next != "" } {
+		eval $call_next $sh
+	    }
 	    return;		# no matches, end of table
 	}
 	set $var $vbl
@@ -77,10 +83,12 @@ proc processRow { sh vbl err slist var action } {
 	    lappend nslist [format "%s.%s" $elt $li]
 	}
 	$sh getnext $nslist \
-		[concat processRow "%S" {"%V"} "%E" \
-		[list $slist] $var [list $action]]
+	    [concat processRow "%S" {"%V"} "%E" \
+		 [list $slist] $var [list $action] $args]
     } else {
-	if { [info exists swalkErrorHandler] } {
+	if { $call_error != "" } {
+	    eval $call_error $sh $err
+	} elseif { [info exists swalkErrorHandler] } {
 	    $swalkErrorHandler $sh $err
 	} else {
 	    error $err
@@ -90,13 +98,13 @@ proc processRow { sh vbl err slist var action } {
 
 # Do a walk of a sparse table.  May unwind with error-return.
 
-proc sparseWalk { sh startList x action } {
+proc sparseWalk { sh startList x action args } {
     foreach v $startList {
 	lappend oidsl [mib oid $v]
     }
     $sh getnext $oidsl \
 	    [concat processRow "%S" {"%V"} "%E" \
-	    [list $oidsl] $x [list $action]]
+		 [list $oidsl] $x [list $action] [list $args]]
     return
 }
 
