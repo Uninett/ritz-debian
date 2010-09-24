@@ -213,12 +213,15 @@ sub read_5m_sum {
 			$base{$v} = $save_base{$l,$v};
 			$lasttime{$v} = $save_lasttime{$l,$v};
 			$dstcomp{$v} = $save_dstcomp{$l,$v};
-			# When we compensate for daylight savings change...
-			if ($lasttime{$v} > 24*3600) {
-			    $lasttime{$v} -= 3600;
-			}
-			if ($date_str eq $prev_d) {
-			    $lasttime{$v} -= 24 * 3600;
+			# If we're doing old-style data (cheesy test, I know...)
+			if ($lasttime{$v} < 48*3600) {
+			    # When we compensate for daylight savings change...
+			    if ($lasttime{$v} > 24*3600) {
+				$lasttime{$v} -= 3600;
+			    }
+			    if ($date_str eq $prev_d) {
+				$lasttime{$v} -= 24 * 3600;
+			    }
 			}
 		    }
 		}
