@@ -82,13 +82,13 @@ sub save_files {
 	}
     }
 
-    $cmd = "/bin/mv $today/* $savedir";
+    $cmd = "find $today -type f | xargs %TOPDIR%/bin/move-to $savedir";
     $ret = system($cmd) / 256;
     if ($ret != 0) {
 	die "Could not move files\n";
     }
     
-    $cmd = "/bin/cp -p $savedir/* $backupdir";
+    $cmd = "find $savedir -type f | xargs %TOPDIR%/bin/copy-to $backupdir";
     $ret = system($cmd) / 256;
     if ($ret != 0) {
 	die "Could not save files in backup directory\n";
