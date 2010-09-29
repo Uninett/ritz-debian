@@ -1,0 +1,32 @@
+-*- Text -*- $Id$
+
+To install and use this set of programs on a NetBSD system, the
+following set of packages needs to be installed:
+
+perl
+tcl-scotty
+tcl-tclX
+tk
+tk-Tix
+just
+gnuplot
+rrdtool
+
+ap22-perl		(for RRD plotter in Apache 2.2)
+apache			(in our case version 2.2.*, to match ap22-perl)
+
+p5-IPC-Shareable	(for IPC::Shareable)
+p5-TimeDate		(for Date::Parse and Date::Format)
+p5-GD			(for GD)
+p5-DateTime		(for Date::Time)
+p5-YAML			(for YAML)
+p5-Digest-SHA		(for Digest::SHA)
+p5-Net-Telnet		(for Net::Telnet)
+p5-TimeDate		(for Time::Date)
+
+The package needs tweaking: copy Makefile.inc.dist to Makefile.inc and
+edit.
+
+The package needs NetBSD's make to install.  Other systems could
+possibly use "bmake" as a replacement.  (I know, this really should be
+autoconf-driven instead...)
