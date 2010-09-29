@@ -1,3 +1,339 @@
+2010-09-29  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Mark this as version 0.9.9.
+
+	* traffic/report/rh-test.pl, traffic/report/rr-test.pl:
+	Add two small test scripts (not installed).
+
+	* UPDATING:
+	Write a note about how to upgrade to the new raw data format for the
+	traffic statistics.
+
+	* INSTALL: List the packages required to use this package.
+	Provide other minimal installation information.
+
+2010-09-24  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Change to a new raw data format where we log time stamps as seconds
+	since Jan 1 1970 00:00:00 UTC instead of as a string in the local time
+	zone.  The latter has been the source of much teeth-gnashing over DST-
+	related bugs, particularly when the raw data files are processed
+	incrementally in "tail" mode.  Those bugs should now be history.
+
+	* tpoller/Makefile: Add new files which are now included in zino.
+
+	* zinomon/Makefile:
+	Avoid referring to ${PROGS} so as to not interfere with the default
+	.mk setup on NetBSD.
+
+	* zino/swalk.tcl:
+	Extend swalk so that it can optionally take names of functions to
+	call at end-of-table and in case of an error event.
+
+	* vwatch/Makefile:
+	Avoid problems with using macros with predefined meaning in NetBSD's
+	make setup.  Someday we ought to consider autoconfig'ing this stuff
+	and not use NetBSD's .mk files at all...
+
+	* traffic/report/tail-stats.pl:
+	Make it possible to only process a subset of logical ports
+	via the -n option, also for "today".
+	Also print an error message instead of an error code if rrd fails.
+
+	* traffic/report/report-day.pl:
+	Make this run with "use strict;" which actually improves performance
+	radically with a newish perl.
+
+	* traffic/report/customer-ts.pl:
+	Add some debugging code active under -V.  Make sure to print times in
+	hh:mm:ss format in local time.
+
+	* traffic/jobs/Makefile: Add the new files to be installed.
+
+	* traffic/jobs/onlyone.sh: Add a comment.
+
+	* traffic/jobs/fixup-data.pl:
+	Add detection of the new raw data format, and add a function to deal
+	with that format.
+
+	* traffic/jobs/compress-data.pl:
+	Make the daily compression job able to handle lots of files by using
+	find + xargs.
+
+	* traffic/common/date.pl:
+	Correctly compute the number of days in a year, accounting for leap
+	years.
+
+	* traffic/common/Makefile: Add the new scripts to be installed.
+
+	* traffic/common/read-raw-log.pl, traffic/common/read-hr-log.pl:
+	Detect the new version format, and switch to the routine reading that
+	format.
+
+	* traffic/common/read-5m-sum.pl:
+	Disable DST compensation when reading new-style raw data logs,
+	since the new code's use of %lasttime is different than the old.
+
+	* ritz/notify.tcl: Get rid of an un-needed declaration.
+
+	* traffic/cgi/r-all.pl:
+	If, for some reason, the desc file is unreadable or nonexistent, emit
+	an error to that effect (usually a config error).
+
+	* traffic/common/new-read-hr-log.pl, traffic/common/new-read-raw-log.pl:
+	Add a variant of the read-raw-log script which processes new-style
+	timestamped raw data files, where timestamps are in seconds since 1
+	Jan 1970 00:00:00 UTC.  Gone should therefore be bugs in the DST
+	handling code, which were especially troublesome for incremental file
+	processing.
+
+	* traffic/common/dst-test.pl:
+	Add a small script which parses an old-style date timestamp on input
+	and prints whether the given day goes from or to DST.  This should now
+	be redundant, since we log with time stamps in UTC.
+
+	* traffic/jobs/split-new-data.pl:
+	Add a script which can split new-style raw data files over days.
+	I'm not entirely satisfied with the way the arguments are handled,
+	maybe it will improve in the next iteration.
+
+	* traffic/jobs/check-deltas.pl:
+	Add a small debugging script (not installed) which checks the
+	time-delta values in the data file.  This turns out to have limited
+	usefulness for historical logs, because there intermediate lines
+	with the same value have been filtered out.
+
+	* traffic/jobs/print-old.pl:
+	Add a small debugging script (not installed), which prints
+	the time stamps in the old style.
+
+	* traffic/jobs/convert-data.pl:
+	Add a script which will convert from old-style to new-style time
+	stamps in the raw data files.
+
+	* traffic/jobs/daily.pl:
+	Make the daily job able to handle lots of files by using find +
+	xargs and the recently added move-to and copy-to scripts.
+	This should make the daily job able to handle lots of files,
+	and avoids relying on the maximum command line length.
+
+	* traffic/jobs/copy-to:
+	Add a script for copying a set of files to a given directory, suitable
+	for use with find and xargs.
+
+	* traffic/jobs/move-to:
+	Add a script to move a set of files to a given directory,
+	suitable for use with find and xargs.
+
+	* zinomon/Makefile:
+	Avoid the use of PROGS, use variants so as to not conflict with
+	NetBSD's mk rules.
+
+	* vwatch/Makefile:
+	Avoid problems with using macros with predefined meaning in NetBSD's
+	make setup.  Someday we ought to consider autoconfig'ing this stuff
+	and not use NetBSD's .mk files at all...
+
+	* traffic/report/customer-ts.pl:
+	Add some more debug output, and ensure times printed in debug output
+	are in local time.
+
+	* traffic/common/new-read-raw-log.pl:
+	We need to remember the position we had progressed to for each round.
+
+	* traffic/cgi/r-all.pl:
+	Emit a warning if description file can't be opened.
+
+2010-09-23  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl:
+	Disable DST compensation when reading new-style raw data logs,
+	since the new code's use of %lasttime is different than the old.
+
+2010-09-22  Havard Eidnes  <he@uninett.no>
+
+	* zino/trap.tcl: Ignore BGP traps from Juniper boxes as well.
+
+	* zino/status.tcl:
+	Implement removal of old stale entries in the AddrToRouter array,
+	in the manner done for descriptions.
+
+	* zino/swalk.tcl:
+	Don't put a list around $args in ProcessRow, this should prevent
+	list braces accumulating.
+
+2010-09-20  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-raw-log.pl:
+	We need to trigger doing the new stats data format
+	when we see a line starting with a digit.  This is
+	needed for e.g. incremental data file processing.
+
+2010-09-17  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/date.pl:
+	Correctly compute the number of days in a year, accounting for leap
+	days.
+
+2010-09-01  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/convert-data.pl:
+	Uh, always mark converted data as being Version 1.
+
+	* traffic/report/tail-stats.pl:
+	Print a newline, and use $! instad of $?.
+
+2010-08-20  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/compress-data.pl: Only try to compress files...
+
+2010-08-19  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/convert-data.pl:
+	Skip empty lines instead of potentially falling into doing strptime()
+	on an empty day of month...  Also skip already converted lines.
+
+2010-08-17  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Add support for handling layer-2 VPN "circuits" in reversing the
+	logical port name, by keeping -l2vpn-whatever and pivoting on any
+	remaining hypen preceding this part.
+
+2010-08-13  Havard Eidnes  <he@uninett.no>
+
+	* traffic/jobs/convert-data.pl:
+	Add ability to properly handle gzip archive files.
+	If original was gzip'ed, the new one will be too.
+
+2010-08-06  Havard Eidnes  <he@uninett.no>
+
+	* ritz/notify.tcl:
+	Remove some global declarations which are not needed.
+
+2010-07-28  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/Makefile, tpoller/tpoller.tcl,
+	  traffic/common/Makefile, traffic/common/new-read-hr-log.pl,
+	  traffic/common/new-read-raw-log.pl,
+	  traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl,
+	  traffic/jobs/Makefile, traffic/jobs/check-deltas.pl,
+	  traffic/jobs/compress-data.pl, traffic/jobs/convert-data.pl,
+	  traffic/jobs/copy-to, traffic/jobs/daily.pl,
+	  traffic/jobs/fixup-data.pl, traffic/jobs/move-to,
+	  traffic/jobs/onlyone.sh, traffic/jobs/print-old.pl,
+	  traffic/jobs/split-new-data.pl, traffic/report/report-day.pl,
+	  traffic/report/rh-test.pl, traffic/report/rr-test.pl,
+	  zino/swalk.tcl:
+
+	Change the raw data format of the traffic logs, in an attempt at
+	getting rid of all the "shift to or from DST" bugs in this code,
+	by using seconds UTC since 1 jan 1970 instead of textual timestamps
+	in the local time zone.
+
+	Adapt processing routines so that both the old and the new data format
+	is recognized.  Add a new script to split a new-style raw data file
+	if for some reason the processing around midnight isn't executed.
+
+	Also add some test scripts useful to test the innards of the
+	"read in raw data files" functions.
+
+	In the process, read-hr-log, read-raw-log and report-day has been
+	made to run with "use strict;" which actually made a big difference
+	performance-wise with a newish perl.
+
+	Extend swalk so that it can optionally take names of functions to
+	call at end-of-table and in case of an error event.
+
+	Make the daily job able to handle lots of files by using find +
+	xargs instead of hoping that the command line can hold all the
+	file names.  This introduces the new copy-to and move-to helper
+	scripts (target dirname given as first argument).
+
+2010-07-27  Havard Eidnes  <he@uninett.no>
+
+	* zinomon/Zino.pm, zinomon/zino-monitor.pl:
+	Make the lack of active events / "case-IDs" a non-fatal error as far
+	as this test is concerned.  Instead pull the version number and do
+	some simplistic tests on it.
+
+	Add a time-out of 30 seconds around the main checking loop, to protect
+	against stuck connections.
+
+2010-07-15  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/cur-vers.pl: Recognize JunOS service versions as well.
+
+2010-06-28  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Make it possible to only process a subset of logical ports
+	via the -n option, also for "today".
+
+2010-05-26  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Rewrite to use only asynchronous callbacks, so that if a significant
+	portion of the devices are unreachable, the poll frequency for those
+	which remain should not be adversely affected.
+
+2010-05-20  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Make it possible to provide an absolute pointer, so that the date+type
+	doesn't get tacked on, by rewriting an "absolute http pointer" of the
+	form "abs-http://" to just "http://".
+
+2010-04-22  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Bump version to 0.9.8.2.
+
+	* ChangeLog: Add changes since version 0.9.8.1.
+
+	* mibs/mib-jnx-exp.txt:
+	Add support for monitoring the state of BFD sessions, using the
+	Juniper BFD MIB, which is currently implanted in the Juniper
+	experimental MIB tree (but using the MIB variable names from the
+	draft of the standard MIB, sigh...).
+
+	Regrettably, Cisco has not implemented the BFD MIB on any of the
+	pieces of equipment we use, even though they have participated in
+	specifying the IETF standard, which is still in draft form, some
+	6 years after the initial draft.  Sigh!
+
+	* mibs/mib-jnx-bfd-exp-mod.txt:
+	Add support for monitoring the state of BFD sessions, using the
+	Juniper BFD MIB, which is currently implanted in the Juniper
+	experimental MIB tree (but using the MIB variable names from the
+	draft of the standard MIB, sigh...).
+
+	Regrettably, Cisco has not implemented the BFD MIB on any of the
+	pieces of equipment we use, even though they have participated in
+	specifying the IETF standard, which is still in draft form, some
+	6 years after the initial draft.  Sigh!
+
+	(This MIB is slightly modified compared to the original; it uses the
+	bfdDiag syntax for the bfdSessDiag instead of an Unsigned32.)
+
+	* zino/bfd.tcl, zino/trap.tcl, zino/status.tcl,
+	  zino/load-mibs.tcl, zino/Makefile, ritz/summary.tcl,
+	  ritz/sort.tcl, mibs/Makefile, emt/emt.tcl, common/sort.tcl,
+	  common/attrs.tcl:
+	
+	Add support for monitoring the state of BFD sessions, using the
+	Juniper BFD MIB, which is currently implanted in the Juniper
+	experimental MIB tree (but using the MIB variable names from the
+	draft of the standard MIB, sigh...).
+
+	Regrettably, Cisco has not implemented the BFD MIB on any of the
+	pieces of equipment we use, even though they have participated in
+	specifying the IETF standard, which is still in draft form, some
+	6 years after the initial draft.  Sigh!
+
+	* TODO:
+	Add one more TODO item: traffic poller should do all-async requests.
+
 2010-04-22  Havard Eidnes  <he@uninett.no>
 
 	* Makefile: Bump version to 0.9.8.2.
