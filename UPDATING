@@ -1,0 +1,22 @@
+-*- Text -*- $Id$
+
+Updating to version 0.9.9 from earlier versions:
+------------------------------------------------
+
+The raw data for the traffic statistics have changed.  The new tpoller
+will write data in the new format.  To convert to the new traffic
+stats poller, you need to follow these steps:
+
+1) Stop any "tail-stats" cron jobs
+2) Stop the traffic statistics poller
+3) Convert today's data with bin/convert-data.pl
+4) Remove "we had read up to here" files in data/c-tail/ and
+   data/tail-save/
+5) Just to be safe, copy any rrd databases from data/cust-rrd/ into a
+   dated directory.
+6) Start the traffic statistics poller
+7) Re-enable the cron jobs
+
+You'll get a lot of errors from cron for the first run because it'll
+try to update with data from last midnight up to where it had read
+earlier; those errors can be safely ignored.
