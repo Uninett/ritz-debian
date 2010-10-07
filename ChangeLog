@@ -1,4 +1,12 @@
+2010-10-07  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Mark this as 0.9.9.1.
+
+	* tpoller/Makefile: Fix syntax error in the list of source files.
+
 2010-09-29  Havard Eidnes  <he@uninett.no>
+
+	* ChangeLog: Add changes leading up to 0.9.9.
 
 	* Makefile: Mark this as version 0.9.9.
 
