@@ -4,7 +4,7 @@
 
 SCRIPTS=addup.pl date.pl newtimelocal.pl \
 	new-read-raw-log.pl new-read-hr-log.pl \
-	perc.pl perc-5m.pl \
+	perc.pl perc-5m.pl read-5m-sum.pl \
 	read-day-report.pl read-hr-log.pl read-raw-log.pl \
 	read-week-report.pl \
 	scaling.pl search.pl timelocal.pl tmpfiles.pl utils.pl \
