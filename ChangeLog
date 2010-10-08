@@ -1,8 +1,16 @@
 2010-10-07  Havard Eidnes  <he@uninett.no>
 
+	* ChangeLog: Add changes for 0.9.9.1.
+
 	* Makefile: Mark this as 0.9.9.1.
 
 	* tpoller/Makefile: Fix syntax error in the list of source files.
+
+2010-10-06  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/Makefile:
+	Reinstate installation of read-5m-sum.pl, which was mistakenly
+	removed.
 
 2010-09-29  Havard Eidnes  <he@uninett.no>
 
