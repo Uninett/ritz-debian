@@ -31,12 +31,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Input: -t topdir
+# Input: [-t topdir] (topdir defaults to installed prefix)
 #	points to top directory.  Uses
 #	topdir/conf/polldevs.cf
 #	topdir/db/manual-devs
 # Output:
 #	stderr empty if everyghing ok, otherwise report
+#	plus non-zero exit status if duplicates seen.
 #
 
 use strict;
@@ -103,7 +104,7 @@ sub read_manuals {
 sub get_line_names {
     my($dev, $polladdr) = @_;
     my(@a);
-    our(%line_name, %seen_name, %max_ix, %seen_at, %community);
+    our(%line_name, %seen_name, %max_ix, %seen_at, %community, %dev, %ifname);
     our($es, $opt_v);
 
     open(IN, "%SNMPNETSTAT% -idnh -t 30 -y $community{$dev} $polladdr 2>&1|");
@@ -115,9 +116,10 @@ sub get_line_names {
 	    }
 	    return undef;
 	}
-	if (/^(\d+)\s+\S+\s+\S+ "(.*)"$/) {
+	if (/^(\d+)\s+(\S+)\s+\S+ "(.*)"$/) {
 	    my($ix) = $1;
-	    @a = split(/,[ _]/,$2);
+	    @a = split(/,[ _]/,$3);
+	    my($ifname) = $2;
 	    if ($#a < 1) { next; }
 	    # Trim leading and trailing spaces,
 	    my $n = $a[1];
@@ -130,14 +132,18 @@ sub get_line_names {
 	    $n =~ s/ /-/g;
 	    my $k = $dev . ":" . $ix;
 	    $line_name{$k} = $n;
+	    $dev{$k} = $dev;
+	    $ifname{$k} = $ifname;
 	    if ($ix > $max_ix{$dev}) {
 		$max_ix{$dev} = $ix;
 	    }
 	    if (defined($seen_at{$n})) {
 		printf(STDERR "Duplicate logical port name: %s\n", $n);
-		printf(STDERR "Seen both at %s\n", $k);
-		printf(STDERR "      and at %s\n", $seen_at{$n});   
-		$es++;
+		printf(STDERR "Seen both at %s %s\n",
+		       $dev{$k}, $ifname{$k});
+		printf(STDERR "      and at %s %s\n",
+		       $dev{$seen_at{$n}}, $ifname{$seen_at{$n}});
+		$es = 1;
 	    } else {
 		$seen_at{$n} = $k;
 	    }
@@ -158,9 +164,13 @@ sub usage {
 our(%polladdr, %manual);
 our($opt_t, $opt_v, $es);
 
+our($topdir) = "%TOPDIR%";
+
 &getopts("t:v");
 
-if (!defined($opt_t)) { &usage(); }
+if(!defined($opt_t)) {
+    $opt_t = $topdir;
+}
 
 &read_config($opt_t . "/conf/polldevs.cf");
 &read_manuals($opt_t . "/db/manual-devs");
