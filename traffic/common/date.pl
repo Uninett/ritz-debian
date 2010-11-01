@@ -565,14 +565,16 @@ sub next_datespec {
     if ($day) {
 	$base_tm = &date_to_tm(sprintf("%04d%02d%02d", $year, $month, $day));
 	($year, $month, $day) = 
-	    unpack("a4a2a2", &tm_to_date($base_tm+(60*60*24))); 
+	    # 26 to handle the case of DST change
+	    unpack("a4a2a2", &tm_to_date($base_tm+(60*60*26))); 
 	return (sprintf("%04d-%02d-%02d", $year, $month, $day));
     } elsif ($week && $month) {
 	# Both week and month doesn't make sense, we'll assume
 	# that $week is really meant to be $day
 	$base_tm = &date_to_tm(sprintf("%04d%02d%02d", $year, $month, $week));
 	($year, $month, $day) = 
-	    unpack("a4a2a2", &tm_to_date($base_tm+(60*60*24))); 
+	    # 26 to handle the case of DST change
+	    unpack("a4a2a2", &tm_to_date($base_tm+(60*60*26))); 
 	return (sprintf ("%04d-%02d-%02d", $year, $month, $day));
 
     } elsif ($week) {
@@ -608,14 +610,16 @@ sub previous_datespec {
     if ($day) {
 	$base_tm = &date_to_tm(sprintf("%04d%02d%02d", $year, $month, $day));
 	($year, $month, $day) = 
-	    unpack("a4a2a2", &tm_to_date($base_tm-(60*60*24))); 
+	    # 22 to handle DST change
+	    unpack("a4a2a2", &tm_to_date($base_tm-(60*60*22))); 
 	return (sprintf ("%04d-%02d-%02d", $year, $month, $day));
     } elsif ($week && $month) {
 	# Both week and month doesn't make sense, we'll assume
 	# that $week is really meant to be $day
 	$base_tm = &date_to_tm(sprintf ("%04d%02d%02d", $year, $month, $week));
 	($year, $month, $day) = 
-	    unpack("a4a2a2", &tm_to_date($base_tm-(60*60*24))); 
+	    # 22 to handle DST change
+	    unpack("a4a2a2", &tm_to_date($base_tm-(60*60*22))); 
 	return (sprintf ("%04d-%02d-%02d", $year, $month, $day));
     } elsif ($week) {
 	if ($week <= 1) {
