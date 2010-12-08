@@ -284,6 +284,11 @@ sub read_5m_sum {
 	    $end_tick = &floor_int($sample_time{$max_sample} * 60/5.0);
 
 	    $min_sample = $lasttick + 1;
+	    # Did we actually collect any data?
+	    if ($end_tick < $min_sample) {
+		next;		# nope, next go-around
+	    }
+
 	    if (!defined($my_min_sample)) {
 		$my_min_sample = $min_sample;
 	    } else {
