@@ -28,6 +28,7 @@ sub get_start_software {
 	}
 	close(in);
 	$desc =~ s/\r//g;
+	chomp $desc;
 	$software{$f} = $desc;
 	$old_software{$f} = $desc;
 	undef $desc;
