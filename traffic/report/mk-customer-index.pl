@@ -24,7 +24,8 @@ sub dayreport_ports {
     my($f) = $dn . "/traffic";
     open(REP, $f) || return;
     while(<REP>) {
-	chomp; split;
+	chomp;
+	@_ = split;
 	push(@ports, $_[0]);
     }
     close(REP);
@@ -45,12 +46,13 @@ sub read_template {
     open(IN, "$f") || die "Could not open $f: $!";
     while(<IN>) {
 	chomp;
-	split(/\s+/, $_, 2);
+	@_ = split(/\s+/, $_, 2);
 	if (/^group/) {
 	    my($group) = $_[1];
 	    while ($_ ne "") {
 		$_ = <IN>;
-		chomp; split(/\s+/, $_, 2);
+		chomp;
+		@_ = split(/\s+/, $_, 2);
 		if (/^select/) {
 		    $select{$group} = $_[1];
 		} elsif (/^title/) {

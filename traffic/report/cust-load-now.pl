@@ -29,7 +29,8 @@ sub read_load_now {
 
     open(IN, "%TOPDIR%" . "/reports/load-now.txt");
     while(<IN>) {
-	chomp; split;
+	chomp;
+	@_ = split;
 	$p_in{$_[0]} = $_[1];
 	$p_out{$_[0]} = $_[2];
 	$a_in{$_[0]} = $_[3];

@@ -198,7 +198,7 @@ sub new_process {
     }
     while(<>) {
 	chomp;
-	split;
+	@_ = split;
 
 	if (/ifSpeed/ || /ifType/ || /ifDescr/ || /Version/) {
 	    my $k = $_[0];

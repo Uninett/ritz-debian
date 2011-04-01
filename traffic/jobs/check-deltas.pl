@@ -8,7 +8,7 @@ my(%previous);
 my(%prev_l);
 
 while (<>) {
-    split;
+    @_ = split;
 
     if (! /^[0-9]/) {
 	next;

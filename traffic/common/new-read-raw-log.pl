@@ -88,7 +88,7 @@ sub new_read_log {
   loop:
     while (<$fh>) {
 	chop;
-	split;
+	@_ = split;
 
 	if (/^Version/o) {
 	    if ($_[1] != 1) {

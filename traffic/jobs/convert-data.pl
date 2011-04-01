@@ -22,7 +22,7 @@ sub convert {
 
     print $OUT "Version 1\n";
     while(<$IN>) {
-	split;
+	@_ = split;
 
 	if (/^Version/) {
 	    next;

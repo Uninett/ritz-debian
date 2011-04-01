@@ -69,7 +69,7 @@ sub new_read_log {
 
     while (<$fh>) {
         chop;
-	split;
+	@_ = split;
     
 	if (!defined($v_set)) {
 	    if (/^Version/o) {

@@ -166,7 +166,7 @@ sub read_template {
     open(IN, $f) || die "Could not open $f: $!";
     while(<IN>) {
 	chomp;
-	split(/\s+/, $_, 2);
+	@_ = split(/\s+/, $_, 2);
 
 	if (/^head/) {
 	    my($marker) = $_[1];
@@ -215,7 +215,8 @@ sub process_data {
     open(IN, "%TOPDIR%/bin/cust-load-now -c $desc |") ||
 	die "Could not get customer statistics: $!";
     while(<IN>) {
-	chomp; split;
+	chomp;
+	@_ = split;
 	my($n) = $_[0];
 	$last_in{$n} = $_[1];
 	$last_out{$n}= $_[2];

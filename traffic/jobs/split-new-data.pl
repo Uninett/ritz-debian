@@ -97,7 +97,7 @@ sub process_file {
     open(NI, ">" . $f . ".new") ||
 	die "Could not write $f.new: $!";
     while(<I>) {
-	split;
+	@_ = split;
 	if ($_[0] =~ /^[0-9]+/) {
 	    if ($_[0] < $time0) {
 		print O $_;

@@ -82,7 +82,8 @@ sub get_data {
     
     open(IN, $f) || &err("Could not open $f: $!");
     while(<IN>) {
-	chomp; split;
+	chomp;
+	@_ = split;
 	my $p = $_[0];
 	$a_in{$p} = $_[$fields{$dsp_t}->{"avg-in"}];
 	$a_out{$p} = $_[$fields{$dsp_t}->{"avg-out"}];
