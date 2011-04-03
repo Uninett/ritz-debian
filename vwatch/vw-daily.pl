@@ -8,19 +8,22 @@
 # Rotate logs, mail report.
 #
 
+use strict;
+
 sub get_date_strings {
     my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
 
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
 	localtime($^T);
     
-    $ym_str = sprintf("%4d-%02d", $year+1900, $mon+1);
-    $day_str = sprintf("%02d", $mday);
-    $yyyymmdd = sprintf("%04d-%02d-%02d", $year+1900, $mon+1, $mday);
+    our($ym_str) = sprintf("%4d-%02d", $year+1900, $mon+1);
+    our($day_str) = sprintf("%02d", $mday);
+    our($yyyymmdd) = sprintf("%04d-%02d-%02d", $year+1900, $mon+1, $mday);
 }
 
 sub save_logs {
     my($logtree, $mdir, $ddir, $today, $cmd, $ret);
+    our($LOGTREE, $logtree, $ym_str, $day_str);
     
     $logtree = $LOGTREE;
 
@@ -58,6 +61,8 @@ sub save_logs {
 
 sub report_and_mail {
     my($ddir, $rfn, $cmd);
+    our($MAILFROM, $MAILTO);
+    our($LOGTREE, $ym_str, $day_str);
 
     $ddir = $LOGTREE . "/" . $ym_str . "/" . $day_str;
 
@@ -89,14 +94,14 @@ sub getmail {
     open(IN, $f) || die "Could not open $f: $!";
     while(<IN>) {
 	chomp;
-	split(/=/, $_, 2);
+	@_ = split(/=/, $_, 2);
 	if ($_[1] =~ /^[\'\"]/) {
 	    $_[1] = substr($_[1], 1);
 	}
 	if ($_[1] =~ /[\'\"]$/) {
 	    chop($_[1]);
 	}
-	$str = "\$$_[0] = \$_[1];";
+	$str = "our(\$$_[0]); \$$_[0] = \$_[1];";
 	eval $str;
     }
     close(IN);
@@ -106,7 +111,7 @@ sub getmail {
 # Main
 #
 
-$LOGTREE = "%TOPDIR%/ver-watch/logs";
+our($LOGTREE) = "%TOPDIR%/ver-watch/logs";
 
 &getmail($ENV{'HOME'} . "/.zino-mail");
 
