@@ -328,6 +328,8 @@ sub tgif_group {
 	   "page" => 1,
 	   "dont_reencode" => 1,
 	   "objshadow_info" => 1,
+	   "rotate_pivot" => 1,
+	   "spline_tightness" => 1,
        );
 
 sub tgif_obj {
