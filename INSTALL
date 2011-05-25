@@ -23,6 +23,7 @@ p5-YAML			(for YAML)
 p5-Digest-SHA		(for Digest::SHA)
 p5-Net-Telnet		(for Net::Telnet)
 p5-TimeDate		(for Time::Date)
+p5-BerkeleyDB		(for BerkeleyDB)
 
 The package needs tweaking: copy Makefile.inc.dist to Makefile.inc and
 edit.
