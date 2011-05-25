@@ -48,23 +48,45 @@
 
 push(@INC, "%LIBDIR%");
 
+use BerkeleyDB;
+
 require 'getopts.pl';
 
 require 'date.pl';
 require 'search.pl';
 
 
+sub open_db {
+    my($db, $rh) = @_;
+    my($dbf) = $db . ".bdb";
+
+    if (-f $dbf) {	# has converted to Berkeley DB
+	tie(%{ $rh }, 'BerkeleyDB::Hash', -Filename => $dbf)
+	    or die "Cannot open $dbf: $! $BerkeleyDB::Error\n";
+    } else {
+	dbmopen(%{ $rh }, $db, 0666);
+    }
+}
+
+sub close_db {
+    my($rh) = @_;
+
+    untie(%{ $rh });
+}
+
 sub open_dbs {
     my($dbdir) = @_;
+    our(%ftn, %ntf);
 
-    dbmopen(%ftn, "$dbdir/ftn", 0664);
-    dbmopen(%ntf, "$dbdir/ntf", 0664);
+    open_db("$dbdir/ftn", \%ftn);
+    open_db("$dbdir/ntf", \%ntf);
 }
 
 sub close_dbs {
+    our(%ftn, %ntf);
 
-    dbmclose(%ftn);
-    dbmclose(%ntf);
+    close_db(\%ftn);
+    close_db(\%ntf);
 }
 
 sub closed_entry {
@@ -95,6 +117,7 @@ sub find_close_date {
 }
 
 sub update_dbs {
+    our(%ntf, %ftn);
 
     foreach my $ln (keys %ntf) {
 	my($s) = $ntf{$ln};
@@ -108,6 +131,11 @@ sub update_dbs {
 	my($newcdate) = &find_close_date($fn);
 	if (!defined($newcdate)) { next; }
 	if ($newcdate == $cdate) { next; }
+	if ($newcdate < $c[0]) {
+	    printf(STDERR "Close-before-open: %s vs. %s for %s\n",
+		   $newcdate, $c[0], $ln);
+	    next;
+	}
 	my($new_entry) = substr($s, 0, -6) . $newcdate;
 	if (!defined($opt_n)) {
 	    $ntf{$ln} = $new_entry;
@@ -129,6 +157,11 @@ sub update_dbs {
 	my($newcdate) = &find_close_date($fn);
 	if (!defined($newcdate)) { next; }
 	if ($newcdate == $cdate) { next; }
+	if ($newcdate < $c[0]) {
+	    printf(STDERR "Close-before-open: %s vs. %s for %s\n",
+		   $newcdate, $c[0], $fn);
+	    next;
+	}
 	my($new_entry) = substr($s, 0, -6) . $newcdate;
 	if (!defined($opt_n)) {
 	    $ftn{$fn} = $new_entry;

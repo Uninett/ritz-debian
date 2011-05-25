@@ -42,10 +42,27 @@
 package db_lookup;
 
 use strict;
+use BerkeleyDB;
 
 our($ROOT) = "%TOPDIR%";
 our($FTN_DB) = "$ROOT/db/ftn";
 our($NTF_DB) = "$ROOT/db/ntf";
+
+
+# Auto-detect if the administrator has taken the leap and converted
+# to using BerkeleyDB when opening the hashed files
+
+sub open_db {
+    my($db, $rh) = @_;
+    my($dbf) = $db . ".bdb";
+
+    if (-f $dbf) {		# has converted to Berkeley DB
+	tie(%{ $rh }, 'BerkeleyDB::Hash', -Filename => $dbf)
+	    or die "Cannot open $dbf: $! $BerkeleyDB::Error\n";
+    } else {
+	dbmopen(%{ $rh }, $db, 0666);
+    }
+}
 
 
 # Extract data value corresponding to the given date
@@ -84,7 +101,7 @@ sub main::name_to_file {
     }
 
     if (!$ntf_open) {
-	dbmopen(%ntf_db, $NTF_DB, 0666);
+	open_db($NTF_DB, \%ntf_db);
 	$ntf_open = 1;
     }
     if (! defined($entry = $ntf_db{$name})) {
@@ -105,7 +122,7 @@ sub main::file_to_name {
     }
 
     if (!$ftn_open) {
-	dbmopen(%ftn_db, $FTN_DB, 0666);
+	open_db($FTN_DB, \%ftn_db);
 	$ftn_open = 1;
     }
     if (! defined($entry = $ftn_db{$file})) {
@@ -122,7 +139,7 @@ sub main::data_origin {
     our($ntf_open, %ntf_db, $NTF_DB);
 
     if (!$ntf_open) {
-	dbmopen(%ntf_db, $NTF_DB, 0666);
+	open_db($NTF_DB, \%ntf_db);
 	$ntf_open = 1;
     }
 
@@ -141,7 +158,7 @@ sub main::all_port_names {
     our($ntf_open, %ntf_db, $NTF_DB);
 
     if (!$ntf_open) {
-	dbmopen(%ntf_db, $NTF_DB, 0666);
+	open_db($NTF_DB, \%ntf_db);
 	$ntf_open = 1;
     }
     while(($k, $val) = each %ntf_db) {

@@ -50,22 +50,42 @@
 # where the ", " is the field delimiter (note: two chars!).
 
 use strict;
+use BerkeleyDB;
 require 'getopts.pl';
+
+
+sub open_db {
+    my($db, $rh) = @_;
+    my($dbf) = $db . ".bdb";
+
+    if (-f $dbf) {	# has converted to Berkeley DB
+	tie(%{ $rh }, 'BerkeleyDB::Hash', -Filename => $dbf)
+	    or die "Cannot open $dbf: $! $BerkeleyDB::Error\n";
+    } else {
+	dbmopen(%{ $rh }, $db, 0666);
+    }
+}
+
+sub close_db {
+    my($rh) = @_;
+
+    untie(%{ $rh });
+}
 
 
 sub open_dbs {
     my($dbdir) = @_;
     our(%ftn, %ntf);
 
-    dbmopen(%ftn, "$dbdir/ftn", 0664);
-    dbmopen(%ntf, "$dbdir/ntf", 0664);
+    open_db("$dbdir/ftn", \%ftn);
+    open_db("$dbdir/ntf", \%ntf);
 }
 
 sub close_dbs {
     our(%ftn, %ntf);
 
-    dbmclose(%ftn);
-    dbmclose(%ntf);
+    close_db(\%ftn);
+    close_db(\%ntf);
 }
 
 sub read_config {
