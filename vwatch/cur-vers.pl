@@ -105,7 +105,7 @@ sub cmp_versions {
     if ($ta eq "JunOS") {
 	%a = &dissect_junos_version($a);
 	%b = &dissect_junos_version($b);
-	if (!defined(%a) || !defined(%b)) {
+	if (!defined($a{"major"}) || !defined($b{"major"})) {
 	    return $a <=> $b;
 	}
 	if ($a{"major"} == $b{"major"}) {
@@ -125,7 +125,7 @@ sub cmp_versions {
     } else {
 	%a = &dissect_cisco_version($a);
 	%b = &dissect_cisco_version($b);
-	if (!defined(%a) || !defined(%b)) {
+	if (!defined($a{"major"}) || !defined($b{"major"})) {
 	    return $a <=> $b;
 	}
 	if ($a{"major"} == $b{"major"}) {
