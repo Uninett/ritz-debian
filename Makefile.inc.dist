@@ -26,6 +26,8 @@ DESCFILE=${TOPDIR}/ndn.dsc
 CGIPFX=/stat-q
 WEBSRVR=stats.nordu.net
 ISPNAME=NORDUnet
+# List of connections/customers and their list of ports:
+DESCFILE=/data/traffic/ndn.dsc
 HTMLDIR=${TOPDIR}/html
 # HTMLPFX has to be only one path component (due to cgi/ex-png.pl).
 HTMLPFX=/stats
