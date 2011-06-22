@@ -61,7 +61,7 @@ vwatch: vwatch.tcl vwatch-main.tcl ${SUBST} Makefile ${INCSRCS}
 	sed -f ${SUBST} ${.CURDIR}/vwatch-main.tcl) > vwatch
 
 install: ${ALLPROGS} ${COMMON}
-	@for f in ${PROGS}; do \
+	@for f in ${PPROGS}; do \
 		echo install -c -m 555 $$f ${BINDIR}; \
 		install -c -m 555 $$f ${BINDIR}; \
 	done
