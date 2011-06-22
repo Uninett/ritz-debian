@@ -137,6 +137,12 @@ sub get_line_names {
 	    if ($ix > $max_ix{$dev}) {
 		$max_ix{$dev} = $ix;
 	    }
+	    # Report about bad character(s)
+	    if ($n =~ /([;])/) {
+		printf(STDERR "Illegal character in: \"%s\": \"%s\"\n", $n, $1);
+		printf(STDERR "  On %s, interface %s\n", $dev{$k}, $ifname{$k});
+		$es = 1;
+	    }
 	    if (defined($seen_at{$n})) {
 		printf(STDERR "Duplicate logical port name: %s\n", $n);
 		printf(STDERR "Seen both at %s %s\n",
