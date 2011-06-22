@@ -364,7 +364,7 @@ sub make_small_plot {
 	"--font", "LEGEND:9",
 	);
 
-    return &make_plot($name, $type, $rrd, $png, 400, 200, @fonts);
+    return &make_plot($name, $type, $rrd, $png, 450, 200, @fonts);
 }
 
 sub make_big_plot {
