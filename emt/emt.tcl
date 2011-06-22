@@ -399,6 +399,11 @@ proc single_subject { id } {
 
     set str [report_compact $id]
 
+    # Convert underscores to spaces for two reasons:
+    # 1) D-Link switches don't allow spaces in descr fields, so ,_ is
+    #    used as separator instead
+    # 2) It appears that certain mobiles don't like _ in text messages...
+    regsub -all "_" $str " " str
     # Convert multiple consecutive spaces to one
     regsub -all " +" $str " " str
     # Trim spaces at start and end
@@ -544,6 +549,8 @@ proc emt_check_all {} {
 	emt_report $rids
 	if { [info exists emt_alarm_to] } {
 	    emt_alarm $rids
+	} else {
+	    log "emt_alarm_to not set, so no SMS alerts"
 	}
     }
 }
