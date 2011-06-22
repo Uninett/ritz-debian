@@ -57,7 +57,7 @@ sub timelocal {
     package timelocal;
 
     local($[) = 0;
-    $time = &main'timegm + $tzmin*$MIN;
+    $time = &main::timegm + $tzmin*$MIN;
     return -1 if $cheat<0;
     @test = localtime($time);
     $time -= $HR if $test[2] != $_[2];
