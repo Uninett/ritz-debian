@@ -76,7 +76,7 @@ install: ${ALLPROGS} ${COMMON}
 	install -c -m 555 start-vwatch ${BINDIR}
 
 clean:
-	rm -f ${PROGS}
+	rm -f ${PPROGS}
 
 .include "../Makefile.inc"
 .include <bsd.prog.mk>
