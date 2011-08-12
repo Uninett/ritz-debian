@@ -120,18 +120,18 @@ sub printit {
     printf($fh "<img src=\"imgs/%s.png\" alt=\"%s\" " .
 	   "usemap=\"#%s\" border=\"0\" />\n",
 	   $picname, $picname, $mapname);
-    my($x, $top, $bot);
 
-    $top = 38;
-    $bot = 440;
-    $x = 94;
+    my($leftx, $rightx, $top, $bot) = (94, 620, 38, 440);
 
-    my($dx) = 51 * 10 / ($#customers + 1);
+    my($x) = $leftx;
+    my($dx) = ($rightx - $leftx) / ($#customers + 2);
+
+    $x += $dx * 0.6;
 
     printf($fh "<map id=\"%s\" name=\"%s\">\n", $mapname, $mapname);
     foreach my $c (@customers) {
 	printf($fh "  <area shape=\"rect\" coords=\"%d,%d,%d,%d\"",
-	       $x, $top, $x+51, $bot);
+	       $x, $top, $x+$dx-1, $bot);
 	$x += $dx;
 	printf($fh " href=\"%CGIPFX%/r-all?q=all&amp;name=%s\" " .
 	       "alt=\"current plot for %s\" />\n", $c, $c);

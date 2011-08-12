@@ -254,12 +254,16 @@ printf("<img src=\"../imgs/%s.png\" alt=\"%s\" " .
        "usemap=\"#%s\" border=\"0\" />\n",
        $plotname, $plotname, $mapname);
 
-my($x, $top, $bot) = (94, 38, 440);
+my($top, $bot, $leftx, $rightx) = (38, 440, 94, 620);
 printf("<map id=\"%s\" name=\"%s\">\n", $mapname, $mapname);
+my($x) = $leftx;
+my($dx) = ($rightx - $leftx) / ($#customers + 2);
+$x += $dx * 0.6;
+
 foreach my $c (@customers) {
     printf("  <area shape=\"rect\" coords=\"%d,%d,%d,%d\"",
-	   $x, $top, $x+51, $bot);
-    $x += 51;
+	   $x, $top, $x+$dx-1, $bot);
+    $x += $dx;
     printf(" href=\"%CGIPFX%/r-all?q=all&amp;name=%s\" " .
 	   "alt=\"current plot for %s\" />\n", $c, $c);
 }
@@ -268,7 +272,7 @@ foreach my $c (@customers) {
 # Pointers to previous and possibly next
 #
 
-my($leftx, $rightx, $endx, $endy) = (61, 622, 640, 480);
+my($leftx, $rightx, $endx, $endy) = (93, 620, 640, 480);
 my($prev_dsp) = &previous_datespec($dsp);
 my($next_dsp) = &next_datespec($dsp);
 
@@ -300,7 +304,8 @@ my($z_type) = $zoom_in{$dsp_t};
 if (defined($z_type)) {
     my(@dsl) = &expand_datespec($dsp, $z_type, $base_tm, $ndays);
     $x = $leftx;
-    my($dx) = ($rightx - $leftx) / ($#dsl + 1);
+    my($dx) = ($rightx - $leftx) / ($#dsl + 2);
+    $x += $dx * 0.6;
 
     foreach my $ds (@dsl) {
 	printf("  <area shape=\"rect\" coords=\"%d,%d,%d,%d\"",
