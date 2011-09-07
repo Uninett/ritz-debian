@@ -21,18 +21,16 @@ proc initStatus { } {
     initBFD
 
     global IgnoreAddrs
-    set IgnoreAddrs(10.0.0.4) 1
-    set IgnoreAddrs(127.0.0.1) 1
-    set IgnoreAddrs(128.0.0.4) 1
-
     # UNINETTs anycast addresses (should be configurable)
     set IgnoreAddrs(128.39.0.85) 1
     set IgnoreAddrs(128.39.0.2) 1
 
     global IgnoreAddrPatterns
 
-    set IgnoreAddrPatterns(a) "^127\."
-    set IgnoreAddrPatterns(b) "^128\.0\.0\."
+    set IgnoreAddrPatterns(a) "^10\\."
+    set IgnoreAddrPatterns(b) "^127\."
+    set IgnoreAddrPatterns(c) "^128\\.0\\.0\\."
+    set IgnoreAddrPatterns(d) "^192\\.168\\."
 }
 
 proc isCisco { sh } {
