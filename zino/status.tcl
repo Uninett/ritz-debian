@@ -28,7 +28,7 @@ proc initStatus { } {
     global IgnoreAddrPatterns
 
     set IgnoreAddrPatterns(a) "^10\\."
-    set IgnoreAddrPatterns(b) "^127\."
+    set IgnoreAddrPatterns(b) "^127\\."
     set IgnoreAddrPatterns(c) "^128\\.0\\.0\\."
     set IgnoreAddrPatterns(d) "^192\\.168\\."
 }
