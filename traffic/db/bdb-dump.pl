@@ -19,7 +19,7 @@ if ($#ARGV < 0) {
 my $f = $ARGV[0];
 my(%db, $key, $val);
 
-tie(%db, 'BerkeleyDB::Hash', -Filename $f)
+tie %db, 'BerkeleyDB::Hash', -Filename => $f
     or die "Could not open $f: $! $BerkeleyDB::Error\n";
 
 while (($key,$val) = each %db) {
