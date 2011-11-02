@@ -295,10 +295,10 @@ proc recordIntf { sh vbl } {
     set portState($ix) $state
 }
 
-proc recordDescr { sh vbl } {
+proc recordDescr { sh vbl varprefix } {
 
     set n [name $sh]
-    set vn [format "descs_%s" $n]
+    set vn [format "%s%s" $varprefix $n]
     global $vn
 
     foreach vb $vbl {
@@ -311,20 +311,30 @@ proc recordDescr { sh vbl } {
     }
 }
 
-proc endDescrAll { sh } {
-
-    if {! [isCisco $sh]} {
-	endDescr $sh; # cisco devices use endDescr directly
-    }
+proc recordLocalDescr { sh vbl } {
+    recordDescr $sh $vbl "ldescs_"
 }
 
-proc endDescr { sh } {
+proc recordAliasDescr { sh vbl } {
+    recordDescr $sh $vbl "adescs_"
+}
+
+proc endLocalDescr { sh } {
+    endDescr $sh "ldescs_"
+}
+
+proc endAliasDescr { sh } {
+    endDescr $sh "adescs_"
+}
+
+proc endDescr { sh varprefix } {
     global portToLocIfDescr
 
     set n [name $sh]
-    set varname [format "descs_%s" $n]
+    set varname [format "%s%s" $varprefix $n]
     global $varname
     
+    set count 0
     foreach ifix [array names $varname] {
 	set ix [format "%s,%s" $n $ifix]
 	set newval [set [set varname]($ifix)]
@@ -347,16 +357,19 @@ proc endDescr { sh } {
 	    }
 	    set portToLocIfDescr($ix) $newval
 	}
+	set count [expr $count + 1]
     }
-    foreach ix [array names portToLocIfDescr] {
-	set l [split $ix ","]
-	set rp [lindex $l 0]
-	set ifix [lindex $l 1]
-	if {$rp == $n} {
-	    if {! [info exists [set varname]($ifix)]} {
-		log [format "unset desc for %s, was %s" \
-			 $ix $portToLocIfDescr($ix)]
-		unset portToLocIfDescr($ix)
+    if { $count != 0 } {
+	foreach ix [array names portToLocIfDescr] {
+	    set l [split $ix ","]
+	    set rp [lindex $l 0]
+	    set ifix [lindex $l 1]
+	    if {$rp == $n} {
+		if {! [info exists [set varname]($ifix)]} {
+		    log [format "unset desc for %s, was %s" \
+			     $ix $portToLocIfDescr($ix)]
+		    unset portToLocIfDescr($ix)
+		}
 	    }
 	}
     }
@@ -389,12 +402,12 @@ proc getDescrFields { sh } {
     global $varname
     catch { unset $varname }
 
-    bulkWalk $sh "ifAlias" 10 recordDescr endDescrAll errBulk
+    bulkWalk $sh "ifAlias" 10 recordAliasDescr endAliasDescr errBulk
 
     # Do the same for locIfDescr for Cisco devices
     # May return longer than 64 chars (ifAlias is limited to 64)
     if [isCisco $sh] {
-	bulkWalk $sh "locIfDescr" 10 recordDescr endDescr errBulk
+	bulkWalk $sh "locIfDescr" 10 recordLocalDescr endLocalDescr errBulk
     }
 }
 
