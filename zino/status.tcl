@@ -334,6 +334,9 @@ proc endDescr { sh varprefix } {
     set varname [format "%s%s" $varprefix $n]
     global $varname
     
+    set supports_varname [format "supports_%s" $varprefix]
+    global $supports_varname
+
     set count 0
     foreach ifix [array names $varname] {
 	set ix [format "%s,%s" $n $ifix]
@@ -372,6 +375,9 @@ proc endDescr { sh varprefix } {
 		}
 	    }
 	}
+	set [set supports_varname]($n) 1
+    } else {
+	set [set supports_varname]($n) 0
     }
     catch { unset [set varname] }
 }
@@ -398,16 +404,23 @@ proc description { ix } {
 proc getDescrFields { sh } {
 
     set n [name $sh]
-    set varname [format "descs_%s" $n]
-    global $varname
-    catch { unset $varname }
 
-    bulkWalk $sh "ifAlias" 10 recordAliasDescr endAliasDescr errBulk
+    foreach vn { "ldescs_" "adescs_" } {
+	set varname [format "%s%s" $vn $n]
+	global $varname
+	catch { unset $varname }
+    }
 
-    # Do the same for locIfDescr for Cisco devices
-    # May return longer than 64 chars (ifAlias is limited to 64)
-    if [isCisco $sh] {
-	bulkWalk $sh "locIfDescr" 10 recordLocalDescr endLocalDescr errBulk
+    global supports_adescs_
+
+    if [info exists supports_adescs_($n)] {
+	if { $supports_adescs_($n) == 1 } {
+	    bulkWalk $sh "ifAlias" 10 recordAliasDescr endAliasDescr errBulk
+	} else {
+	    bulkWalk $sh "locIfDescr" 10 recordLocalDescr endLocalDescr errBulk
+	}
+    } else {
+	bulkWalk $sh "ifAlias" 10 recordAliasDescr endAliasDescr errBulk
     }
 }
 
