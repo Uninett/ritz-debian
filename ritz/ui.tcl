@@ -271,7 +271,9 @@ proc uiOpenServer { } {
     global User Secret
     if { [info exists User] && [info exists Secret] } {
 	authUser $User $Secret
-	notifyOpen handleNotify
+	if [ catch { newNotifyOpen handleNotify } ] {
+	    notifyOpen handleNotify; # do it the old style
+	}
     }
 
     # Pull in cases from newly opened server

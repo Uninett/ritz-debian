@@ -340,14 +340,14 @@ proc doHelpCmd { chan l } {
 	ClientResponse $chan \
 		"200- ADDHIST CASEIDS CLEARFLAP COMMUNITY GETATTRS GETHIST"
 	ClientResponse $chan \
-		"200- GETLOG HELP NSOCKET POLLINTF POLLRTR QUIT SETSTATE PM"
+		"200- GETLOG HELP NSOCKET NTIE POLLINTF POLLRTR QUIT SETSTATE"
 	ClientResponse $chan \
-	        "200  VERSION"
+	        "200  PM VERSION"
     } elseif [PermitROaccess $chan] {
 	ClientResponse $chan \
 		"200- CASEIDS GETATTRS GETHIST"
 	ClientResponse $chan\
-		"200  GETLOG HELP NSOCKET QUIT USER PM VERSION"
+		"200  GETLOG HELP NSOCKET NTIE QUIT USER PM VERSION"
     } else {
 	ClientResponse $chan "200  HELP QUIT USER VERSION"
     }
@@ -595,6 +595,9 @@ proc ServerCmd { chan line } {
 	nsocket {
 	    doNsocketCmd $chan $l
 	}
+	ntie {
+	    doNtieCmd $chan $l
+	}
 	caseids {
 	    doCaseidsCmd $chan $l
 	}
@@ -701,6 +704,54 @@ proc endAddHist { chan id var } {
 }
 
 # Notification (sub)module
+
+if { [info exists NotifyServerSocket] } {
+    close $NotifyServerSocket
+}
+
+set NotifyServerSocket [socket -server newNotifyConn 8002]
+
+proc getNonce { } {
+
+    set n [exec dd if=/dev/urandom count=128 bs=1 2> /dev/null | %SHA%]
+    return $n
+}
+
+proc newNotifyConn { chan chost cport } {
+    global NotifyChan
+
+    fconfigure $chan -buffering line
+    fconfigure $chan -blocking false
+    fcntl $chan KEEPALIVE 1
+
+    set n [getNonce]
+    puts $chan $n
+
+    set NotifyChan($n) $chan
+}
+
+proc doNtieCmd { chan l } {
+    global NotifyChan
+    global ClientNotify
+
+    if { ! [PermitROaccess $chan] } {
+	errResponse $chan "Not authenticated"
+	return
+    }
+    if { [llength $l] < 2 } {
+	errResponse $chan "ntie needs 1 parameter (nonce)"
+	return
+    }
+    set nonce [lindex $l 1]
+
+    if [info exists NotifyChan($nonce)] {
+	set ClientNotify($chan) $NotifyChan($nonce)
+	unset NotifyChan($nonce)
+	okResponse $chan
+	return
+    }
+    errResponse $chan "Could not find your notify socket"
+}
 
 proc openNotifyConn { chan host port } {
     global ClientNotify

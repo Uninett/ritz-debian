@@ -279,8 +279,31 @@ proc clearFlap { router intf } {
 # remember association so that closeServer can close the notify
 # socket as well.
 
-proc notifyOpen { handler } {
+proc newNotifyOpen { handler } {
     global NotifyConn
+    global ServerChan
+
+    set chan $ServerChan
+
+    set l [fconfigure $chan -peername]
+    set serv [lindex $l 0]
+    if [catch {
+	set ns [socket $serv 8002]
+    }] {
+	error [format "Could not open new server notify socket, fallback"]
+    }
+    safeGets $ns nonce
+    safePuts $chan [format "ntie %s" $nonce]
+    safeGets $chan l
+    if {! [regexp "^200 " $l]} {
+	error [format "error setting up notify channel: %s" $l]
+    }
+    set NotifyConn $ns
+    fconfigure $ns -buffering line
+    fileevent $ns readable [list $handler $ns]
+}
+
+proc notifyOpen { handler } {
     global NotifyHandler
     global NotifyAcceptChan
     global ServerChan
@@ -310,7 +333,6 @@ proc notifyAccept { chan addr port } {
     global NotifyConn
     global NotifyHandler
     global NotifyAcceptChan
-    global ServerChan
 
 #    puts [format "notifyAccept entered: chan %s addr %s port %s" \
 #	    $chan $addr $port]
