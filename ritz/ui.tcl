@@ -236,7 +236,7 @@ proc uiAbout { } {
     $w tag configure t1 -justify center
     $w insert end "(c) UNINETT and NORDUnet\n" t2
     $w tag configure t2 -justify center
-    $w insert end "1998 - 2008\n" t3
+    $w insert end "1998 - 2012\n" t3
     $w tag configure t3 -justify center
 
     $w configure -state disabled
