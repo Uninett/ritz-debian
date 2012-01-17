@@ -1,3 +1,184 @@
+2012-01-17  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Bump version number.
+
+2012-01-16  Havard Eidnes  <he@uninett.no>
+
+	* ritz/net.tcl, ritz/ui.tcl, zino/server.tcl:
+	Implement new style notify connection setup, where only the server
+	listens for connections.  Implement some minimal protection using
+	a random string to be repeated back to the server to tie together
+	a normal server connection and the new notify connection.  Until
+	that is done, no other traffic than the nonce is set on the notify
+	connection, which uses port 8002.
+
+	Ritz falls back to the old style notify connection setup if the
+	new style setup fails for some reason.
+
+	This should make it possible to use ritz from behind a NAT device.
+
+2011-12-12  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/pretty-ios.pl: Add minimal handling of IOS-XR.
+
+2011-11-03  Havard Eidnes  <he@uninett.no>
+
+	* zino/test-traps.tcl:
+	Remove remnants of "/store", use NetBSD's /usr/pkg/bin instead.
+
+	* zino/status.tcl:
+	First try to get interface descriptions using ifAlias.
+	Only if that returns an empty table, revert to trying locIfDescr,
+	despite the latter possibly returning a longer string.
+	The reason is that some newer IOS boxes has started returning
+	an incomplete list of interface descriptions when queried for
+	via locIfDescr.
+
+2011-11-02  Havard Eidnes  <he@uninett.no>
+
+	* zino/status.tcl:
+	Avoid race by having the two methods of getting the interface
+	descriptions use different variables to stash their stuff.
+	Problem uncovered by Cisco IOS-XR which no longer supports
+	the ancient locIfDescr MIB variables, and therefore ended up
+	with empty interface descriptions.
+
+2011-10-14  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/bdb-dump.pl:
+	Fix the tie syntax so that this actually works.
+
+2011-10-07  Havard Eidnes  <he@uninett.no>
+
+	* ritz/ui.tcl: Add alarm type case types to sort on.
+
+2011-09-16  Havard Eidnes  <he@uninett.no>
+
+	* zino/status.tcl: Typo correction.
+
+2011-09-07  Havard Eidnes  <he@uninett.no>
+
+	* zino/status.tcl: Make some patterns which actually work.
+	Remove some 10.0.0.*, 127.* and 128.* explicitly ignored addresses.
+
+2011-08-12  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/mk-top10.pl, traffic/cgi/top10.pl:
+	Change how we compute placement of the rectangles which refer to
+	customer-specific plots.  Fix an off-by-one error: $# is "index of
+	last entry", not "number of entries".  Also correct the left edge of
+	the plot (I wonder if the larger numbers affect this...)
+
+2011-08-08  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/Makefile: Fix so that "make clean" works.
+
+2011-06-22  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/cur-vers.pl:
+	Replace now-deprecated defined(%hash) by testing one of the elements
+	instead.
+
+	* traffic/cgi/r-all.pl:
+	Widen the plots slightly, from 400 to 450 pixels, to fit more text
+	and legend, to avoid ugly text wrapping.
+
+	* vwatch/Makefile: Fix typo.
+
+	* traffic/site/default.rng: Modernize to by default do higher speeds.
+
+	* traffic/db/warn-dups.pl: Warn if ; is found in description fields.
+
+	* traffic/common/timelocal.pl: Use :: instead of '.
+
+	* emt/emt.tcl:
+	Support _ as a replacement for ' ' in description fields.
+	If emt_alarm_to isn't set, warn about it.
+
+	* Makefile.inc.dist: Add DESCFILE setting.
+
+2011-05-25  Havard Eidnes  <he@uninett.no>
+
+	* INSTALL: Add p5-BerkeleyDB as a requirement.
+
+	* traffic/db/update-dbs.pl, traffic/db/update-close.pl,
+	traffic/db/bdb-load.pl, traffic/db/bdb-dump.pl,
+	traffic/db/db-lookup.pl:
+	Implement BerkeleyDB as a preferred alternative to the original "bdm"
+	hashed files (which are BerkeleyDB version 1, in all probability).  If
+	database files named ntf.bdb and ftn.bdb exists, they will be
+	preferred over the older "dbm" hashed files, and accessed using the
+	BerkeleyDB perl module.
+
+	This is done because at least one installation of zino has hit a bug
+	or a limitation in the original "dbm" implementation, causing a
+	segfault with perl 5.8 and a perl-internal panic with perl 5.12, both
+	of which are avoided if using BerkeleyDB with version 4 DB library and
+	databases.
+
+	Convert to ntf.bdb and ftn.bdb by using "../bin/dbm-dump ftn > ftn"
+	and subsequently "../bin/bdb-load ftn.bdb ftn", which will create the
+	ftn.bdb database, and correspondingly for the ntf database.
+
+2011-04-05  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Ignore two more directives, apparently emitted by tgif 4.2.2.
+
+2011-04-03  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/vw-daily.pl:
+	Adapt to "use strict;", prepare for perl 5.12 which doesn't by default
+	split into @_...
+
+2011-04-01  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/top10.pl, traffic/common/new-read-hr-log.pl,
+	traffic/common/new-read-raw-log.pl, traffic/jobs/check-deltas.pl,
+	traffic/jobs/convert-data.pl, traffic/jobs/fixup-data.pl,
+	traffic/jobs/print-old.pl, traffic/jobs/split-new-data.pl,
+	traffic/report/cust-load-now.pl,
+	traffic/report/mk-customer-index.pl, traffic/report/mk-top10.pl:
+	Prepare for perl 5.12, by explicitly putting the result of split()
+	into @_.
+
+2011-02-15  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/cur-vers.pl:
+	Remove a possible trailing newline (seen from D-Link switches).
+
+2011-01-31  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/pretty-ios.pl: Also recognize Cisco CatOS.
+
+2010-12-08  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl:
+	Short-circuit if we didn't actually collect any new data for a given
+	variable.  This appears to be triggered when logical ports are moved
+	around...
+
+2010-11-01  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/date.pl:
+	Allow for up to 2h DST change when moving between days around
+	a DST shift.
+
+2010-10-25  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/warn-dups.pl:
+	Make -t argument optional, default to installed topdir.
+	Make the output easier to handle: print device name and interface name
+	instead of just the raw key made up of device name and ifIndex.
+
+2010-10-08  Havard Eidnes  <he@uninett.no>
+
+	* ChangeLog: Add more changes to be included in 0.9.9.1.
+
+	* traffic/common/Makefile:
+	Reinstate installation of read-5m-sum.pl, which was mistakenly
+	removed.
+
 2010-10-07  Havard Eidnes  <he@uninett.no>
 
 	* ChangeLog: Add changes for 0.9.9.1.
