@@ -6,7 +6,7 @@ Build-Depends: pmake
 Standards-Version: 0.9
 
 Package: ritz
-Architecture: any
+Architecture: all
 Depends: ${shlibs:Depends}, scotty, tix
 Description: RITZ is "Remote Interface to ZINO"
  Ritz is a TK-based user interface to ZINO.
