@@ -301,9 +301,14 @@ proc uiCloseServer { } {
     # "forget" all attributes
     AttrForgetAll
 
-    set allCases {}
-    set filteredCases {}
-    set sortedCases {}
+    foreach v "allCases filteredCases sortedCases" {
+	global $v
+	set $v {}
+    }
+    catch {
+	global knownCase
+	unset knownCase
+    }
 
     uiDisplaySummary $sortedCases
 }
