@@ -36,6 +36,7 @@ source "zino.cf"
 ::persist::setup $persist_file
 ::persist::restore
 
+initAgent
 initEvent $eventid_file $old_events
 initFlaps
 initStatus
