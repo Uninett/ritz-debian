@@ -1,3 +1,47 @@
+2012-01-22  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Mark this as version 0.9.9.3.
+
+	* zino/server.tcl: No safeGets in the server, use gets instead.
+
+	* ritz/net.tcl: Remove debugging output.
+
+	* ritz/net.tcl:
+	Add support for optional application-level keepalive, to maintain
+	mapping state in a NAT/PT device along the path.  This is enabled
+	by setting the global TCL variable Keepalive to the number of seconds
+	to expire between each keepalive activity.  Both the normal command
+	socket as well as the notify socket gets this treatment.
+
+	* mibs/UNINETT-SMI.my:
+	Use official assignment in the UNINETT OID space.
+
+	* zino/server.tcl: Consume any data arriving on the notify sockets.
+
+2012-01-19  Havard Eidnes  <he@uninett.no>
+
+	* mibs/UNINETT-SMI.my, mibs/UNINETT-ZINO-MIB.my, zino/agent.tcl,
+	zino/zino-main.tcl:
+	Implement a small SNMP agent listening on  port 8000, responding
+	with how many seconds the current zino instance has been running.
+
+2012-01-18  Havard Eidnes  <he@uninett.no>
+
+	* ritz/ui.tcl:
+	Fix a bug which caused old state related to a connection and the
+	events collected via it to not be cleaned up when the connection is
+	closed.
+
+2012-01-17  Havard Eidnes  <he@uninett.no>
+
+	* ritz/debian/control: bugfix
+
+	* ritz/ui.tcl: Bump end year of copyright range.
+
+	* ChangeLog: Add changes done since the previous release.
+
+	* Makefile: Bump version number.
+
 2012-01-17  Havard Eidnes  <he@uninett.no>
 
 	* Makefile: Bump version number.
