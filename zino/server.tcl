@@ -733,7 +733,7 @@ proc newNotifyConn { chan chost cport } {
 
 proc NotifySink { chan } {
 
-    safeGets $chan l
+    gets $chan l
 }
 
 proc doNtieCmd { chan l } {
