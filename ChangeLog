@@ -1,5 +1,9 @@
 2012-01-22  Havard Eidnes  <he@uninett.no>
 
+	* mibs/Makefile: Install the new Zino-related MIB files.
+
+	* zino/Makefile: Also include the agent.tcl file.
+
 	* Makefile: Mark this as version 0.9.9.3.
 
 	* zino/server.tcl: No safeGets in the server, use gets instead.
