@@ -10,7 +10,8 @@ proc openServer { host port } {
     global AuthChallenge
     global ServerChan
     global Authenticated
-
+    global Keepalive KeepaliveJob
+    
     if { [info exists ServerChan] } {
 	error [format "server connection already open on %s" $ServerChan]
     }
@@ -24,12 +25,34 @@ proc openServer { host port } {
     }
     set AuthChallenge($s) [lindex [split $l " "] 1]
     set ServerChan $s
+
+    if [info exists Keepalive] {
+	set KeepaliveJob \
+	    [job create \
+		 -interval [expr 1000 * $Keepalive] \
+		 -command [list serverKeepalive $s]]
+	puts "Normal keepalive job created" 
+    } else {
+	puts "No keepalive job created"
+    }
+}
+
+proc serverKeepalive { chan } {
+    global allCases
+
+    set t [getLog [lindex $allCases 0]]
 }
 
 proc closeServer { } {
     global NotifyConn NotifyAcceptChan NotifyHandler
     global ServerChan
     global Authenticated
+
+    global NotifyKeepaliveJob
+    catch { $NotifyKeepaliveJob destroy }
+
+    global KeepaliveJob
+    catch { $KeepaliveJob destroy }
 
     set Authenticated 0
     set chan $ServerChan
@@ -282,6 +305,7 @@ proc clearFlap { router intf } {
 proc newNotifyOpen { handler } {
     global NotifyConn
     global ServerChan
+    global Keepalive NotifyKeepaliveJob
 
     set chan $ServerChan
 
@@ -301,6 +325,22 @@ proc newNotifyOpen { handler } {
     set NotifyConn $ns
     fconfigure $ns -buffering line
     fileevent $ns readable [list $handler $ns]
+
+    if [info exists Keepalive] {
+	set NotifyKeepaliveJob \
+	    [job create \
+		 -interval [expr 1000 * $Keepalive] \
+		 -command [list notifyKeepalive $ns] \
+		 ]
+	puts "Notify keepalive job created"
+    } else {
+	puts "No notify keepalive job created"
+    }
+}
+
+proc notifyKeepalive { ns } {
+
+    safePuts $ns "Keepalive"
 }
 
 proc notifyOpen { handler } {
