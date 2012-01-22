@@ -1,4 +1,4 @@
-#
+
 # $Id$
 # 
 
@@ -31,9 +31,6 @@ proc openServer { host port } {
 	    [job create \
 		 -interval [expr 1000 * $Keepalive] \
 		 -command [list serverKeepalive $s]]
-	puts "Normal keepalive job created" 
-    } else {
-	puts "No keepalive job created"
     }
 }
 
@@ -332,9 +329,6 @@ proc newNotifyOpen { handler } {
 		 -interval [expr 1000 * $Keepalive] \
 		 -command [list notifyKeepalive $ns] \
 		 ]
-	puts "Notify keepalive job created"
-    } else {
-	puts "No notify keepalive job created"
     }
 }
 
