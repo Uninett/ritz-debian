@@ -723,11 +723,17 @@ proc newNotifyConn { chan chost cport } {
     fconfigure $chan -buffering line
     fconfigure $chan -blocking false
     fcntl $chan KEEPALIVE 1
+    fileevent $chan readable [list NotifySink $chan]
 
     set n [getNonce]
     puts $chan $n
 
     set NotifyChan($n) $chan
+}
+
+proc NotifySink { chan } {
+
+    safeGets $chan l
 }
 
 proc doNtieCmd { chan l } {
@@ -767,6 +773,7 @@ proc openNotifyConn { chan host port } {
     fconfigure $s -blocking false
     fconfigure $s -buffering line
     fcntl $s KEEPALIVE 1
+    fileevent $s readable [list NotifySink $s]
     set ClientNotify($chan) $s
 }
 
