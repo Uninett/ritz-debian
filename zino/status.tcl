@@ -21,9 +21,11 @@ proc initStatus { } {
     initBFD
 
     global IgnoreAddrs
-    # UNINETTs anycast addresses (should be configurable)
+    # UNINETTs anycast PIM RP addresses (should be configurable)
     set IgnoreAddrs(128.39.0.85) 1
     set IgnoreAddrs(128.39.0.2) 1
+    # SUNET PIM RP address
+    set IgnoreAddrs(193.10.80.229) 1
 
     global IgnoreAddrPatterns
 
