@@ -66,16 +66,20 @@ namespace eval ::polljob {
     proc setup { dev } {
 	variable cx
 
-	set ip	      [::config::conf $dev address]
+	set address   [::config::conf $dev address]
 	set community [::config::conf $dev community]
 	set intv      [::config::conf $dev interval]
 	set version   [snmpVersion $dev]
+	set timeout   [::config::conf $dev timeout]
+	set retries   [::config::conf $dev retries]
 
 	if [catch {
 	    set s [snmp session \
-		    -address $ip \
-		    -community $community \
-		    -version $version \
+		       -address $address \
+		       -community $community \
+		       -version $version \
+		       -timeout $timeout \
+		       -retries $retries \
 		    ]
 	} msg] {
 	    puts stderr "snmp session failed for device $dev: $msg"
