@@ -37,7 +37,11 @@ proc openServer { host port } {
 proc serverKeepalive { chan } {
     global allCases
 
-    set t [getLog [lindex $allCases 0]]
+    if { [llength $allCases] > 0 } {
+	set t [getLog [lindex $allCases 0]]
+    } else {
+	set t [getLog 0];	# dummy, will give error, but will keepalive
+    }
 }
 
 proc closeServer { } {
