@@ -25,7 +25,7 @@ namespace eval ::config {
     set known_attrs(watchpat) 1
     set known_attrs(priority) 1
     set known_attrs(timeout) 1
-    set known_attrs(retry) 1
+    set known_attrs(retries) 1
     set known_attrs(domain) 1
     set known_attrs(statistics) 1
     set known_attrs(hcounters) 1
@@ -35,7 +35,7 @@ namespace eval ::config {
     set defaults(community) "public"
     set defaults(interval) 15
     set defaults(timeout) 5
-    set defaults(retry) 3
+    set defaults(retries) 3
     set defaults(statistics) "yes"
     set defaults(hcounters) "no"
 
