@@ -1,3 +1,24 @@
+2012-01-25  Havard Eidnes  <he@uninett.no>
+
+	* Makefile: Mark this as version 0.9.9.4.
+
+	* common/config.tcl:
+	Rename "retry" to "retries", to match what scotty documents.
+
+	* common/polljob.tcl:
+	Add support for actually using the "timeout" and "retries" config
+	variables, and rename "retry" to "retries" in the process.  These were
+	accepted but not used earlier.
+
+	* ritz/net.tcl:
+	Try to get the log for event 0 if there are no active events.
+	This will cause the server to give an error, but it will nevertheless
+	keep the connection alive.
+
+	* zino/status.tcl:
+	Handle empty address and description tables by just returning.
+	Might be caused by restricted SNMP access.
+
 2012-01-22  Havard Eidnes  <he@uninett.no>
 
 	* mibs/Makefile: Install the new Zino-related MIB files.
