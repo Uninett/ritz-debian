@@ -92,6 +92,9 @@ proc endAddr { sh } {
     set vn [format "addrs_%s" $n]
     global $vn
     
+    # Empty address table or no SNMP access
+    if { ! [info exists $vn] } { return; }
+
     foreach a [set $vn] {
 	if [ignoreAddress $a] {
 	    continue
@@ -336,6 +339,9 @@ proc endDescr { sh varprefix } {
     
     set supports_varname [format "supports_%s" $varprefix]
     global $supports_varname
+
+    # Empty table or no SNMP access
+    if { ! [info exists $varname] } { return; }
 
     set count 0
     foreach ifix [array names $varname] {
