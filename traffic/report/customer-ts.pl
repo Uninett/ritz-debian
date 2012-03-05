@@ -192,6 +192,7 @@ sub compute_basic_values {
     my($i);
     our(%count, %sample_secs);
     our($opt_V);
+    our($ifspeed);
 
     for ($i = $start; $i <= $end; $i++) {
 	if (!defined($sample_secs{$i-1})) {
@@ -212,10 +213,28 @@ sub compute_basic_values {
 	    my($mult) = $d->{$k}->{"mult"};
 
 	    my($v) = 0;
+	    my($ov) = 0;
 	    foreach my $var (@vars) {
 		$v += $count{$var,$i};
+		if ($var =~ /Octets/o) {
+		    $ov = 1;
+		}
 	    }
 	    my($val) = $v * $mult / $delta_t;
+
+	    # If processing an octet counter, check that we're
+	    # within ifSpeed's range, balk otherwise and set sample to zero.
+	    if ($ov && $ifspeed != 0) {
+		my($br) = $val * 1000.0;
+		if ($br > $ifspeed) {
+		    printf(STDERR
+			   "ERROR: Bitrate above ifSpeed for %s: %s vs %s" .
+			   ", sample ignored\n",
+			   $b, $br, $ifspeed);
+		    $val = 0;
+		}
+	    }
+
 	    push(@$ap, $val);
 	    if ($opt_V) {
 		printf(STDERR " %s: %14f", $k, $val);

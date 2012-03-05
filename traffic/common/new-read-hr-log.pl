@@ -169,6 +169,14 @@ sub new_read_log {
 	if (/Octets/) {
 	    if ($delta_time > 30) {	# Skip too small intervals (inaccurate)
 		my $delta_rate = $delta / $delta_time;
+
+		if ($ifspeed != 0) {
+		    if ($delta_rate * 8 > $ifspeed) {
+			$delta_rate = 0; # ignore, unreasonable
+			$delta = 0;
+		    }
+		}
+
 		if (!defined($max_rate{$v, $h}) ||
 		    $delta_rate > $max_rate{$v, $h})
 		{

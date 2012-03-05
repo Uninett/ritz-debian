@@ -71,6 +71,8 @@ sub read_log {
     my($h0_seen) = 0;
     my(%dstcomp);
     my($lasttime_uncomp, $dstcomp, $computed_dst);
+    our($ifspeed, $iftype, $ifdescr, $max_sample);
+    our($date, %count, %max_rate, %sample_delta, %sample_time);
 
     $sample_no = 0;
     while (<$fh>) {
@@ -223,6 +225,14 @@ sub read_log {
 	if (/Octets/) {
 	    if ($delta_time > 30) {	# Skip too small intervals (inaccurate)
 		$delta_rate = $delta / $delta_time;
+
+		if ($ifspeed != 0) {
+		    if ($delta_rate * 8 > $ifspeed) {
+			$delta_rate = 0;
+			$delta = 0;
+		    }
+		}
+
 		if (!defined($max_rate{$v, $h}) ||
 		    $delta_rate > $max_rate{$v, $h})
 		{

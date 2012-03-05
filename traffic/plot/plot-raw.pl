@@ -81,6 +81,7 @@ sub plot_traffic_common {
     my($i, $h, $val, $v, %then, $now, %add);
     my($started) = 0;
     my(@vars);
+    our($ifspeed);
 
     $vars[0] = &octets_var("in");
     $vars[1] = &octets_var("out");
@@ -117,8 +118,15 @@ sub plot_traffic_common {
 		$add{$v} += $count{$v,$i}; # But add data
 	    } else {
 		$then{$v} = $now;
-		&maxit($val = &$compute_val($count{$v,$i} + $add{$v},
-					    $time_delta));
+		$val = &$compute_val($count{$v,$i} + $add{$v},
+				     $time_delta);
+		if ($v =~ /Octets/ && $ifspeed != 0) {
+		    if ($val * 1000.0 > $ifspeed) {
+			$val = 0;
+		    }
+		}
+
+		&maxit($val);
 		$add{$v} = 0;
 		if ($v =~ /In/) {
 		    $in = $val;
