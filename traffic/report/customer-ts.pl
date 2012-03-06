@@ -77,6 +77,7 @@ sub save_file {
 		"save_lasttime" => \%save_lasttime,
 		"save_varnames" => \%save_varnames,
 		"lastfilebase" => \%lastfilebase,
+		"ifspeed" => \%ifspeed,
     );
 %save_vars = ("date" => \$date);
 

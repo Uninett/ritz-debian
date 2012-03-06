@@ -63,17 +63,17 @@ require 'read-raw-log.pl';
 # reverse packet and byte counters
 
 %rev_ctr = (
-	    "ifInUcastPkts" => "ifOutUcastPkts",
-	    "ifInNUcastPkts" => "ifOutNUcastPkts",
-	    "ifOutUcastPkts" => "ifInUcastPkts",
-	    "ifOutNUcastPkts" => "ifInNUcastPkts",
-	    
-	    "ifInOctets" => "ifOutOctets",
-	    "ifOutOctets" => "ifInOctets",
+    "ifInUcastPkts" => "ifOutUcastPkts",
+    "ifInNUcastPkts" => "ifOutNUcastPkts",
+    "ifOutUcastPkts" => "ifInUcastPkts",
+    "ifOutNUcastPkts" => "ifInNUcastPkts",
+    
+    "ifInOctets" => "ifOutOctets",
+    "ifOutOctets" => "ifInOctets",
 
-	    "ifHCInOctets" => "ifHCOutOctets",
-	    "ifHCOutOctets" => "ifHCInOctets",
-	    );
+    "ifHCInOctets" => "ifHCOutOctets",
+    "ifHCOutOctets" => "ifHCInOctets",
+    );
 
 
 sub sprint_hms {
@@ -98,7 +98,8 @@ sub read_5m_sum {
     our($max_sample, $min_sample);
     my($my_min_sample, $my_max_sample);
     my($reverse, $mv);
-    our(%save_base, %save_lasttime, %save_varnames, $date);
+    our($ifspeed, $date);
+    our(%save_base, %save_lasttime, %save_varnames, %save_ifspeed);
     our(%base, %lasttime, %firsttime, %leftover, %position);
     our(%lastfilebase);
     our(%dstcomp, %save_dstcomp);
@@ -228,11 +229,19 @@ sub read_5m_sum {
 	    }
 	}
 
+	undef($ifspeed);
+
 	&read_log(DAYLOG, $zero_tm, $td);
 	if ($seekable) {
 	    $position{$base} = tell(DAYLOG);
 	}
 	close(DAYLOG);
+
+	if (!defined($ifspeed) && defined($save_ifspeed{$line})) {
+	    $ifspeed = $save_ifspeed{$line};
+	} elsif (defined($ifspeed)) {
+	    $save_ifspeed{$line} = $ifspeed;
+	}
 
 	foreach my $v (keys %base) {
 	    $save_base{$line,$v} = $base{$v};
@@ -305,6 +314,32 @@ sub read_5m_sum {
 		# may accidentally have read whole log, but have seen
 		# partial data for the day earlier
 		$sno++;
+	    }
+
+	    if (defined($ifspeed) && $mv =~ /ifHC.*Octets/o) {
+		my($s, $r, $dt);
+
+		for($s = $sno; $s <= $max_sample; $s++) {
+		    $dt = ($sample_time{$s} - $sample_time{$s-1}) * 3600.0;
+		    if ($dt != 0) {
+			$r = $count{$mv,$s} * 8 / $dt;
+			if ($r > $ifspeed) {
+			    my($e);
+			    $e = sprintf("Data rate over ifSpeed: %s vs. %s, " .
+					 "name %s file %s date %s time %s\n",
+					 $r, $ifspeed,
+					 $line, $base, $date,
+					 $sample_time{$s});
+			    $err .= $e;
+			    if ($opt_v) {
+				printf(STDERR "%s", $e);
+			    }
+			    # cap octet counts at interface speed
+			    # drop any samples which exceeds
+			    $count{$mv,$s} = 0;
+			}
+		    } # Otherwise hope for the best and leave it alone
+		}
 	    }
 
 	    if ($opt_V) {
