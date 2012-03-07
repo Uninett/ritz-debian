@@ -867,7 +867,12 @@ sub report {
 sub check_and_report {
     my($dsp, $dsp_t);
     my($tm, $nd, $dn, $find, $reporter, $sortfield);
-    our(%in);
+    our(%in, %rd_finder);
+
+    if (!defined($rd_finder{$in{"dsp-type"}})) {
+	&err("Illegal datespec type");
+	return undef;
+    }
 
     $dsp = &make_datespec($dsp_t = $in{"dsp-type"}, $in{"datespec"});
     # Pretend that the unambiguated datespec returned was what
