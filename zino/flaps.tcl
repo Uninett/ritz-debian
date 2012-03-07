@@ -417,7 +417,7 @@ proc linkTrans { router ifIndex descr updown reason } {
 	    eventLog $eid $s
 	    
 	    unset flapping($ix)
-	    set portState($ix) "flapping"
+	    set portState($ix) [string tolower $updown]
 	    unFlap $ix
 	}
 	
