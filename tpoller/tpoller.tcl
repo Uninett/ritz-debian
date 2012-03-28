@@ -269,14 +269,16 @@ proc getVarList { sh } {
     set name [::polljob::name $sh]
 
     set vl [list "ifInUcastPkts" "ifInNUcastPkts" "ifInDiscards" \
-	    "ifInErrors" "ifOutUcastPkts" "ifOutNUcastPkts" \
-	    "ifOutDiscards" "ifOutErrors"]
+		"ifInErrors" "ifOutUcastPkts" "ifOutNUcastPkts" \
+		"ifOutDiscards" "ifOutErrors" \
+		"ifInMulticastPkts" "ifOutMulticastPkts" \
+		"ifInBroadcastPkts" "ifOutBroadcastPkts" \
+	       ]
 
     if { [::config::conf $name "hcounters"] != "no" } {
-	lappend vl "ifHCInOctets" "ifHCOutOctets" "ifInOctets" "ifOutOctets"
-    } else {
-	lappend vl "ifInOctets" "ifOutOctets"
+	lappend vl "ifHCInOctets" "ifHCOutOctets"
     }
+    lappend vl "ifInOctets" "ifOutOctets"
 
     if { [oidPfxMatch [mib oid cisco] $cx([name $sh],sysid)] } {
 	lappend vl "locIfInRunts" "locIfInGiants" \
