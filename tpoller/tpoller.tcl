@@ -122,7 +122,10 @@ proc uptimeProcess { sh err vbl call_continue } {
 proc expectedUptime { name newup } {
     global cx uptimeSlop
 
-    if { ! [info exists cx($name,uptime)] } { return 0; }
+    if { ! [info exists cx($name,uptime)] } {
+	set cx($name,uptime) $newup
+	return 0;
+    }
     set lastuptime $cx($name,uptime)
     set cx($name,uptime) $newup
 
