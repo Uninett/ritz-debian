@@ -101,15 +101,18 @@ proc errIntf { sh err } {
 #
 
 proc uptimeProcess { sh err vbl call_continue } {
+    global cx
 
     if { $err != "noError" } {
 	set msg [format "Uptime poll FAILED for %s: %s" [name $sh] $err]
 	logerr $msg
 	return
     }
-    set name [lindex [lindex $vbl 0] 0]
+    set varname [lindex [lindex $vbl 0] 0]
     set value [lindex [lindex $vbl 0] 2]
-    set uptime [mib scan $name $value]
+    set uptime [mib scan $varname $value]
+
+    set name [name $sh]
     if { ! [expectedUptime $name $uptime] } {
 	# record timestamp for use later
 	set cx($name,reload) [expr [clock seconds] - $uptime / 100]
@@ -130,7 +133,9 @@ proc expectedUptime { name newup } {
     set cx($name,uptime) $newup
 
     # We don't know what to expect in this case
-    if { ! [info exists cx($name,lastpoll)] } { return 0; }
+    if { ! [info exists cx($name,lastpoll)] } { 
+	return 0;
+    }
 
     # Estimate new expected uptime
     set now [clock seconds]
@@ -148,12 +153,14 @@ proc expectedUptime { name newup } {
 	return 1
     }
 
-    if { $cx($name,uptime) == 0 } { return 0; }
+    if { $cx($name,uptime) == 0 } { 
+	return 0;
+    }
 
     if { $newup < $estup - $uptimeSlop } {
 	set msg [format \
 "%s: unexpected uptime, newup %s estup %s lastuptime %s lastpoll %s time %s" \
-		     $name $newup $estup $uptimeSlop \
+		     $name $newup $estup \
 		     $lastuptime $cx($name,lastpoll) $now]
 	logerr $msg
 	return 0
