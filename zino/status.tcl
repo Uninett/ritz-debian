@@ -804,9 +804,9 @@ proc schedPollRouter { sh } {
 #    log [format "debug: %s scheduled poll in %d ms" [name $sh] $msintv]
 }
 
-# Poll BGP once every 5 rounds
+# Poll BGP once every other round
 
-set delay_factor(checkBGP) 5
+set delay_factor(checkBGP) 1
 set delay_factor(checkJNXalarm) 0
 set delay_factor(checkBFD) 0
 
