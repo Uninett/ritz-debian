@@ -30,7 +30,7 @@ proc initEvent { saveFile saveDir } {
 	set e $EventId($ix)
 	initEventAttrs $e
     }
-#    fixupEventIdToIx
+    fixupEventIdToIx
     fixupEventState
 }
 
@@ -58,19 +58,6 @@ proc fixupEventState { } {
 proc initEventAttrs { id } {
 
     ::persist::add ::EventAttrs_$id
-}
-
-proc fixupEventIdToIx { } {
-    global EventId
-    global EventIdToIx
-
-    foreach ix [array names EventId] {
-	set id $EventId($ix)
-	if { ! [info exists EventIdToIx($id)] } {
-	    puts [format "fixed up %s" $id]
-	    set EventIdToIx($id) $ix
-	}
-    }
 }
 
 proc setEventFile { file } {
@@ -483,7 +470,7 @@ proc eventExists { id } {
 # Close all events related to router 'r' with reason 'msg'
 
 proc closeEventsOnRouter { r msg } {
-    global EventIdToIx
+    global EventId
 
     # Close out any remaining reachability problems
     if [eventIxExists $r "reachability"] {
@@ -494,9 +481,9 @@ proc closeEventsOnRouter { r msg } {
 	eventCommit $eid
     }
 
-    # Close out any remaining portstate problems
-    foreach eid [array names EventIdToIx] {
-	set l [split $EventIdToIx($eid) ","]
+    # Close out any remaining events on this device
+    foreach ix [array names EventId] {
+	set l [split $ix ","]
 	if { [lindex $l 0] == $r } {
 	    eventHistoryAdd $eid "monitor" $msg
 	    eventLog $eid $msg
@@ -630,8 +617,6 @@ proc dumpEventIds { } {
 proc dumpEvent { id } {
     set Attrs EventAttrs_$id
     global $Attrs
-    global EventState
-    global EventIdToIx
 
     foreach ix [array names [set Attrs]] {
 	puts [format "%s: %s" $ix [set [set Attrs]($ix)]]
@@ -658,6 +643,25 @@ proc fixupLastUpds { } {
     foreach a {EventCloseTimes EventState} {
 	foreach id [array names $a] {
 	    fixupLastUpd $id
+	}
+    }
+}
+
+# Remove extraneous entries in EventIdToIx
+# At this point these seem to be accumulating...
+
+proc fixupEventIdToIx { } {
+    global EventIdToIx
+    global EventId
+
+    foreach ix [array names EventId] {
+	set Id($EventId($ix)) 1
+    }
+    foreach ix [array names EventIdToIx] {
+	if { ! [info exists Id($ix)] } {
+	    puts [format "Cleaned up EventIdToIx, id %s ix %s" \
+		      $ix $EventIdToIx($ix)]
+	    unset EventIdToIx($ix)
 	}
     }
 }
