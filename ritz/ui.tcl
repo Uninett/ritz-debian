@@ -802,9 +802,12 @@ proc uiModHistSetup { w id applyCmd } {
 	    -state disabled
 
     tixOptionMenu $w.state \
-	    -label "Set admin state to: " \
-	    -command "uiCondEnable $w.bot.apply $id"
-
+	-label "Set admin state to: " \
+	-command "uiCondEnable $w.bot.apply $id" \
+	-options {
+	    menubutton.relief raised
+	}
+	
     foreach state [possibleStates] {
 	$w.state add command $state -label $state
     }
@@ -1029,8 +1032,10 @@ proc uiMkMatchtypeMenu { w item { matchtypes default }} {
 	    -label "Matchtype:" \
 	    -variable FilterHow($item) \
 	    -options {
-	menubutton.width 8
-    }
+		menubutton.width 8
+		menubutton.relief raised
+	    }
+
     if { $matchtypes == "default" } {
 	set mts [possibleMatchTypes]
     } else {
@@ -1055,9 +1060,11 @@ proc uiMkSimpleMenu { w item values } {
     tixOptionMenu $w.menu \
 	    -variable FilterVal($item) \
 	    -options {
-	menubutton.width 10
-	label.width 0
+		menubutton.width 10
+		menubutton.relief raised
+		label.width 0
     }
+
     foreach state $values {
 	$w.menu add command $state -label $state
     }
