@@ -1,3 +1,86 @@
+2012-09-07  Havard Eidnes <he@uninett.no>
+
+	* Makefile: Bump the version number.
+
+	* zino/bfd.tcl: Add support for also probing the state of BFD sessions
+	using the Cisco implant of the IETF BFD MIB.
+
+	* mibs/Makefile: Install the Cisco version of the IETF BFD MIB.
+
+	* mibs/CISCO-IETF-BFD-MIB.my:
+	Check in a copy of the Cisco implant of the IETF BFD MIB.
+
+	* zino/events.tcl:
+	Also clean up any delayed checking for reachability when
+	cleaning up after a now-removed router.
+
+2012-08-23  Havard Eidnes <he@uninett.no>
+
+	* ritz/ui.tcl: Ensure menubuttons are drawn with a raised relief.
+	Apparently the defaults in the tixOptionMenu widget
+	do not take effect(!?)
+
+2012-07-20  Havard Eidnes <he@uninett.no>
+
+	* zino/events.tcl:
+	Add a new fixupEventIdToIx to get rid of extraneous entries in that
+	array.
+
+	Rewrite closeEventsOnRouter to not use EventIdToIx, due to there
+	existing stale entries in EventIdToIx, we may end up with events with
+	only log + history as attributes, causing ritz indigestion.
+
+2012-05-31  Havard Eidnes <he@uninett.no>
+
+	* zino/status.tcl: Increase the frequency of BGP neighborship polling.
+
+2012-05-29  Havard Eidnes <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Fix bugs in uptime estimation and reboot detection, which were
+	introduced when this code was converted to async operation(!)
+
+2012-04-11  Havard Eidnes <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Ensure that cx($name,uptime) gets set at all, so that the uptime check
+	can be performed on the subsequent polls.
+
+2012-03-28  Havard Eidnes <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Ask routers also for the newer counters for multicast and broadcast
+	packets.
+
+2012-03-07  Havard Eidnes <he@uninett.no>
+
+	* traffic/cgi/tbl-report.pl:
+	Prevent cross-site scripting using the dsp-type attribute.
+
+	* zino/flaps.tcl:
+	If we're no longer flapping, don't set portState to "flapping", but
+	instead to the actual state.  This may cure the "phantom flapping
+	interfaces" displayed by ritz.
+
+2012-03-06  Havard Eidnes <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl, traffic/report/customer-ts.pl:
+	Cap the data rate for each port to the interface speed, not just
+	to the sum of the interface speeds in total, which is useless e.g.
+	when summing up traffic over all customers.
+
+	Save ifspeed readings in %save_ifspeed, caller responsible for
+	save/restore if doing incremental log processing.
+
+2012-03-05  Havard Eidnes <he@uninett.no>
+
+	* traffic/common/new-read-hr-log.pl,
+	traffic/common/read-hr-log.pl, traffic/plot/plot-5m.pl,
+	traffic/plot/plot-raw.pl, traffic/report/customer-ts.pl,
+	traffic/report/tail-stats.pl:
+	Check Octet-derived data rates and ignore samples with values
+	larger than that reported by ifSpeed, if ifSpeed is not zero.
+
 2012-01-25  Havard Eidnes  <he@uninett.no>
 
 	* Makefile: Mark this as version 0.9.9.4.
