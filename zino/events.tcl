@@ -740,6 +740,7 @@ proc cleanupDBvars { r } {
 
     set msg [format "Router %s no longer monitored" $r]
 
+    catch { cleanupDelayedResponse [handle $r] }
     catch { closeEventsOnRouter $r $msg }
     catch { forgetFlaps $r $msg }
 
