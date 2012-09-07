@@ -27,6 +27,10 @@ proc recordBFD { sh vbl } {
 
     foreach vb $vbl {
 	set n [mib name [lindex $vb 0]]
+	# replace any "ciscoBfd" with just "bfd"
+	# before internalizing the MIB variables
+	regsub "ciscoBfd" $n "bfd" n
+
 	set v [lindex $vb 2]
 	set ix [lindex [split $n .] 1]
 	set mv [lindex [split $n .] 0]
@@ -76,6 +80,9 @@ proc changedBFD { sh ix oldstate newstate infosource diag } {
     catch {
 	set addr [formatAddr $bfdSessAddrType($ix) $bfdSessAddr($ix)]
 	setEventAttr $eid "bfdAddr" $addr
+	catch {
+	    setEventAttr $eid "Neigh-rDNS" [dns name $addr]
+	}
     }
     catch {
 	set discr $bfdSessDiscr($ix)
@@ -94,6 +101,9 @@ proc changedBFD { sh ix oldstate newstate infosource diag } {
 
     if [info exists addr] {
 	set s [format "%s BFD neighbor %s" $r $addr]
+	catch {
+	    set s [format "%s (%s)" $s [dns name $addr]]
+	}
     } else {
 	if [info exists discr] {
 	    set s [format "%s BFD ix %s discr %s" $r $bfdIx $discr]
@@ -140,10 +150,10 @@ proc refreshBFDinfo { r i } {
 #	return;			# have info, no need to fetch
 #    }
 
-    set vbl \
-	[format "bfdSessDiscriminator.%d bfdSessAddrType.%d bfdSessAddr.%d" \
-	     $i $i $i]
     set sh [handle $r]
+
+    set vbl [bfdMibNames $sh "SessDiscriminator SessAddrType SessAddr"]
+    set vbl [addIndex $i $vbl]
 
     $sh get $vbl {
 	if {"%E" == "noError"} {
@@ -169,6 +179,10 @@ proc doBFDtrap { r newstate vbl } {
 	set mibvar [mib name $oid]
 
 	set name [lindex [split $mibvar "."] 0]
+	# replace any "ciscoBfd" with just "bfd"
+	# before internalizing the MIB variables
+	regsub "ciscoBfd" $name "bfd" name
+
 	set inst [join [lrange [split $mibvar "."] 1 end] "."]
 
 	if { $name == "bfdSessDiag" } {
@@ -222,6 +236,9 @@ proc updateBFDevent { r ix gix } {
 		set addr [formatAddr $bfdSessAddrType($gix) $bfdSessAddr($gix)]
 		setEventAttr $eid "bfdAddr" $addr
 		set l [format "BFD neighbor %s" $addr]
+		catch {
+		    set l [format "%s (%s)" $l [dns name $addr]]
+		}
 		set l [format "%s is %s" $l bfdSessState($gix)]
 
 		log $l
@@ -300,19 +317,57 @@ proc endBFD { sh } {
 
 proc checkBFDsessions { sh } {
 
-    bulkWalk $sh {
-	bfdSessDiscriminator
-	bfdSessState
-	bfdSessAddrType
-	bfdSessAddr
-    } 20 recordBFD endBFD errBulk
+    bulkWalk $sh [bfdMibNames $sh {
+	SessDiscriminator
+	SessState
+	SessAddrType
+	SessAddr
+    }] 20 recordBFD endBFD errBulk
+}
+
+proc addIndex { i vars } {
+
+    set vbl ""
+    foreach v $vars {
+	if { $vbl != "" } {
+	    set vbl [format "%s " $vbl]
+	}
+	set vbl [format "%s%s.%d" $vbl $v $i]
+    }
+    return $vbl
+}
+
+proc bfdMibNames { sh vars } {
+    global bfdMibStyle
+
+    if { ! [info exists bfdMibStyle($sh)] } {
+	set pfx "bfd";		# assume Juniper-style
+    } else {
+	if { $bfdMibStyle($sh) == "Cisco" } {
+	    set pfx "ciscoBfd"
+	} else {
+	    set pfx "bfd"
+	}
+    }
+
+    set vbl ""
+
+    foreach v $vars {
+	if { $vbl != "" } {
+	    set vbl [format "%s " $vbl]
+	}
+	set vbl [format "%s%s%s" $vbl $pfx $v]
+    }
+    return $vbl
 }
 
 proc checkBFD { sh } {
+    global bfdMibStyle
+
+    # Judiciously avoid using "local" variables;
+    # the callbacks are executed in the global context!
 
     $sh get "bfdAdminStatus.0" {
-	# Judiciously avoid using "local" variables;
-	# the callback is executed in the global context!
 
 	if { "%E" != "noError" } {
 	    # Some error happened, skip rest of polling
@@ -329,6 +384,27 @@ proc checkBFD { sh } {
 	    return
 	}
 
+	set bfdMibStyle(%S) "Juniper"
+	checkBFDsessions %S
+    }
+
+    $sh get "ciscoBfdAdminStatus.0" {
+	if { "%E" != "noError" } {
+	    # Some error happened, skip rest of polling
+	    return
+	}
+
+	if { [lindex [lindex "%V" 0] 1] == "noSuchObject" } {
+	    # Device doesn't do this MIB
+	    return
+	}
+	
+	if { [lindex [lindex "%V" 0] 2] != "enabled" } {
+	    # BFD isn't enabled
+	    return
+	}
+
+	set bfdMibStyle(%S) "Cisco"
 	checkBFDsessions %S
     }
 }
