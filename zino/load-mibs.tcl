@@ -27,6 +27,7 @@ mib load ../mibs/INET-ADDRESS-MIB.my
 mib load ../mibs/CISCO-VTP-MIB.my
 mib load ../mibs/CISCO-PIM-MIB.my
 mib load ../mibs/CISCO-BGP4-MIB.my
+mib load ../mibs/CISCO-IETF-BFD-MIB.my
 mib load ../mibs/MSDP-MIB.my
 mib load ../mibs/BGP4-MIB.my
 mib load ../mibs/CISCO-MAC-NOTIFICATION-MIB.my
