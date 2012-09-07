@@ -1,5 +1,10 @@
 2012-09-07  Havard Eidnes <he@uninett.no>
 
+	* Makefile: Bump again.
+
+	* zino/load-mibs.tcl: Also load the Cisco IETF BFD MIB.
+
+	* ChangeLog: Note updates since last release.
 	* Makefile: Bump the version number.
 
 	* zino/bfd.tcl: Add support for also probing the state of BFD sessions
