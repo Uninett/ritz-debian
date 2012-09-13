@@ -60,6 +60,8 @@
 #	resets
 #	eerrs
 #	pps
+#	upps
+#	mpps
 #   -r 			unconditionally regenerate plot
 #
 
@@ -278,8 +280,8 @@ sub decorate_errors {
     printf($fh "      \"$df\" using 1:5 title \"Abort\" with lines\n");
 }
 
-sub plot_pps {
-    my($line, $fh, $dn, $d, $tm) = @_;
+sub plot_pps_common {
+    my($fh, $d, $tm, $ivr, $ovr) = @_;
     my($i, $h, $ipkts, $opkts, $ipps, $opps, $dt);
 
     foreach $i (0 .. 23) {
@@ -289,10 +291,13 @@ sub plot_pps {
 
 	printf($fh "%d ", $i + ($d*24)); # X-axis
 	
-	$ipkts = ($count{"ifInUcastPkts",$h} +
-		  $count{"ifInNUcastPkts",$h});
-	$opkts = ($count{"ifOutUcastPkts",$h} +
-		  $count{"ifOutNUcastPkts",$h});
+	$ipkts = $opkts = 0;
+	foreach my $v (@{$ivr}) {
+	    $ipkts += $count{$v,$h};
+	}
+	foreach my $v (@{$ovr}) {
+	    $opkts += $count{$v,$h};
+	}
 	$dt = 3600;
 	$ipps = $ipkts / $dt;
 	$opps = $opkts / $dt;
@@ -302,10 +307,57 @@ sub plot_pps {
     }
 }
 
-sub decorate_pps {
-    my($fh, $maxy, $df, $dsp) = @_;
+sub has_multicast_pkts {
+    our(%count);
 
-    printf($fh &plot_title(sprintf("$name hourly packets per second on %s",
+    return (defined($count{"ifInMulticastPkts","00"}));
+}
+
+sub plot_pps {
+    my($line, $fh, $dn, $d, $tm) = @_;
+
+    if (&has_multicast_pkts()) {
+	&plot_pps_common($fh, $d, $tm,
+			 ["ifInUcastPkts",
+			  "ifInMulticastPkts",
+			  "ifInBroadcastPkts"],
+			 ["ifOutUcastPkts",
+			  "ifOutMulticastPkts",
+			  "ifOutBroadcastPkts"]);
+    } else {
+	&plot_pps_common($fh, $d, $tm,
+			 ["ifInUcastPkts", "ifInNUcastPkts"],
+			 ["ifOutUcastPkts", "ifOutNUcastPkts"]);
+    }
+}
+
+sub plot_mpps {
+    my($line, $fh, $dn, $d, $tm) = @_;
+
+    if (&has_multicast_pkts()) {
+	&plot_pps_common($fh, $d, $tm,
+			 ["ifInMulticastPkts"],
+			 ["IfOutMulticastPkts"]);
+    } else {
+	&plot_pps_common($fh, $d, $tm,
+			 ["ifInNUcastPkts"],
+			 ["ifOutNUcastPkts"]);
+    }
+}
+
+sub plot_upps {
+    my($line, $fh, $dn, $d, $tm) = @_;
+
+    &plot_pps_common($fh, $d, $tm,
+		     ["ifInUcastPkts"],
+		     ["ifOutUcastPkts"]);
+}
+
+sub decorate_pps_common {
+    my($fh, $maxy, $df, $dsp, $title) = @_;
+
+    printf($fh &plot_title(sprintf("%s hourly %s on %s",
+				   $name, $title,
 				   &pretty_datespec($dsp))));
     printf($fh "%s", &plot_xlabel("Time"));
     printf($fh "%s", &plot_ylabel("pps"));
@@ -317,6 +369,29 @@ sub decorate_pps {
     printf($fh "plot  \"$df\" using 1:2 title \"input\" with lines,");
     printf($fh "      \"$df\" using 1:3 title \"output\" with lines\n");
 }
+
+
+sub decorate_pps {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    &decorate_pps_common($fh, $maxy, $df, $dsp,
+			 "packets per second");
+}
+
+sub decorate_mpps {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    &decorate_pps_common($fh, $maxy, $df, $dsp,
+			 "multicast packets per second");
+}
+
+sub decorate_upps {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    &decorate_pps_common($fh, $maxy, $df, $dsp,
+			 "unicast packets per second");
+}
+
 
 sub plot_resets {
     my($line, $fh, $dn, $d, $tm) = @_;
@@ -429,24 +504,28 @@ sub decorate_eerrs {
 #
 
 %data_plotter = (
-		 "traffic"	=> \&plot_traffic,
-	         "traffic-kbit"	=> \&plot_traffic_kbit,
-	         "discards"	=> \&plot_discards,
-	         "errors"	=> \&plot_errors,
-		 "resets"	=> \&plot_resets,
-		 "eerrs"	=> \&plot_eerrs,
-		 "pps"		=> \&plot_pps,
-		 );
+    "traffic"		=> \&plot_traffic,
+    "traffic-kbit"	=> \&plot_traffic_kbit,
+    "discards"		=> \&plot_discards,
+    "errors"		=> \&plot_errors,
+    "resets"		=> \&plot_resets,
+    "eerrs"		=> \&plot_eerrs,
+    "pps"		=> \&plot_pps,
+    "upps"		=> \&plot_upps,
+    "mpps"		=> \&plot_mpps,
+    );
 
 %decorator = (
-	      "traffic"		=> \&decorate_traffic,
-	      "traffic-kbit"	=> \&decorate_traffic_kbit,
-	      "discards"	=> \&decorate_discards,
-	      "errors"		=> \&decorate_errors,
-	      "resets"		=> \&decorate_resets,
-	      "eerrs"		=> \&decorate_eerrs,
-	      "pps"		=> \&decorate_pps,
-	      );
+    "traffic"		=> \&decorate_traffic,
+    "traffic-kbit"	=> \&decorate_traffic_kbit,
+    "discards"		=> \&decorate_discards,
+    "errors"		=> \&decorate_errors,
+    "resets"		=> \&decorate_resets,
+    "eerrs"		=> \&decorate_eerrs,
+    "pps"		=> \&decorate_pps,
+    "upps"		=> \&decorate_upps,
+    "mpps"		=> \&decorate_mpps,
+    );
 
 #
 #
