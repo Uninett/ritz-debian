@@ -60,6 +60,8 @@
 #	resets
 #	eerrs
 #	pps
+#	upps
+#	mpps
 #   -r 			unconditionally regenerate plot
 #
 
@@ -121,7 +123,7 @@ sub plot_traffic_common {
 		$val = &$compute_val($count{$v,$i} + $add{$v},
 				     $time_delta);
 		if ($v =~ /Octets/ && $ifspeed != 0) {
-		    if ($val * 1000.0 > $ifspeed) {
+		    if ($val * 1000.0 > $ifspeed * 1.05) { # Allow 5% overshoot
 			$val = 0;
 		    }
 		}
@@ -314,17 +316,20 @@ sub decorate_errors {
     printf($fh "      \"$df\" using 1:5 title \"Abort\" with lines\n");
 }
 
-sub plot_pps {
-    my($line, $fh, $dn, $d, $tm) = @_;
+sub plot_pps_common {
+    my($fh, $d, $ivr, $ovr) = @_;
     my($i, $val, $inpkts, $outpkts, $inpps, $outpps, $dt);
     
     foreach $i (0 .. $max_sample) {
 	if ($i == 0) { next; }
 	printf($fh "%f", $sample_time{$i} + ($d * 24));
-	$inpkts = ($count{"ifInUcastPkts",$i} +
-		   $count{"ifInNUcastPkts",$i});
-	$outpkts= ($count{"ifOutUcastPkts",$i} +
-		   $count{"ifOutNUcastPkts",$i});
+	$outpkts = $inpkts = 0;
+	foreach my $v (@{$ivr}) {
+	    $inpkts += $count{$v,$i};
+	}
+	foreach my $v (@{$ovr}) {
+	    $outpkts += $count{$v,$i};
+	}
 	$dt = ($sample_time{$i} - $sample_time{$i-1}) * 3600;
 	$inpps = $inpkts / $dt;
 	$outpps= $outpkts / $dt;
@@ -335,13 +340,59 @@ sub plot_pps {
     }
 }
 
-sub decorate_pps {
-    my($fh, $maxy, $df, $dsp) = @_;
+sub has_multicast_pkts {
+    our(%count);
+
+    return (defined($count{"ifInMulticastPkts",0}));
+}
+
+sub plot_pps {
+    my($line, $fh, $dn, $d, $tm) = @_;
+
+    if (&has_multicast_pkts()) {
+	&plot_pps_common($fh, $d,
+			 ["ifInUcastPkts",
+			  "ifInMulticastPkts",
+			  "ifInBroadcastPkts"],
+			 ["ifOutUcastPkts",
+			  "ifOutMulticastPkts",
+			  "ifOutBroadcastPkts"]);
+    } else {
+	&plot_pps_common($fh, $d,
+			 ["ifInUcastPkts", "ifInNUcastPkts"],
+			 ["ifOutUcastPkts", "ifOutNUcastPkts"]);
+    }
+}
+
+sub plot_mpps {
+    my($line, $fh, $dn, $d, $tm) = @_;
+
+    if (&has_multicast_pkts()) {
+	&plot_pps_common($fh, $d,
+			 ["ifInMulticastPkts"],
+			 ["ifOutMulticastPkts"]);
+    } else {
+	&plot_pps_common($fh, $d,
+			 ["ifInNUcastPkts"],
+			 ["ifOutNUcastPkts"]);
+    }
+}
+
+sub plot_upps {
+    my($line, $fh, $dn, $d, $tm) = @_;
+
+    &plot_pps_common($fh, $d,
+		     ["ifInUcastPkts"],
+		     ["ifOutUcastPkts"]);
+}
+
+sub decorate_pps_common {
+    my($fh, $maxy, $df, $dsp, $title) = @_;
 
     printf($fh
 	   &plot_title(sprintf("%s %s (5m avgs) on %s",
 			       $name,
-			       "packets per second",
+			       $title,
 			       &pretty_datespec($dsp))));
     printf($fh &plot_xlabel("Time"));
     printf($fh "%s", &plot_ylabel("pps"));
@@ -353,7 +404,27 @@ sub decorate_pps {
     printf($fh "plot  \"$df\" using 1:2 title \"input\" with lines,");
     printf($fh "      \"$df\" using 1:3 title \"output\" with lines\n");
 }
-    
+
+
+sub decorate_pps {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    &decorate_pps_common($fh, $maxy, $df, $dsp, "packets per second");
+}
+
+sub decorate_mpps {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    &decorate_pps_common($fh, $maxy, $df, $dsp, "multicast packets per second");
+}
+
+sub decorate_upps {
+    my($fh, $maxy, $df, $dsp) = @_;
+
+    &decorate_pps_common($fh, $maxy, $df, $dsp, "unicast packets per second");
+}
+
+
 sub plot_resets {
     my($line, $fh, $dn, $d, $tm) = @_;
     my($i, $val);
@@ -465,24 +536,28 @@ sub decorate_eerrs {
 #
 
 %data_plotter = (
-		 "traffic"	=> \&plot_traffic,
-	         "traffic-kbit"	=> \&plot_traffic_kbit,
-	         "discards"	=> \&plot_discards,
-	         "errors"	=> \&plot_errors,
-		 "resets"	=> \&plot_resets,
-		 "eerrs"	=> \&plot_eerrs,
-		 "pps"		=> \&plot_pps,
-		 );
+    "traffic"		=> \&plot_traffic,
+    "traffic-kbit"	=> \&plot_traffic_kbit,
+    "discards"		=> \&plot_discards,
+    "errors"		=> \&plot_errors,
+    "resets"		=> \&plot_resets,
+    "eerrs"		=> \&plot_eerrs,
+    "pps"		=> \&plot_pps,
+    "upps",		=> \&plot_upps,
+    "mpps",		=> \&plot_mpps,
+    );
 
 %decorator = (
-	      "traffic"		=> \&decorate_traffic,
-	      "traffic-kbit"	=> \&decorate_traffic_kbit,
-	      "discards"	=> \&decorate_discards,
-	      "errors"		=> \&decorate_errors,
-	      "resets"		=> \&decorate_resets,
-	      "eerrs"		=> \&decorate_eerrs,
-	      "pps"		=> \&decorate_pps,
-	      );
+    "traffic"		=> \&decorate_traffic,
+    "traffic-kbit"	=> \&decorate_traffic_kbit,
+    "discards"		=> \&decorate_discards,
+    "errors"		=> \&decorate_errors,
+    "resets"		=> \&decorate_resets,
+    "eerrs"		=> \&decorate_eerrs,
+    "pps"		=> \&decorate_pps,
+    "upps"		=> \&decorate_upps,
+    "mpps"		=> \&decorate_mpps,
+    );
 
 #
 #
