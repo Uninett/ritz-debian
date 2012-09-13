@@ -4,7 +4,9 @@
 
 LIBFILES=db-lookup.pl
 
-PROGS=	dbm-edit dbm-dump.pl dbm-load.pl update-dbs.pl warn-dups.pl
+PROGS=	dbm-edit dbm-dump.pl dbm-load.pl
+PROGS+= update-close.pl update-dbs.pl warn-dups.pl
+PROGS+= bdb-dump.pl bdb-load.pl
 
 SUBST=	${.CURDIR}/../../subst
 
