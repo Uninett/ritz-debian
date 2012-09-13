@@ -227,7 +227,7 @@ sub compute_basic_values {
 	    # within ifSpeed's range, balk otherwise and set sample to zero.
 	    if ($ov && $ifspeed != 0) {
 		my($br) = $val * 1000.0;
-		if ($br > $ifspeed) {
+		if ($br > $ifspeed * 1.05) { # Allow 5% overshoot
 		    printf(STDERR
 			   "ERROR: Bitrate above ifSpeed for %s: %s vs %s" .
 			   ", sample ignored\n",

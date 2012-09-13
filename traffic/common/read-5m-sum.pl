@@ -323,7 +323,7 @@ sub read_5m_sum {
 		    $dt = ($sample_time{$s} - $sample_time{$s-1}) * 3600.0;
 		    if ($dt != 0) {
 			$r = $count{$mv,$s} * 8 / $dt;
-			if ($r > $ifspeed) {
+			if ($r > $ifspeed * 1.05) { # Allow 5% overshoot
 			    my($e);
 			    $e = sprintf("Data rate over ifSpeed: %s vs. %s, " .
 					 "name %s file %s date %s time %s\n",
