@@ -51,7 +51,7 @@
 
 use strict;
 use BerkeleyDB;
-require 'getopts.pl';
+use Getopt::Std;
 
 
 sub open_db {
@@ -481,7 +481,7 @@ sub usage {
 
 our($opt_t, $opt_v, $opt_d, $opt_n);
 
-&Getopts("D:dnt:v");
+&getopts("D:dnt:v");
 
 if (!defined($opt_t)) { &usage(); }
 if (defined($opt_v) || defined($opt_d)) {
