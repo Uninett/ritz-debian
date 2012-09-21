@@ -29,7 +29,8 @@ if { $x >= 0 } {
 mib load rfc2863.mib
 mib load IANAifType.tc
 mib load cisco.mib
-
+mib load ../mibs/IPV6-TC.my
+mib load ../mibs/IPV6-MIB.my
 
 proc initDev { sh } {
 }
@@ -283,6 +284,7 @@ proc getVarList { sh } {
 		"ifOutDiscards" "ifOutErrors" \
 		"ifInMulticastPkts" "ifOutMulticastPkts" \
 		"ifInBroadcastPkts" "ifOutBroadcastPkts" \
+		"ipv6IfStatsInReceives" "ipv6IfStatsOutForwDatagrams" \
 	       ]
 
     if { [::config::conf $name "hcounters"] != "no" } {
