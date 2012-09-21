@@ -5,7 +5,7 @@
 # Test of read-raw-log, looking at DST switchover
 #
 
-require 'getopts.pl';
+use Getopt::Std;
 
 use lib "/local/traffic/lib";
 require "read-hr-log.pl";
@@ -20,7 +20,7 @@ use strict;
 
 our($opt_d, $opt_n);
 
-&Getopts("d:n:");
+&getopts("d:n:");
 
 my($f) = $ARGV[0];
 our(%count, $max_sample, %sample_time, %max_rate);

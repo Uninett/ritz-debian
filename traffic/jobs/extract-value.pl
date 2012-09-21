@@ -54,7 +54,7 @@
 
 push(@INC, "%LIBDIR%");
 
-require 'getopts.pl';
+use Getopt::Std;
 
 require 'date.pl';
 require 'db-lookup.pl';
@@ -151,7 +151,7 @@ sub print_data {
 # Main
 #
 
-&Getopts("ad:i:n:p:sw:");
+&getopts("ad:i:n:p:sw:");
 
 $name = $opt_n;
 $datespec = $opt_d;

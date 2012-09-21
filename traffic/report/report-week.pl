@@ -82,7 +82,8 @@
 
 push(@INC, "%LIBDIR%");
 
-require 'getopts.pl';
+use Getopt::Std;
+
 require 'date.pl';
 require 'search.pl';
 require 'read-day-report.pl';
@@ -355,7 +356,7 @@ sub usage {
 
 # Main
 
-&Getopts("hw:y:");
+&getopts("hw:y:");
 
 if (defined($opt_h)) {
     &usage();

@@ -41,7 +41,7 @@
 push(@INC, "%LIBDIR%");
 push(@INC, "%CONFDIR%");
 
-require 'getopts.pl';
+use Getopt::Std;
 
 require "date.pl";
 require "search.pl";
@@ -616,7 +616,7 @@ sub usage {
 # Main
 #
 
-&Getopts("C:c:d:e:hNn:R:vV");
+&getopts("C:c:d:e:hNn:R:vV");
 
 if ($opt_h) { &usage(); }
 

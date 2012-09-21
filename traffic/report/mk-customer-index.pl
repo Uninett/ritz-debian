@@ -11,7 +11,7 @@ use lib qw(%LIBDIR%);
 use POSIX qw(strftime);
 use Zino::conn qw(read_desc select_types %fullname %ports);
 
-require 'getopts.pl';
+use Getopt::Std;
 
 require 'date.pl';
 require 'search.pl';
@@ -211,7 +211,7 @@ sub emit_html {
 # Main
 #
 
-&Getopts("c:t:");
+&getopts("c:t:");
 if (! -f $opt_c) {
     &err("description file (-c file) not readable: $opt_c");
 }

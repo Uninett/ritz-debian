@@ -14,7 +14,7 @@ use lib qw(%LIBDIR%);
 
 use Zino::conn qw(read_desc select_types %fullname %ports);
 
-require 'getopts.pl';
+use Getopt::Std;
 
 
 sub err {
@@ -72,7 +72,7 @@ sub report {
 # Main
 #
 
-&Getopts("c:");
+&getopts("c:");
 
 if (! -f $opt_c) {
     &err("description file (-c file) not readable; $opt_c");

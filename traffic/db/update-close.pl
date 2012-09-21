@@ -50,7 +50,7 @@ push(@INC, "%LIBDIR%");
 
 use BerkeleyDB;
 
-require 'getopts.pl';
+use Getopt::Std;
 
 require 'date.pl';
 require 'search.pl';
@@ -179,7 +179,7 @@ sub usage {
 }
 
 
-&Getopts("d:nt:v");
+&getopts("d:nt:v");
 
 if (!defined($opt_t)) { &usage(); }
 if (!defined($opt_d)) { &usage(); }

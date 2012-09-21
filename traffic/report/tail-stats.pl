@@ -34,7 +34,7 @@
 push(@INC, "%LIBDIR%");
 push(@INC, "%CONFDIR%");
 
-require 'getopts.pl';
+use Getopt::Std;
 
 require "date.pl";
 require "search.pl";
@@ -963,7 +963,7 @@ sub usage {
 our($opt_h, $opt_m, $opt_M, $opt_t, $opt_u, $opt_l, $opt_p, $opt_r,
     $opt_R, $opt_n, $opt_d);
 
-&Getopts("d:hiIl:M:m:Nn:p:R:r:t:u:vV");
+&getopts("d:hiIl:M:m:Nn:p:R:r:t:u:vV");
 
 if (defined($opt_h)) {
     &usage();

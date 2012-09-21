@@ -35,7 +35,8 @@ push(@INC, "%LIBDIR%");
 
 use strict;
 
-require 'getopts.pl';
+use Getopt::Std;
+
 require 'perc-5m.pl';
 
 
@@ -50,7 +51,7 @@ sub usage {
 our($opt_d, $opt_n, $opt_p);
 our($opt_N, $opt_M);
 
-&Getopts("d:MN:n:p:");
+&getopts("d:MN:n:p:");
 
 if (!defined($opt_d)) { &usage(); }
 if (!defined($opt_n)) { &usage(); }

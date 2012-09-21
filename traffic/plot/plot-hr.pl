@@ -67,7 +67,8 @@
 
 push(@INC, "%LIBDIR%");
 
-require 'getopts.pl';
+use Getopt::Std;
+
 require 'date.pl';
 require 'db-lookup.pl';
 require 'search.pl';
@@ -639,7 +640,7 @@ sub make_plot_file  {
 # Main
 #
 
-&Getopts("d:f:m:n:rt:");
+&getopts("d:f:m:n:rt:");
 
 $name = $opt_n;
 $datespec = $opt_d;

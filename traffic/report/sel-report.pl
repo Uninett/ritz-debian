@@ -39,7 +39,7 @@
 # Script to extract certain coloumns from a report.
 #
 
-require 'getopts.pl';
+use Getopt::Std;
 
 push(@INC, "%LIBDIR%");
 
@@ -171,7 +171,7 @@ sub err {
 # Main
 #
 
-&Getopts("d:t:s:");
+&getopts("d:t:s:");
 
 if (!defined($opt_d)) {
     $opt_d = &yesterday_spec();

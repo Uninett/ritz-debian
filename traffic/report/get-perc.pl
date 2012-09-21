@@ -35,7 +35,8 @@ use lib "%LIBDIR%";
 
 use strict;
 
-require 'getopts.pl';
+use Getopt::Std;
+
 require 'perc.pl';
 
 
@@ -50,7 +51,7 @@ sub usage {
 
 our($opt_d, $opt_n, $opt_p);
 
-&Getopts("d:n:p:");
+&getopts("d:n:p:");
 
 if (!defined($opt_d)) { &usage(); }
 if (!defined($opt_n)) { &usage(); }

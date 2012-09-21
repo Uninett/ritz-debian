@@ -451,11 +451,12 @@ sub usage {
     exit(1);
 }
 
-require 'getopts.pl';
+
+use Getopt::Std;
 
 # Main
 
-&Getopts("s:d:t");
+&getopts("s:d:t");
 
 our($opt_t);
 

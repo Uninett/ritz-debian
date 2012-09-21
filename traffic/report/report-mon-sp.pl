@@ -69,7 +69,8 @@
 
 push(@INC, "%LIBDIR%");
 
-require 'getopts.pl';
+use Getopt::Std;
+
 require 'date.pl';
 require 'search.pl';
 require 'read-hr-log.pl';
@@ -330,7 +331,7 @@ sub usage {
 #  -r regexp	limit files processed to those matching regexp
 #  -v		verbose (progress report)
 
-&Getopts("d:r:v");
+&getopts("d:r:v");
 
 if ($#ARGV != -1) {
     &usage();

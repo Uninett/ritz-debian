@@ -5,7 +5,7 @@
 # Test of read-raw-log, looking at DST switchover
 #
 
-require 'getopts.pl';
+use Getopt::Std;
 
 use lib "/local/traffic/lib";
 require "read-raw-log.pl";
@@ -20,7 +20,7 @@ use strict;
 
 our($opt_d);
 
-&Getopts("d:");
+&getopts("d:");
 
 my($f) = $ARGV[0];
 my($IN);
