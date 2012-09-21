@@ -326,7 +326,6 @@ sub usage {
     exit(1);
 }
 
-require 'getopts.pl';
 
 # Main
 
