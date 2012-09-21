@@ -45,7 +45,7 @@ use DateTime;
 $seconds_pr_day = 24*60*60;
 $seconds_per_day = $seconds_pr_day;
 
-require 'timelocal.pl';
+use Time::Local;
 
 # Transform either dd, mm-dd or yyyy-mm-dd into yyyymmdd.
 
