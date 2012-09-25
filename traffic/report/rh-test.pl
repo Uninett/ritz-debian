@@ -2,7 +2,7 @@
 #
 # $Id$
 #
-# Test of read-raw-log, looking at DST switchover
+# Test of read-hr-log, looking at DST switchover
 #
 
 use Getopt::Std;
