@@ -2,12 +2,15 @@
 #
 # $Id$
 #
-# Test of read-raw-log, looking at DST switchover
+# Simple script to compute the percentage of ipv6 traffic
+# for a given day.
+#
+# Usage: perl ip6-day-perc.pl -d <datespec> <data filename>
 #
 
 use Getopt::Std;
 
-use lib "/local/traffic/lib";
+use lib "/data/traffic/lib";
 require "read-raw-log.pl";
 require "date.pl";
 
