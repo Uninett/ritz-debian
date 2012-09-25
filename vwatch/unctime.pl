@@ -8,7 +8,7 @@
 # The time zone specified in the given string is ignored,
 # and the time is assumed to be in the local time zone.
 
-require 'timelocal.pl';
+use Time::Local;
 
 package unctime;
 
