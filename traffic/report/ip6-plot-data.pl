@@ -1,4 +1,4 @@
-#! /usr/bin/perl
+#! %PERL%
 #
 # $Id$
 #
@@ -10,7 +10,7 @@
 
 use Getopt::Std;
 
-use lib "/data/traffic/lib";
+use lib "%LIBDIR%";
 require "read-raw-log.pl";
 require "date.pl";
 
