@@ -56,9 +56,9 @@
 #
 # Possible heading for traffic.kbit
 #
-#          Busy hour    Busy sample   24hr average  speed            90%    90%
+#          Busy hour    Busy sample   24hr average  speed            90%    90% IPv6 traffic  IPv6 percent
 # Intf.  input output   input output   input output kbit/s iftype     in    out
-#xxxxxx xxxxxx xxxxxx  xxxxxx xxxxxx  xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx
+#xxxxxx xxxxxx xxxxxx  xxxxxx xxxxxx  xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx  xxx xxx
 #
 # Possible heading for errors:
 #
@@ -85,7 +85,7 @@ use strict;
 
 sub get_file_data {
     my($date, $dir, $cat, $f, $name) = @_;
-    my($h, $errpct, $inpkts, $outpk, $discpct);
+    my($h, $errpct, $inpkts, $outpkts, $discpct);
     my($tm);
     my($IN);
     our($iov, $oov);
@@ -114,6 +114,12 @@ sub get_file_data {
 	foreach my $v ($iov, $oov,
 		       "ifInNUcastPkts", "ifInUcastPkts",
 		       "ifOutNUcastPkts", "ifOutUcastPkts",
+
+		       "ifInMulticastPkts", "ifInBroadcastPkts",
+		       "ifOutMulticastPkts", "ifOutBroadcastPkts",
+		       
+		       "ipv6IfStatsInReceives", "ipv6IfStatsOutForwDatagrams",
+
 		       "ifInDiscards", "ifOutDiscards",
 		       "ifInErrors", "ifOutErrors",
 		       "locIfInRunts", "locIfInCRC",
@@ -143,9 +149,16 @@ sub get_file_data {
 		$peak_h{$name,$v} = $i;
 	    }
 	}
-	$inpkts = ($count{"ifInUcastPkts",$h} +
-		   $count{"ifInNUcastPkts",$h} +
-		   $count{"ifInErrors",$h}); # need to include these also...
+	if (defined($count{"ifInMulticastPkts",$h})) {
+	    $inpkts = ($count{"ifInUcastPkts",$h} +
+		       $count{"ifInMulticastPkts",$h} +
+		       $count{"ifInBroadcastPkts",$h} +
+		       $count{"ifInErrors",$h});
+	} else {
+	    $inpkts = ($count{"ifInUcastPkts",$h} +
+		       $count{"ifInNUcastPkts",$h} +
+		       $count{"ifInErrors",$h}); # need to include these also...
+	}
 	if (!defined($errhrs{$name,"1.0"})) {
 	    $errhrs{$name,"1.0"} = 0;
 	}
@@ -167,16 +180,35 @@ sub get_file_data {
 		$errhrs{$name,"0.01"}++;
 	    }
 	}
-	$outpk = ($count{"ifOutUcastPkts",$h} +
-		  $count{"ifOutNUcastPkts",$h} +
-		  $count{"ifOutDiscards",$h}); # need to include these also...
-	if ($outpk > 0) {
-	    $discpct = $count{"ifOutDiscards",$h}*100.0/$outpk;
+	if (defined($count{"ifOutMulticastPkts",$h})) {
+	    $outpkts = ($count{"ifOutUcastPkts",$h} +
+		      $count{"ifOutMulticastPkts",$h} +
+		      $count{"ifOutBroadcastPkts",$h} +
+		      $count{"ifOutDiscards",$h});
+	} else {
+	    $outpkts = ($count{"ifOutUcastPkts",$h} +
+		      $count{"ifOutNUcastPkts",$h} +
+		      $count{"ifOutDiscards",$h}); # need to include these also...
+	}
+	if ($outpkts > 0) {
+	    $discpct = $count{"ifOutDiscards",$h}*100.0/$outpkts;
 	    if (!defined($peak_disc_pct{$name}) ||
 		$peak_disc_pct{$name} < $discpct)
 	    {
 		$peak_disc_pct{$name} = $discpct;
 	    }
+	}
+	if ($inpkts != 0) {
+	    if (! defined($total{$name,"inpkts"})) {
+		$total{$name,"inpkts"} = 0;
+	    }
+	    $total{$name,"inpkts"} += $inpkts;
+	}
+	if ($outpkts != 0) {
+	    if (! defined($total{$name,"outpkts"})) {
+		$total{$name,"outpkts"} = 0;
+	    }
+	    $total{$name,"outpkts"} += $outpkts;
 	}
     }
     $in_90perc_bps  = &percentile(90, &sample_val_ps($iov)) * 8.0;
@@ -211,6 +243,45 @@ sub undef_file_data {
     undef %sample_delta;
     undef %sample_time;
     undef $max_sample;
+}
+
+sub ip6_in_perc {
+    my($n) = @_;
+    our(%total);
+
+    if (! defined($total{$n,"ipv6IfStatsInReceives"})) {
+	return("n/a");
+    }
+    if ($total{$n,"inpkts"} != 0) {
+	return ((100.0 *
+		 $total{$n,"ipv6IfStatsInReceives"}) /
+		$total{$n,"inpkts"});
+    }
+    return "0.0";
+}
+
+sub ip6_out_perc {
+    my($n) = @_;
+    our(%total);
+
+    if (! defined($total{$n,"ipv6IfStatsOutForwDatagrams"})) {
+	return("n/a");
+    }
+    if ($total{$n,"outpkts"} != 0) {
+	return ((100.0 *
+		 $total{$n,"ipv6IfStatsOutForwDatagrams"}) /
+		$total{$n,"outpkts"});
+    }
+    return "0.0";
+}
+
+sub ip6_traffic {
+    my($perc, $rate) = @_;
+
+    if ($perc eq "n/a") {
+	return "n/a";
+    }
+    return ($rate * $perc) / 100.0;
 }
 
 
@@ -257,6 +328,9 @@ sub do_all_files {
 sub sprint_percent {
     my($val) = @_;
 
+    if ($val !~ /^[0-9]/) {
+	return $val;
+    }
     if ($val >= 10) {
 	return sprintf("%3d", $val);
     } elsif ($val >= 1) {
@@ -289,7 +363,7 @@ sub report_traffic {
 	       $max_h{$n,$iov},
 	       &sprint_percent($max_r{$n,$oov}*8*100.0/3600/$ifspeed{$n}),
 	       $max_h{$n,$oov});
-	printf($out "  %3s  %02d %3s  %02d  %3s %3s  %6d  %6d  %3s  %3s\n",
+	printf($out "  %3s  %02d %3s  %02d  %3s %3s  %6d  %6d  %3s  %3s",
 	       &sprint_percent($peak_r{$n,$iov}*8*100.0/$ifspeed{$n}),
 	       $peak_h{$n,$iov},
 	       &sprint_percent($peak_r{$n,$oov}*8*100.0/$ifspeed{$n}),
@@ -301,6 +375,9 @@ sub report_traffic {
 	       &sprint_percent($in_90perc_bps * 100.0 / $ifspeed{$n}),
 	       &sprint_percent($out_90perc_bps * 100.0 / $ifspeed{$n})
 	       );
+	printf($out " %3s %3s\n",
+	       &sprint_percent(&ip6_in_perc($n)),
+	       &sprint_percent(&ip6_out_perc($n)));
     }
 }
 
@@ -316,7 +393,8 @@ sub report_traffic_kbit {
 #	   "input", "output", "kbit/s", "iftype", "90%in", "90%out");
 
     if ($ifspeed{$n} != 0) {
-	printf($out "%-20s %6d %6d  %6d %6d  %6d %6d %6d %6d %6d %6d\n",
+	printf($out "%-20s %6d %6d  %6d %6d  %6d %6d" .
+	       " %6d %6d %6d %6d %3s %3s %6s %6s\n",
 	       $n,
 	       $max_r{$n,$iov}*8/1000/3600,
 	       $max_r{$n,$oov}*8/1000/3600,
@@ -327,7 +405,14 @@ sub report_traffic_kbit {
 	       $ifspeed{$n}/1000,
 	       $iftype{$n},
 	       $in_90perc_bps / 1000,
-	       $out_90perc_bps / 1000);
+	       $out_90perc_bps / 1000,
+	       &sprint_percent(&ip6_in_perc($n)),
+	       &sprint_percent(&ip6_out_perc($n)),
+	       &ip6_traffic(&ip6_in_perc($n),
+			    $total{$n,$iov}*8/1000/3600/24),
+	       &ip6_traffic(&ip6_out_perc($n),
+			    $total{$n,$oov}*8/1000/3600/24)
+	    );
     }
 }
 
@@ -335,8 +420,8 @@ sub report_traffic_kbit {
 sub report_error_percs {
     my($out, $n) = @_;
     my($val);
-    my($inpkts,$tot_in);
-    my($outpkts,$tot_out);
+    my($tot_in);
+    my($tot_out);
 
     our(%errhrs, %total, %iftype, %peak_disc_pct);
 
@@ -346,11 +431,9 @@ sub report_error_percs {
 	   $errhrs{$n,"1.0"},
 	   $errhrs{$n,"0.1"},
 	   $errhrs{$n,"0.01"});
-    $inpkts = ($total{$n,"ifInNUcastPkts"} +
-	       $total{$n,"ifInUcastPkts"});
-    $tot_in = $inpkts + $total{$n,"ifInErrors"};
+    $tot_in = $total{$n,"inpkts"};
     foreach my $v ("ifInErrors", "locIfInCRC", "locIfInFrame",
-		"locIfInAbort", "locIfInIgnored")
+		   "locIfInAbort", "locIfInIgnored")
     {
 	if ($tot_in > 0) {
 	    $val = $total{$n,$v}*100.0/$tot_in;
@@ -360,9 +443,7 @@ sub report_error_percs {
 	printf ($out " %5s", &nice_sprint_perc_5($val));
     }
     printf($out "  %5d", $total{$n,"locIfResets"});
-    $outpkts = ($total{$n,"ifOutNUcastPkts"} +
-		$total{$n,"ifOutUcastPkts"});
-    $tot_out = $outpkts + $total{$n,"ifOutDiscards"};
+    $tot_out = $total{$n,"outpkts"};
     if ($tot_out > 0) {
 	$val = $total{$n,"ifOutDiscards"}*100.0/$tot_out;
     } else {
@@ -385,9 +466,7 @@ sub report_ether_perc_errs {
 	return;
     }
     printf($out "%-20s ", $n);
-    $inpkts = ($total{$n,"ifInNUcastPkts"} +
-	       $total{$n,"ifInUcastPkts"} +
-	       $total{$n,"ifInErrors"}); # need these also
+    $inpkts = $total{$n,"inpkts"};
     foreach my $v ("ifInErrors", "locIfInCRC", "locIfInFrame",
 		"locIfInRunt", "locIfInGiants", "locIfInIgnored")
     {
@@ -403,8 +482,7 @@ sub report_ether_perc_errs {
 	printf($out " %5s", &nice_sprint_perc_5($val));
     }
     printf($out " ");
-    $outpkts = ($total{$n,"ifOutNUcastPkts"} +
-		$total{$n,"ifOutUcastPkts"});
+    $outpkts = $total{$n,"outpkts"};
     foreach my $v ("ifOutErrors", "ifOutDiscards", "locIfCollisions") {
 	if ($outpkts > 0) {
 	    $val = $total{$n,$v}*100.0/($outpkts + $total{$n,$v});
