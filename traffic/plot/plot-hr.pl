@@ -62,6 +62,7 @@
 #	pps
 #	upps
 #	mpps
+#	ip6perc
 #   -r 			unconditionally regenerate plot
 #
 
@@ -393,6 +394,72 @@ sub decorate_upps {
 			 "unicast packets per second");
 }
 
+sub plot_ip6perc {
+    my($line, $fh, $dn, $d, $tm) = @_;
+    my($h, $ipkts, $opkts, $i6pkts, $o6pkts, $iperc, $operc);
+
+    foreach $i (0 .. 23) {
+	$h = sprintf("%02d", $i);
+
+	if ($tm + $i * 3600 > time) { next; }
+
+	printf($fh "%d ", $i + ($d*24)); # X-axis
+	
+	if (&has_multicast_pkts()) {
+	    $ipkts =
+		$count{"ifInUcastPkts",$h} +
+		$count{"ifInMulticastPkts",$h} +
+		$count{"ifInBroadcastPkts",$h};
+	    $opkts =
+		$count{"ifOutUcastPkts",$h} +
+		$count{"ifOutMulticastPkts",$h} +
+		$count{"ifOutBroadcastPkts",$h};
+	} else {
+	    $ipkts =
+		$count{"ifInUcastPkts",$h} +
+		$count{"ifInNUcastPkts",$h};
+	    $opkts =
+		$count{"ifOutUcastPkts",$h} +
+		$count{"ifOutNUcastPkts",$h};
+	}
+	$i6pkts = $count{"ipv6IfStatsInReceives",$h};
+	$o6pkts = $count{"ipv6IfStatsOutForwDatagrams",$h};
+
+	if ($ipkts != 0) {
+	    $iperc = $i6pkts * 100.0 / $ipkts;
+	} else {
+	    $iperc = 0;
+	}
+	if ($opkts != 0) {
+	    $operc = $o6pkts * 100.0 / $opkts;
+	} else {
+	    $opkts = 0;
+	}
+
+	&maxit($iperc);
+	&maxit($operc);
+	printf($fh "%f %f\n", $iperc, $operc);
+    }
+}
+
+sub decorate_ip6perc {
+    my($fh, $maxy, $df, $dsp) = @_;
+    
+    printf($fh "%s", &plot_title(sprintf("%s hourly IPv6 %% on %s",
+					 $name,
+					 &pretty_datespec($dsp))));
+    printf($fh "%s", &plot_xlabel("Time"));
+    printf($fh "%s", &plot_ylabel("IPv6 %"));
+
+    # Try to manage without this (?)
+    printf($fh &plot_yrange("0:$maxy"));
+    
+    # NB This should be generalized and put into plot.pl
+    printf($fh "plot  \"$df\" using 1:2 title \"IPv6%% in\" with lines,");
+    printf($fh "      \"$df\" using 1:3 title \"IPv6%% out\" with lines\n");
+}
+
+
 
 sub plot_resets {
     my($line, $fh, $dn, $d, $tm) = @_;
@@ -514,6 +581,7 @@ sub decorate_eerrs {
     "pps"		=> \&plot_pps,
     "upps"		=> \&plot_upps,
     "mpps"		=> \&plot_mpps,
+    "ip6perc"		=> \&plot_ip6perc,
     );
 
 %decorator = (
@@ -526,6 +594,7 @@ sub decorate_eerrs {
     "pps"		=> \&decorate_pps,
     "upps"		=> \&decorate_upps,
     "mpps"		=> \&decorate_mpps,
+    "ip6perc"		=> \&decorate_ip6perc,
     );
 
 #
