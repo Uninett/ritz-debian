@@ -56,15 +56,18 @@ require 'plot.pl';
 
 
 %plot_title = (
-	       "traffic",       "traffic in percent of capacity",
-	       "traffic-kbit",	"traffic in kbit/s",
-	       "discards",	"output discards / input ignores",
-	       "errors",	"input errors",
-	       "resets",	"interface resets",
-	       "eerrs",		"ethernet errors",
-	       "error-hrs",	"error hours above thresholds",
-	       "pps",		"packets per second",
-	       );
+    "traffic",		"traffic in percent of capacity",
+    "traffic-kbit",	"traffic in kbit/s",
+    "discards",		"output discards / input ignores",
+    "errors",		"input errors",
+    "resets",		"interface resets",
+    "eerrs",		"ethernet errors",
+    "error-hrs",	"error hours above thresholds",
+    "pps",		"packets per second",
+    "mpps",		"multicast packets per second",
+    "upps",		"unicast packets per second",
+    "ip6perc",		"percent of IPv6 packets",
+    );
 
 %resolution_plots = (
 		     "raw" => {
@@ -75,6 +78,9 @@ require 'plot.pl';
 			 "resets" => 1,
 			 "eerrs" => 1,
 			 "pps" => 1,
+			 "mpps" => 1,
+			 "upps" => 1,
+			 "ip6perc" => 1,
 		     },
 		     "5m" => {
 			 "traffic" => 1,
@@ -84,6 +90,9 @@ require 'plot.pl';
 			 "resets" => 1,
 			 "eerrs" => 1,
 			 "pps" => 1,
+			 "mpps" => 1,
+			 "upps" => 1,
+			 "ip6perc" => 1,
 		     },
 		     "hr" => {
 			 "traffic" => 1,
@@ -93,6 +102,9 @@ require 'plot.pl';
 			 "resets" => 1,
 			 "eerrs" => 1,
 			 "pps" => 1,
+			 "mpps" => 1,
+			 "upps" => 1,
+			 "ip6perc" => 1,
 		     },
 		     "day" => {
 			 "traffic" => 1,
