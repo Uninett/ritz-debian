@@ -213,9 +213,11 @@ sub month_traffic_line {
 
 sub day_traffic_kbit_header {
 
-    printf("%-25s %15s  %15s  %15s  %9s\n",
-	   "", "Busy hour", "Peak sample", "24hr average", "speed");
-    printf("%s %s %s  %s %s  %s %s  %9s\n",
+    printf("%-25s %15s  %15s  %15s  %15s  %15s  %9s\n",
+	   "", "Busy hour", "Peak sample", "24hr average",
+	   "IPv6 traffic", "IPv6 percent",
+	   "speed");
+    printf("%s %s %s  %s %s  %s %s  %s %s  %s %s  %9s\n",
 	   &make_ref("%-25s", "Interface", "tk-sort", "Name"),
 	   &make_ref(  "%7s", "input",     "tk-sort", "Busy+hour+in"),
 	   &make_ref(  "%7s", "output",    "tk-sort", "Busy+hour+out"),
@@ -223,13 +225,17 @@ sub day_traffic_kbit_header {
 	   &make_ref(  "%7s", "output",    "tk-sort", "Peak+sample+out"),
 	   &make_ref(  "%7s", "input",     "tk-sort", "Average+in"),
 	   &make_ref(  "%7s", "output",    "tk-sort", "Average+out"),
+	   &make_ref(  "%7s", "input",	   "tk-sort", "IPv6+input"),
+	   &make_ref(  "%7s", "output",    "tk-sort", "IPv6+output"),
+	   &make_ref(  "%7s", "input",     "tk-sort", "IPv6+input+percent"),
+	   &make_ref(  "%7s", "output",    "tk-sort", "IPv6+output+percent"),
 	   "kbit/s");
 }
 
 sub day_traffic_kbit_line {
     my($dsp, @l) = @_;
 
-    printf("%-25.25s %7s %7s  %7s %7s  %7s %7s  %9s\n",
+    printf("%-25.25s %7s %7s  %7s %7s  %7s %7s",
 	   $l[0],
 	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[1]),
@@ -243,7 +249,26 @@ sub day_traffic_kbit_line {
 		   $l[0], $dsp, $l[5]),
 	   sprintf("<a href=\"plot-all/%s,%s,raw,traffic-kbit\">%7d</a>",
 		   $l[0], $dsp, $l[6]),
-	   $l[7]);
+	);
+    if ($l[11] ne "") {
+	if ($l[11] ne "n/a") {
+	    printf("  %s %s  %s %s",
+		   sprintf("<a href=\"plot-all/%s,%s,raw,ip6perc\">%7d</a>",
+			   $l[0], $dsp, $l[13]),
+		   sprintf("<a href=\"plot-all/%s,%s,raw,ip6perc\">%7d</a>",
+			   $l[0], $dsp, $l[14]),
+		   sprintf("<a href=\"plot-all/%s,%s,raw,ip6perc\">%7s</a>",
+			   $l[0], $dsp, $l[11]),
+		   sprintf("<a href=\"plot-all/%s,%s,raw,ip6perc\">%7s</a>",
+			   $l[0], $dsp, $l[12])
+		);
+	} else {
+	    printf("  %7s %7s  %7s %7s", $l[13], $l[14], $l[11], $l[12]);
+	}
+    } else {
+	printf("  %7s %7s  %7s %7s", "", "", "", "");
+    }
+    printf("  %9s\n", $l[7]);
 }
 
 sub week_traffic_kbit_header {
@@ -551,6 +576,10 @@ sub day_eerrs_line {
 		     "Peak sample in"	=> "-n -r +3 +4 +1 +2 +5 +6",
 		     "Peak sample out"	=> "-n -r +4 +3 +2 +1 +6 +5",
 		     "Name"		=> "",
+		     "IPv6 input"       => "-n -r +13 +14 +0",
+		     "IPv6 output"      => "-n -r +14 +13 +0",
+		     "IPv6 input percent" => "-n -r +11 +12 +0",
+		     "IPv6 output percent" => "-n -r +12 +11 +0",
 		 },
 		 "week" => {
 		     "Average in"	=> "-n -r +7 +8 +5 +6 +3 +4 +1 +2",
