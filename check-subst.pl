@@ -6,7 +6,7 @@
 # $Id$
 #
 
-require 'getopts.pl';
+use Getopt::Std;
 
 sub read_subst {
     my($f) = @_;
@@ -42,7 +42,7 @@ sub read_Makefile {
 our($opt_s, $opt_o);
 our(%s_vars, %m_vars);
 
-&Getopts("o:s:");
+&getopts("o:s:");
 
 &read_subst($opt_s);
 &read_Makefile($opt_o);
