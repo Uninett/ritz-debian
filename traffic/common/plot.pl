@@ -115,7 +115,7 @@ sub plot_title {
 
 sub plot_xlabel {
     my($xlabel) = @_;
-    return "set xlabel \"$xlabel\" 0,-0.6\n";
+    return "set xlabel \"$xlabel\" offset 0,-0.6\n";
 }
 sub plot_ylabel {
     my($ylabel) = @_;
