@@ -11,18 +11,18 @@ tk-Tix
 just
 gnuplot
 rrdtool
+tgif
 
 ap22-perl		(for RRD plotter in Apache 2.2)
 apache			(in our case version 2.2.*, to match ap22-perl)
 
 p5-IPC-Shareable	(for IPC::Shareable)
-p5-TimeDate		(for Date::Parse and Date::Format)
+p5-TimeDate		(for Date::Parse, Date::Format, and Time::Date)
 p5-GD			(for GD)
 p5-DateTime		(for Date::Time)
 p5-YAML			(for YAML)
 p5-Digest-SHA		(for Digest::SHA)
 p5-Net-Telnet		(for Net::Telnet)
-p5-TimeDate		(for Time::Date)
 p5-BerkeleyDB		(for BerkeleyDB)
 
 The package needs tweaking: copy Makefile.inc.dist to Makefile.inc and
