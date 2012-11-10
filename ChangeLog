@@ -1,5 +1,7 @@
 2012-11-10  Havard Eidnes  <he@uninett.no>
 
+	* ChangeLog, Makefile: Mark this as 0.9.9.7.
+
 	* traffic/common/read-raw-log.pl:
 	Thanks to Ville Mattila at CSC who found that the code was using
 	an undefined $pos if the optional $td argument (indicating how
