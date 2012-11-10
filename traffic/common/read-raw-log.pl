@@ -103,11 +103,10 @@ sub read_log {
     undef $day_comp;
     $dstcomp = 0;
     $sample_no = -1;
-    if (defined($td)) {
-	$pos = tell($fh);
-	if ($pos == -1) {
-	    $seekable = 0;	# didn't work out after all
-	}
+
+    $pos = tell($fh);   # Remember position, to re-position if new format
+    if ($pos == -1) {
+	$seekable = 0;	# didn't work out after all
     }
 
   loop:
