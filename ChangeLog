@@ -1,3 +1,147 @@
+2012-11-10  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/read-raw-log.pl:
+	Thanks to Ville Mattila at CSC who found that the code was using
+	an undefined $pos if the optional $td argument (indicating how
+	close to the start time of the script to read the data) isn't supplied.
+	Instead, always record the current position; if we're incrementally
+	reading new-format files, the second test for "new format" will hit,
+	and we need to re-position so that new_read_log() will se the current
+	line again.
+
+	The net effect is a speed-up of the incremental reading and processing
+	of the data; not always reading from the start of the file(!)
+
+2012-11-02  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/tbl-report.pl:
+	Widen the fields for traffic in kbit/s, so that data rates
+	over 10Gbit/s don't skew the table.
+
+2012-10-24  Havard Eidnes  <he@uninett.no>
+
+	* traffic/common/plot.pl:
+	Insert the "offset" keyword in "set xlabel", now required by at
+	least gnuplot 4.6.0, and also accepted by gnuplot 4.2.6.
+
+	* INSTALL: Coalesce the two p5-TimeDate entries.
+	Add tgif.
+
+2012-10-22  Havard Eidnes  <he@uninett.no>
+
+	* check-subst.pl: Convert to 'use Getopt::Std;'.
+
+2012-10-21  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/tbl-report.pl:
+	Support the computed IPv6 traffic and percentage IPv6 traffic
+	report coloumns.
+
+	* traffic/report/report-day.pl:
+	Add a new pair of coloumns to the textual report:
+	Computed IPv6 traffic in/out (based on percentage and total traffic),
+	and percentage of IPv6 traffic.
+
+	* traffic/cgi/plot-all.pl:
+	Support plotting the percentage of IPv6 traffic.
+	Additionally, also support the plotting of multicast and
+	unicast packets per second.
+
+	* traffic/plot/plot-hr.pl, traffic/plot/plot-5m.pl,
+	traffic/plot/plot-raw.pl:
+	Support plotting the percentage of IPv6 traffic.
+
+	* traffic/cgi/load-map.pl:
+	Support "-l3" as a suffix, in addition to "-l2vpn<whatever>",
+	and apply normal "swap direction" rules to the rest of the
+	logical port name.
+
+2012-10-18  Havard Eidnes  <he@uninett.no>
+
+	* traffic/cgi/tbl-report.pl: With 100G, you need 9 spaces...
+
+2012-09-25  Havard Eidnes  <he@uninett.no>
+
+	* traffic/report/Makefile:
+	Add the two simple ip6 scripts.  These are just interim hacks...
+
+	* traffic/report/ip6-day-perc.pl, traffic/report/ip6-plot-data.pl:
+	Make this installable.
+
+	* traffic/report/ip6-day-perc.pl, traffic/report/ip6-plot-data.pl:
+	Adapt to install elsewhere, and fix up comments.
+
+	* traffic/report/ip6-day-perc.pl, traffic/report/ip6-plot-data.pl:
+	Add two simple scripts to test the percentage of ipv6 traffic,
+	from interfaces which implement the IPv6 MIB.  On JunOS this means
+	"layer 3 interfaces", on logical unit interfaces, as opposed to the
+	physical interfaces.
+
+	One to output raw plot data for a given day, one to compute the average
+	value for a given day.
+
+	* vwatch/unctime.pl: Convert to Time::Local.
+
+	* traffic/report/rh-test.pl: Fix comment.
+
+2012-09-21  Havard Eidnes  <he@uninett.no>
+
+	* tpoller/tpoller.tcl: Add counting of IPv6 packets.
+
+	* mibs/IPV6-MIB.my, mibs/IPV6-TC.my, mibs/Makefile:
+	Add the IPv6 MIB and the required IPv6 textual conventions.
+
+	* traffic/report/tail-stats.pl, traffic/report/sel-report.pl,
+	traffic/report/rr-test.pl, traffic/report/rh-test.pl,
+	traffic/report/report-week.pl, traffic/report/report-month.pl,
+	traffic/report/report-mon-sp.pl:
+	Move from getopts.pl to Getopt::Std.
+
+	* traffic/report/re-report-day.pl:
+	Remove extraneous getopt.pl inclusion.
+
+	* traffic/report/mk-top10.pl, traffic/report/mk-customer-index.pl,
+	traffic/report/get-perc.pl, traffic/report/get-5m-perc.pl,
+	traffic/report/customer-ts.pl, traffic/report/cust-load-now.pl,
+	traffic/plot/plot-raw.pl, traffic/plot/plot-week.pl,
+	traffic/plot/plot-hr.pl, traffic/plot/plot-day.pl,
+	traffic/plot/plot-5m.pl, traffic/jobs/extract-value.pl,
+	traffic/db/update-close.pl, traffic/report/report-day.pl:
+	Move from getopts.pl to Getopt::Std.
+
+	* traffic/common/date.pl: Move from timelocal.pl to Time::Local.
+
+2012-09-18  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/update-dbs.pl: Convert away from perl4ish getopts.pl.
+
+2012-09-13  Havard Eidnes  <he@uninett.no>
+
+	* traffic/db/Makefile:
+	Also install bdb-dump.pl and bdb-load.pl, to allow for an alternative
+	format of the files-to-names and names-to-file mappings.
+
+	* traffic/report/tail-stats.pl, traffic/report/customer-ts.pl:
+	Allow for a 5% overshoot over ifSpeed, to allow for quantization
+	errors which might occur with lower poll intervals.
+
+	* traffic/plot/plot-raw.pl:
+	Implement plotting of unicast and multicast packets per seconds.
+	Also allow for a 5% overshoot over ifSpeed, to allow for quantization
+	errors which might occur with lower poll intervals.
+
+	* traffic/plot/plot-hr.pl:
+	Implement plotting of unicast and multicast packets per seconds.
+
+	* traffic/plot/plot-5m.pl:
+	Implement plotting of unicast and multicast packets per seconds.
+	Also allow for a 5% overshoot over ifSpeed, to allow for quantization
+	errors which might occur with lower poll intervals.
+
+	* traffic/common/read-5m-sum.pl:
+	Allow for a 5% overshoot over ifSpeed, to allow for quantization
+	errors which might occur with lower poll intervals.
+
 2012-09-07  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Bump again.
