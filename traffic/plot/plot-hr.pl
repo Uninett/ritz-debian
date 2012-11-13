@@ -107,22 +107,33 @@ sub plot_traffic {
 
 sub decorate_traffic_1 {
     my($fh, $maxy, $df, $dsp, $ylabel) = @_;
+    my($scale, $label);
 
     printf($fh
-	   &plot_title(sprintf("$name hourly load on %s, capacity %d kbit/s",
+	   &plot_title(sprintf("$name hourly load on %s, capacity %s",
 			       &pretty_datespec($dsp),
-			       $ifspeed / 1000)));
+			       &pretty_ifspeed($ifspeed))));
     printf($fh &plot_xlabel("hourly average + peak interval in hour"));
+
+    # scale data rates to appropriate decimal unit
+    if ($ylabel eq "kbit/s") {
+	($scale, $label) = &scale_kbit_values($maxy);
+	$ylabel = $label;	# override with scaled unit
+    } else {
+	$scale = 1.0;
+    }
+
     printf($fh "%s", &plot_ylabel($ylabel));
 
     # Try to manage without this (?)
-    printf($fh &plot_yrange("0:$maxy"));
+    printf($fh &plot_yrange(
+	       sprintf("0:%s", $maxy / $scale)));
     
     # NB This should be generalized and put into plot.pl
-    printf($fh "plot  \"$df\" using 1:2 title \"in\" with lines,");
-    printf($fh "      \"$df\" using 1:3 title \"peak-in\" with lines,");
-    printf($fh "      \"$df\" using 1:4 title \"out\" with lines,");
-    printf($fh "      \"$df\" using 1:5 title \"peak-out\" with lines\n");
+    printf($fh "plot  \"$df\" using 1:(\$2/$scale) title \"in\" with lines,");
+    printf($fh "      \"$df\" using 1:(\$3/$scale) title \"peak-in\" with lines,");
+    printf($fh "      \"$df\" using 1:(\$4/$scale) title \"out\" with lines,");
+    printf($fh "      \"$df\" using 1:(\$5/$scale) title \"peak-out\" with lines\n");
 }
 
 sub decorate_traffic {

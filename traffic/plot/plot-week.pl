@@ -252,28 +252,37 @@ sub decorate_traffic_1 {
     my($fh, $maxy, $df, $dsp, $ylabel) = @_;
 
     printf($fh
-	   &plot_title(sprintf("%s weekly load %s, capacity %d kbit/s",
+	   &plot_title(sprintf("%s weekly load %s, capacity %s",
 			       $name,
 			       $dsp eq "epoch" ?
 			         "for the epoch" :
 			         sprintf("in %s",
 					 &pretty_datespec($dsp)),
-			       $ifspeed)
-		       ));
+			       &pretty_ifspeed($ifspeed * 1000))));
 					     
-    printf($fh "%s", &plot_ylabel("$ylabel"));
     printf($fh &plot_xlabel("Time"));
     
+    # scale real data rates to appropriate decimal unit
+    if ($ylabel eq "kbit/s") {
+	($scale, $label) = &scale_kbit_values($maxy);
+	$ylabel = $label;	# override with scaled unit
+    } else {
+	$scale = 1.0;
+    } 
+
+    printf($fh "%s", &plot_ylabel("$ylabel"));
+
     # Try to manage without this, (?)
-    printf($fh &plot_yrange("0:$maxy"));
+    printf($fh &plot_yrange(
+	       sprintf("0:%s", $maxy / $scale)));
     
     # NB This should probably be generalized and put into plot.pl
-    printf($fh "plot \"$df\" using 1:2 title \"peak-hr-in\" with lines,");
-    printf($fh "     \"$df\" using 1:3 title \"peak-hr-out\" with lines,");
-    printf($fh "     \"$df\" using 1:4 title \"busy-day-in\" with lines,");
-    printf($fh "     \"$df\" using 1:5 title \"busy-day-out\" with lines,");
-    printf($fh "     \"$df\" using 1:6 title \"average-in\" with lines,");
-    printf($fh "     \"$df\" using 1:7 title \"average-out\" with lines\n");
+    printf($fh "plot \"$df\" using 1:(\$2/$scale) title \"peak-hr-in\" with lines,");
+    printf($fh "     \"$df\" using 1:(\$3/$scale) title \"peak-hr-out\" with lines,");
+    printf($fh "     \"$df\" using 1:(\$4/$scale) title \"busy-day-in\" with lines,");
+    printf($fh "     \"$df\" using 1:(\$5/$scale) title \"busy-day-out\" with lines,");
+    printf($fh "     \"$df\" using 1:(\$6/$scale) title \"average-in\" with lines,");
+    printf($fh "     \"$df\" using 1:(\$7/$scale) title \"average-out\" with lines\n");
 }
 
 sub decorate_traffic {
