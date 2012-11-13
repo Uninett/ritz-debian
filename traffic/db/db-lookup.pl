@@ -57,7 +57,11 @@ sub open_db {
     my($dbf) = $db . ".bdb";
 
     if (-f $dbf) {		# has converted to Berkeley DB
-	tie(%{ $rh }, 'BerkeleyDB::Hash', -Filename => $dbf)
+	tie(%{ $rh }, 
+		'BerkeleyDB::Hash', 
+			-Filename => $dbf,
+			-Flags => DB_RDONLY
+	    )
 	    or die "Cannot open $dbf: $! $BerkeleyDB::Error\n";
     } else {
 	dbmopen(%{ $rh }, $db, 0666);
