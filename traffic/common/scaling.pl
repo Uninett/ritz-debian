@@ -43,7 +43,8 @@
 package scaling;
 
 sub main::maxit {
-    local($value) = @_;
+    my($value) = @_;
+    our($max_value);
 
     if (!defined($max_value) ||
 	$value > $max_value)
@@ -53,7 +54,8 @@ sub main::maxit {
 }
 
 sub main::max_scale {
-    local($log10, $limit, $upper, $bound);
+    my($log10, $limit, $upper, $bound);
+    our($max_value);
     
     if (defined($max_value) &&
 	$max_value > 0)
@@ -74,6 +76,49 @@ sub main::max_scale {
 	$bound = 0.0001;
     }
     return $bound;
+}
+
+# Given an interface speed in bit/s,
+# return a string which pretty-prints the value and unit
+sub main::pretty_ifspeed {
+    my($ifspeed) = @_;
+    my($scale, $val, $unit);
+
+    ($scale, $unit) = &main::scale_kbit_values($ifspeed / 1000.0);
+
+    $val = $ifspeed / 1000.0 / $scale;
+
+    # is value integral?
+    if ($val == int($val)) {
+	return sprintf("%d %s", $val, $unit);
+    } else {
+	return sprintf("%3.2f %s", $val, $unit);
+    }
+}
+
+sub main::scale_kbit_values {
+    my($max) = @_;
+    my($log10, $scale, $unit);
+
+    $max *= 1000.0;		# get bit/s
+
+    $log10 = log($max) / log(10);
+    $log10 += 0.001;		# compensate possible rounding error
+
+    if ($log10 >= 9) {
+	$scale = 1000000.0;
+	$unit = "Gbit/s";
+    } elsif ($log10 >= 6) {
+	$scale = 1000.0;
+	$unit = "Mbit/s";
+    } elsif ($log10 >= 3) {
+	$scale = 1.0;
+	$unit = "kbit/s";
+    } else {
+	$scale = 0.001;
+	$unit = "bit/s";
+    }
+    return ($scale, $unit);
 }
 
 1;
