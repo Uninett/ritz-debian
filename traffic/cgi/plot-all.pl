@@ -547,7 +547,7 @@ print $doc->start_html(-title=>$title,
 # Do argument validation
 
 @al = ($line, $datespec, $res, $plot, $regen);
-if (defined($ai = &invalid_arg("[-A-Za-z0-9_.\+]*", @al))) {
+if (defined($ai = &invalid_arg("[-A-Za-z0-9_.:\+]*", @al))) {
     printf("<h2>Invalid argument: %s</h2>\n", $al[$ai]);
     print $doc->end_html;
     print "\n";
