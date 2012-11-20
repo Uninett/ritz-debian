@@ -50,6 +50,8 @@ use Fcntl qw(:seek);
 use Date::Parse;
 use Date::Format;
 
+use RRDs;
+
 use strict;
 
 
@@ -222,8 +224,8 @@ sub compute_basic_values {
 		if ($br > $ifspeed * 1.05) { # Allow 5% overshoot
 		    printf(STDERR
 			   "ERROR: Bitrate above ifSpeed for %s: %s vs %s" .
-			   ", sample ignored\n",
-			   $b, $br, $ifspeed);
+			   " at time %s, sample ignored\n",
+			   $b, $br, $ifspeed, $sample_secs{$i});
 		    $val = 0;
 		}
 	    }
@@ -569,36 +571,38 @@ sub process_data {
 sub create_rrd {
     my($n) = @_;
     my($cmd);
+    my(@cmd);
     our($opt_V);
 
     # 3 years (and then some) in the past as starting point
     my($s) = $^T - (4 * 365) * 24 * 3600;
 
-    $cmd = "rrdtool create %s.rrd ";
-    $cmd .= "--start %d ";
-    $cmd .= "-s 300 ";
-    $cmd .= "DS:In:GAUGE:600:0:U ";
-    $cmd .= "DS:Out:GAUGE:600:0:U ";
-    # 72 hours of 5-minute intervals
-    $cmd .= "RRA:AVERAGE:0.5:1:864 ";
-    # 21 days of 30-minute intervals
-    $cmd .= "RRA:AVERAGE:0.5:6:1008 ";
-    # 62 days of 2-hour intervals
-    $cmd .= "RRA:AVERAGE:0.5:24:744 ";
-    # 1095 days (3 years) of 24-hour intervals
-    $cmd .= "RRA:AVERAGE:0.5:288:730 ";
 
+    push(@cmd, sprintf("%s.rrd", $n));
+    push(@cmd, sprintf("-b %d", $s));
+    push(@cmd, "-s 300");
+    push(@cmd, "DS:In:GAUGE:600:0:U");
+    push(@cmd, "DS:Out:GAUGE:600:0:U");
+    # 72 hours of 5-minute intervals
+    push(@cmd, "RRA:AVERAGE:0.5:1:864");
+    # 21 days of 30-minute intervals
+    push(@cmd, "RRA:AVERAGE:0.5:6:1008");
+    # 62 days of 2-hour intervals
+    push(@cmd, "RRA:AVERAGE:0.5:24:744");
+    # 1095 days (3 years) of 24-hour intervals
+    push(@cmd, "RRA:AVERAGE:0.5:288:730");
     # And similar for the max values:
-    $cmd .= "RRA:MAX:0.5:1:864 ";
-    $cmd .= "RRA:MAX:0.5:6:1008 ";
-    $cmd .= "RRA:MAX:0.5:24:744 ";
-    $cmd .= "RRA:MAX:0.5:288:730 ";
+    push(@cmd, "RRA:MAX:0.5:1:864");
+    push(@cmd, "RRA:MAX:0.5:6:1008");
+    push(@cmd, "RRA:MAX:0.5:24:744");
+    push(@cmd, "RRA:MAX:0.5:288:730");
 
     if ($opt_V) {
-	printf(STDERR "$cmd\n", $n, $s);
+	printf(STDERR "RRDs::create %s\n", join("\n", @cmd));
     }
-    if (system(sprintf($cmd, $n, $s)) != 0) {
-	printf(STDERR "rrdtool create %s.rrd failed: %s\n", $n, $!);
+    RRDs::create(@cmd);
+    if (RRDs::error) {
+	printf(STDERR "RRDs::create failed: %s\n", RRDs::error);
 	return undef;
     }
     return 1;
@@ -625,18 +629,52 @@ sub update_rrd {
     my($tap) = $d->{"sample_times"}->{"values"};
     my($iap) = $d->{"ikbps"}->{"values"};
     my($oap) = $d->{"okbps"}->{"values"};
+    my(@args);
+    my($lastupdate, $n_skip, $n_done, $n_oos, $firstskip, $prev_t);
+
+    $n_skip = $n_done = $n_oos = $prev_t = 0;
+
+    push(@args, sprintf("%s.rrd", $name));
+    $lastupdate = RRDs::last($args[0]);
+
     for ($i = 0; $i <= $eoa; $i++) {
-	printf(RRD "update %s.rrd %d:%f:%f\n",
-	       $name, $tap->[$i],
-	       $iap->[$i] * 1000.0,
-	       $oap->[$i] * 1000.0);
-	if ($opt_V) {
-	    printf(STDERR "RRD-update %s %f %f %s.rrd\n",
-		   &time_str($tap->[$i]),
-		   $iap->[$i] * 1000.0,
-		   $oap->[$i] * 1000.0,
-		   $name);
+	if ($tap->[$i] > $lastupdate) {
+	    if ($tap->[$i] > $prev_t) {
+		push(@args, sprintf("%d:%f:%f", 
+				    $tap->[$i],
+				    $iap->[$i] * 1000.0,
+				    $oap->[$i] * 1000.0));
+		$prev_t = $tap->[$i];
+		$n_done++;
+	    } else {
+		$n_oos++;
+	    }
+	} else {
+	    if (!defined($firstskip)) {
+		$firstskip = $tap->[$i];
+	    }
+	    $n_skip++;
 	}
+    }
+    if ($n_done != 0) {
+	RRDs::update(@args);
+	if (RRDs::error) {
+	    printf(STDERR "RRDs::update %s -- error: %s\n",
+		   join("\n", @args), RRDs::error);
+	}
+    }
+    if ($n_skip != 0) {
+	printf(STDERR "%s: RRDs skipped %d entries, did %d," .
+	       " first skipped = %d, lastupdate = %d\n",
+	       $name, $n_skip, $n_done, $firstskip, $lastupdate);
+    }
+    if ($n_oos != 0) {
+	printf(STDERR "%s: RRDs skipped %d entries out of sequence, did %d\n",
+	    $name, $n_oos, $n_done);
+    }
+
+    if ($opt_V) {
+	printf(STDERR "RRDs::update %s\n", join("\n", @args));
     }
 }
 
@@ -784,6 +822,9 @@ sub do_one_file {
     our($max_sample, %sample_time, $fd, %base, $date, $opt_I);
     our(%lasttime, %firsttime, %dstcomp, $retention_time, $opt_v);
 
+    # For undef'ing after processing one file
+    our(%count, $ifspeed, $iftype, $ifdescr);
+
     my($base_tm, $nd) = &decode_datespec($dsp);
 
     if (defined($opt_I)) {
@@ -829,9 +870,9 @@ sub do_one_file {
 
 	my($t0) = str2time($date);
 
-	# set up to process 1 hour at a time, but at least 4 samples
+	# set up to process 6 hours at a time, but at least 4 samples
 	# on each go-around
-	my($samples_per_go) = &max(4, int($max_sample / 24));
+	my($samples_per_go) = &max(4, int($max_sample / 4));
 
 	for($i = 0; $i < $max_sample; $i += $samples_per_go) {
 	    my $top = &min($i + $samples_per_go - 1, $max_sample);
@@ -841,15 +882,49 @@ sub do_one_file {
 			    $retention_time));
 	}
     }
+
+    undef %count;
+    undef %base;
+    undef %sample_time;
     undef %lasttime;
     undef %firsttime;
     undef %dstcomp;
+    undef $date;
+    undef $ifspeed;
+    undef $iftype;
+    undef $ifdescr;
+    undef $max_sample;
 }
+
+sub child_process_files {
+    my($pid, $d, $dsp, @l) = @_;
+    our($opt_v);
+
+    my $nf = 0;
+    foreach my $f (@l) {
+	my($name) = &file_to_name($f, $d);
+	if (!defined($name)) { next; }
+	if (defined($opt_v)) {
+	    printf(STDERR
+		   "Pid %s doing %s / %s / %s\n",
+		   $pid, $d, $name, $f);
+	}
+	&do_one_file($dsp, $name);
+	$nf++;
+    }
+    if (defined($opt_v)) {
+	printf(STDERR
+	       "Pid %d exiting after processing %d files\n",
+	       $pid, $nf);
+    }
+    exit(0);
+}
+
 
 sub do_all_files {
     my($dsp) = @_;
     my($i);
-    our($max_sample, %sample_time, $fd, %base, $date, $opt_v);
+    our($max_sample, %sample_time, $fd, %base, $date, $opt_v, $opt_j);
 
     my($base_tm, $nd) = &decode_datespec($dsp);
     if (!defined($base_tm)) {
@@ -862,16 +937,66 @@ sub do_all_files {
 	my($dsp) = &date_to_datespec($d, "day");
 	my($dir) = &find_data_dir($d);
 	my(@files) = &directory_files($dir);
+	my(%file, @bns);
 	
+	# Weed out duplicate logical port names
+	# before potentially processing them in parallel
 	foreach my $f (@files) {
 	    $f =~ s/.gz$//;
-	    my($b) = basename($f);
-	    my($name) = &file_to_name($b, $d);
-	    if (!defined($name)) { next; }
-	    if (defined($opt_v)) {
-		printf(STDERR "Doing %s / %s / %s\n", $d, $name, $f);
+	    my $b = basename($f);
+	    my $n = &file_to_name($b, $d);
+	    if (! defined($n)) { next; }
+	    if (! defined($file{$n})) {
+		$file{$n} = $b;
+		push(@bns, $b);
+	    } else {
+		printf(STDERR "Skipping dup port name: %s / %s," .
+		       " already seen at %s\n",
+		       $n, $b, $file{$n});
 	    }
-	    &do_one_file($dsp, $name);
+	}
+
+
+	# Parallel processing requested?
+	# If you have more I/O capacity than single-core CPU speed,
+	# and have multiple cores, you may gain by using this
+	if (defined($opt_j) && $opt_j > 1) {
+	    my($inc, $p, $pid);
+
+	    $inc = int(($#bns + 1) / ($opt_j));
+	    if ($inc == 0) { $inc = 1; }
+	    $p = 0;
+	    while($p <= $#bns) {
+		my($m);
+
+		$m = &min($p + $inc - 1, $#bns);
+
+		if (($pid = fork()) == 0) {
+		    &child_process_files($$, $d, $dsp, @bns[$p .. $m]);
+		}
+		if (defined($opt_v)) {
+		    printf(STDERR
+			   "Forked pid %d for processing %d files" .
+			   ", from %s to %s\n",
+			   $pid, $m - $p + 1, $p, $m);
+		}
+		$p += $inc;
+	    }
+	    # Wait for all the children to finish
+	    while(($pid = wait()) != -1) {
+		if (defined($opt_v)) {
+		    printf(STDERR "Reaped pid %d\n", $pid);
+		}
+	    }
+	} else {
+	    foreach my $f (@bns) {
+		my($name) = &file_to_name($f, $d);
+		if (!defined($name)) { next; }
+		if (defined($opt_v)) {
+		    printf(STDERR "Doing %s / %s / %s\n", $d, $name, $f);
+		}
+		&do_one_file($dsp, $name);
+	    }
 	}
     }
 }
@@ -950,6 +1075,7 @@ sub usage {
     printf(STDERR "-m mailto    mail statistical deviations report to addr\n");
     printf(STDERR "-M mailfrom  set from address for stat dev. reports\n");
     printf(STDERR "-N           no deviation processing\n");
+    printf(STDERR "-j <jobs>    Parallelize historical re-processing (-d)\n");
     printf(STDERR "-v           output some verbose debugging info\n");
     printf(STDERR "-V           output extra-verbose debugging info\n");
 
@@ -961,9 +1087,9 @@ sub usage {
 #
 
 our($opt_h, $opt_m, $opt_M, $opt_t, $opt_u, $opt_l, $opt_p, $opt_r,
-    $opt_R, $opt_n, $opt_d);
+    $opt_R, $opt_n, $opt_d, $opt_j);
 
-&getopts("d:hiIl:M:m:Nn:p:R:r:t:u:vV");
+&getopts("d:hij:Il:M:m:Nn:p:R:r:t:u:vV");
 
 if (defined($opt_h)) {
     &usage();
@@ -997,8 +1123,8 @@ if (defined($opt_R)) {
 	&usage();
     }
     chdir($opt_R) || die "Could not chdir to $opt_R: $!";
-    open(RRD, "|rrdtool - 2>&1 | egrep -v '^OK'") ||
-	die "Could not open rrdtool";
+#    open(RRD, "|rrdtool - 2>&1 | egrep -v '^OK'") ||
+#	die "Could not open rrdtool";
 }
 
 # Make STDERR flush output immediately
@@ -1045,6 +1171,6 @@ if (defined($opt_d) && defined($opt_n)) {
 	&do_all_files_today();
     }
 }
-if ($opt_R) {
-    close(RRD);
-}
+#if ($opt_R) {
+#    close(RRD);
+#}
