@@ -7,7 +7,7 @@
 
 use Getopt::Std;
 
-use lib "/local/traffic/lib";
+use lib "/a/traffic/lib";
 require "read-raw-log.pl";
 require "date.pl";
 
@@ -31,6 +31,28 @@ our(%count, $max_sample, %sample_time);
 
 &read_log($IN, $tm);
 
-for(my $i = 0; $i <= $max_sample; $i++) {
-    printf("%07.4f %f\n", $sample_time{$i}, $count{"ifHCInOctets",$i});
+our($ifspeed);
+
+our($iov, $oov);
+
+if (defined($count{"ifHCInOctets",0})) {
+    $iov = "ifHCInOctets";
+    $oov = "ifHCOutOctets";
+} else {
+    $iov = "ifInOctets";
+    $oov = "ifOutOctets";
+}
+
+for(my $i = 1; $i <= $max_sample; $i++) {
+    my $td = $sample_time{$i} - $sample_time{$i-1};
+    my $ir = $count{$iov,$i} * 8 / ($td * 3600);
+    my $or = $count{$oov,$i} * 8 / ($td * 3600);
+    my $m = "";
+    if ($ir > $ifspeed || $or > $ifspeed) {
+	$m = " <-- " . $ifspeed;
+    }
+    printf("%07.4f %10.0f %10.0f%s\n",
+	$sample_time{$i},
+	$ir, $or, $m
+	);
 }
