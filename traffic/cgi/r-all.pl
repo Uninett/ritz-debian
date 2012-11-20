@@ -621,6 +621,9 @@ sub err {
     my($msg) = @_;
     our($q);
 
+    if (!defined($q)) {
+	$q = new CGI;
+    }
     print $q->header("text/html");
     print $q->start_html("Error");
     printf("<h2>%s</h2>", $msg);
