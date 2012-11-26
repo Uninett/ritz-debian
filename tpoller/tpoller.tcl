@@ -241,17 +241,50 @@ proc recordIntf { sh vbl } {
     set type [mib scan [lindex [lindex $vbl 1] 0] $type]; # undo TC coding
     set hs	[lindex [lindex $vbl 5] 2]
 
-    if { $hs != "" && $hs != 0 } {
+    if { $hs != "" && $hs != 0 && $hs > 3000 } {
 	set speed [expr $hs * 1000000.0]
     }
 
     set name [name $sh]
 
+    set s ""
+
+    if [info exists cx($name,type,$ix)] {
+	if { $cx($name,type,$ix) != $type } {
+	    set s [format "IfIndex %s on %s changed type from %s to %s" \
+		       $ix $name $cx($name,type,$ix) $type]
+	}
+    }
     set cx($name,type,$ix) $type
+
+    if [info exists cx($name,speed,$ix)] {
+	if { $cx($name,speed,$ix) != $speed } {
+	    set s [format "%s\nIfIndex %s on %s changed speed from %s to %s" \
+		       $s $ix $name $cx($name,speed,$ix) $speed]
+	}
+    }
     set cx($name,speed,$ix) $speed
+
+    if [info exists cx($name,admin,$ix)] {
+	if { $cx($name,admin,$ix) != $admin } {
+	    set s [format "%s\nifIndex %s on %s changed admin-state from %s to %s" \
+		       $s $ix $name $cx($name,admin,$ix) $admin]
+	}
+    }
     set cx($name,admin,$ix) $admin
+
+    if [info exists cx($name,descr,$ix)] {
+	if { $cx($name,descr,$ix) != $descr } {
+	    set s [format "%s\nifIndex %s on %s changed descr from \"%s\" to \"%s\"" \
+		       $s $ix $name $cx($name,descr,$ix) $descr]
+	}
+    }
     set cx($name,descr,$ix) $descr
     lappend cx($name,ifindexes) $ix
+
+    if { $s != "" } {
+	puts $s
+    }
 
 #    puts [format "Intf %s,%s type %s speed %s admin %s descr %s" \
 #	    $name $ix $type $speed $admin $descr]
