@@ -9,6 +9,9 @@
 sub pretty_ios_desc {
     my($desc) = @_;
 
+    if ($desc =~ /NX-OS\(tm\) ([^,]*), .*Version ([^,]*), .*/) {
+	$desc = "Cisco-NX-OS $2 $1";
+    }
     if ($desc =~ /IOS XR.*Version ([^\[]*).*/) {
 	$desc = "Cisco-IOS-XR $1";
     }
