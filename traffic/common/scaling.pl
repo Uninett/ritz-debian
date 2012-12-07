@@ -103,7 +103,7 @@ sub main::scale_kbit_values {
     $max *= 1000.0;		# get bit/s
 
     if ($max == 0) {		# protection...
-	return (1.0, "kbit/s");
+	return (1.0, "bit/s");
     }
 
     $log10 = log($max) / log(10);
