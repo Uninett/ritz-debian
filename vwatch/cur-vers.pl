@@ -7,6 +7,8 @@
 # Produce report of current software verions on the monitored devices.
 #
 
+use strict;
+
 push(@INC, "%LIBDIR%");
 push(@INC, "%TOPDIR%/conf");
 
@@ -16,6 +18,7 @@ require 'pretty-ios.pl';
 sub get_start_software {
     my($daydir) = @_;
     my($dn, $f, $fn, $desc);
+    our(%software, %old_software);
     
     $dn = $daydir . "/descs";
     opendir (dir, $dn) || die "Could not opendir $dn: $!";
@@ -43,9 +46,11 @@ sub get_start_software {
 sub read_day_data {
     my($in) = @_;
     my($rtr, $desc);
+    our(%software);
 
     while(<$in>) {
-	chop; split;
+	chop;
+	@_ = split;
 	$rtr = $_[5];
 	if (/software: (.*)/) {
 	    if (/\#$/) {
@@ -185,6 +190,7 @@ sub pretty_desc {
 sub report {
     my($rtr, $l);
     my(@ll, @sl);
+    our(%software);
 
     foreach $rtr (keys %software) {
 	push(@ll, sprintf("%-25s %s\n", $rtr, &pretty_desc($software{$rtr})));
@@ -199,14 +205,15 @@ sub report {
 # Main
 #
 
-$LOGTREE = "%TOPDIR%/ver-watch/logs";
+our $LOGTREE = "%TOPDIR%/ver-watch/logs";
 
-$today = $LOGTREE . "/today";
+our $today = $LOGTREE . "/today";
 
 &get_start_software($today);
-$f = $today . "/ver-watch.log";
-open(IN, $f) || die "Could not open $f: $!";
-&read_day_data(IN);
-close(IN);
+my $f = $today . "/ver-watch.log";
+my($IN);
+open($IN, $f) || die "Could not open $f: $!";
+&read_day_data($IN);
+close($IN);
 &report();
 
