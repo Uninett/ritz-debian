@@ -65,7 +65,8 @@ sub process {
 
     open(in, $lf) || die "Could not open $lf: $!\n";
     while(<in>) {
-	chop; split;
+	chop;
+	@_ = split;
 	$rtr = $_[5];
 	if (/reloaded: (.*)/) {
 	    @a = split(/[ \t\n]+/, $1);

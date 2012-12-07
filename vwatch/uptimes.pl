@@ -88,7 +88,8 @@ sub read_day_data {
     our(%software);
 
     while(<$in>) {
-	chop; split;
+	chop;
+	@_ = split;
 	$rtr = $_[5];
 	if (/software: (.*)/) {
 	    if (/\#$/) {

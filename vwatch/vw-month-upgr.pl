@@ -103,7 +103,8 @@ sub read_day_data {
     my($rtr, $desc, @a, $day);
 
     while(<$in>) {
-	chop; split;
+	chop;
+	@_ = split;
 	$rtr = $_[5];
 	$day = $_[1] . " " . $_[2]; # "prettyprinted" date a'la "Oct 08"
 	if (/reloaded: (.*)/) {
