@@ -412,6 +412,18 @@ sub find_rgb_color {
 
 sub find_color {
     my($cname, $img) = @_;
+    our(%red, %green, %blue);
+
+    if (!defined($red{$cname})) {
+	my $fc = substr($cname, 0, 1);
+        my $r = substr($cname, 1);
+	my $c = uc($fc) . $r;
+	if (defined($red{$c})) {
+		$cname = $c;
+	} else {
+		warn("Unknown color: $cname");
+	}
+    }
 
     return &find_rgb_color($red{$cname},
 			   $green{$cname},
@@ -763,7 +775,7 @@ sub draw_title {
     $pw = $len * 6;		# small font is apparenty 6pix wide
     $x = ($w / 2) - ($pw / 2);	# center text
 
-    $c = &find_color(0, $img);	# black
+    $c = &find_color("black", $img);
     $img->string(gdSmallFont, $x, 0, $title, $c);
 }
 
