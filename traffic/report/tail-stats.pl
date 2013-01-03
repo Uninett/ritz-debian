@@ -832,7 +832,8 @@ sub do_one_file {
     }
 
     foreach my $day (0 .. $nd-1) {
-	my($tm) = $base_tm + 3600 * 24 * $day;
+	# 2h+ to compensate for effects of DST...
+	my($tm) = $base_tm + 7200 + 3600 * 24 * $day;
 	my($d) = &tm_to_date($tm);
 
 	if ($opt_v) {
