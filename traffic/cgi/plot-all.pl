@@ -510,7 +510,10 @@ $ourname = sprintf("%splot-all", $pfx);
 
 ($line, $datespec, $res, $plot, $regen) = split(/\s*,\s*/,"$query");
 
-if (&tm_in_datespec(time, $datespec)) {
+if (!defined($datespec) || $datespec eq "") {
+    $datespec = &yesterday_spec(); # default to show plot for previous day
+    $exp = &secs_to_expiry("day", $datespec);
+} elsif (&is_today($datespec)) {
     $exp = &secs_to_expiry($res, $datespec);
 } else {
     $exp = 30*24*60*60;		# one month, really "eternally"
