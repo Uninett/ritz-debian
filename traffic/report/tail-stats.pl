@@ -933,7 +933,8 @@ sub do_all_files {
     }
 
     foreach my $day (0 .. $nd-1) {
-	my($tm) = $base_tm + $day * 3600 * 24;
+	# 7200 = 2h to compensate for DST shifts
+	my($tm) = $base_tm + 7200 + $day * 3600 * 24;
 	my($d) = &tm_to_date($tm);
 	my($dsp) = &date_to_datespec($d, "day");
 	my($dir) = &find_data_dir($d);
