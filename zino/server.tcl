@@ -748,7 +748,7 @@ proc NotifySink { chan } {
     if { $c == -1 } {
 	log [format "Error reading notify-channel %s, closing" $chan]
 	catch { close $chan }
-	foreach $n [array names NotifyChan] {
+	foreach n [array names NotifyChan] {
 	    if { $NotifyChan($n) == $chan } {
 		unset NotifyChan($n)
 	    }
