@@ -26,6 +26,8 @@ proc newServerConn { chan host port } {
     set ClientPort($chan) $port
 
     fileevent $chan readable [list readServerCmd $chan]
+
+    log [format "New server connection fd %s from %s / %s" $chan $host $port]
 }
 
 proc readServerCmd { chan } {
@@ -53,10 +55,12 @@ proc closeClient { chan msg } {
     if { [info exists ClientNotify($chan)] } {
 	set s $ClientNotify($chan)
 	catch { puts $s $msg }
-	close $ClientNotify($chan)	
+	catch { close $s }	
 	unset ClientNotify($chan)
+	log [format "Closed notify channel %s" $s]
     }
     catch { close $chan }
+    log [format "Closed fd %s" $chan]
 }
 
 proc ClientResponse { chan msg } {
@@ -729,11 +733,29 @@ proc newNotifyConn { chan chost cport } {
     puts $chan $n
 
     set NotifyChan($n) $chan
+
+    log [format "New notify connection fd %s from %s / %s" $chan $chost $cport]
+
+    after 30000 CheckNewNotify $n
+
 }
 
 proc NotifySink { chan } {
 
     gets $chan l
+}
+
+proc CheckNewNotify { nonce } {
+    global NotifyChan
+
+    if [info exists NotifyChan($nonce)] {
+	set chan $NotifyChan($nonce)
+	catch { puts $chan "Timeout waiting for action, closing..." }
+	log [format "closing %s: timeout waiting for tie of notify socket" \
+		 $chan]
+	catch { close $chan }
+	unset NotifyChan($nonce)
+    }
 }
 
 proc doNtieCmd { chan l } {
@@ -775,6 +797,8 @@ proc openNotifyConn { chan host port } {
     fcntl $s KEEPALIVE 1
     fileevent $s readable [list NotifySink $s]
     set ClientNotify($chan) $s
+
+    log [format "Notify connection fd %s from %s / %s" $chan $host $port]
 }
 
 proc notifySend { msg } {
