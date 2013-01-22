@@ -741,8 +741,24 @@ proc newNotifyConn { chan chost cport } {
 }
 
 proc NotifySink { chan } {
+    global NotifyChan
+    global ClientNotify
 
-    gets $chan l
+    set c [gets $chan l]
+    if { $c == -1 } {
+	log [format "Error reading notify-channel %s, closing" $chan]
+	catch { close $chan }
+	foreach $n [array names NotifyChan] {
+	    if { $NotifyChan($n) == $chan } {
+		unset NotifyChan($n)
+	    }
+	}
+	foreach clnt [array names ClientNotify] {
+	    if { $ClientNotify($clnt) == $chan } {
+		closeClient $clnt "Lost notify connection, shutting down"
+	    }
+	}
+    }
 }
 
 proc CheckNewNotify { nonce } {
