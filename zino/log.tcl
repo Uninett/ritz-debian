@@ -28,7 +28,8 @@ proc log { str } {
     foreach chan [array names log_chans] {
 	if { [catch { puts $chan [log_str $str] }] } {
 	    unset log_chans($chan)
-	    close $chan
+	    catch { close $chan }
+	    log [format "Closed log channel %s" $chan]
 	}
     }
 }
@@ -37,6 +38,8 @@ proc newConn { chan host port } {
     global log_chans
     fconfigure $chan -buffering line
     set log_chans($chan) 1
+
+    log [format "New log client on %s from %s / %s" $chan $host $port]
 }
 
 if { [info exists ssock] } {
