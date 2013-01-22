@@ -95,11 +95,11 @@ sub save_files {
     }
 
     # Clean up any gzipped files from last month
-    $cmd = "rm -f $backupdir/*.gz";
+    $cmd = "find $backupdir -name '*.gz' -type f | xargs rm -f";
     # ignore any error code returned
     system($cmd);
 
-    $cmd = "$gzip $backupdir/*";
+    $cmd = "find $backupdir -type f | xargs $gzip";
     $ret = system($cmd) / 256;
     if ($ret != 0) {
 	die "Could not compress backup files\n";
