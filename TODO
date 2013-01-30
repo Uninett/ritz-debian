@@ -1,5 +1,7 @@
 $Id$		-*- Text -*-
 
+ o Limit the number of x tics on epoch plots.
+
  o Count input drops?
 
  o Add a DoS-detection facility, triggering on large swings in
