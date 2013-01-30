@@ -1,5 +1,7 @@
 $Id$		-*- Text -*-
 
+ o Support "today" as an alias for ... today's datespec.
+
  o Limit the number of x tics on epoch plots.
 
  o Count input drops?
