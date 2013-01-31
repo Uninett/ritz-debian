@@ -152,6 +152,26 @@ sub plot_set_xtics {
 		$xtics .= "\"" . &tm_to_mday($tm) . "\"$tic,";
 	    }
 	}
+    } elsif ($no_days > 10 * 365) { # More than 10 years, use every other year
+	foreach $d (0 .. $period_days - 1) {
+	    $tm = $base_tm + $d * (60*60*24);
+	    $date = &tm_to_date($tm);
+	    if ($date =~ /(\d\d\d[02468])0101/) {
+		my $y = $1;
+		$tic = sprintf(" %3d", $d*24);
+		$xtics .= sprintf("\"%s\"%s,", $y, $tic);
+	    }
+	}
+    } elsif ($no_days > 4 * 365) { # more than 4 years, use years as tickmark
+	foreach $d (0 .. $period_days - 1) {
+	    $tm = $base_tm + $d * (60*60*24);
+	    $date = &tm_to_date($tm);
+	    if ($date =~ /(\d\d\d\d)0101/) { # mark each year
+		my $y = $1;
+		$tic = sprintf(" %3d", $d*24);
+		$xtics .= sprintf("\"%s\"%s,", $y, $tic);
+	    }
+	}
     } elsif ($no_days > 365) {
 	foreach $d (0 .. $period_days - 1) {
 	    $tic = sprintf(" %3d", $d*24);
@@ -164,7 +184,7 @@ sub plot_set_xtics {
 		$xtics .= "\"1" . $_[2] . "\\n" . $1 . "\"$tic,";
 	    }
 	}
-    } elsif ($no_days > 100) {	# approximately 14 weeks, use month as tickmark
+    } elsif ($no_days > 70) {	# approximately 10 weeks, use month as tickmark
 	foreach $d (0 .. $period_days - 1) {
 	    $tic = sprintf(" %3d", $d*24);
 	    $tm = $base_tm + $d * (60*60*24);
