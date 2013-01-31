@@ -7,6 +7,8 @@
 # Produce a report of this month's upgrades
 #
 
+use strict;
+
 push(@INC, "%LIBDIR%");
 
 require 'unctime.pl';
@@ -33,6 +35,7 @@ sub close_times {
 sub get_start_software {
     my($daydir) = @_;
     my($dn, $f, $fn, $desc);
+    our(%cur_software, %old_software);
     
     $dn = $daydir . "/descs";
     opendir (dir, $dn) || die "Could not opendir $dn: $!";
@@ -56,8 +59,8 @@ sub get_start_software {
 
 sub check_descs {
     my($daydir) = @_;
-
     my($dn, $f, $fn, $desc);
+    our(%cur_software, %software, %upgraded);
     
     $dn = $daydir . "/descs";
     opendir (dir, $dn) || die "Could not opendir $dn: $!";
@@ -101,6 +104,8 @@ sub check_descs {
 sub read_day_data {
     my($in) = @_;
     my($rtr, $desc, @a, $day);
+    our(%restarts, %reload_date, %upgraded, %software, %reason);
+    our(%cur_software, %uptime);
 
     while(<$in>) {
 	chop;
@@ -113,7 +118,6 @@ sub read_day_data {
 		$_[1] eq $a[1] &&
 		$_[2] eq $a[2])	# same date
 	    {
-		$recent_restart{$rtr} = 1;
 		if (! defined $restarts{$rtr}) {
 		    $restarts{$rtr} = 1;
 		} else {
@@ -162,6 +166,7 @@ sub report_day {
     my($day) = @_;
     my(@report, $rtr);
     my($old, $sw, @sw);
+    our(%upgraded, %software, %old_software, %restarts);
     
     foreach $rtr (keys %upgraded) {
 	$old = $old_software{$rtr};
@@ -186,15 +191,15 @@ sub report_day {
 sub process_day {
     my($daydir) = @_;
     my($lf, $day);
-    my($r);
+    my($r, $in);
 
     &check_descs($daydir);
 
     $lf = $daydir . "/ver-watch.log";
 
-    open(in, $lf) || die "Could not open $lf: $!\n";
-    $day = &read_day_data(in);
-    close(in);
+    open($in, $lf) || die "Could not open $lf: $!\n";
+    $day = &read_day_data($in);
+    close($in);
 
     return $day;
 }
@@ -202,6 +207,7 @@ sub process_day {
 sub process_month {
     my($month) = @_;
     my(@report, $day, $daydir, $d);
+    our($LOGTREE, %cur_software, %old_software);
     
     $daydir = $LOGTREE . "/" . $month . "/01";
     
@@ -216,7 +222,7 @@ sub process_month {
 	$day = &process_day($daydir);
 	push (@report, &report_day($day));
 
-	foreach $r (keys %cur_software) {
+	foreach my $r (keys %cur_software) {
 	    $old_software{$r} = $cur_software{$r};
 	}
     }
@@ -233,15 +239,15 @@ sub usage {
 # Main
 #
 
-$LOGTREE = "%TOPDIR%/ver-watch/logs";
+our $LOGTREE = "%TOPDIR%/ver-watch/logs";
 
 if ($#ARGV != 0) {
     &usage();
 }
-$month = $ARGV[0];
+my $month = $ARGV[0];
 
-@report = &process_month($month);
+my @report = &process_month($month);
 
-while($line = shift(@report)) {
+while(my $line = shift(@report)) {
     printf("%s", $line);
 }
