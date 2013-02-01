@@ -45,7 +45,8 @@ sub pretty_hp_desc {
 sub pretty_junos_desc {
     my($desc) = @_;
 
-    if ($desc =~ /Juniper Networks, Inc. ([^ ]+) .*kernel JUNOS ([^ ]+) .*/) {
+    if ($desc =~
+	/Juniper Networks, Inc. ([^ ]+) .*kernel JUNOS ([^ ,]+)[, ].*/) {
 	$desc = "JunOS $2 $1";
     }
     return $desc;
