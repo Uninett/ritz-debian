@@ -261,6 +261,7 @@ proc recordIntf { sh vbl } {
 	if { $cx($name,speed,$ix) != $speed } {
 	    set s [format "%s\nIfIndex %s on %s changed speed from %s to %s" \
 		       $s $ix $name $cx($name,speed,$ix) $speed]
+	    set cx($name,speedchange,$ix) 1
 	}
     }
     set cx($name,speed,$ix) $speed
@@ -283,7 +284,7 @@ proc recordIntf { sh vbl } {
     lappend cx($name,ifindexes) $ix
 
     if { $s != "" } {
-	puts $s
+	logerr $s
     }
 
 #    puts [format "Intf %s,%s type %s speed %s admin %s descr %s" \
@@ -384,6 +385,11 @@ proc logVars { sh vbl } {
     # if the device was reloaded
     # and we've not yet recorded it, do so now
     maybeLogReload $fh $name $ix
+
+    if [ info exists cx($name,speedchange,$ix) ] {
+	logInfo $fh $name $ix
+	unset cx($name,speedchange,$ix)
+    }
 
     foreach vb $vbl {
 	set oid [lindex $vb 0]
