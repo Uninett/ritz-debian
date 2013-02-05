@@ -253,6 +253,7 @@ proc recordIntf { sh vbl } {
 	if { $cx($name,type,$ix) != $type } {
 	    set s [format "IfIndex %s on %s changed type from %s to %s" \
 		       $ix $name $cx($name,type,$ix) $type]
+	    set cx($name,changed,$ix) 1
 	}
     }
     set cx($name,type,$ix) $type
@@ -261,7 +262,7 @@ proc recordIntf { sh vbl } {
 	if { $cx($name,speed,$ix) != $speed } {
 	    set s [format "%s\nIfIndex %s on %s changed speed from %s to %s" \
 		       $s $ix $name $cx($name,speed,$ix) $speed]
-	    set cx($name,speedchange,$ix) 1
+	    set cx($name,changed,$ix) 1
 	}
     }
     set cx($name,speed,$ix) $speed
@@ -278,6 +279,7 @@ proc recordIntf { sh vbl } {
 	if { $cx($name,descr,$ix) != $descr } {
 	    set s [format "%s\nifIndex %s on %s changed descr from \"%s\" to \"%s\"" \
 		       $s $ix $name $cx($name,descr,$ix) $descr]
+	    set cx($name,changed,$ix) 1
 	}
     }
     set cx($name,descr,$ix) $descr
@@ -386,9 +388,9 @@ proc logVars { sh vbl } {
     # and we've not yet recorded it, do so now
     maybeLogReload $fh $name $ix
 
-    if [ info exists cx($name,speedchange,$ix) ] {
+    if [ info exists cx($name,changed,$ix) ] {
 	logInfo $fh $name $ix
-	unset cx($name,speedchange,$ix)
+	unset cx($name,changed,$ix)
     }
 
     foreach vb $vbl {
