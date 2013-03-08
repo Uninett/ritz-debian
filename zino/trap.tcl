@@ -24,13 +24,14 @@ proc doTrap { a type args } {
 	puts [format "ignored trap from %s" $a]
 	return
     }
-    if [catch { set sh [handle $AddrToRouter($a)] }] {
-	puts [format "ignored trap from %s (startup?)" $a]
-	return
-    }
-    set r [name $sh]
+#    if [catch { set sh [handle $AddrToRouter($a)] }] {
+#	puts [format "ignored trap from %s (startup?)" $a]
+#	return
+#    }
+#    set r [name $sh]
+    set r $AddrToRouter($a)
 
-#    puts [format "%s: trap-type %s" $r $type]
+    puts [format "%s: trap-type %s" $r $type]
 
     foreach vb $args {
 	set oid [lindex $vb 0]
@@ -46,7 +47,7 @@ proc doTrap { a type args } {
     }
 
     if { ! [info exists snmpTrapOID] } {
-	puts [format "snmpTrapOID missing from %s (%s)" [name $sh] $a]
+	puts [format "snmpTrapOID missing from %s (%s)" $r $a]
 	return
     }
 
@@ -74,12 +75,12 @@ proc doTrap { a type args } {
 	return
     }
 
-    set router [name $sh]
+    set router $r
     set RestartTime($router) [expr [clock seconds] - ($uptime / 100)]
 
     switch $snmpTrapOID {
 	IF-MIB!linkUp {
-	    set s [format "%s: linkUp" [name $sh]]
+	    set s [format "%s: linkUp" $r]
 	    if { ! [info exists ifIndex] } {
 		set ifIndex -1
 	    }
@@ -96,7 +97,7 @@ proc doTrap { a type args } {
 	    linkTrans $router $ifIndex $ifDescr Up $locIfReason
 	}
 	IF-MIB!linkDown {
-	    set s [format "%s: linkDown" [name $sh]]
+	    set s [format "%s: linkDown" $r]
 	    if { ! [info exists ifIndex] } {
 		set ifIndex -1
 	    }
@@ -148,7 +149,7 @@ proc doTrap { a type args } {
 	}
 	CISCO-CONFIG-MAN-MIB!ciscoConfigManEvent {
 	    log [format "%s: config-change: cmd-src %s conf-src %s dst %s" \
-		    [name $sh] $ccmHistoryEventCommandSource \
+		    $r $ccmHistoryEventCommandSource \
 		    $ccmHistoryEventConfigSource \
 		    $ccmHistoryEventConfigDestination]
 	}
@@ -194,10 +195,10 @@ proc doTrap { a type args } {
 		    [mib name $snmpTrapOID]]
 	}
     }
-    if [eventIxExists $router "reachability"] {
-	# We got a trap from the box -- check if it's now reachable
-	checkResponse $sh
-    }
+#    if [eventIxExists $router "reachability"] {
+#	# We got a trap from the box -- check if it's now reachable
+#	checkResponse $sh
+#    }
 }
 
 proc os_to_as { os } {
