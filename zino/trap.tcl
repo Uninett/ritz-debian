@@ -31,7 +31,7 @@ proc doTrap { a type args } {
 #    set r [name $sh]
     set r $AddrToRouter($a)
 
-    puts [format "%s: trap-type %s" $r $type]
+#    puts [format "%s: trap-type %s" $r $type]
 
     foreach vb $args {
 	set oid [lindex $vb 0]
