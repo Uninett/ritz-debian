@@ -6,7 +6,7 @@
 # Server module, handling connections and commands from clients.
 #
 
-package require Tclx
+# package require Tclx
 
 if { [info exists ServerSocket] } {
     close $ServerSocket
@@ -18,7 +18,7 @@ proc newServerConn { chan host port } {
     
     fconfigure $chan -buffering line
     fconfigure $chan -blocking false
-    fcntl $chan KEEPALIVE 1
+#    fcntl $chan KEEPALIVE 1
 
     ClientResponse $chan [format "200 %s Hello, there" [authChallenge $chan]]
 
@@ -726,7 +726,7 @@ proc newNotifyConn { chan chost cport } {
 
     fconfigure $chan -buffering line
     fconfigure $chan -blocking false
-    fcntl $chan KEEPALIVE 1
+#    fcntl $chan KEEPALIVE 1
     fileevent $chan readable [list NotifySink $chan]
 
     set n [getNonce]
@@ -810,7 +810,7 @@ proc openNotifyConn { chan host port } {
     set s [socket $host $port]
     fconfigure $s -blocking false
     fconfigure $s -buffering line
-    fcntl $s KEEPALIVE 1
+#    fcntl $s KEEPALIVE 1
     fileevent $s readable [list NotifySink $s]
     set ClientNotify($chan) $s
 
