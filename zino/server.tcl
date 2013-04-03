@@ -27,7 +27,7 @@ proc newServerConn { chan host port } {
 
     fileevent $chan readable [list readServerCmd $chan]
 
-    log [format "New server connection fd %s from %s / %s" $chan $host $port]
+#    log [format "New server connection fd %s from %s / %s" $chan $host $port]
 }
 
 proc readServerCmd { chan } {
@@ -57,10 +57,10 @@ proc closeClient { chan msg } {
 	catch { puts $s $msg }
 	catch { close $s }	
 	unset ClientNotify($chan)
-	log [format "Closed notify channel %s" $s]
+#	log [format "Closed notify channel %s" $s]
     }
     catch { close $chan }
-    log [format "Closed fd %s" $chan]
+#    log [format "Closed fd %s" $chan]
 }
 
 proc ClientResponse { chan msg } {
@@ -734,7 +734,7 @@ proc newNotifyConn { chan chost cport } {
 
     set NotifyChan($n) $chan
 
-    log [format "New notify connection fd %s from %s / %s" $chan $chost $cport]
+#    log [format "New notify connection fd %s from %s / %s" $chan $chost $cport]
 
     after 30000 CheckNewNotify $n
 
@@ -746,7 +746,7 @@ proc NotifySink { chan } {
 
     set c [gets $chan l]
     if { $c == -1 } {
-	log [format "Error reading notify-channel %s, closing" $chan]
+#	log [format "Error reading notify-channel %s, closing" $chan]
 	catch { close $chan }
 	foreach n [array names NotifyChan] {
 	    if { $NotifyChan($n) == $chan } {
@@ -814,7 +814,7 @@ proc openNotifyConn { chan host port } {
     fileevent $s readable [list NotifySink $s]
     set ClientNotify($chan) $s
 
-    log [format "Notify connection fd %s from %s / %s" $chan $host $port]
+#    log [format "Notify connection fd %s from %s / %s" $chan $host $port]
 }
 
 proc notifySend { msg } {
