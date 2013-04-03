@@ -574,7 +574,7 @@ sub decorate_eerrs {
     printf($fh "      \"$df\" using 1:4 title \"CRC\" with lines,");
     printf($fh "      \"$df\" using 1:5 title \"Frame\" with lines,");
     printf($fh "      \"$df\" using 1:6 title \"Runts\" with lines,");
-    printf($fh "      \"$df\" using 1:7 title \"Giangs\" with lines\n");
+    printf($fh "      \"$df\" using 1:7 title \"Giants\" with lines\n");
 }
 
 
