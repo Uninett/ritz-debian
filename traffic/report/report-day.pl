@@ -122,11 +122,12 @@ sub get_file_data {
 
 		       "ifInDiscards", "ifOutDiscards",
 		       "ifInErrors", "ifOutErrors",
-		       "locIfInRunts", "locIfInCRC",
-		       "locIfInFrame", "locIfInOverrun",
-		       "locIfInIgnored", "locIfInAbort",
-		       "locIfResets", "locIfRestarts",
-		       "locIfCollisions") # Should this list be read from cf file?
+		       "locIfInRunts", "locIfInGiants",
+		       "locIfInCRC", "locIfInFrame",
+		       "locIfInOverrun", "locIfInIgnored",
+		       "locIfInAbort", "locIfResets",
+		       "locIfRestarts", "locIfCollisions")
+	    # Should this list be read from cf file?
 	{
 	    if (defined $count{$v,$h}) {
 		if (!defined($total{$name,$v})) {
