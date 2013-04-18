@@ -49,12 +49,14 @@ my $storage_file = "%TOPDIR%/data/last_dev.yaml";
 # Leave these as they are :)
 my $help = 0;
 my $diff = 0;
+my $known = 0;
 my @exclude = ();
 
 GetOptions("deviations=i" => \$n_dev,
            "min-value=i"  => \$min_value,
            "help"         => \$help,
            "diff"         => \$diff,
+	   "known"	  => \$known,
            "previous=s"   => \$storage_file,
            "exclude=i"    => \@exclude);
 
@@ -71,15 +73,19 @@ my $map = {
         'inerr hrs >x%  1.0',
         'inerr hrs >x%  0.1',
         'inerr hrs >x%  .01',
+	'inerr hrs >x% 1e-3',
+	'inerr hrs >x% 1e-4',
         'in % Errs',
         'in % CRC',
-        'in % Frm',
-        'in % Abrt',
+# We've cut these from the report to keep within 80 coloumns
+#        'in % Frm',  
+#        'in % Abrt',
         'in % Ign',
         'out Reset',
         'out Disc%',
-        'peak Disc%',
-        'iftype',
+# Same as above
+#        'peak Disc%',
+#        'iftype',
      ],
     'ether_errs.perc' => [
         'in %  Errs',
@@ -121,6 +127,19 @@ for my $file (@files) {
     while (<FH>) {
         chomp;
         my ($name, @rest) = split /\s+/;
+
+	if ($errtype eq "errors.perc") {
+	    if ($#rest == 13) { # new format, re-arrange fields for report
+		my @l = (@rest[0..2], @rest[12..13],
+			 @rest[3..4], @rest[7..9]);
+		@rest = @l;
+	    } else {
+		# add dummy fields in new places
+		my @l = (@rest[0..2], 0, 0,
+			 @rest[3..4], @rest[7..9]);
+		@rest = @l;
+	    }
+	} 
 
         $tmp_ifaces{$name} = 1;
 
@@ -269,16 +288,23 @@ if ($diff) {
 	warn "Could not DumpFile $storage_file: $!";
 } else {
     # Print yaml of stats to STDOUT
-    Dump($problem) || warn "Could not Dump: $!";
+    print Dump($problem) || warn "Could not Dump: $!";
 }
+
+if ($known) {
+    printf("\n");
+    printf("Now-known problems:\n");
+    print Dump($problem) || warn "Could not Dump: $!";
+}
+
 
 sub header_line {
     my ($type) = @_;
     my %header_format = 
         (
          'errors.perc'     =>
-	 "Interface                inerr hrs >x% ------------ in % -----------  -- out ----\n".
-	 "                           1.0 0.1 .01  Errs   CRC   Frm  Abrt   Ign  Reset Disc%\n",
+	 "Interface                          inerr hrs >x%  ------ in % -----  -- out ----\n".
+	 "                           1.0 0.1 .01 1e-3 1e-4  Errs   CRC    Ign  Reset Disc%\n",
          'ether_errs.perc' =>
 	 "Interface                  --------------  in % --------------  ----- out % -----\n".
 	 "                           Errs   CRC Frame Runts Giant Ignor   Errs  Disc Colls\n",
@@ -294,14 +320,16 @@ sub errs_line {
     my %line_format = 
         (
          'errors.perc'     =>
-	 "%-25.25s  %3s %3s %3s %5s %5s %5s %5s %5s  %5s %5s\n",
+	 "%-25.25s  %3s %3s %3s %4s %4s %5.5s %5.5s %5.5s %5.5s %5.5s",
          'ether_errs.perc' =>
-	 "%-25.25s  %5s %5s %5s %5s %5s %5s  %5s %5s %5s\n",
+	 "%-25.25s  %5s %5s %5s %5s %5s %5s  %5s %5s %5s",
         ); 
-        return(sprintf($line_format{$type}, $intf,
-		       map {defined $cols->{$_} ?
-				$cols->{$_} : ' '}
-		       @errs_cols));
+    my $s = sprintf($line_format{$type}, $intf,
+		    map {defined $cols->{$_} ? $cols->{$_} : ' '}
+		    @errs_cols);
+    $s =~ s/\s*$//;
+    $s .= "\n";
+    return $s;
 }
 
 __END__
@@ -352,6 +380,10 @@ Where to store the previous results, so that the recent result
 can be compared to the historical values.  The default value
 is %TOPDIR%/data/last_dev.yaml.
 
+=item B<--known>
+
+Print the now-known deviations at the end of processing.
+
 =back
 
 =head1 DESCRIPTION
@@ -390,9 +422,9 @@ mapping for the report columns in the file types we know about.
 
 =item B<errors>
 
- inerr hrs >x% --------- in % ---------  -- out -----peak-
-   1.0 0.1 .01 Errs  CRC  Frm Abrt  Ign  Reset Disc% Disc% iftype
-    xx  xx  xx xxxx xxxx xxxx xxxx xxxx  xxxxx xxxxx xxxxx xxxxxx
+           inerr hrs >x% ----- in % ------  --- out ---
+   1.0 0.1 .01 1e-3 1e-4  Errs   CRC   Ign  Reset Disc%
+    xx  xx  xx   xx   xx xxxxx xxxxx xxxxx  xxxxx xxxxx
 
 =item B<ether_errs>
 
