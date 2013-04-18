@@ -354,44 +354,84 @@ sub month_traffic_kbit_line {
 }
 
 sub day_errs_header {
+    my($nf) = @_;
 
-    printf("%-25s%13s %24s  %11s\n",
-	   &make_ref("%-25s", "Interface",    "e-sort", "Name"),
-	   &make_ref("%13s", "inerr hrs >x%", "e-sort", "Error+hours"),
-	   "------------ in % -----------",
-	   "-- out ----");
-    printf("%-25s  %3s %3s %3s %5s %5s %5s %5s %5s  %5s %5s\n", "",
-	   "1.0", "0.1", ".01",
-	   &make_ref("%5s", "Errs", "e-sort", "Input+errors"),
-	   &make_ref("%5s", "CRC" , "e-sort", "CRC+errors"),
-	   &make_ref("%5s", "Frm" , "e-sort", "Framing+errors"),
-	   &make_ref("%5s", "Abrt", "e-sort", "Abort+errors"),
-	   &make_ref("%5s", "Ign" , "e-sort", "Ignored+packets"),
-	   &make_ref("%5s", "Reset","e-sort", "Interface+resets"),
-	   &make_ref("%5s", "Disc%","e-sort", "Peak+out+discards")
-	   );
+    if ($nf == 15) {
+	my $r1 = &make_ref("%-25s", "Interface",    "e-sort", "Name");
+	my $r2 = &make_ref("%22s", "inerr hrs >x%", "e-sort", "Error+hours");
+	printf("%-25s%22s    %24s %11s\n", $r1, $r2,
+	       "----------------- in % ----------------",
+	       "-- out ----");
+	printf("%-25s  %3s %3s %3s %4s %4s   %7s %7s %7s %7s %7s %5s %5s\n",
+	       "",
+	       "1.0", "0.1", ".01", "1e-3", "1e-4",
+	       &make_ref("%7s", "Errs", "e-sort", "Input+errors"),
+	       &make_ref("%7s", "CRC" , "e-sort", "CRC+errors"),
+	       &make_ref("%7s", "Frm" , "e-sort", "Framing+errors"),
+	       &make_ref("%7s", "Abrt", "e-sort", "Abort+errors"),
+	       &make_ref("%7s", "Ign" , "e-sort", "Ignored+packets"),
+	       &make_ref("%5s", "Reset","e-sort", "Interface+resets"),
+	       &make_ref("%5s", "Disc%","e-sort", "Peak+out+discards")
+	    );
+    } else {
+	printf("%-25s%13s %24s  %11s\n",
+	       &make_ref("%-25s", "Interface",    "e-sort", "Name"),
+	       &make_ref("%13s", "inerr hrs >x%", "e-sort", "Error+hours"),
+	       "------------ in % -----------",
+	       "-- out ----");
+	printf("%-25s  %3s %3s %3s %5s %5s %5s %5s %5s  %5s %5s\n", "",
+	       "1.0", "0.1", ".01",
+	       &make_ref("%5s", "Errs", "e-sort", "Input+errors"),
+	       &make_ref("%5s", "CRC" , "e-sort", "CRC+errors"),
+	       &make_ref("%5s", "Frm" , "e-sort", "Framing+errors"),
+	       &make_ref("%5s", "Abrt", "e-sort", "Abort+errors"),
+	       &make_ref("%5s", "Ign" , "e-sort", "Ignored+packets"),
+	       &make_ref("%5s", "Reset","e-sort", "Interface+resets"),
+	       &make_ref("%5s", "Disc%","e-sort", "Peak+out+discards")
+	    );
+    }
 }
 
 sub day_errs_line {
     my($dsp, @l) = @_;
 
-    printf("%-25.25s  %3s %3s %3s %5s %5s %5s %5s %5s  %5s %5s\n",
-	   $l[0], $l[1], $l[2], $l[3],
-	   sprintf("<a href=\"plot-all/%s,%s,raw,errors\">%5s</a>",
-		   $l[0], $dsp, $l[4]),
-	   sprintf("<a href=\"plot-all/%s,%s,raw,errors\">%5s</a>",
-		   $l[0], $dsp, $l[5]),
-	   sprintf("<a href=\"plot-all/%s,%s,raw,errors\">%5s</a>",
-		   $l[0], $dsp, $l[6]),
-	   sprintf("<a href=\"plot-all/%s,%s,raw,errros\">%5s</a>",
-		   $l[0], $dsp, $l[7]),
-	   sprintf("<a href=\"plot-all/%s,%s,raw,discards\">%5s</a>",
-		   $l[0], $dsp, $l[8]),
-	   sprintf("<a href=\"plot-all/%s,%s,raw,resets\">%5s</a>",
-		   $l[0], $dsp, $l[9]),
-	   sprintf("<a href=\"plot-all/%s,%s,raw,discards\">%5s</a>",
-		   $l[0], $dsp, $l[10]),
-	   $l[12]);
+    if ($#l == 14) {
+	printf("%-25.25s  %3s %3s %3s %4s %4s   %7s %7s %7s %7s %7s %5s %5s\n",
+	       $l[0], $l[1], $l[2], $l[3], $l[13], $l[14],
+	       sprintf("<a href=\"plot-all/%s,%s,raw,errors\">%7s</a>",
+		       $l[0], $dsp, $l[4]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,errors\">%7s</a>",
+		       $l[0], $dsp, $l[5]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,errors\">%7s</a>",
+		       $l[0], $dsp, $l[6]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,errros\">%7s</a>",
+		       $l[0], $dsp, $l[7]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,discards\">%5s</a>",
+		       $l[0], $dsp, $l[8]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,resets\">%5s</a>",
+		       $l[0], $dsp, $l[9]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,discards\">%5s</a>",
+		       $l[0], $dsp, $l[10]),
+	       $l[12]);
+    } else {
+	printf("%-25.25s  %3s %3s %3s %5s %5s %5s %5s %5s  %5s %5s\n",
+	       $l[0], $l[1], $l[2], $l[3],
+	       sprintf("<a href=\"plot-all/%s,%s,raw,errors\">%5s</a>",
+		       $l[0], $dsp, $l[4]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,errors\">%5s</a>",
+		       $l[0], $dsp, $l[5]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,errors\">%5s</a>",
+		       $l[0], $dsp, $l[6]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,errros\">%5s</a>",
+		       $l[0], $dsp, $l[7]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,discards\">%5s</a>",
+		       $l[0], $dsp, $l[8]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,resets\">%5s</a>",
+		       $l[0], $dsp, $l[9]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,discards\">%5s</a>",
+		       $l[0], $dsp, $l[10]),
+	       $l[12]);
+    }
 }
 
 sub week_errs_header {
@@ -799,10 +839,6 @@ sub report {
 	printf("</pre>\n");
 	return undef;
     }
-    &$put_header();
-
-    printf("\n");
-
     #
     # Prepare to output data.
     #
@@ -838,6 +874,17 @@ sub report {
 	printf("</pre>\n");
 	return undef;
     }
+
+    # Check number of fields in output
+    open(IN, $tmpf);
+    $_ = <IN>;
+    @_ = split;
+    my $fields = $#_ + 1;
+    close(IN);
+
+    &$put_header($fields);
+
+    printf("\n");
 
     #
     # Now spit out the data
