@@ -306,15 +306,15 @@ sub report_errors {
 	       $wk_inerr_10_hrs{$intf},
 	       $wk_inerr_01_hrs{$intf},
 	       $wk_inerr_001_hrs{$intf},
-	       &nice_sprint_perc_4($max_wk_inerrs{$intf}),
-	       &nice_sprint_perc_4($wk_inerrs{$intf}/7),
-	       &nice_sprint_perc_4($max_wk_ignores{$intf}),
-	       &nice_sprint_perc_4($wk_ignores{$intf}/7),
+	       &nice_sprint_perc($max_wk_inerrs{$intf}, 4),
+	       &nice_sprint_perc($wk_inerrs{$intf}/7, 4),
+	       &nice_sprint_perc($max_wk_ignores{$intf}, 4),
+	       &nice_sprint_perc($wk_ignores{$intf}/7, 4),
 	       $wk_resets{$intf}/7,
 	       $max_wk_resets{$intf},
-	       &nice_sprint_perc_4($peak_wk_discards{$intf}),
-	       &nice_sprint_perc_4($max_wk_discards{$intf}),
-	       &nice_sprint_perc_4($wk_discards{$intf}/7),
+	       &nice_sprint_perc($peak_wk_discards{$intf}, 4),
+	       &nice_sprint_perc($max_wk_discards{$intf}, 4),
+	       &nice_sprint_perc($wk_discards{$intf}/7, 4),
 	       $type{$intf}
 	       );
     }
