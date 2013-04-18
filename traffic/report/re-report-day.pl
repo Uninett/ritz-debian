@@ -178,24 +178,6 @@ sub report_traffic_kbit {
     }
 }
 
-sub nice_sprint_perc_4 {
-    my($v) = @_;
-
-    if ($v >= 10) {
-	return sprintf("%4.1f", $v);
-    }
-    return sprintf("%4.2f", $v);
-}
-
-sub nice_sprint_perc_5 {
-    my($v) = @_;
-
-    if ($v >= 10) {
-	return sprintf("%5.2f", $v);
-    }
-    return sprintf("%5.3f", $v);
-}
-
 
 sub report_error_percs {
     my($out) = @_;
@@ -219,7 +201,7 @@ sub report_error_percs {
 	    } else {
 		$val = 0;
 	    }
-	    printf ($out " %4s", &nice_sprint_perc_4($val));
+	    printf ($out " %4s", &nice_sprint_perc($val, 4));
 	}
 	printf ($out "  %5d", $total{$n,"locIfResets"});
 	$outpkts = ($total{$n,"ifOutNUcastPkts"} +
@@ -229,7 +211,7 @@ sub report_error_percs {
 	} else {
 	    $val = 0;
 	}
-	printf ($out " %5s", &nice_sprint_perc_5($val));
+	printf ($out " %5s", &nice_sprint_perc($val, 5));
 	printf ($out " %6d\n", $iftype{$n});
     }
 }
