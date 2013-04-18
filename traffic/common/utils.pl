@@ -171,27 +171,24 @@ sub modtime {
     return $r[9];
 }
 
-# Return a "nicely formatted percentage" within 4 spaces
+# Return a "nicely formatted and compact percentage" within the
+# given number of spaces.  Handles percentages > 10 different from
+# other smaller values.
 
-sub nice_sprint_perc_4 {
-    my($v) = @_;
+sub nice_sprint_perc {
+    my($v, $places) = @_;
 
+    my($a, $b);
+    
+    $a = $places;
     if ($v >= 10) {
-	return sprintf("%4.1f", $v);
+	$b = $places - 3; 	# 2 digits before decimal + decimal
+    } else {
+	$b = $places - 2;	# only 1 digit before decimal
     }
-    return sprintf("%4.2f", $v);
+    return sprintf(sprintf("%%%d.%df", $a, $b), $v);
 }
 
-# Return a "nicely formatted percentage" within 5 spaces
-
-sub nice_sprint_perc_5 {
-    my($v) = @_;
-
-    if ($v >= 10) {
-	return sprintf("%5.2f", $v);
-    }
-    return sprintf("%5.3f", $v);
-}
 
 # Check validity of arguments, match against regexp given as first arg.
 # Return 'undef' on success and index into args pointing to first
