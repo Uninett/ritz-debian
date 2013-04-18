@@ -303,8 +303,8 @@ sub header_line {
     my %header_format = 
         (
          'errors.perc'     =>
-	 "Interface                          inerr hrs >x%  ------ in % -----  -- out ----\n".
-	 "                           1.0 0.1 .01 1e-3 1e-4  Errs   CRC    Ign  Reset Disc%\n",
+	 "Interface                          inerr hrs >x% ------- in % ----- --- out ---\n".
+	 "                           1.0 0.1 .01 1e-3 1e-4    Errs   CRC  Ign Reset Disc%\n",
          'ether_errs.perc' =>
 	 "Interface                  --------------  in % --------------  ----- out % -----\n".
 	 "                           Errs   CRC Frame Runts Giant Ignor   Errs  Disc Colls\n",
@@ -320,7 +320,7 @@ sub errs_line {
     my %line_format = 
         (
          'errors.perc'     =>
-	 "%-25.25s  %3s %3s %3s %4s %4s %5.5s %5.5s %5.5s %5.5s %5.5s",
+	 "%-25.25s  %3s %3s %3s %4s %4s %7.7s %5.5s %4.4s %5.5s %5.5s",
          'ether_errs.perc' =>
 	 "%-25.25s  %5s %5s %5s %5s %5s %5s  %5s %5s %5s",
         ); 
