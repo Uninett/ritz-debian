@@ -320,6 +320,7 @@ sub read_5m_sum {
 		my($s, $r, $dt);
 
 		for($s = $sno; $s <= $max_sample; $s++) {
+		    if (!defined($sample_time{$s-1})) { next; }
 		    $dt = ($sample_time{$s} - $sample_time{$s-1}) * 3600.0;
 		    if ($dt != 0) {
 			$r = $count{$mv,$s} * 8 / $dt;
