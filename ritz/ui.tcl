@@ -682,9 +682,8 @@ proc uiViewCase { id } {
 	set e $lf.entry
 	entry $e -width $width
 	$e insert end [uiAttrVal $id $attr]
-	$e configure -state disabled
-	$e configure -disabledforeground {#666666}
-	$e configure -disabledbackground {#ffffff}
+	$e configure -state readonly
+	$e configure -readonlybackground {#ffffff}
 	pack $l $e -fill x -side left
 	pack $lf -side top
     }
