@@ -92,9 +92,7 @@ sub restore_vars {
 		$$a{$v} = $p->{$a}->{$v};
 	    }
 	}
-	foreach my $v (keys %lasttime) {
-	    $sample_time{$v,-1} = $lasttime{$v};
-	}
+	$sample_time{-1} = $p->{"last_sample"};
 	$date = $p->{"date_string"};
 	$ifspeed = $p->{"ifspeed"};
 	$iftype = $p->{"iftype"};
@@ -157,7 +155,7 @@ sub convert_times {
     my($s, $i);
     our(%sample_time, %base);
     our(%sample_secs, $max_sample);
-    our($opt_d);
+    our($opt_d, $debug);
     my($start_secs);
 
     # Handle that the time scale is in hours for the "current day",
@@ -167,6 +165,14 @@ sub convert_times {
     } else {
 	$s = $start;
     }
+    if ($debug) {
+	printf(STDERR "convert_times: starting from %d\n", $s);
+	foreach my $i (sort { $a <=> $b } keys %sample_time) {
+	    printf(STDERR "convert_times: sample_time{%s} = %s\n",
+		   $i, $sample_time{$i});
+	}
+    }
+
     for($i = $s; $sample_time{$i} > $sample_time{$max_sample}; $i++) {
 	$sample_time{$i} -= 24;
 	foreach my $k (keys %base) {
@@ -187,6 +193,12 @@ sub convert_times {
 	}
 	$sample_secs{$i} = $secs;
     }
+    if ($debug) {
+	foreach my $k (keys %sample_secs) {
+	    printf(STDERR "convert_times: sample_secs{%s} = %s\n",
+		   $k, $sample_secs{$k});
+	}
+    }
 }
 
 sub compute_basic_values {
@@ -194,13 +206,29 @@ sub compute_basic_values {
     my($i, $delta_t);
     our($max_sample, %count);
     our(%sample_secs);
-    our($ifspeed);
+    our($ifspeed, $opt_D);
+
+    my $n = &file_to_name($b, &today);
 
     for ($i = $start; $i <= $end; $i++) {
 	if (!defined($sample_secs{$i-1})) {
+	    if (defined($opt_D) && $opt_D eq $n) {
+		printf(STDERR "For %s, sample_secs ix %d nonexistent\n",
+		       $n, $i-1);
+	    }
 	    next;
 	}
 	$delta_t = $sample_secs{$i} - $sample_secs{$i-1};
+
+	if (defined($opt_D) && $opt_D eq $n) {
+	    printf(STDERR "Delta for step %d is %d secs, (%d vs %d)\n",
+		   $i, $delta_t, $sample_secs{$i}, $sample_secs{$i-1});
+	}
+	if ($delta_t == 0) {
+	    printf(STDERR "Delta for step %d is zero! Name %s base %s\n",
+		   $i, $n, $b);
+	    next;
+	}
 
 	foreach my $k (keys %$d) {
 	    my($ap) = $d->{$k}->{"values"};
@@ -216,6 +244,11 @@ sub compute_basic_values {
 		}
 	    }
 	    my($val) = $v * $mult / $delta_t;
+
+	    if (defined($opt_D) && $opt_D eq $n) {
+		printf(STDERR "Computed %s step %d value %s\n",
+		       $k, $i, $val);
+	    }
 
 	    # If processing an octet counter, check that we're
 	    # within ifSpeed's range, balk otherwise and set sample to zero.
@@ -492,7 +525,7 @@ sub process_data {
     my($iov, $oov);
     our($fd);
     my($p) = $fd->{$b};
-    our(%sample_secs, $opt_R);
+    our(%sample_secs, $opt_R, $debug);
 
     # Prefer 64-bit counters
     if (defined($p->{"base"}->{"ifHCInOctets"})) {
@@ -503,7 +536,15 @@ sub process_data {
 	$oov = "ifOutOctets";
     }
 
+    my $n = &file_to_name($b, &today);
+    our($opt_D);
+#    if (defined($opt_D) && $opt_D eq $n) {
+#	$debug = 1;
+#    }
+
     &convert_times(\@times, $start, $end, $tm);
+
+#    $debug = 0;
 
     my($desc) = {
 	"ikbps" => {
@@ -611,7 +652,7 @@ sub create_rrd {
 sub update_rrd {
     my($b, $d, $tm) = @_;
     my($i);
-    our($opt_V);
+    our($opt_V, $opt_D);
     my($name);
 
     if (defined($tm)) {
@@ -673,7 +714,9 @@ sub update_rrd {
 	    $name, $n_oos, $n_done);
     }
 
-    if ($opt_V) {
+    if ($opt_V ||
+	(defined($opt_D) && $opt_D eq $name))
+    {
 	printf(STDERR "RRDs::update %s\n", join("\n", @args));
     }
 }
@@ -690,20 +733,30 @@ sub time_str {
 
 sub position_file {
     my($fh, $b) = @_;
-    our($fd);
+    our($fd, $opt_D);
     my $p = $fd->{$b};
 
     my($mtime, $size) = (stat($fh))[9,7];
     my $mod_date = &tm_to_date($mtime);
     my $pos = $fd->{$b}->{"position"};
 
+    my $name = &file_to_name($b, &today);
+
     if (!defined($pos) || $pos > $size ||
 	(($mod_date ne $p->{"date"}) &&
 	 ($mod_date ne &yesterday() && !&just_past_midnight()))) {
 	# stale data and/or file was rotated out
 	$fd->{$b}->{"position"} = 0;
+	if (defined($opt_D) && $opt_D eq $name) {
+	    printf(STDERR "Positioning for %s to 0\n", $name);
+	}
 	return undef;
     }
+
+    if (defined($opt_D) && $opt_D eq $name) {
+	printf(STDERR "Positioning for %s to %d\n", $name, $pos);
+    }
+
     return seek($fh, $pos, SEEK_SET);
 }
 
@@ -717,7 +770,7 @@ sub save_position {
 
 sub report_tail_stats {
     my($rfile, $b, $ofile) = @_;
-    our($fd, $opt_i, $opt_v);
+    our($fd, $opt_i, $opt_V);
     my($ikbps, $okbps, $n);
     my($sp) = $fd->{$b}->{"save_values"};
     my $ia = $sp->{"ikbps"};
@@ -748,7 +801,7 @@ sub report_tail_stats {
     my $name = &file_to_name($b, &today);
     if (!defined($name)) {
 	if (defined($opt_i)) {	# ignore unnamed logical ports
-	    if (defined($opt_v)) {
+	    if (defined($opt_V)) {
 		printf(STDERR "Skipping unnamed port for: %s\n", $b);
 	    }
 	    next;
@@ -777,7 +830,8 @@ sub tail_process_file {
     my($b) = basename($f);
     my($cat, $base) = &cat_and_base($f);
     my($tm) = &date_to_tm($d);
-    our($max_sample, $opt_r, $opt_v, $retention_time, %base, $fd);
+    our($max_sample, $opt_r, $opt_v, $opt_D, $retention_time, %base, $fd);
+    our(%sample_time);
 
     if ($cat ne "cat") {
 	if ($opt_v) {
@@ -788,13 +842,25 @@ sub tail_process_file {
 
     &restore_vars($b);
 
+    my $name = &file_to_name($b, &today);
+    if (defined($opt_D) && $opt_D eq $name) {
+	printf(STDERR "Restored data for %s:\n", $name);
+	printf(STDERR "Sample_time{-1} = %s\n", $sample_time{-1});
+	
+    }
+
     open(IN, $f) || return undef;
     &position_file(\*IN, $b);
     &read_log(\*IN, $tm);
     &save_position(\*IN, $b);
     close(IN);
 
-    if ($max_sample != 0) {
+    my $name = &file_to_name($b, &today);
+    if (defined($opt_D) && $opt_D eq $name) {
+	printf(STDERR "Read data for %s, %d samples\n", $name, $max_sample + 1);
+    }
+
+    if ($max_sample != -1) {
 	# for type of octet counter detection in process_data()
 	foreach my $v (keys %base) {
 	    $fd->{$b}->{"base"}->{$v} = $base{$v};
@@ -832,9 +898,10 @@ sub do_one_file {
     }
 
     foreach my $day (0 .. $nd-1) {
-	# 2h+ to compensate for effects of DST...
-	my($tm) = $base_tm + 7200 + 3600 * 24 * $day;
-	my($d) = &tm_to_date($tm);
+	my($tm) = $base_tm + 3600 * 24 * $day;
+	# 2h+ to compensate for effects of DST, only use to compute day...
+	my($day_tm) = $tm + 7200;
+	my($d) = &tm_to_date($day_tm);
 
 	if ($opt_v) {
 	    printf(STDERR "Processing %s / %s\n", $name, $d);
@@ -853,6 +920,8 @@ sub do_one_file {
 		   $b, $d);
 	    next;
 	}
+
+	&restore_vars($b);
 
 	if (!open(DAYLOG, "$cat $f |")) {
 	    printf(STDERR "Could not open \"|%s %s\": %s\n", $cat, $f, $!);
@@ -875,13 +944,14 @@ sub do_one_file {
 	# on each go-around
 	my($samples_per_go) = &max(4, int($max_sample / 4));
 
-	for($i = 0; $i < $max_sample; $i += $samples_per_go) {
+	for($i = 0; $i <= $max_sample; $i += $samples_per_go) {
 	    my $top = &min($i + $samples_per_go - 1, $max_sample);
 
 	    &process_data($b, $i, $top, $tm);
 	    &trim_data($b, (&convert_time($sample_time{$top}, $t0) -
 			    $retention_time));
 	}
+	&save_vars($b);
     }
 
     undef %count;
@@ -1012,7 +1082,7 @@ sub just_past_midnight {
 
 sub do_all_files_today {
     my($d);
-    our($opt_v);
+    our($opt_V);
 
     if (&just_past_midnight()) {
 	$d = &yesterday();
@@ -1034,7 +1104,7 @@ sub do_all_files_today {
 
     foreach my $f (@files) {
 	&tail_process_file(\*REP, $dir . "/" . $f, $d);
-	if (defined($opt_v)) {
+	if (defined($opt_V)) {
 	    printf(".");
 	}
     }
@@ -1045,7 +1115,7 @@ sub do_all_files_today {
     if ($stat_report != "" && defined($opt_m) && defined($opt_M)) {
 	&mail_report($opt_M, $opt_m, $stat_report);
     }
-    if (defined($opt_v)) {
+    if (defined($opt_V)) {
 	printf("\n");
     }
 }
@@ -1080,6 +1150,7 @@ sub usage {
     printf(STDERR "-j <jobs>    Parallelize historical re-processing (-d)\n");
     printf(STDERR "-v           output some verbose debugging info\n");
     printf(STDERR "-V           output extra-verbose debugging info\n");
+    printf(STDERR "-D portname  Do debugging for only the given port name\n");
 
     exit 1;
 }
@@ -1089,9 +1160,9 @@ sub usage {
 #
 
 our($opt_h, $opt_m, $opt_M, $opt_t, $opt_u, $opt_l, $opt_p, $opt_r,
-    $opt_R, $opt_n, $opt_d, $opt_j);
+    $opt_R, $opt_n, $opt_d, $opt_j, $opt_D);
 
-&getopts("d:hij:Il:M:m:Nn:p:R:r:t:u:vV");
+&getopts("D:d:hij:Il:M:m:Nn:p:R:r:t:u:vV");
 
 if (defined($opt_h)) {
     &usage();
@@ -1125,8 +1196,6 @@ if (defined($opt_R)) {
 	&usage();
     }
     chdir($opt_R) || die "Could not chdir to $opt_R: $!";
-#    open(RRD, "|rrdtool - 2>&1 | egrep -v '^OK'") ||
-#	die "Could not open rrdtool";
 }
 
 # Make STDERR flush output immediately
@@ -1173,6 +1242,3 @@ if (defined($opt_d) && defined($opt_n)) {
 	&do_all_files_today();
     }
 }
-#if ($opt_R) {
-#    close(RRD);
-#}
