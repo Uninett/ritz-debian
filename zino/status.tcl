@@ -32,7 +32,8 @@ proc initStatus { } {
     set IgnoreAddrPatterns(a) "^10\\."
     set IgnoreAddrPatterns(b) "^127\\."
     set IgnoreAddrPatterns(c) "^128\\.0\\."
-    set IgnoreAddrPatterns(d) "^192\\.168\\."
+    set IgnoreAddrPatterns(d) "^172\\.(1\[6-9\]|2\[0-9\]|3\[0-1\])\\."
+    set IgnoreAddrPatterns(e) "^192\\.168\\."
 }
 
 proc isCisco { sh } {
