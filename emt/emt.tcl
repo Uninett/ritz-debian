@@ -62,8 +62,12 @@ proc emt_loop { server port user secret } {
 
     while { 1 } {
 	emt_open $server $port $user $secret
-	emt_init
-	emt_check_all
+	if { [catch emt_init] } {
+	    continue
+	}
+	if { [catch emt_check_all] } {
+	    continue
+	}
 	if [info exists emk_job] {
 	    catch { $emk_job destroy }
 	}
