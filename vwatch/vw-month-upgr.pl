@@ -133,7 +133,7 @@ sub read_day_data {
 	    $uptime{$rtr} = $1;
 	} elsif (/software: (.*)/) {
 	    if (/\#$/) {
-		while(<in>) {
+		while(<$in>) {
 		    if (/^\#$/) {
 			$desc =~ s/\r//g;
 			last;
