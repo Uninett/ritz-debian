@@ -1,3 +1,264 @@
+2014-03-20  Havard Eidnes <he@uninett.no>
+
+	* Makefile: Bump VERSION to 0.9.9.8.
+
+2014-02-11  Havard Eidnes <he@uninett.no>
+
+	* vwatch/vw-month-upgr.pl: Fix typo which caused ... lossage.
+
+2013-11-22  Havard Eidnes <he@uninett.no>
+
+	* emt/emt.tcl: Add more robustness if emt_init or emt_check_all hits
+	a "connection refused" or similar, due to server process
+	restarts.
+
+2013-06-21  Havard Eidnes <he@uninett.no>
+
+	* zino/status.tcl: Also ignore 172.16/12 IPv4 addresses.
+
+2013-06-20  Havard Eidnes <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	Add lots more optional debugging output, under -D <portname>.
+	This is an attempt at hunting down an off-by-one fencepost error,
+	and this contains a tentative fix for this.
+	This reveals itself with newer perl which balks at $array[-1].
+
+2013-05-24  Havard Eidnes <he@uninett.no>
+
+	* ritz/ui.tcl:
+	Change the individual field values' "entry" widgets from disabled
+	to readonly, so that the contents can be cut+pasted.
+
+2013-05-22  Havard Eidnes <he@uninett.no>
+
+	* zino/status.tcl:
+	Evidently, Juniper in their SRX series is using larger parts
+	of 128.0/16, e.g. 128.0.1/24, for "internal" purposes.  Shorten
+	the pattern so that we ignore all addrs in 128.0/16.
+
+2013-04-19  Havard Eidnes <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl:
+	Avoid trying to use an undefined value at index -1.
+
+2013-04-18  Havard Eidnes <he@uninett.no>
+
+	* traffic/jobs/find-err-dev.pl:
+	Adjust format for stats lines to get alignment and to give more room
+	for the Errs number, which may now be available in higher precision.
+
+	* traffic/jobs/find-err-dev.pl:
+	Support both the old and the new errors.perc format.
+	Add an option to dump the yaml file at the end;
+	however it shows itself not to be very useful.
+	Drop some coloumns from the errors.perc report to keep it within
+	80 coloumns, now that we have the new coloumns for "hrs inerrs >=
+	1e-3%" and the same for >= 1e-4%.
+	Fix a bug with the use of Dump -- it returns a string which itself
+	needs to be printed for anything to be printed.
+	Drop trailing whitespace from the report lines.
+	Update the documentation.
+
+	* traffic/common/utils.pl:
+	Get rid of nice_sprint_perc_4() and nice_sprint_perc_5(), introduce
+	nice_sprint_perc() instead.
+
+	* traffic/cgi/tbl-report.pl:
+	Support both the new and the old format of the errors.perc report,
+	including the new "hours where input error%" is larger than 1e-3% and
+	1e-4%.  Also widen the fields to show more decimals.
+
+	* traffic/report/report-day.pl: Convert to nice_sprint_perc().
+	Add two more coloumns to count hours where input errors are above
+	1e-3 and 1e-4 percents, to catch transmission problems earlier.
+
+	* traffic/report/report-week.pl:
+	Convert from nice_sprint_perc_4 to nice_sprint_perc.
+
+	* traffic/report/re-report-day.pl:
+	Remove local nice_sprint_perc_4, use nic_sprint_perc instead.
+	Really, this file is outdated and should be let go...
+
+2013-04-03  Havard Eidnes <he@uninett.no>
+
+	* zino/server.tcl: Comment out file descriptor usage logging.
+
+	* traffic/plot/plot-hr.pl: Correct typo, it's "Giants".
+
+	* traffic/report/report-day.pl:
+	Include locIfInGiants in the calculation of the totals; it was
+	erroneously omitted earlier.
+
+2013-03-13  Havard Eidnes <he@uninett.no>
+
+	* zino/server.tcl:
+	Comment out use of Tclx; we used fcntl to set KEEPALIVE.
+	This because Tclx isn't compatible with newer Tcl, i.e. >= 8.5.
+
+2013-03-08  Havard Eidnes <he@uninett.no>
+
+	* zino/trap.tcl: More verbose debugging to comment out.
+
+	* zino/trap.tcl: Comment out verbose debugging.
+
+2013-02-06  Havard Eidnes <he@uninett.no>
+
+	* README:
+	Update the list of tool versions to what we use at the moment.
+	Remove a little text which is no longer applicable.
+
+2013-02-05  Havard Eidnes <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Log info not only on speed change, but also other changes.
+
+	* tpoller/tpoller.tcl: Log speed, ifDescr etc. if the speed changes.
+	Log informational messages via stderr, so they end up in the log.
+
+2013-02-01  Havard Eidnes <he@uninett.no>
+
+	* vwatch/pretty-ios.pl:
+	Get rid of an extra comma which is present in 12.1 and later.
+
+2013-01-31  Havard Eidnes <he@uninett.no>
+
+	* vwatch/vw-month-upgr.pl: Make this adhere to "use strict;".
+
+	* traffic/common/plot.pl:
+	Improve tick mark settings; lower threshold for doing from weekno to
+	month from 100 days to 70 to improve readability.  Also use years as
+	tick marks between 4y and 10y, and every other year when the period
+	exceeds 10y.
+
+2013-01-30  Havard Eidnes <he@uninett.no>
+
+	* TODO: More to do.
+
+2013-01-22  Havard Eidnes <he@uninett.no>
+
+	* zino/server.tcl: Uh, this is tcl, not perl...
+
+	* zino/server.tcl: Avoid spinning on reading from closed connections.
+	NotifySink was a tad too simplistic.
+	Close down any associated state if we get EOF reading the
+	notify socket.
+
+	* zino/log.tcl: Add some logging for handling of log channels.
+
+	* zino/server.tcl:
+	Add some debugging output of who connects to the various sockets.
+	Add a 30s time-out for tieing the notify socket to the command socket
+	to avoid leaking FDs when exposed to e.g. nmap.
+
+	* traffic/jobs/daily.pl:
+	Use find + xargs two more places to avoid overflowing command lines.
+
+2013-01-04  Havard Eidnes <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	One more instance of DST shift compensation.
+
+2013-01-03  Havard Eidnes <he@uninett.no>
+
+	* traffic/report/tail-stats.pl:
+	When re-processing data, data for an entire day would be omitted
+	when going from DST to non-DST.  Fix this bug with a band-aid.
+
+	* traffic/cgi/plot-all.pl:
+	Also default plots to yesterday if datespec is omitted,
+	patterned after load-map's behaviour.
+
+2012-12-14  Havard Eidnes <he@uninett.no>
+
+	* traffic/cgi/load-map.pl:
+	Try to upcase the colour name word, for forward compatibility
+	with newer versions of tgif.
+	Also get rid of assumption that colour 0 is black.
+
+2012-12-07  Havard Eidnes <he@uninett.no>
+
+	* vwatch/uptimes.pl, vwatch/vw-day-report.pl,
+	  vwatch/vw-month-rst.pl, vwatch/vw-month-upgr.pl:
+	Fix split() usage.
+
+	* vwatch/cur-vers.pl: Convert to "use strict".
+	Fix split() usage.
+
+	* traffic/common/scaling.pl: Do 0 as bit/s.
+
+2012-12-06  Havard Eidnes <he@uninett.no>
+
+	* vwatch/pretty-ios.pl: Add some handling of Cisco NX-OS.
+
+2012-11-26  Havard Eidnes <he@uninett.no>
+
+	* tpoller/tpoller.tcl:
+	Be more verbose when interface information change -- log the changes.
+	Don't just blindly use the ifHighSpeed value -- only use it when it's
+	over 3000, so that we can discern the difference between 2.0 and
+	2.2 Mbit/s (since ifHighSpeed only counts whole Mbit/s).
+
+2012-11-22  Havard Eidnes <he@uninett.no>
+
+	* vwatch/Makefile: Ensure that all programs are installed.
+
+2012-11-20  Havard Eidnes <he@uninett.no>
+
+	* traffic/report/tail-stats.pl: Several changes rolled up into one:
+	 * Change from piping into rrdtool to using the perl RRDs module.
+	 * Improve some diagnostic output to include more information.
+	 * Try as carefully as possible to not trigger any error messages when
+	   doing RRD update operations, by checking for the last update time
+	   and skipping any later samples, and also checking that the sample
+	   times are monotonically increasing (violations will be skipped)
+	 * Fix a bug where values from a prior data file read would "shine
+	   through", e.g. when the new device doesn't do 64-bit counters; in
+	   that case the old values would lie lingering about, causing "data
+	   rate exceeds ifspeed" errors.  (I really, really ought to re-write
+	   the interface to the central "read raw data" routines...)
+	 * Make it possible to process historical data files in parallel via
+	   the "-j" option.  This is useful if you have sufficient I/O
+	   capacity and several CPU cores.
+	 * In order to avoid attempts to update data for same logical port
+	   more than once, weed out duplicates (and emit a warning) before
+	   doing the processing.
+
+	* traffic/report/rr-test.pl:
+	Expand this to a test comparing data rates with ifspeed,
+	and automatic detection of 64-bit octet counters.
+
+	* traffic/cgi/r-all.pl:
+	&err() may be called before $q is initialized, so check for it and
+	initialize before using it.
+
+2012-11-13  Havard Eidnes <he@uninett.no>
+
+	* traffic/common/scaling.pl: Protect against max value being 0.
+
+	* traffic/db/db-lookup.pl:
+	The scripts accessing the mappings using this function do not
+	nead other access than read-only, so in order to prevent the
+	scripts running from the web server to err out with "permission
+	denied", open the BerkeleyDB with read-only access.
+
+	* traffic/cgi/plot-all.pl: Add colon as an invalid argument character.
+
+	* traffic/plot/plot-5m.pl, traffic/plot/plot-day.pl,
+	  traffic/plot/plot-hr.pl, traffic/plot/plot-raw.pl,
+	  traffic/plot/plot-week.pl:
+	In the plots which show data rates, scale the values to the most
+	appropriate decimal unit, and also pretty-print the interface speed
+	using the appropriate decimal unit.
+
+	* traffic/common/scaling.pl: Use lexical instead of dynamic scoping.
+	Add two functions to scale values to appropriate decimal units.
+
+2012-11-12  Havard Eidnes <he@uninett.no>
+
+	* traffic/common/Makefile:
+	Ensure that plot.pl is also updated/installed.
+
 2012-11-10  Havard Eidnes  <he@uninett.no>
 
 	* ChangeLog, Makefile: Mark this as 0.9.9.7.
