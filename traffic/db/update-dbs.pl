@@ -219,7 +219,7 @@ sub get_line_names {
 	    # eventual overflow for the DB(M) entry (!).
 	    $a[1] =~ s/ /-/g;
 	    $line_name{$dev . ":" . $ix} = $a[1];
-	    if (!defined($ix_map{$dev}->{$ix)) {
+	    if (!defined($ix_map{$dev}->{$ix})) {
 		$ix_map{$dev}->{$ix} = 1;
 	    }
 	}
