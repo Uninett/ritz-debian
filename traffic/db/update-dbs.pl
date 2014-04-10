@@ -162,7 +162,7 @@ sub alive {
 
 sub get_addrs {
     my($dev, $polladdr) = @_;
-    our(%dead, %address, %as, %max_ix, %community);
+    our(%dead, %address, %as, %ix_map, %community);
 
     if ($dead{$polladdr} || ! &alive($polladdr)) {
 	$dead{$polladdr} = 1;
@@ -181,8 +181,8 @@ sub get_addrs {
 	@_ = split;
 	$as{$dev . ":" . $_[0]} = $_[2];
 	$address{$dev . ":" . $_[0]} = $_[4];
-	if (!defined($max_ix{$dev}) || $_[0] > $max_ix{$dev}) {
-	    $max_ix{$dev} = $_[0];
+	if (!defined($ix_map{$dev}->{$_[0]})) {
+	    $ix_map{$dev}->{$_[0]} = 1;
 	}
     }
     close(IN);
@@ -192,7 +192,7 @@ sub get_addrs {
 sub get_line_names {
     my($dev, $polladdr) = @_;
     my(@a);
-    our(%dead, %line_name, %max_ix, %community);
+    our(%dead, %line_name, %ix_map, %community);
 
     if ($dead{$polladdr} || ! &alive($polladdr)) {
 	$dead{$polladdr} = 1;
@@ -219,8 +219,8 @@ sub get_line_names {
 	    # eventual overflow for the DB(M) entry (!).
 	    $a[1] =~ s/ /-/g;
 	    $line_name{$dev . ":" . $ix} = $a[1];
-	    if ($ix > $max_ix{$dev}) {
-		$max_ix{$dev} = $ix;
+	    if (!defined($ix_map{$dev}->{$ix)) {
+		$ix_map{$dev}->{$ix} = 1;
 	    }
 	}
     }
@@ -231,7 +231,7 @@ sub get_line_names {
 sub get_current_state {
     my($k);
     my($fn);
-    our($out_d, %polladdr, %manual, %max_ix, %as, %address);
+    our($out_d, %polladdr, %manual, %ix_map, %as, %address);
     our(%file, %line, %line_name, $opt_d);
 
     if (defined($opt_d)) {
@@ -256,7 +256,7 @@ sub get_current_state {
 	    printf(STDERR "\n");
 	}
 
-	for my $i (1 .. $max_ix{$r}) {
+	for my $i (sort { $a <=> $b } keys(%{$ix_map{$r}})) {
 	    $k = $r . ":" . $i;
 	    if (!defined($address{$k})) {
 		next;		# skip holes in ifIndex space
