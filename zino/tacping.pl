@@ -161,6 +161,8 @@ die "Send error: $!\n" if (send(S, $packet, 0, $serv) != length($packet));
 
 select(S); $| = 1; select(STDOUT);
 
+alarm 5;	# Fixed 5-second timeout
+
 die "Receive error: $!\n" if (!recv(S, $packet, 576, 0));
 
 if ($verbose) {
