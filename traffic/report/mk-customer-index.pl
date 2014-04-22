@@ -13,8 +13,13 @@ use Zino::conn qw(read_desc select_types %fullname %ports);
 
 use Getopt::Std;
 
+use strict;
+
 require 'date.pl';
 require 'search.pl';
+
+push(@INC, "%CONFDIR%");
+require 'zino-config.pl';
 
 
 sub dayreport_ports {
@@ -144,6 +149,7 @@ sub active_links {
 sub emit_html {
     our(%select, %title, @group_order, @head_lines, @tail_lines, %text);
     our(%fullname, %catplot);
+    our($do_98p, $do_avg);
 
     foreach my $l (@head_lines) {
 	printf("%s\n", $l);
@@ -154,8 +160,12 @@ sub emit_html {
 	    printf("  <tr>\n");
 	    printf("    <td width=\"50%\"><h3>%s</h3></td>\n",
 		   &htmlize($title{$g}));
-	    printf("    <td width=\"5%\">&nbsp;</td>\n");
-	    printf("    <td width=\"8%\">&nbsp;</td>\n");
+	    if (defined($do_98p)) {
+		printf("    <td width=\"5%\">&nbsp;</td>\n");
+	    }
+	    if (defined($do_avg)) {
+		printf("    <td width=\"8%\">&nbsp;</td>\n");
+	    }
 	    printf("    <td width=\"8%\"><a href=\"/stat-q/r-all?q=all&amp;");
 	    printf("name=%s\">Current</a></td>\n", $catplot{$g});
 	    printf("    <td width=\"29%\">&nbsp;</td>\n");
@@ -175,19 +185,23 @@ sub emit_html {
 	foreach my $n (sort @names) {
 	    printf("  <tr>\n    <td width=\"50%\">%s</td>\n",
 		   &htmlize($fullname{$n}));
-	    printf("    <td width=\"5%\">");
-	    printf("<a href=\"98p/%s.png\">%s</a></td>\n",
-		   $n, "98%");
-	    printf("    <td width=\"8%\">");
-	    printf("<a href=\"avg/%s.png\">%s</a></td>\n",
-		   $n, "Average");
+	    if (defined($do_98p)) {
+		printf("    <td width=\"5%\">");
+		printf("<a href=\"98p/%s.png\">%s</a></td>\n",
+		       $n, "98%");
+	    }
+	    if (defined($do_avg)) {
+		printf("    <td width=\"8%\">");
+		printf("<a href=\"avg/%s.png\">%s</a></td>\n",
+		       $n, "Average");
+	    }
 	    printf("    <td width=\"8%\">");
 	    printf("<a href=\"/stat-q/r-all?q=all&amp;");
 	    printf("name=%s\">%s</a></td>\n",
 		   $n, "Current");
 	    my($i) = 0;
 	    printf("    <td>Links: ");
-	    foreach $l (&active_links($n)) {
+	    foreach my $l (&active_links($n)) {
 		printf("    <a href=\"/stat-q/r-all?q=all&amp;name=%s\">",
 		       $l);
 		printf("%d</a>", ++$i);
@@ -216,6 +230,8 @@ sub emit_html {
 #
 
 &getopts("c:t:");
+our($opt_c, $opt_t);
+
 if (! -f $opt_c) {
     &err("description file (-c file) not readable: $opt_c");
 }
@@ -224,8 +240,9 @@ if (! -f $opt_c) {
 if (! -f $opt_t) {
     &err("HTML template file (-t file) not readable: $opt_t");
 }
-@ports = &dayreport_ports();
-foreach $p (@ports) {
+my(@ports) = &dayreport_ports();
+our(%active_port);
+foreach my $p (@ports) {
     $active_port{$p} = 1;
 }
 
