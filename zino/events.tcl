@@ -397,7 +397,6 @@ proc closeEvent { id } {
     catch { unset PreClosedEventId($ix) }
     catch { unset EventState($id) }
     catch { unset EventIdToIx($id) }
-    catch { unset EventId($ix) }
     unset $Attrs
 }
 
