@@ -110,16 +110,20 @@ sub htmlize {
     my($s) = @_;
 
     $s =~ s/&/&amp;/g;
+    $s =~ s/\x{E1}/&aacute;/g;
     $s =~ s/\x{E4}/&auml;/g;
-    $s =~ s/\x{C4}/&Auml;/g;
-    $s =~ s/\x{F6}/&ouml;/g;
-    $s =~ s/\x{D6}/&Ouml;/g;
     $s =~ s/\x{E5}/&aring;/g;
-    $s =~ s/\x{C5}/&Aring;/g;
-    $s =~ s/\x{F8}/&oslash;/g;
-    $s =~ s/\x{D8}/&Oslash;/g;
+    $s =~ s/\x{E6}/&aelig;/g;
     $s =~ s/\x{E9}/&eacute;/g;
+    $s =~ s/\x{F6}/&ouml;/g;
+    $s =~ s/\x{C1}/&Aacute;/g;
+    $s =~ s/\x{C4}/&Auml;/g;
+    $s =~ s/\x{C5}/&Aring;/g;
+    $s =~ s/\x{C6}/&Aelig;/g;
     $s =~ s/\x{C9}/&Eacute;/g;
+    $s =~ s/\x{D6}/&Ouml;/g;
+    $s =~ s/\x{D8}/&Oslash;/g;
+    $s =~ s/\x{F8}/&oslash;/g;
 
     return $s;
 }
