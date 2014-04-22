@@ -7,6 +7,7 @@
 #
 
 use Getopt::Std;
+use strict;
 
 sub read_subst {
     my($f) = @_;
@@ -23,13 +24,13 @@ sub read_subst {
 
 sub read_Makefile {
     my($f) = @_;
-    our(%m_var);
+    our(%m_vars);
 
     open(IN, $f) || die "Could not open $f: $!";
     while(<IN>) {
 	chomp;
 	if (/(.*)=.*/) {
-	    $m_var{$1} = 1;
+	    $m_vars{$1} = 1;
 	}
     }
     close(IN);
@@ -50,7 +51,7 @@ our(%s_vars, %m_vars);
 my($err) = 0;
 
 foreach my $v (keys %m_vars) {
-    if (!defined($s_vars)) {
+    if (!defined($s_vars{$v})) {
 	printf(STDERR "Variable %s missing from Makefile.inc\n", $v);
 	$err = 1;
     }
