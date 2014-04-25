@@ -186,6 +186,7 @@ namespace eval ::pm {
 
     }
 
+    # not implemented yet
     proc save { id } {
     }
 
@@ -215,6 +216,101 @@ namespace eval ::pm {
 	    }
 	}
 	return $s
+    }
+
+    proc active_pms { } {
+
+	set s {}
+	foreach id [ids] {
+	    set name [attrs $id]
+	    global $name
+	    set end [set [set name](endtime)]
+	    set start [set [set name](starttime)]
+	    set now [clock seconds]
+	    if { $end > $now && $start < $now } {
+		lappend s $id
+	    }
+	}
+	return $s
+    }
+
+    proc port_matches_pm { ix pmid } {
+	global ::portToLocIfDescr
+
+	set match_type [attr $pmid "match_type"]
+	set match_expr [attr $pmid "match_expr"]
+
+	if { $match_type == "regexp" } {
+	    if [regexp $match_expr $portToLocIfDescr($ix)] {
+		return 1
+	    }
+	} elseif { $match_type == "str" } {
+	    if [string match $match_expr $portToLocIfDescr($ix)] {
+		return 1
+	    }
+	}
+	return 0
+    }
+
+    proc dev_matches_pm { name pmid } {
+	# abuse this to get at list of devices
+	global ::isCisco
+
+	set match_type [attr $pmid "match_type"]
+	set match_expr [attr $pmid "match_expr"]
+
+	if { $match_type == "str" } {
+	    foreach {dev val} [array get isCisco $match_expr] {
+		return 1
+	    }
+	} elseif { $match_type == "exact" } {
+	    if [info exists isCisco($match_expr)] {
+		return 1
+	    }
+	}
+	return 0
+    }
+
+    proc pm_matches { pmid eid } {
+
+	set t [getEventAttr $eid "type"]
+	set pmt [attr $pmid "type"]
+
+	if { $t == "portstate" && $pmt == "portstate" } {
+	    set r [getEventAttr $eid "router"]
+	    set ifix [getEventAttr $eid "ifindex"]
+	    set ix [format "%s,%s" $r $ifix]
+	    if [port_matches_pm $ix $pmid] {
+		return 1
+	    }
+	} elseif { $t == "reachability" && $pmt == "device" } {
+	    set r [getEventAttr $eid "router"]
+	    if [dev_matches_pm $r $pmid] {
+		return 1
+	    }
+	}
+	return 0
+    }
+
+    proc check_pm_event { eid } {
+
+	set t [getEventAttr $eid "type"]
+	set s [getEventAttr $eid "state"]
+
+	# if already set to "ignored", don't mess more with it
+	if {$s == "ignored"} { return; }
+	if {$s == "closed"} { return; }; # ignore these as well...
+
+	foreach pm [active_pms] {
+	    if [pm_matches $pm $eid] {
+		# set to ignored during PM
+		setEventAttr $eid "state" "ignored"
+		eventLog $eid \
+		    "entered into existing active PM event id $pm"
+		eventCommit $eid
+		lappend ::pm::pm_events($pm) $eid
+	    }
+	}
     }
 
     proc matching_ports { match_type match_expr } {
@@ -381,12 +477,28 @@ namespace eval ::pm {
 
 	set now [clock seconds]
 
-	foreach id [starting_pms $lasttime $now] {
-	    start_pm $id
+	if [catch {
+	    foreach id [starting_pms $lasttime $now] {
+		start_pm $id
+	    }
+	} err] {
+	    log $err
 	}
 
-	foreach id [ending_pms $lasttime $now] {
-	    end_pm $id
+	if [catch {
+	    fireach eid [eventIds] {
+		check_pm_event $eid
+	    }
+	} err] {
+	    log $err
+	}
+
+	if [catch {
+	    foreach id [ending_pms $lasttime $now] {
+		end_pm $id
+	    }
+	} err] {
+	    log $err
 	}
 
 	set lasttime $now
