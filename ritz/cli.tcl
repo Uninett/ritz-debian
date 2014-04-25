@@ -27,7 +27,18 @@ proc main {} {
     }
 
     openServer $Server $Port
+
+    puts [format "Connected to %s / %s" $Server $Port]
+
     authUser $User $Secret
+
+    if { $Authenticated == 1 } {
+	puts [format "Authenticated as user %s" $User]
+    } else {
+	puts [format "Authentication as %s failed" $User]
+	closeServer
+	exit 1
+    }
     
     global ServerChan
     set ch $ServerChan
@@ -46,6 +57,11 @@ proc main {} {
 		puts $l
 	    }
 	    puts $l;		# final "."
+	} elseif [regexp {^...-} $l] {
+	    while { [regexp {^...-} $l] } {
+		safeGets $ch l
+		puts $l
+	    }
 	}
     }
     closeServer
