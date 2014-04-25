@@ -51,7 +51,7 @@ install: ritz cli
 	rm -f ${BINDIR}/ritz
 	cp ritz ${BINDIR}/ritz
 	rm -f ${BINDIR}/cli
-	cp ritz ${BINDIR}/cli
+	cp cli ${BINDIR}/cli
 
 clean:
 	rm -f ritz
