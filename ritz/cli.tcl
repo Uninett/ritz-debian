@@ -47,8 +47,10 @@ proc main {} {
     set n 0
     while { $cmd != "quit" && $n >= 0} {
 	set n [gets stdin l]
+	if { $n < 0 } { break; }
 	set cmd [lindex $l 0]
 	if { $cmd == "quit" } { break; }
+
 	safePuts $ch $l
 	safeGets $ch l
 	puts $l
@@ -57,14 +59,16 @@ proc main {} {
 		puts $l
 	    }
 	    puts $l;		# final "."
-	} elseif [regexp {^...-} $l] {
+	} elseif [regexp {^...-} $l] { # also "more to come"
 	    while { [regexp {^...-} $l] } {
 		safeGets $ch l
 		puts $l
 	    }
 	}
     }
+    puts "Closing server connection"
     closeServer
+    exit 0
 }
 
 
