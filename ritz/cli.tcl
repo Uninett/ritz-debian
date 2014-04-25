@@ -5,7 +5,7 @@
 # Simple CLI client to zino, takes care of authentication
 # and allows the user to interact directly with the zino server.
 
-sub main {} {
+proc main {} {
 
     global allCases filteredCases sortedCases
     global Authenticated
