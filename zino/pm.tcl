@@ -83,18 +83,21 @@ namespace eval ::pm {
 
     proc details { id } {
 	# return details for a PM event:
-	# $id $from_t $to_t $type $match_type $match_expr
-
-	set name [attrs $id]
-	global $name
+	# $id $from_t $to_t $type $match_type [$match_dev] $match_expr
 
 	set s ""
 	set s [format "%d" $id]
-	set s [format "%s %s" $s [set [set name](starttime)]]
-	set s [format "%s %s" $s [set [set name](endtime)]]
-	set s [format "%s %s" $s [set [set name](type)]]
-	set s [format "%s %s" $s [set [set name](match_type)]]
-	set s [format "%s %s" $s [set [set name](match_expr)]]
+	set s [format "%s %s" $s [attr $id starttime]]
+	set s [format "%s %s" $s [attr $id endtime]]
+	set s [format "%s %s" $s [attr $id type]]
+	set mt [attr $id match_type]
+	set s [format "%s %s" $s $mt]
+
+	if { $mt == "intf-regexp" } {
+	    set s [format "%s %s" $s [attr $id match_dev]]
+	}
+
+	set s [format "%s %s" $s [attr $id match_expr]]	       
 
 	return $s
     }
