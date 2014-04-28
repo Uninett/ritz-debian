@@ -111,11 +111,7 @@ namespace eval ::pm {
 	set type       [attr $id "type"]
 	set match_type [attr $id "match_type"]
 	set match_expr [attr $id "match_expr"]
-	if [info exists [set name](match_dev)] {
-	    set match_dev [set [set name](match_dev)]
-	} else {
-	    set match_dev ""
-	}
+	set match_dev  [attr $id "match_dev"]
 
 	if { $type == "portstate" } {
 	    foreach ix [matching_ports $match_type $match_expr $match_dev] {
