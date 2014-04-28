@@ -507,7 +507,7 @@ namespace eval ::pm {
 	}
 
 	if [catch {
-	    fireach eid [eventIds] {
+	    foreach eid [eventIds] {
 		check_pm_event $eid
 	    }
 	} err] {
