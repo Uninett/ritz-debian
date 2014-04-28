@@ -30,7 +30,7 @@ namespace eval ::pm {
 	}
     }
 
-    proc add { from_t to_t type match_type match_expr } {
+    proc add { from_t to_t type match_type match_expr match_dev } {
 
 	set id [newid]
 	set name [attrs $id]
@@ -40,6 +40,7 @@ namespace eval ::pm {
 	set [set name](type) $type
 	set [set name](match_type) $match_type
 	set [set name](match_expr) $match_expr
+	set [set name](match_dev) $match_dev
 
 	::persist::add $name
 	::persist::dump
@@ -313,8 +314,9 @@ namespace eval ::pm {
 	}
     }
 
-    proc matching_ports { match_type match_expr } {
+    proc matching_ports { match_type match_expr match_dev } {
 	global ::portToLocIfDescr
+	global ::portToIfDescr
 
 	set ixes {}
 	if { $match_type == "regexp" } {
@@ -326,6 +328,20 @@ namespace eval ::pm {
 	} elseif { $match_type == "str" } {
 	    foreach ix [array names portToLocIfDescr] {
 		if [string match $match_expr $portToLocIfDescr($ix)] {
+		    lappend ixes $ix
+		}
+	    }
+	} elseif { $match_type == "intf-regexp" } {
+	    # match expression for array get
+	    set me [format "%s,*" $match_dev]
+	    foreach {ix intf} [array get ::portToIfDescr $me] {
+		# make sure it's the right device
+		set l [split $ix ","]
+		if { [lindex $l 0] != $match_dev } {
+		    continue;
+		}
+		# and match the interface name
+		if [regexp $match_expr $intf] {
 		    lappend ixes $ix
 		}
 	    }
@@ -363,12 +379,17 @@ namespace eval ::pm {
 	set type       [set [set name](type)]
 	set match_type [set [set name](match_type)]
 	set match_expr [set [set name](match_expr)]
+	if [info exists [set name](match_dev)] {
+	    set match_dev [set [set name](match_dev)]
+	} else {
+	    set match_dev ""
+	}
 
 	set ::pm::pm_events($id) {}
 
 	if { $type == "portstate" } {
 	    global ::portToIfDescr
-	    set ixes [matching_ports $match_type $match_expr]
+	    set ixes [matching_ports $match_type $match_expr $match_dev]
 	    foreach ix $ixes {
 		set eid [::eventId $ix "portstate"]
 		set l [split $ix ","]

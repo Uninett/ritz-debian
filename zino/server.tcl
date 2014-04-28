@@ -389,7 +389,7 @@ proc doPMadd { chan l } {
     set to_t   [lindex $l 3]
     set type   [string tolower [lindex $l 4]]
     set m_type [string tolower [lindex $l 5]]
-    set m_expr [lindex $l 6]
+    # See below for the last 1 or 2 args
 
     if { ! [regexp {^[0-9][0-9]*$} $from_t] } {
 	errResponse $chan \
@@ -413,11 +413,22 @@ proc doPMadd { chan l } {
 	errResponse $chan [format "unknown PM event type: %s" $type]
 	return
     }
-    if { $m_type != "regexp" && $m_type != "str" && $m_type != "exact" } {
+    if { $m_type != "regexp" &&
+	 $m_type != "str" &&
+	 $m_type != "exact" &&
+	 $m_type != "intf-regexp" } {
 	errResponse $chan [format "unknown match type: %s" $m_type]
 	return
     }
-    set id [::pm::add $from_t $to_t $type $m_type $m_expr]
+    if { $m_type == "intf-regexp" } {
+	set m_dev  [lindex $l 6]
+	set m_expr [lindex $l 7]
+    } else {
+	set m_dev  ""
+	set m_expr [lindex $l 6]
+    }
+
+    set id [::pm::add $from_t $to_t $type $m_type $m_expr $m_dev]
     ClientResponse $chan \
 	[format "200 PM id %s successfully added" $id]
 }
