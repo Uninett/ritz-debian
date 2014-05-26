@@ -145,7 +145,7 @@ sub cmp_ios_versions {
 
     %a = &dissect_cisco_version($a);
     %b = &dissect_cisco_version($b);
-    if (!defined(%a) || !defined(%b)) {
+    if (!(%a) || !(%b)) {
 	return $a <=> $b;
     }
     if ($a{"major"} == $b{"major"}) {
