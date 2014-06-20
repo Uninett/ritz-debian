@@ -31,6 +31,9 @@ mib load IANAifType.tc
 mib load cisco.mib
 mib load ../mibs/IPV6-TC.my
 mib load ../mibs/IPV6-MIB.my
+mib load ../mibs/IF-MIB.my
+mib load ../mibs/INET-ADDRESS-MIB.my
+mib load ../mibs/IP-MIB.my
 
 proc initDev { sh } {
 }
@@ -320,8 +323,14 @@ proc getVarList { sh } {
 		"ifOutDiscards" "ifOutErrors" \
 		"ifInMulticastPkts" "ifOutMulticastPkts" \
 		"ifInBroadcastPkts" "ifOutBroadcastPkts" \
-		"ipv6IfStatsInReceives" "ipv6IfStatsOutForwDatagrams" \
 	       ]
+
+    # for IPv6 stats on JunOS, from the IPV6-MIB:
+    lappend vl "ipv6IfStatsInReceives" "ipv6IfStatsOutForwDatagrams"
+    # for IPv6 stats on IOS-XR, from IP-MIB:
+    lappend vl "ipIfStatsInReceives.2" "ipIfStatsOutTransmits.2" \
+		"ipIfStatsHCInOctets.2" "ipIfStatsHCOutOctets.2"
+
 
     if { [::config::conf $name "hcounters"] != "no" } {
 	lappend vl "ifHCInOctets" "ifHCOutOctets"
@@ -353,7 +362,7 @@ proc logVars { sh vbl } {
     foreach vb $vbl {
 	set oid [lindex $vb 0]
 	if { $oid != {} } {
-	    set ix [getInstance $oid]
+	    set ix [getIfIndex $oid]
 	}
     }
     if { ! [info exists ix] } { return; }
@@ -405,8 +414,9 @@ proc logVars { sh vbl } {
     close $fh
 }
 
-proc getInstance { oid } {
-    return [join [lrange [split [mib name $oid] "."] 1 end] "."]
+proc getIfIndex { oid } {
+    # assumes ifIndex is last index, if multiple, is in ipIfStatsTable
+    return [join [lrange [split [mib name $oid] "."] end end] "."]
 }
 
 proc openFile { dev ix new } {
