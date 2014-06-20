@@ -460,8 +460,16 @@ sub plot_ip6perc {
 		$count{"ifOutUcastPkts",$i} +
 		$count{"ifOutNUcastPkts",$i};
 	}
-	$i6pkts = $count{"ipv6IfStatsInReceives",$i};
-	$o6pkts = $count{"ipv6IfStatsOutForwDatagrams",$i};
+	if (defined($count{"ipIfStatsInReceives",$i})) {
+	    $i6pkts = $count{"ipIfStatsInReceives",$i}
+	} else {
+	    $i6pkts = $count{"ipv6IfStatsInReceives",$i};
+	}
+	if (defined($count{"ipIfStatsOutTransmits",$i})) {
+	    $o6pkts = $count{"ipIfStatsOutTransmits",$i};
+	} else {
+	    $o6pkts = $count{"ipv6IfStatsOutForwDatagrams",$i};
+	}
 
 	if ($ipkts != 0) {
 	    $iperc = $i6pkts * 100.0 / $ipkts;
