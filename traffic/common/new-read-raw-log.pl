@@ -147,7 +147,7 @@ sub new_read_log {
 	    next;
 	}
 
-	($v, $instance) = split(/\./, $_[1]);
+	($v, $instance) = split(/\./, $_[1], 2);
 
 	if (!defined($data_seen{$v})) {
 	    if (defined($lasttime{$v})) {

@@ -125,7 +125,7 @@ sub new_read_log {
 	    next;
 	}
 
-	($v, $instance) = split(/\./, $_[1]);
+	($v, $instance) = split(/\./, $_[1], 2);
 
 	# If we change instance for this variable, use current
 	# value as a baseline, and skip to next line.
