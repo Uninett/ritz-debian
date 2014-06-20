@@ -46,8 +46,13 @@ for(my $i = 0; $i <= $max_sample; $i++) {
 	$count{"ifOutUcastPkts",$i} +
 	$count{"ifOutNUcastPkts",$i};
 
-    $i6pkts = $count{"ipv6IfStatsInReceives",$i};
-    $o6pkts = $count{"ipv6IfStatsOutForwDatagrams",$i};
+    if (defined($count{"ipIfStatsInReceives"})) {
+	$i6pkts += $count{"ipIfStatsInReceives"};
+	$o6pkts += $count{"ipIfStatsOutTransmits"};
+    } else {
+	$i6pkts += $count{"ipv6IfStatsInReceives",$i};
+	$o6pkts += $count{"ipv6IfStatsOutForwDatagrams",$i};
+    }
 
     if ($ipkts != 0) {
 	$iperc = $i6pkts * 100.0 / $ipkts;
