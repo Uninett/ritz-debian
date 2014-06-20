@@ -123,6 +123,9 @@ sub get_file_data {
 		       
 		       "ipv6IfStatsInReceives", "ipv6IfStatsOutForwDatagrams",
 
+		       "ipIfStatsInReceives", "ipIfStatsOutTransmits",
+		       "ipIfStatsHCInOctets", "ipIfStatsHCOutOctets",
+
 		       "ifInDiscards", "ifOutDiscards",
 		       "ifInErrors", "ifOutErrors",
 		       "locIfInRunts", "locIfInGiants",
@@ -264,14 +267,19 @@ sub undef_file_data {
 sub ip6_in_perc {
     my($n) = @_;
     our(%total);
+    my($ip6pkts);
 
-    if (! defined($total{$n,"ipv6IfStatsInReceives"})) {
+    undef $ip6pkts;
+    if (defined($total($n,"ipIfStatsInReceives"})) {
+	$ip6pkts = $total($n,"ipIfStatsInReceives"};
+    } elsif (defined($total{$n,"ipv6IfStatsInReceives"})) {
+	$ip6pkts = $total{$n,"ipv6IfStatsInReceives"};
+    }
+    if (!defined($ip6pkts)) {
 	return("n/a");
     }
     if ($total{$n,"inpkts"} != 0) {
-	return ((100.0 *
-		 $total{$n,"ipv6IfStatsInReceives"}) /
-		$total{$n,"inpkts"});
+	return ((100.0 * $ip6pkts) / $total{$n,"inpkts"});
     }
     return "0.0";
 }
@@ -279,25 +287,59 @@ sub ip6_in_perc {
 sub ip6_out_perc {
     my($n) = @_;
     our(%total);
+    my($ip6pkts);
 
-    if (! defined($total{$n,"ipv6IfStatsOutForwDatagrams"})) {
+    if (defined($total{$n,"ipIfStatsOutTransmits"})) {
+	$ip6pkts = $total{$n,"ipIfStatsOutTransmits"};
+    } elsif (defined($total{$n,"ipv6IfStatsOutForwDatagrams"})) {
+	$ip6pkts = $total{$n,"ipv6IfStatsOutForwDatagrams"};
+    }
+    if (!defined($ip6pkts)) {
 	return("n/a");
     }
+    
     if ($total{$n,"outpkts"} != 0) {
-	return ((100.0 *
-		 $total{$n,"ipv6IfStatsOutForwDatagrams"}) /
-		$total{$n,"outpkts"});
+	return ((100.0 * $ip6pkts) / $total{$n,"outpkts"});
     }
     return "0.0";
 }
 
-sub ip6_traffic {
-    my($perc, $rate) = @_;
+sub ip6_in_traffic {
+    my($n) = @_;
+    our(%total, $oov);
+    my($in, $perc);
 
-    if ($perc eq "n/a") {
-	return "n/a";
+    $in = "n/a";
+    if (defined($total{$n,"ipIfStatsHCInOctets"})) {
+	$in = $total{$n,"ipIfStatsHCInOctets"};
+    } elsif (defined($total{$n,"ipv6IfStatsInReceives"})) {
+	# Have to estimate volume based on packet percentage
+	$perc = &ip6_in_perc($n);
+	if ($perc eq "n/a") {	# should not happen
+	    return "n/a";
+	}
+	$in = ($total{$n,$iov}*8/1000/3600/24) * $perc / 100.0;
     }
-    return ($rate * $perc) / 100.0;
+    return $in;
+}
+
+sub ip6_out_traffic {
+    my($n) = @_;
+    our(%total, $oov);
+    my($out, $perc);
+    
+    $out = "n/a";
+    if (defined($total{$n,"ipIfStatsHCOutOctets"})) {
+	$out = $total{$n,"ipIfStatsHCOutOctets"};
+    } elsif (defined($total{$n,"ipv6IfStatsOutForwDatagrams"})) {
+	# Have to estimate volume based on packet percentage
+	$perc = &ip6_out_perc($n);
+	if ($perc eq "n/a") {	# should not happen
+	    return "n/a";
+	}
+	$out = ($total{$n,$oov}*8/1000/3600/24) * $perc / 100.0;
+    }
+    return $out;
 }
 
 
@@ -424,10 +466,8 @@ sub report_traffic_kbit {
 	       $out_90perc_bps / 1000,
 	       &sprint_percent(&ip6_in_perc($n)),
 	       &sprint_percent(&ip6_out_perc($n)),
-	       &ip6_traffic(&ip6_in_perc($n),
-			    $total{$n,$iov}*8/1000/3600/24),
-	       &ip6_traffic(&ip6_out_perc($n),
-			    $total{$n,$oov}*8/1000/3600/24)
+	       &ip6_in_traffic($n),
+	       &ip6_out_traffic($n)
 	    );
     }
 }
