@@ -311,7 +311,7 @@ sub ip6_in_traffic {
 
     $in = "n/a";
     if (defined($total{$n,"ipIfStatsHCInOctets"})) {
-	$in = $total{$n,"ipIfStatsHCInOctets"};
+	$in = $total{$n,"ipIfStatsHCInOctets"}*8/1000/3600/24;
     } elsif (defined($total{$n,"ipv6IfStatsInReceives"})) {
 	# Have to estimate volume based on packet percentage
 	$perc = &ip6_in_perc($n);
@@ -330,7 +330,7 @@ sub ip6_out_traffic {
     
     $out = "n/a";
     if (defined($total{$n,"ipIfStatsHCOutOctets"})) {
-	$out = $total{$n,"ipIfStatsHCOutOctets"};
+	$out = $total{$n,"ipIfStatsHCOutOctets"}*8/1000/3600/24;
     } elsif (defined($total{$n,"ipv6IfStatsOutForwDatagrams"})) {
 	# Have to estimate volume based on packet percentage
 	$perc = &ip6_out_perc($n);
