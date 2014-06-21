@@ -37,38 +37,46 @@ our(%count, $max_sample, %sample_time);
 for(my $i = 0; $i <= $max_sample; $i++) {
     my($ipkts, $opkts, $iperc, $operc);
     my($i6pkts, $o6pkts);
+    my($ioctets, $ooctets);
 
-    $ipkts =
-	$count{"ifInUcastPkts",$i} +
-	$count{"ifInNUcastPkts",$i};
+    if (defined($count{"ipIfStatsHCInOctets",$i})) {
+	$ioctets = $count{"ipIfStatsHCInOctets",$i};
+	$ooctets = $count{"ipIfStatsHCOutOctets",$i};
 
-    $opkts =
-	$count{"ifOutUcastPkts",$i} +
-	$count{"ifOutNUcastPkts",$i};
-
-    if (defined($count{"ipIfStatsInReceives"})) {
-	$i6pkts += $count{"ipIfStatsInReceives"};
-	$o6pkts += $count{"ipIfStatsOutTransmits"};
+	printf("%07.4f %f %f\n",
+	       $sample_time{$i},
+	       $ioctets, $ooctets);
     } else {
-	$i6pkts += $count{"ipv6IfStatsInReceives",$i};
-	$o6pkts += $count{"ipv6IfStatsOutForwDatagrams",$i};
+	$ipkts =
+	    $count{"ifInUcastPkts",$i} +
+	    $count{"ifInNUcastPkts",$i};
+
+	$opkts =
+	    $count{"ifOutUcastPkts",$i} +
+	    $count{"ifOutNUcastPkts",$i};
+
+	$i6pkts = $count{"ipv6IfStatsInReceives",$i};
+	$o6pkts = $count{"ipv6IfStatsOutForwDatagrams",$i};
+
+	$ioctets = $count{"ifHCInOctets",$i};
+	$ooctets = $count{"ifHCOutOctets",$i};
+
+	if ($ipkts != 0) {
+	    $iperc = $i6pkts * 100.0 / $ipkts;
+	} else {
+	    $iperc = 0;
+	}
+
+	if ($opkts != 0) {
+	    $operc = $o6pkts * 100.0 / $opkts;
+	} else {
+	    $operc = 0;
+	}
+
+	printf("%07.4f %f %f\n",
+	       $sample_time{$i},
+	       $ioctets * $iperc / 100.0,
+	       $ooctets * $operc / 100.0
+	    );
     }
-
-    if ($ipkts != 0) {
-	$iperc = $i6pkts * 100.0 / $ipkts;
-    } else {
-	$iperc = 0;
-    }
-
-    if ($opkts != 0) {
-	$operc = $o6pkts * 100.0 / $opkts;
-    } else {
-	$operc = 0;
-    }
-
-
-    printf("%07.4f %f %f\n",
-	   $sample_time{$i},
-	   $iperc, $operc
-	);
 }
