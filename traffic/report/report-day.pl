@@ -270,8 +270,8 @@ sub ip6_in_perc {
     my($ip6pkts);
 
     undef $ip6pkts;
-    if (defined($total($n,"ipIfStatsInReceives"})) {
-	$ip6pkts = $total($n,"ipIfStatsInReceives"};
+    if (defined($total{$n,"ipIfStatsInReceives"})) {
+	$ip6pkts = $total{$n,"ipIfStatsInReceives"};
     } elsif (defined($total{$n,"ipv6IfStatsInReceives"})) {
 	$ip6pkts = $total{$n,"ipv6IfStatsInReceives"};
     }
@@ -306,7 +306,7 @@ sub ip6_out_perc {
 
 sub ip6_in_traffic {
     my($n) = @_;
-    our(%total, $oov);
+    our(%total, $iov);
     my($in, $perc);
 
     $in = "n/a";
