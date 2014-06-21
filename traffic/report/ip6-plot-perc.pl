@@ -5,7 +5,7 @@
 # Siple script to output percentage of ipv6 packets on
 # input and output for a given day.
 #
-# Usage: perl ip6-plot-data.pl -d <datespec> <data filename>
+# Usage: perl ip6-plot-perc.pl -d <datespec> <data filename>
 #
 
 use Getopt::Std;
