@@ -1052,10 +1052,10 @@ sub other_map_url {
     my($mr) = $mapref[$elt];
 
     if (!defined($mr)) { return undef; }
-    if ($mr =~ /^http:\/\//) {
+    if ($mr =~ /^https?:\/\//) {
 	return sprintf("%s,%s,%s,%s", $mr, $dsp, $type, $select);
     }
-    if ($mr =~ /^abs-http:\/\//) {
+    if ($mr =~ /^abs-https?:\/\//) {
 	$mr =~ s/^abs-//;
 	return $mr;
     }
