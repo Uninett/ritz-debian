@@ -333,7 +333,7 @@ sub forward_refs {
     printf("<hr />\n");
     printf("You may further inspect for this period/port\n");
     printf("<ul>\n");
-    foreach $pt (keys %{ $resolution_plots{$res}}) {
+    foreach $pt (sort keys %{ $resolution_plots{$res}}) {
 	if ($pt ne $plot) {
 	    printf("<li><a href=\"%s/%s,%s,%s,%s\">\n",
 		   $ourname, $line, $dsp, $res, $pt);
