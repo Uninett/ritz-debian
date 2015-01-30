@@ -507,12 +507,12 @@ sub get_area {
 #
 
 sub get_dash_pattern {
-    my($img) = @_;
+    my($img, $color) = @_;
     
-    my($black) = &find_color("black", $img);
-    $img->setStyle($black,
-		   $black,
-		   $black,
+    my($c) = &find_color($color, $img);
+    $img->setStyle($c,
+		   $c,
+		   $c,
 		   GD::gdTransparent,
 		   GD::gdTransparent,
 	);
@@ -525,7 +525,7 @@ sub get_brush {
     our($brush, @dashed);
     
     if ($dashed[$e]) {
-	$c = &get_dash_pattern($img);
+	$c = &get_dash_pattern($img, $cname);
     } else {
 	$brush = new GD::Image($lw,$lw);
 	&find_color($cname, $brush); # should allocate background color
@@ -652,7 +652,7 @@ sub draw_color {
 	$c = &get_brush($img, $e, $width[$e], $cname);
     } else {
 	if ($dashed[$e]) {
-	    $c = &get_dash_pattern($img);
+	    $c = &get_dash_pattern($img, $cname);
 	} else {
 	    $c = &find_color($cname, $img);
 	}
@@ -985,7 +985,7 @@ sub get_name_brush {
 
     if (!defined($val)) {
 	if ($dashed[$elt]) {
-	    return &get_dash_pattern($img);
+	    return &get_dash_pattern($img, "black");
 	} else {
 	    return &find_color("black", $img);
 	}
