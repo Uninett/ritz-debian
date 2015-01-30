@@ -42,6 +42,8 @@
 # For now, just input drawing and output interpreted file.
 #
 
+use strict;
+
 use GD;
 use CGI;
 
@@ -55,12 +57,15 @@ push(@INC, "%CONFDIR%");
 
 require "zino-config.pl";
 
+our($load_now);
+
 if (!defined($load_now)) {
     $load_now = "%TOPDIR%" . "/reports/load-now.txt";
 }
 
 use POSIX qw(strftime);
 
+our($border, $scale, $touch_len);
 
 $border = 10;			# in pixels
 $scale = 1.5;
@@ -87,8 +92,9 @@ sub tgif_color_info {
     my($fh, @f) = @_;
     my($nc) = $f[1];
     my($cname, $r, $g, $b, @rest);
+    our(%red, %green, %blue);
     
-    for ($n = 0; $n < $nc; $n++) {
+    for (my $n = 0; $n < $nc; $n++) {
 	$_ = <$fh>; chop;
 	$_ =~ s/^\s+//;
 	($cname, $r, $g, $b, @rest) = split(/[, ]+/);
@@ -104,6 +110,7 @@ sub tgif_color_info {
 sub tgif_minilines {
     my($fh, $elt, $show, $lines, @f) = @_;
     my($n, @lines);
+    our(@text, @type);
 
     if (/^minilines/ && $lines > 0) {
 	for ($n = 0; $n < $lines; $n++) {
@@ -141,6 +148,7 @@ sub tgif_minilines {
 sub tgif_text {
     my($fh, $elt, $show, @f) = @_;
     my($n, $lines);
+    our(@x, @y);
 
     if (/^text/) {
 	$x[$elt] = $f[2];
@@ -158,6 +166,9 @@ sub tgif_text {
 sub tgif_attr {
     my($fh, $elt, @f) = @_;
     my($lw_seen, $oelt);
+    our(@hide, @name, @load_color, @color_elt, @lowlimit, @nosplit);
+    our(@mapref, @mapalt, @lw_text_elt, $area_elt, @fill_color);
+    our($limits_specified);
 
     if (/^attr/) {
 	my($n) = $f[1];
@@ -217,6 +228,7 @@ sub tgif_attrlist {
 sub tgif_box {
     my($fh, $elt, @f) = @_;
     my($c) = $f[1];
+    our(@pen_color, @fill_color, @fill, @coords, @width, @type);
 
     $c =~ s/\'//g;
     $pen_color[$elt] = $c;
@@ -237,6 +249,7 @@ sub tgif_polygon {
     my($nvs) = $f[3];		# Number of vertices
     my($c) = $f[1];		# Pen color
     my($vc);			# Vertice count in current block
+    our(@pen_color, @coords, @width, @type, @fill);
 
     $c =~ s/\'//g;
     $pen_color[$elt] = $c;
@@ -266,6 +279,7 @@ sub tgif_poly {
     my($nvs) = $f[3];
     my($vc);
     my($c) = $f[1];
+    our(@coords, @width, @type, @dashed, @pen_color);
 
     $c =~ s/\'//g;
     $pen_color[$elt] = $c;
@@ -281,6 +295,7 @@ sub tgif_poly {
     $coords[$elt] =~ s/^\s//;
     $width[$elt] = $f[($vc*2)+1];
     $type[$elt] = "polyline";
+    $dashed[$elt] = $f[($vc*2)+6];
 
     $_ = <$fh>;
     $_ = <$fh>;
@@ -294,6 +309,7 @@ sub tgif_oval {
     my($fh, $elt, @f) = @_;
     my($ltx, $lty, $brx, $bry) = @f[3 .. 6];
     my($cx, $cy, $rx, $ry);
+    our(@type, @cx, @cy, @radius_x, @radius_y, @width);
 
     $rx = ($brx - $ltx) / 2;
     $ry = ($bry - $lty) / 2;
@@ -323,18 +339,19 @@ sub tgif_group {
 
 # One-line directives we ignore
 
-%ignore = ("unit" => 1,
-	   "script_frac" => 1,
-	   "fg_bg_colors" => 1,
-	   "page" => 1,
-	   "dont_reencode" => 1,
-	   "objshadow_info" => 1,
-	   "rotate_pivot" => 1,
-	   "spline_tightness" => 1,
-       );
+our(%ignore) = ("unit" => 1,
+		"script_frac" => 1,
+		"fg_bg_colors" => 1,
+		"page" => 1,
+		"dont_reencode" => 1,
+		"objshadow_info" => 1,
+		"rotate_pivot" => 1,
+		"spline_tightness" => 1,
+    );
 
 sub tgif_obj {
     my($fh, $elt, @f) = @_;
+    our(%ignore);
 
     if ($f[0] eq "color_info") {
 	&tgif_color_info($fh, @f);
@@ -370,6 +387,7 @@ sub tgif_objlist {
 
 sub setup_color_limits {
     my($c, $elt);
+    our(@color_elt, @load_color, @load_limit, @lowlimit);
 
     for($c = 0; $c <= $#load_color; $c++) {
 	$elt = $color_elt[$c];
@@ -380,6 +398,7 @@ sub setup_color_limits {
 sub read_tgif {
     my($fh) = @_;
     my(@f, $elt);
+    our($limits_specified);
 
     &tgif_head($fh);
     $elt = 0;
@@ -438,6 +457,7 @@ sub find_color {
 sub xlc {
     my(@fcs) = @_;
     my(@xlcs, $c);
+    our($xoff, $yoff, $border, $scale);
 
     while($#fcs >= 0) {
 	push(@xlcs, (((shift(@fcs)-$xoff)/$scale)+$border));
@@ -452,6 +472,7 @@ sub xlc {
 sub scale {
     my(@l) = @_;
     my(@nl);
+    our($scale);
     
     while($#l >= 0) {
 	push(@nl, (shift(@l) / $scale));
@@ -463,6 +484,7 @@ sub scale {
 
 sub get_area {
     my($w, $h, $e, @c, $c);
+    our($area_elt, @type, $xoff, $yoff, @coords);
 
     if (!defined($area_elt)) {
 	&err("No \"area\" tag found");
@@ -484,20 +506,39 @@ sub get_area {
 # GD-specific code
 #
 
-sub get_brush {
-    my($img, $lw, $cname) = @_;
-    my($c);
+sub get_dash_pattern {
+    my($img) = @_;
     
-    $brush = new GD::Image($lw,$lw);
-    &find_color($cname, $brush); # should allocate background color
-    $img->setBrush($brush);
-    $c = GD::gdBrushed;
+    my($black) = &find_color("black", $img);
+    $img->setStyle($black,
+		   $black,
+		   $black,
+		   GD::gdTransparent,
+		   GD::gdTransparent,
+	);
+    return GD::gdStyled;
+}
+
+sub get_brush {
+    my($img, $e, $lw, $cname) = @_;
+    my($c);
+    our($brush, @dashed);
+    
+    if ($dashed[$e]) {
+	$c = &get_dash_pattern($img);
+    } else {
+	$brush = new GD::Image($lw,$lw);
+	&find_color($cname, $brush); # should allocate background color
+	$img->setBrush($brush);
+	$c = GD::gdBrushed;
+    }
     return $c;
 }
 
 sub draw_rectangle {
     my($img, $e) = @_;
     my(@c);
+    our(@coords, @fill, @fill_color, @pen_color);
 
     @c = split(/ /, $coords[$e]);
 
@@ -534,7 +575,7 @@ sub line_seg_rel {
 
     $ll = &line_length($x1, $y1, $x1+$dx, $y1+$dy);
     if ($ll == 0) {
-	return($x1, $x2);
+	return($x1, $y1);
     }
     $xn = $x1 + $dx*$len/$ll;
     $yn = $y1 + $dy*$len/$ll;
@@ -583,31 +624,20 @@ sub last_half_polyline {
 
 sub draw_polyline_1 {
     my($img, $c, @c) = @_;
-    my(@oc, $x, $y, $xs, $ys);
+    my(@oc, $x, $y, $x1, $y1, $xs, $ys);
     my($poly);
 
     @oc = @c;
 
-    $poly = new GD::Polygon;
+    $x = shift(@c);
+    $y = shift(@c);
     while($#c > 0) {
-	$x = shift(@c);
-	$y = shift(@c);
-	$poly->addPt(&xlc($x,$y));
+	$x1 = shift(@c);
+	$y1 = shift(@c);
+	$img->line(&xlc($x,$y,$x1,$y1),$c);
+	$x = $x1;
+	$y = $y1;
     }
-    if ($#oc > 3) {		# if more than 2 points
-	$xs = $oc[0];
-	$ys = $oc[1];
-	if ($xs != $x && $ys != $y) {
-	    # trace back to emulate polyline (not a closed polygon...)
-	    pop(@oc); pop(@oc);
-	    while($#oc > 0) {
-		$y = pop(@oc);
-		$x = pop(@oc);
-		$poly->addPt(&xlc($x,$y));
-	    }
-	}
-    }
-    $img->polygon($poly, $c);
 }
 
 # Note: $brush must be global; otherwise left on stack
@@ -616,11 +646,16 @@ sub draw_polyline_1 {
 sub draw_color {
     my($img, $e, $cname) = @_;
     my($c);
+    our(@width, @dashed);
 
     if ($width[$e] != 1) {
-	$c = &get_brush($img, $width[$e], $cname);
+	$c = &get_brush($img, $e, $width[$e], $cname);
     } else {
-	$c = &find_color($cname, $img);
+	if ($dashed[$e]) {
+	    $c = &get_dash_pattern($img);
+	} else {
+	    $c = &find_color($cname, $img);
+	}
     }
     return $c;
 }
@@ -628,12 +663,13 @@ sub draw_color {
 sub draw_polyline {
     my($img, $e) = @_;
     my(@c, @fh, @lh, @ef, @el);
+    our(@name, @coords, @name, @nosplit);
 
     @c = split(/ /, $coords[$e]);
 
     if (defined($name[$e])) {
 	if (defined($nosplit[$e])) {
-	    &draw_polyline_1($img, &get_name_brush($img, $name[$e]), @c);
+	    &draw_polyline_1($img, &get_name_brush($img, $e, $name[$e]), @c);
 
 #	    @ef = &enclose_polyline(@c);
 #	    &draw_polygon_1($img, &draw_color($img, $e, "black"), @ef);
@@ -642,11 +678,11 @@ sub draw_polyline {
 	    @lh = &last_half_polyline(@c);
 
 	    &draw_polyline_1($img,
-			     &get_name_brush($img,
+			     &get_name_brush($img, $e,
 					     $name[$e]),
 			     @fh);
 	    &draw_polyline_1($img,
-			     &get_name_brush($img,
+			     &get_name_brush($img, $e,
 					     &rev_name($name[$e])),
 			     @lh);
 
@@ -666,12 +702,13 @@ sub draw_polyline {
 sub draw_text {
     my($img, $e) = @_;
     my(@lines, $x, $y);
+    our(@text, @x, @y);
 
-    $c = &find_color("black", $img);
+    my $c = &find_color("black", $img);
     @lines = split(/\n/, $text[$e]);
     $x = $x[$e];
     $y = $y[$e];
-    foreach $l (@lines) {
+    foreach my $l (@lines) {
 	$img->string(gdSmallFont, &xlc($x, $y), $l, $c);
 	$y += 15;
     }
@@ -681,7 +718,7 @@ sub draw_polygon_1 {
     my($img, $c, @c) = @_;
     my($x, $y);
 
-    $poly = new GD::Polygon;
+    my $poly = new GD::Polygon;
     while($#c > 0) {
 	$x = shift(@c);
 	$y = shift(@c);
@@ -693,9 +730,10 @@ sub draw_polygon_1 {
 sub draw_polygon {
     my($img, $e) = @_;
     my(@c, $c, $b);
+    our(@coords, @pen_color);
 
     @c = split(/ /, $coords[$e]);
-    $c = &draw_color($img, $e, $pen_color[$elt]);
+    $c = &draw_color($img, $e, $pen_color[$e]);
 
     &draw_polygon_1($img, $c, @c);
 }
@@ -703,6 +741,7 @@ sub draw_polygon {
 sub draw_ellipsis {
     my($img, $e) = @_;
     my($c);
+    our(@radius_x, @radius_y, @cx, @cy);
 
     $c = &draw_color($img, $e, "black");
 
@@ -783,6 +822,7 @@ sub draw_title {
 sub draw_border {
     my($img, $w, $h) = @_;
     my($light, $dark, $b);
+    our($border);
     
     $light = &find_rgb_color(194, 194, 194, $img);
     $dark =  &find_rgb_color(100, 100, 100, $img);
@@ -801,6 +841,7 @@ sub draw_border {
 sub draw_img {
     my($elts, $title) = @_;
     my($e, $img, $w, $h, $bg, $c);
+    our(@type, @hide, $border);
 
     ($w, $h, $c) = &get_area();
     
@@ -835,6 +876,7 @@ sub draw_img {
 
 sub err {
     my($msg) = @_;
+    our($doc);
 
     printf(STDERR "%s\n", $msg);
     printf("<h2>%s</h2>\n", $msg);
@@ -855,6 +897,7 @@ sub warn {
 sub read_data {
     my($fh) = @_;
     my(@f, $nr, $n);
+    our(%in_load, %out_load, %speed);
 
     $nr = 0;
     while(<$fh>) {
@@ -878,18 +921,18 @@ sub read_data {
 
 sub get_data {
     my($dsp, $type, $select) = @_;
-    my($nr);
+    my($nr, $data);
     
     # Get base data
-    $cmd = sprintf("%s/bin/sel-report -d %s -t %s -s %s",
-		   "%TOPDIR%", $dsp, $type, $select);
+    my $cmd = sprintf("%s/bin/sel-report -d %s -t %s -s %s",
+		      "%TOPDIR%", $dsp, $type, $select);
 
-    open(DATA, "$cmd |");
-    $nr = &read_data(DATA);
+    open($data, "$cmd |");
+    $nr = &read_data($data);
     if ($nr == 0) {
 	&err("No data found for requested time");
     }
-    close(DATA);
+    close($data);
 }
 
 # Functions to deal with coloring of lines
@@ -897,6 +940,7 @@ sub get_data {
 sub load_color {
     my($load) = @_;
     my($ix, $i);
+    our(@load_color, @load_limit, $limits_specified);
     
     if (defined($limits_specified)) {
 	for($i = 0; $i <= $#load_color; $i++) {
@@ -927,8 +971,10 @@ sub clean_rev_name {
 }
 
 sub get_name_brush {
-    my($img, $name) = @_;
+    my($img, $elt, $name) = @_;
     my($val, $speed, $c, $w);
+    our(%in_load, %out_load, %speed);
+    our(@dashed);
 
     if ($name =~ /(.*)\/i/) {
 	$name = $1;
@@ -938,18 +984,23 @@ sub get_name_brush {
     }
 
     if (!defined($val)) {
-	return &find_color("black", $img);
+	if ($dashed[$elt]) {
+	    return &get_dash_pattern($img);
+	} else {
+	    return &find_color("black", $img);
+	}
     }
 
     $w = &speed_width($speed{$name});
     $c = &load_color($val);
 
-    return &get_brush($img, $w, $c);
+    return &get_brush($img, $elt, $w, $c);
 }
 
 sub speed_width {
     my($speed) = @_;
     my($n);
+    our(@high);
 
     for ($n = 1; defined($high[$n]); $n++) {
 	if ($speed < $high[$n]) {
@@ -962,6 +1013,7 @@ sub speed_width {
 sub read_ranges {
     my($fh) = @_;
     my(@f, $n);
+    our(@high, @lw_text);
 
     for ($n = 1; <$fh>; $n++) {
 	chomp;
@@ -973,10 +1025,11 @@ sub read_ranges {
 
 sub read_lw_file {
     my($f) = @_;
+    my($rng);
 
-    open(RNG, $f) || &err("Could not open range file $f: $!");
-    &read_ranges(RNG);
-    close(RNG);
+    open($rng, $f) || &err("Could not open range file $f: $!");
+    &read_ranges($rng);
+    close($rng);
 }
 
 sub lw_file {
@@ -996,6 +1049,7 @@ sub lw_file {
 sub legends {
     my($img) = @_;
     my($e, $i, $c);
+    our(@high, @lw_text_elt, @lw_text, @x, @y);
 
     $c = &find_color("black", $img);
 
@@ -1020,13 +1074,13 @@ sub xfig_map_file {
 
 sub read_map {
     my($map) = @_;
-    my($elts, $file);
+    my($elts, $file, $tg);
     
     # Read map file in tgif format
     $file = &map_file($map);
-    open(TG, $file) || &err("Could not open map file for $map: $!");
-    $elts = &read_tgif(TG);
-    close(TG);
+    open($tg, $file) || &err("Could not open map file for $map: $!");
+    $elts = &read_tgif($tg);
+    close($tg);
     return $elts;
 }
 
@@ -1049,13 +1103,14 @@ sub xlci {
 
 sub other_map_url {
     my($elt, $dsp, $type, $select) = @_;
+    our(@mapref);
     my($mr) = $mapref[$elt];
 
     if (!defined($mr)) { return undef; }
-    if ($mr =~ /^https?:\/\//) {
+    if ($mr =~ /^http:\/\//) {
 	return sprintf("%s,%s,%s,%s", $mr, $dsp, $type, $select);
     }
-    if ($mr =~ /^abs-https?:\/\//) {
+    if ($mr =~ /^abs-http:\/\//) {
 	$mr =~ s/^abs-//;
 	return $mr;
     }
@@ -1064,6 +1119,7 @@ sub other_map_url {
 
 sub other_map_alt {
     my($elt, $dsp, $type, $select) = @_;
+    our(@mapref, @mapalt);
     my($mr) = $mapref[$elt];
 
     if (defined($mapalt[$elt])) {
@@ -1075,8 +1131,10 @@ sub other_map_alt {
 
 sub other_map_coords {
     my($elt) = @_;
+    our(@coords);
     my(@c) = split(/ /, $coords[$elt]);
     my($x, $y, $w, $h);
+    our(@type);
 
     if ($type[$elt] eq "rectangle") { # convert to polygon
 	$x = $c[0];
@@ -1091,6 +1149,7 @@ sub other_map_coords {
 sub other_map_ref {
     my($elt, $dsp, $type, $select) = @_;
     my($mc, $url, $alt);
+    our(@type, @cx, @cy, @radius_x, @radius_y);
 
     $url = &other_map_url($elt, $dsp, $type, $select);
     $alt = &other_map_alt($elt, $dsp, $type, $select);
@@ -1121,6 +1180,7 @@ sub imgmap {
     my($elts, $dsp, $type, $select) = @_;
     my($map) = "";
     my($e, $mc, @c, @ec, @fh, @lh, $url, $alt);
+    our(@name, @mapref, @nosplit, @coords);
 
     # Emit in reverse order to match with front/back layering...
     for ($e = $elts - 1; $e >= 0; $e--) {
@@ -1167,6 +1227,7 @@ sub imgmap {
 sub get_url {
     my($urlc, $select) = @_;
     my($ts) = "hr";
+    our($pfx, $datespec, $graph_type);
 
     if ($select eq "peak") {
 	$ts = "raw";
@@ -1177,6 +1238,7 @@ sub get_url {
 
 sub get_alt {
     my($urlc) = @_;
+    our($graph_type);
 
     return sprintf("[%s %s plot]", $urlc, $graph_type);
 }
@@ -1184,6 +1246,7 @@ sub get_alt {
 sub getargs {
     my($exp, $map, $dsp, $type, $select);
     my($query);
+    our($pfx, $ourname);
 
     if ($ENV{'QUERY_STRING'}) {
 	$query = $ENV{'QUERY_STRING'};
@@ -1216,6 +1279,7 @@ sub getargs {
 sub start_doc {
     my($exp, $map, $dsp, @args) = @_;
     my($title);
+    our($doc);
     
     # Emit a sensible Expires: header
     if (&is_today($dsp)) {
@@ -1234,6 +1298,7 @@ sub start_doc {
 
 sub nx_coords {
     my($w, $h) = @_;
+    our($border);
 
     return
 	sprintf("%d,%d,%d,%d", $w-$border, 0, $w, $h);
@@ -1241,6 +1306,7 @@ sub nx_coords {
 
 sub pr_coords {
     my($w, $h) = @_;
+    our($border);
 
     return
 	sprintf("%d,%d,%d,%d", 0, 0, $border, $h);
@@ -1257,6 +1323,7 @@ sub map_alt {
 
 sub map_ref {
     my($map, $dsp, $type, $select) = @_;
+    our($ourname);
 
     return
 	sprintf("%s/%s,%s,%s,%s", $ourname,
@@ -1267,6 +1334,7 @@ sub add_zoom_areas {
     my($map, $dsp, $type, $select) = @_;
     my($w, $h, $c, $pr_dsp, $nx_dsp, $pr_base_tm, $nx_base_tm, $ndays);
     my($pr_ex, $nx_ex);
+    our($border, $origin);
 
     ($w, $h, $c) = &get_area();
 
@@ -1304,6 +1372,7 @@ sub add_zoom_areas {
 }
 
 sub add_help_ptr {
+    our($pfx);
 
     printf("<p>A short <a href=\"%s\">explanation</a>",
 	   sprintf("%s../stats/map-doc.html", $pfx));
@@ -1342,11 +1411,12 @@ sub get_title {
 # By popular demand, show the load graphs directly in kbit/s, not
 # as percentage of link capacity.
 
-%map_type = ("traffic" => "traffic-kbit",
-	     );
+our %map_type = ("traffic" => "traffic-kbit",
+    );
 
 sub save_url_comps {
     my($dsp, $type) = @_;
+    our($datespec, $graph_type, %map_type);
 
     $datespec = $dsp;
     if (!defined($graph_type = $map_type{$type})) {
@@ -1361,6 +1431,7 @@ sub modtime {
 }
 
 sub last_update {
+    our($load_now);
 
     return strftime("%Y %h %e %H:%M", localtime(&modtime($load_now)));
 }
@@ -1368,7 +1439,8 @@ sub last_update {
 
 sub produce_map {
     my($exp, $map, $dsp, $type, $select) = @_;
-    my($elts, $refname, $file, $img, $title);
+    my($elts, $refname, $file, $img, $title, $out);
+    our($doc);
 
     &save_url_comps($dsp, $type);
     &get_data($dsp, $type, $select);
@@ -1381,10 +1453,10 @@ sub produce_map {
     ($refname, $file) = &img_names($map, $dsp, $type, $select);
 
     $img = &draw_img($elts, $title);
-    open(OUT, ">$file") ||
+    open($out, ">$file") ||
 	&err("Could not open PNG file $file for $refname for write: $!");
-    print OUT $img->png;
-    close(OUT);
+    print $out $img->png;
+    close($out);
 
     # Now produce normal document
     printf("<h2>%s</h2>\n", $title);
@@ -1409,10 +1481,11 @@ sub produce_map {
 # Main
 #
 
-$doc = new CGI;
+our $doc = new CGI;
 
 umask 0;
 
+my($exp, @args);
 ($exp, @args) = &getargs();
 
 # Before we emit any HTML, check to see if the requested map file
@@ -1429,8 +1502,9 @@ if (! -f &map_file($args[0]) &&
 				# be it error messages
 				# or the real document
 # Validate arguments
-if (defined($ai = &invalid_arg("[-A-Za-z0-9_.]*", @args))) {
-    &err(sprintf("Invalid argument: %s", $args[$ai]));
+my $pattern = "[-A-Za-z0-9_.]*";
+if (defined(&invalid_arg($pattern, @args))) {
+    &err(sprintf("Invalid argument, must match %s", $pattern));
 }
 
 &produce_map($exp, @args);
