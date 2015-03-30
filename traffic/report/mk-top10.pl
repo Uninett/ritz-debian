@@ -45,7 +45,12 @@ sub make_plot {
 	$selsum += $href->{$k};
 	$selsum += $href2->{$k};
     }
-    my($percentage) = sprintf("%.1f", $selsum * 100.0 / $total);
+    my($percentage);
+    if ($total != 0) {
+        $percentage = sprintf("%.1f", $selsum * 100.0 / $total);
+    } else {
+	$percentage = 0.0;
+    }
 
     my($datafile) = "/tmp/data$$";
     open(OUT, ">" . $datafile) || die "Could not write $datafile: $!";
