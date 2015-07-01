@@ -428,6 +428,9 @@ proc setEventState { id state user } {
     set e [format "state change %s -> %s (%s)" $oldstate $state $user]
     addLogEntry $id 0 history $e
 
+    log [format "id %s state %s -> %s by %s" \
+	     $id $oldstate $state $user]
+
     if { $state == "closed" } {
 	saveEvent $id
 	preCloseEvent $id
