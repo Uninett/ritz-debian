@@ -272,6 +272,10 @@ proc eventHistoryAdd { id user entry } {
 
     set e [format "%s\n%s" $user $entry]
     addLogEntry $id 0 history $e
+
+    # Output entry to debug log (+ log clients) as well
+    log [format "id %s history added: %s" $id $e]
+
     set eventHistAdd($id) 1
 }
 
