@@ -189,7 +189,7 @@ sub secs_to_hms {
 }
 
 sub compute_basic_values {
-    my($d, $start, $end, $tm0) = @_;
+    my($c, $d, $start, $end, $tm0) = @_;
     my($i);
     our(%count, %sample_secs);
     our($opt_V);
@@ -229,9 +229,9 @@ sub compute_basic_values {
 		my($br) = $val * 1000.0;
 		if ($br > $ifspeed * 1.05) { # Allow 5% overshoot
 		    printf(STDERR
-			   "ERROR: Bitrate above ifSpeed for %s: %s vs %s" .
+			   "ERROR: Bitrate above sum ifSpeed for %s: %s vs %s" .
 			   ", sample ignored\n",
-			   $b, $br, $ifspeed);
+			   $c, $br, $ifspeed);
 		    $val = 0;
 		}
 	    }
@@ -390,7 +390,7 @@ sub process_data {
 	},
     };
     
-    &compute_basic_values($desc, $start, $end, $tm0);
+    &compute_basic_values($c, $desc, $start, $end, $tm0);
     $desc->{"sample_times"}->{"values"} = \@times;
 
     if (defined($p->{"saved_values"})) {
