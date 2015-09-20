@@ -523,7 +523,7 @@ sub do_all_lines {
 	$root->{$c} = {};
     }
 
-    if ($opt_v) {
+    if ($opt_V) {
 	printf(STDERR "Doing %s / %s\n", $dsp, $c);
     }
 
@@ -537,17 +537,18 @@ sub do_all_lines {
 
 	my $err = &read_5m_sum($ls, $d, $td);
 	if ($opt_v && $err ne "") {
-	    printf(STDERR "read_5m_sum returned:\n%s", $err);
+	    printf(STDERR "read_5m_sum while processing %s returned:\n%s",
+		$c, $err);
 	}
 
 	if ($max_sample == 0) {
-	    if ($opt_v) {
+	    if ($opt_V) {
 		printf(STDERR "max_sample == 0, no data for %s / %s?\n",
 		       $d, $c);
 	    }
 	    next;
 	}
-	if ($opt_v) {
+	if ($opt_V) {
 	    printf(STDERR "Processing %s / %s\n", $d, $c);
 	}
 

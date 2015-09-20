@@ -131,7 +131,7 @@ sub read_5m_sum {
 	}
 
 	if (! defined($base = &name_to_file($line, $d))) {
-	    $err .= "Could not find base file name for $line / $d\n";
+#	    $err .= "Could not find base file name for $line / $d\n";
 	    next;
 	}
 	($cat, $f) = &find_cat_and_file($base, $d);
@@ -237,10 +237,27 @@ sub read_5m_sum {
 	}
 	close(DAYLOG);
 
-	if (!defined($ifspeed) && defined($save_ifspeed{$line})) {
-	    $ifspeed = $save_ifspeed{$line};
+	if (!defined($ifspeed)) {
+	    if (defined($save_ifspeed{$line})) {
+	        $ifspeed = $save_ifspeed{$line};
+#	        if ($opt_v) {
+#		    printf(STDERR "saved ifSpeed for %s is %s\n",
+#			 $line, $ifspeed);
+#	        }
+#	    } else {
+#		if ($opt_v) {
+#		    printf(STDERR "no saved ifSpeed defined for %s\n", $line);
+#		}
+	    }
 	} elsif (defined($ifspeed)) {
 	    $save_ifspeed{$line} = $ifspeed;
+#	    if ($opt_v) {
+#		printf(STDERR "ifSpeed for %s is %s\n", $line, $ifspeed);
+#	    }
+#	} else {
+#	    if ($opt_v) {
+#		printf(STDERR "no ifSpeed defined for%s\n", $line);
+#	    }
 	}
 
 	foreach my $v (keys %base) {
@@ -332,9 +349,9 @@ sub read_5m_sum {
 					 $line, $base, $date,
 					 $sample_time{$s});
 			    $err .= $e;
-			    if ($opt_v) {
-				printf(STDERR "%s", $e);
-			    }
+#			    if ($opt_v) {
+#				printf(STDERR "%s", $e);
+#			    }
 			    # cap octet counts at interface speed
 			    # drop any samples which exceeds
 			    $count{$mv,$s} = 0;
