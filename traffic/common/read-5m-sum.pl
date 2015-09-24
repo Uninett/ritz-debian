@@ -300,10 +300,15 @@ sub read_5m_sum {
 		} else {
 		    $lasttime{$v} = $firsttime{$v};
 		    $sno = 0;
+		    $sample_time{-1} = $firsttime{$v};
 		}
 	    } else {
-		$lasttime{$v} = $sample_time{0};
-		$sno = 1;
+		if (defined($sample_time{0})) {
+		    $lasttime{$v} = $sample_time{0};
+		    $sno = 1;
+		} else {
+		    next;	# skip, no samples to check
+		}
 	    }
 
 	    $lasttick = &floor_int($lasttime{$v} * 60/5.0);
@@ -317,7 +322,21 @@ sub read_5m_sum {
 
 	    if (!defined($my_min_sample)) {
 		$my_min_sample = $min_sample;
+		if ($opt_V) {
+		    printf(STDERR "Setting my_min_sample to %d\n", $min_sample);
+		}
 	    } else {
+		if ($opt_V) {
+		    my $n = &min($min_sample, $my_min_sample);
+		    if ($my_min_sample != $n) {
+			printf(STDERR
+			       "Re-setting my_min_sample from %d to %d\n",
+			       $my_min_sample, $n);
+			printf(STDERR
+			       "sample_time{0} is %sdefined\n",
+			       defined($sample_time{0}) ? "" : "un");
+		    }
+		}
 		$my_min_sample = &min($min_sample, $my_min_sample);
 	    }
 	    $my_max_sample = &max($my_max_sample, $end_tick);
@@ -337,7 +356,18 @@ sub read_5m_sum {
 		my($s, $r, $dt);
 
 		for($s = $sno; $s <= $max_sample; $s++) {
-		    if (!defined($sample_time{$s-1})) { next; }
+		    if (!defined($sample_time{$s-1})) { 
+			if ($opt_v) {
+			    printf(STDERR "Skipping check for sample %d, " .
+					"start index %d\n",
+					$s, $sno);
+			    printf(STDERR "sample_time{$s} = %f ",
+					$sample_time{$s});
+			    printf(STDERR "firsttime{$mv} = %f\n",
+					$firsttime{$mv});
+			}
+			next;
+		    }
 		    $dt = ($sample_time{$s} - $sample_time{$s-1}) * 3600.0;
 		    if ($dt != 0) {
 			$r = $count{$mv,$s} * 8 / $dt;
