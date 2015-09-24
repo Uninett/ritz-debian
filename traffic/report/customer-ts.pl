@@ -550,6 +550,8 @@ sub do_all_lines {
 	}
 	if ($opt_V) {
 	    printf(STDERR "Processing %s / %s\n", $d, $c);
+	    printf(STDERR "min_sample = %d, max_sample = %d, tm = %s\n",
+		   $min_sample, $max_sample, $tm);
 	}
 
 	# for type of octet counter detection in process_data()
