@@ -131,12 +131,16 @@ sub read_5m_sum {
 	}
 
 	if (! defined($base = &name_to_file($line, $d))) {
-#	    $err .= "Could not find base file name for $line / $d\n";
+	    if (defined($opt_V)) {
+	        $err .= "Could not find base file name for $line / $d\n";
+	    }
 	    next;
 	}
 	($cat, $f) = &find_cat_and_file($base, $d);
 	if (! defined($f)) {
-	    $err .= "Could not find data file for $base / $d\n";
+	    if (defined($opt_V)) {
+	        $err .= "Could not find data file for $base / $d\n";
+	    }
 	    next;
 	}
 
