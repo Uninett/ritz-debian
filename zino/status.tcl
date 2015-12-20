@@ -26,6 +26,9 @@ proc initStatus { } {
     set IgnoreAddrs(128.39.0.2) 1
     # SUNET PIM RP address
     set IgnoreAddrs(193.10.80.229) 1
+    # NORDUnet PIM RP addresses
+    set IgnoreAddrs(193.10.251.1) 1
+    set IgnoreAddrs(109.105.96.128) 1
 
     global IgnoreAddrPatterns
 
