@@ -17,9 +17,10 @@ if { $x >= 0 } {
     set tnm(mibs:core) [lreplace $tnm(mibs:core) $x $x compat.tc IANAifType.tc]
 }
 
-mib load CISCO-SMI.my
+mib load ../mibs/IANAifType.tc
+mib load ../mibs/CISCO-SMI.my
 mib load ../mibs/CISCO-CONFIG-MAN-MIB.my
-mib load CISCO-PRODUCTS-MIB.my
+mib load ../mibs/CISCO-PRODUCTS-MIB.my
 mib load ../mibs/OLD-CISCO-INTERFACES-MIB.my
 mib load ../mibs/OLD-CISCO-TCP-MIB.my
 mib load ../mibs/OLD-CISCO-TS-MIB.my
@@ -44,3 +45,7 @@ mib load ../mibs/mib-jnx-bfd-exp-mod.txt
 mib load rfc1213.mib
 mib load rfc1573.mib
 mib load rfc1907.mib
+mib load ../mibs/mib-rfc3289.txt
+mib load ../mibs/mib-rfc3811.txt
+mib load ../mibs/mib-rfc3812.txt
+mib load ../mibs/mib-jnx-mpls.txt
