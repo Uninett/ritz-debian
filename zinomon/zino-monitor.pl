@@ -8,6 +8,14 @@ use Data::Dumper;
 use POSIX qw(strftime);
 use Zino;
 
+sub log {
+    my($s) = @_;
+
+    printf("%s %s\n",
+	   strftime("[%Y-%m-%d %H:%M:%S]", localtime),
+	   $s);
+}
+
 # my ($user, $secret) = do 'secret.pl';
 
 my %config = Zino::ritz_config($ENV{HOME}.'/.ritz.tcl');
@@ -18,7 +26,7 @@ die "Unable to contact zino without username and password"
     unless (defined $user and defined $secret);
 
 local $| = 1;
-print strftime("[%Y-%m-%d %H:%M:%S] Checking zino...\n", localtime);
+&log("Checking zino...");
 my $result;
 
 eval {
@@ -27,10 +35,16 @@ eval {
 
     my $zino = Zino::init($host, $port);
 
+    &log("Connected");
+
     Zino::login($zino, $user, $secret);
+
+    &log("Authenticated");
 
     # Get single element from returned id array
     my ($test_id) = Zino::caseids($zino);
+
+    &log("Got case ID");
 
     if (!defined($test_id)) {
 	my ($v) = Zino::version($zino);
@@ -48,11 +62,16 @@ eval {
 	# Get scalar value of array, ie number of results
 	my $count = scalar Zino::getlog( $zino, $test_id);
 
+	&log("Got log for event $test_id, count $count");
+
 	die "Zino didn't return log for CASEID $test_id" if $count == 0;
 
 	$result = "Zino got " . $count . " logs";
     }
     Zino::logout($zino);
+
+    &log("Logged out");
+
     alarm 0;
 };
 if ($@) {
