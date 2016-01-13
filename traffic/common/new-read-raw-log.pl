@@ -115,7 +115,7 @@ sub new_read_log {
 
 	if ($_[0] !~ /[0-9]+/o) {
 	    printf(STDERR
-		   "new_read_log: timestamp not numeric -- not new-format log?");
+	        "new_read_log: timestamp not numeric -- not new-format log?\n");
 	    printf(STDERR "line: %s\n", $_);
 	    exit(1);
 	}
