@@ -109,6 +109,7 @@ sub read_template {
 
 #
 # Convert some common .se/.no letters into html equivalents
+# Input iso-8859-1 assumed...
 #
 
 sub htmlize {
