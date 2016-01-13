@@ -208,6 +208,7 @@ proc flapAger { } {
 			setEventAttr $eid "id" $eid
 			setEventAttr $eid "type" "portstate"
 			setEventAttr $eid "flapstate" "stable"
+			setEventAttr $eid "flaps" [flapCount $ix]
 			setEventAttr $eid "port" $portToIfDescr($ix)
 			setEventAttr $eid "portstate" $portState($router,$i)
 			setEventAttr $eid "router" $router
@@ -363,6 +364,7 @@ proc linkTrans { router ifIndex descr updown reason } {
 	    set portState($ix) [string tolower $updown]
 	    setEventAttr $eid "ifindex" $ifIndex
 	    setEventAttr $eid "flapstate" "flapping"
+	    setEventAttr $eid "flaps" [flapCount $ix]
 	    setEventAttr $eid "polladdr" [::config::conf $router address]
 	    setEventAttr $eid "priority" [::config::conf $router priority]
 	    if { $ldescr != "" } {
@@ -384,6 +386,10 @@ proc linkTrans { router ifIndex descr updown reason } {
 
 	    set flapping($ix) 1
 	}
+	# Record new # of flaps
+	set eid [eventId $ix "portstate"]
+	setEventAttr $eid "flaps" [flapCount $ix]
+	
 	if { [expr [flapCount $ix] % 100] == 0 } {
 	    set s [format \
 		    "%s: intf \"%s\" ix %d (%s), %d flaps, penalty %5.2f" \
@@ -420,6 +426,7 @@ proc linkTrans { router ifIndex descr updown reason } {
 	    set portState($ix) [string tolower $updown]
 	    unFlap $ix
 	}
+	setEventAttr $eid "flaps" [flapCount $ix]
 	
 	set fmt "%s: intf \"%s\" ix %d link%s"
 	if { $reason != "" } {
@@ -461,6 +468,7 @@ proc clearFlapInternal { router ifIndex user reason } {
     set ldescr [description $ix]
     eventHistoryAdd $eid $user $reason
     setEventAttr $eid "flapstate" "stable"
+    setEventAttr $eid "flaps" [flapCount $ix]
     set s [format "%s: intf \"%s\" ix %d (%s) %s" \
 	    $router $descr $ifIndex $ldescr $reason]
     log $s
