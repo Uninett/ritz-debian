@@ -620,8 +620,13 @@ sub create_rrd {
 
 
     push(@cmd, sprintf("%s.rrd", $n));
-    push(@cmd, sprintf("-b %d", $s));
-    push(@cmd, "-s 300");
+
+    push(@cmd, "-b");
+    push(@cmd, sprintf("%d", $s));
+
+    push(@cmd, "-s");
+    push(@cmd, "300");
+
     push(@cmd, "DS:In:GAUGE:600:0:U");
     push(@cmd, "DS:Out:GAUGE:600:0:U");
     # 72 hours of 5-minute intervals
