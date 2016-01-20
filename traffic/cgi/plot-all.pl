@@ -57,7 +57,7 @@ require 'plot.pl';
 
 %plot_title = (
     "traffic",		"traffic in percent of capacity",
-    "traffic-kbit",	"traffic in kbit/s",
+    "traffic-kbit",	"traffic in bit/s",
     "discards",		"output discards / input ignores",
     "errors",		"input errors",
     "resets",		"interface resets",
