@@ -69,6 +69,20 @@ require 'plot.pl';
     "ip6perc",		"percent of IPv6 packets",
     );
 
+# Potentially to l3 interface
+our(%plot_to_l3) = (
+    "ip6perc" => 1,
+    );
+
+# Potentially back to phy interface
+our(%plot_to_phy) = (
+    "discards" => 1,
+    "errors" => 1,
+    "resets" => 1,
+    "eerrs" => 1,
+    "error-hrs" => 1,
+    );
+    
 %resolution_plots = (
 		     "raw" => {
 			 "traffic" => 1,
@@ -333,10 +347,44 @@ sub forward_refs {
     printf("<hr />\n");
     printf("You may further inspect for this period/port\n");
     printf("<ul>\n");
+
     foreach $pt (sort keys %{ $resolution_plots{$res}}) {
+	my($date, $tm, $nd);
+	my($l3name, $phyname, $remark, $name);
+	our(%plot_to_l3, %plot_to_phy);
+	
+	# Prepare for possible to-l3-interface link
+	($tm, $nd) = &decode_datespec($dsp);
+	$date = &tm_to_date($tm);
+
+	$name = $line;
+	$remark = "";
+	if (defined($plot_to_l3{$pt})) {
+	    $l3name = $line . "-l3";
+	    if (defined(&name_to_file($l3name, $date))) {
+		$name = $l3name;
+		$remark = "(l3)";
+	    }
+	} elsif (defined($plot_to_phy{$pt})) {
+	    # Prepare for possible to-physical-interface link
+	    if ($line =~ /.*-l3$/) {
+		# chop it off, and check
+ 		$phyname = $line;
+		$phyname =~ s/-l3$//;
+		if (defined(&name_to_file($phyname, $date))) {
+		    $remark = "(phy)";
+		    $name = $phyname;
+		}
+	    }
+	}
+	
 	printf("<li><a href=\"%s/%s,%s,%s,%s\">\n",
-	       $ourname, $line, $dsp, $res, $pt);
-	printf("%s</a></li>\n", $plot_title{$pt});
+	       $ourname, $name, $dsp, $res, $pt);
+	printf("%s</a>", $plot_title{$pt});
+	if ($remark ne "") {
+	    printf(" %s", $remark);
+	}
+	printf("</li>\n");
     }
     printf("</ul>\n");
     
