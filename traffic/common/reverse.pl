@@ -12,6 +12,8 @@
 sub rev_name {
     my($name) = @_;
     my($rn, $suf);
+    our(%in_load);		# should be populated from reading
+				# a daily report or similar
 
     $suf = "";
     if ($name =~ /^(.*)-l3$/) {
