@@ -17,7 +17,8 @@ FILES=	BGP4-MIB.my CISCO-CDP-MIB.my CISCO-CONFIG-MAN-MIB.my \
 	mib-rfc3811.txt mib-rfc3812.txt mib-rfc3289.txt \
 	mib-jnx-mpls.txt \
 	mib-jnx-chassis-alarm.txt mib-jnx-smi.txt \
-	mib-jnx-bfd-exp-mod.txt mib-jnx-exp.txt
+	mib-jnx-bfd-exp-mod.txt mib-jnx-exp.txt \
+	mib-jnx-bgpmib2.txt
 
 
 MIBDIR=	${TOPDIR}/mibs
