@@ -142,11 +142,16 @@ proc summarizeBGP { id } {
     if { $View(router) } {
 	set s [format "%s %-16s" $s [Attr $id "router"]]
     }
+    set name ""
+    catch {
+	set name [dns name [Attr $id "remote-addr"]]
+    }
     if { $View(port) } {
 	set s [format "%s %-20s" $s \
-		   [format "AS %s %s" \
+		   [format "AS %s %s (%s)" \
 			[Attr $id "remote-AS"] \
 			[Attr $id "remote-addr"] \
+			$name \
 		       ]]
     }
     if { [AttrExists $id "lastevent"] && $View(descr) } {
