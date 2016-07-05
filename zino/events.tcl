@@ -32,6 +32,7 @@ proc initEvent { saveFile saveDir } {
     }
     fixupEventIdToIx
     fixupEventState
+    fixupEventPortState
 }
 
 proc fixupEventState { } {
@@ -54,6 +55,47 @@ proc fixupEventState { } {
 	}
     }
 }
+
+# Fix a bug:
+# "pm add" would earlier set the event portsate to "up"
+# for any matching port, irrespective of the actual state of the port.
+# Fix this up on restart of zino.
+
+proc fixupEventPortState { } {
+    global portState
+    global EventId
+
+    foreach ix [array names EventId] {
+	set id $EventId($ix)
+	if [catch { set type [getEventAttr $id type] } ] {
+	    continue;		# oops
+	}
+	if { $type != "portstate" } {
+	    continue
+	}
+	if [catch { set ps [getEventAttr $id portstate] }] {
+	    continue;		# oops again
+	}
+
+	# Yes, this reuses ix with another format
+	# (EventId also has event-type as index element)
+	if [catch {
+	    set ix [format "%s,%s" \
+			[getEventAttr $id router] \
+			[getEventAttr $id ifindex]]
+	}] {
+	    continue;		# oops again
+	}
+
+	if { $ps != $portState($ix) } {
+	    catch {
+		setEventAttr $id portstate $portState($ix)
+		eventCommit $id
+	    }
+	}
+    }
+}
+
 
 proc initEventAttrs { id } {
 
