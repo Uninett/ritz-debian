@@ -393,6 +393,7 @@ namespace eval ::pm {
 
 	if { $type == "portstate" } {
 	    global ::portToIfDescr
+	    global ::portState
 	    set ixes [matching_ports $match_type $match_expr $match_dev]
 	    foreach ix $ixes {
 		set eid [::eventId $ix "portstate"]
@@ -400,10 +401,16 @@ namespace eval ::pm {
 		set r [lindex $l 0]
 		set ifix [lindex $l 1]
 
+		if [ catch {
+		    set updown ::portState($r,$ifix)
+		}] {
+		    set updown "up"; # default...
+		}
+
 		setEventAttrs $eid \
 		    "router" $r \
 		    "port" $portToIfDescr($ix) \
-		    "portstate" "up" \
+		    "portstate" $updown \
 		    "ifindex" $ifix \
 		    "polladdr" [::config::conf $r address] \
 		    "priority" [::config::conf $r priority] \
