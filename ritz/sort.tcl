@@ -513,7 +513,7 @@ proc filterPass { id } {
 			set match [string match $FilterVal($attr) $val]
 		    }
 		    regexp {
-			set match [regexp -- $Filterval($attr) $val]
+			set match [regexp -- $FilterVal($attr) $val]
 		    }
 		    "value>=" {
 			set match [expr $val >= $FilterVal($attr)]
