@@ -166,6 +166,12 @@ sub new_read_log {
 	
 	$delta_time = $secs - $lasttime{$v};
 
+	if ($delta_time == 0) {
+	    next;		# can't deal with that,
+				# divides by delta_time below to get bitrate
+				# so just skip this sample
+	}
+
 	if (/Octets/) {
 	    if ($delta_time > 30) {	# Skip too small intervals (inaccurate)
 		my $delta_rate = $delta / $delta_time;
