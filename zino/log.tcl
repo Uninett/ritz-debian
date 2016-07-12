@@ -37,6 +37,7 @@ proc log { str } {
 proc newConn { chan host port } {
     global log_chans
     fconfigure $chan -buffering line
+    fconfigure $chan -blocking 0; # try to prevent DoS via hang
     set log_chans($chan) 1
 
     log [format "New log client on %s from %s / %s" $chan $host $port]
