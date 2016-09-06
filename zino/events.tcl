@@ -87,7 +87,12 @@ proc fixupEventPortState { } {
 	    continue;		# oops again
 	}
 
-	if { $ps != $portState($ix) } {
+	if { ! [info exists portState($ix)] } {
+	    catch {
+		setEventAttr $id portstate "up"; # Make an optimistic guess
+		eventCommit $id
+	    }
+	} elseif { $ps != $portState($ix) } {
 	    catch {
 		setEventAttr $id portstate $portState($ix)
 		eventCommit $id
