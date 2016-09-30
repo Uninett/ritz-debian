@@ -33,6 +33,15 @@ sub pretty_ios_desc {
     return $desc;
 }
 
+sub pretty_arista_desc {
+    my($desc) = @_;
+
+    if ($desc =~ /Arista Networks EOS version ([^ ]+) running on an Arista Networks ([^ ]+)/) {
+	$desc = "Arista-EOS $1 $2";
+    }
+    return $desc;
+}
+
 sub pretty_hp_desc {
     my($desc) = @_;
     
@@ -66,6 +75,7 @@ sub pretty_desc {
 
     $desc = &pretty_ios_desc($desc);
     $desc = &pretty_junos_desc($desc);
+    $desc = &pretty_arista_desc($desc);
     $desc = &pretty_hp_desc($desc);
     $desc = &pretty_procurve($desc);
     return $desc;
