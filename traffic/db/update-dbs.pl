@@ -218,6 +218,10 @@ sub get_line_names {
 	    # doesn't produce mismatch, new entry and
 	    # eventual overflow for the DB(M) entry (!).
 	    $a[1] =~ s/ /-/g;
+	    # replace any slashes with hyphens, so that
+	    # the resulting name can be used as a file name.
+	    $a[1] =~ s/\//-/g;
+
 	    $line_name{$dev . ":" . $ix} = $a[1];
 	    if (!defined($ix_map{$dev}->{$ix})) {
 		$ix_map{$dev}->{$ix} = 1;
