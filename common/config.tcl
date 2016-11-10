@@ -29,8 +29,9 @@ namespace eval ::config {
     set known_attrs(domain) 1
     set known_attrs(statistics) 1
     set known_attrs(hcounters) 1
+    set known_attrs(do_bgp) 1
 
-    # Initialize defaults.  These are tweakable.
+    # Initialize defaults.  These are tweakable via the config.
     set defaults(priority) 100
     set defaults(community) "public"
     set defaults(interval) 15
@@ -38,6 +39,7 @@ namespace eval ::config {
     set defaults(retries) 3
     set defaults(statistics) "yes"
     set defaults(hcounters) "no"
+    set defaults(do_bgp) "yes"
 
 
     # Variable access procedure
