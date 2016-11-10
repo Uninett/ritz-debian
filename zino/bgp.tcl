@@ -317,6 +317,17 @@ proc checkBGPpeers { sh up } {
 proc checkBGP { sh } {
     global localAS
 
+    if { [ catch {
+	if { [::config::conf [name $sh] "do_bgp"] != "yes" ] {
+	    log [format "Skipping BGP scanning for %s due to config" \
+		     [name $sh]]
+	    return
+	}
+    } ] } } {
+	log [format "Could not get do_bgp for %s, skipping" [name $sh]]
+	return
+    }
+
     $sh get "bgpLocalAs.0 sysUpTime.0" {
 	# Judiciously avoid using "local" variables;
 	# the callback is executed in the global context!
