@@ -148,7 +148,7 @@ proc emt_should_report { id } {
 			$id]
 		# Save this away for alarm events,
 		# so that we don't trigger twice on alarm events...
-		if { [::attr::get $id "type" == "alarm"] } {
+		if { [::attr::get $id "type"] == "alarm" } {
 		    set ac [::attr::get $id "alarm-count"]
 		    set alarm_count($id) $ac
 		}
@@ -161,7 +161,7 @@ proc emt_should_report { id } {
 	} else {
 	    # Special handling of alarm events:
 	    # Also report them when # of alarms increases
-	    if { [::attr::get $id "type" == "alarm"] } {
+	    if { [::attr::get $id "type"] == "alarm" } {
 		set ac [::attr::get $id "alarm-count"]
 		if { [info exists alarm_count($id)] } {
 		    if { $ac > $alarm_count($id) } {
