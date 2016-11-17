@@ -53,6 +53,7 @@ proc emt_main {} {
     ::persist::add nagged
     ::persist::add history
     ::persist::add log
+    ::persist::add alarm_count
 
     emt_loop $Server $Port $User $Secret
 }
@@ -123,7 +124,7 @@ proc emt_delay_check { id } {
 }
 
 proc emt_should_report { id } {
-    global state nagged hist_update
+    global state nagged hist_update alarm_count
 
     #
     # Trigger on operational stuff
@@ -145,11 +146,35 @@ proc emt_should_report { id } {
 		log [format \
 			"Should report %s, stable different state" \
 			$id]
+		# Save this away for alarm events,
+		# so that we don't trigger twice on alarm events...
+		if { [::attr::get $id "type" == "alarm"] } {
+		    set ac [::attr::get $id "alarm-count"]
+		    set alarm_count($id) $ac
+		}
 		return 1
 	    } else {
 		# Not right now, but check again in a while
 		log [format "Delaying checking for %s" $id]
 		emt_delay_check $id
+	    }
+	} else {
+	    # Special handling of alarm events:
+	    # Also report them when # of alarms increases
+	    if { [::attr::get $id "type" == "alarm"] } {
+		set ac [::attr::get $id "alarm-count"]
+		if { [info exists alarm_count($id)] } {
+		    if { $ac > $alarm_count($id) } {
+			log [format \
+				 "Should report %s, increase in # of alarms" \
+				 $id]
+			set alarm_count($id) $ac; # remember till next time
+			return 1
+		    }
+		}
+		# if number of alarms decreased, remember till next time,
+		# so that we trigger on the next increase
+		set alarm_count($id) $ac
 	    }
 	}
     } else {
