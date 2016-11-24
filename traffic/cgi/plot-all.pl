@@ -597,21 +597,21 @@ print $doc->start_html(-title=>$title,
 
 @al = ($line, $datespec, $res, $plot, $regen);
 if (defined($ai = &invalid_arg("[-A-Za-z0-9_.:\+]*", @al))) {
-    printf("<h2>Invalid argument: %s</h2>\n", $al[$ai]);
+    printf("<h2>One or more syntactically malformed arguments.</h2>\n");
     print $doc->end_html;
     print "\n";
     exit 1;
 }
 
 if (!defined($datespec)) {
-    print "<h2>Sorry, can't decode date specification $datespec </h2>\n";
+    print "<h2>Sorry, can't decode date specification.</h2>\n";
     print $doc->end_html;
     print "\n";
     exit 1;
 }
 
 if (&tm_in_the_future($base_tm)) {
-    print "<h2>Sorry, can't look into the future </h2>\n";
+    print "<h2>Sorry, can't look into the future</h2>\n";
     printf("May be you could try to see the " .
 	   "<a href=\"%s/%s,%s,%s,%s\"> previous period (%s)</a> instead <p>", 
 	   $ourname,
