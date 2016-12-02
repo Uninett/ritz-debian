@@ -1,5 +1,10 @@
 $Id$		-*- Text -*-
 
+ o Add monitoring of l2vpn.
+
+ o Extend BGP monitoring to also do IPv6, possibly using enterprise
+   MIB variants (Juniper).
+
  o Support "today" as an alias for ... today's datespec.
 
  o Limit the number of x tics on epoch plots.
