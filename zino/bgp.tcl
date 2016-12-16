@@ -317,15 +317,9 @@ proc checkBGPpeers { sh up } {
 proc checkBGP { sh } {
     global localAS
 
-    if { [ catch {
-	if { [::config::conf [name $sh] "do_bgp"] != "yes" } {
-	    log [format "Skipping BGP scanning for %s due to config" \
-		     [name $sh]]
-	    return
-	}
-    } do_bgp_err ] } {
-	log [format "Could not get do_bgp for %s, skipping: %s" \
-		 [name $sh] $do_bgp_err]
+    if { [::config::conf [name $sh] "do_bgp"] != "yes" } {
+	log [format "Skipping BGP scanning for %s due to config" \
+		 [name $sh]]
 	return
     }
 
