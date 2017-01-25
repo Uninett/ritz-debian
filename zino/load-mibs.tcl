@@ -42,6 +42,8 @@ mib load ../mibs/mib-jnx-smi.txt
 mib load ../mibs/mib-jnx-chassis-alarm.txt
 mib load ../mibs/mib-jnx-exp.txt
 mib load ../mibs/mib-jnx-bfd-exp-mod.txt
+mib load ../mibs/mib-ospf2mib.txt
+mib load ../mibs/mib-ospf2trap.txt
 mib load ../mibs/mib-jnx-bgpmib2.txt
 mib load rfc1213.mib
 mib load rfc1573.mib
