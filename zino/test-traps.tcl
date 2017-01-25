@@ -5,6 +5,8 @@
 
 source load-mibs.tcl
 source log.tcl
+source ../common/persist.tcl
+source pm.tcl
 source read-cf.tcl
 source status.tcl
 source swalk.tcl
@@ -12,12 +14,13 @@ source trap.tcl
 source utils.tcl
 source flaps.tcl
 
+source "zino.cf"
+
 puts "reading config file"
-readCf "routers.cf"
-puts "setting up handles"
-setupHandles
-puts "getting addresses"
-recordAllAddrs
+readCf "polldevs.cf"
+
+::persist::setup "/data/traffic/zino/save-state.tcl"
+::persist::restore
 
 puts "listening for traps"
 set s [snmp session]
