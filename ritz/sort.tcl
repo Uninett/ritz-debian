@@ -522,6 +522,8 @@ proc filterPass { id } {
 			} else {
 			    return 0;
 			}
+		    } else {
+			return 0; # admin-down isn't oper-down
 		    }
 		} elseif { $FilterVal($attr) == "admin-down" } {
 		    if { $as == "stop" || $as == "halted" } {
