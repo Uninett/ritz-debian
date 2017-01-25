@@ -104,7 +104,7 @@ proc summarizeBGP { id } {
     set os [Attr $id "bgpOS"]
     set as [Attr $id "bgpAS"]
     if { $View(opstate) && $View(admstate) } {
-	if { $as == "start" } {
+	if { $as == "start" || $as == "running" } {
 	    set m [format "bgp %s" [Attr $id "bgpOS"]]
 	} else {
 	    set m "bgp admin-down"
