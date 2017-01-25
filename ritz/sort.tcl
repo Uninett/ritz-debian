@@ -437,7 +437,7 @@ proc caseSeverity { id } {
 	}
     } elseif { $type == "bgp" } {
 	set as [Attr $id "bgpAS"]
-	if { $as == "start" } {
+	if { $as == "start" || $as == "running" } {
 	    set os [Attr $id "bgpOS"]
 	    if { $os == "established" } {
 		return "normal"
