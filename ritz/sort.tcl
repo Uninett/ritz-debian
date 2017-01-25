@@ -501,6 +501,35 @@ proc filterPass { id } {
 
 	    if { $attr == "downtime" } {
 		set val [getDowntime $id]
+	    } elseif { $attr == "bgpstate" } {
+		# Needs to be open-coded, synthesized states
+		set tp  [Attr $id "type"]
+		if { $tp != "bgp" } {
+		    return 0;	# not bgp, so no match
+		}
+		set as [Attr $id "bgpAS"]
+		set os [Attr $id "bgpOS"]
+		if { $FilterVal($attr) == "established" } {
+		    if { $os == "established" } {
+			return 1;
+		    } else {
+			return 0;
+		    }
+		} elseif { $FilterVal($attr) == "down" } {
+		    if { $as == "start" || $as == "running" } {
+			if { $os != "established" } {
+			    return 1;
+			} else {
+			    return 0;
+			}
+		    }
+		} elseif { $FilterVal($attr) == "admin-down" } {
+		    if { $as == "stop" || $as == "halted" } {
+			return 1;
+		    } else {
+			return 0;
+		    }
+		}
 	    } elseif { [catch { set val [Attr $id $attr] } msg] } {
 		return 0;		# attribute does not exist, so no match
 	    }
