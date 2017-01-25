@@ -46,7 +46,7 @@ proc newConn { chan host port } {
 if { [info exists ssock] } {
     close $ssock
 }
-set ssock [socket -server newConn 8000]
+catch { set ssock [socket -server newConn 8000] }
 
 set detailEventLogLimit 30
 
