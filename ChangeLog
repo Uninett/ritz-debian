@@ -1,3 +1,434 @@
+2017-01-26  Havard Eidnes <he@nordu.net>
+
+	* Makefile: Bump to version 1.0,
+	Enough with this 0.9.9* mumbo...
+
+	* ritz/ui.tcl: Adjust end-year of copyright.
+
+2017-01-25  Havard Eidnes <he@nordu.net>
+
+	* zino/test-traps.tcl:
+	Enhance this so that it can work with the new code.
+	Test rig for the code to decode SNMP trap messages.
+
+	* zino/log.tcl: Protect server socket opening with catch.
+
+	* zino/load-mibs.tcl: Add OSPFv2 MIBs.
+
+	* mibs/mib-ospf2mib.txt, mibs/mib-ospf2trap.txt:
+	Add OSPFv2 MIBs, taken from Juniper's archive.
+	This is so that we can start doing decoding of OSPF traps.
+
+	* zino/bgp.tcl: Generalize BGP handling.
+	Support the two newer enterprise-specific BGP MIBs
+	from Juniper and Cisco, only fall back to the old
+	IPv4-only BGP MIB when probing for the newer ones fail.
+	In the process we gain monitoring of BGP sessions over IPv6.
+
+	* ritz/sort.tcl:
+	Fix handling of admin-down BGP events in "down" filtering.
+
+	* ritz/ui.tcl: Support filtering BGP events.
+
+	* ritz/sort.tcl: Support new BGP state filtering.
+
+	* ritz/summary.tcl: Another BGP admin-status "running" == "start".
+
+	* ritz/sort.tcl: Regards BGP AdminState "running" the same as "start".
+
+2017-01-24  Havard Eidnes <he@nordu.net>
+
+	* mibs/CISCO-BGP4-MIB.my, mibs/Makefile, mibs/mib-jnx-bgpmib2.txt:
+	Update the BGP4 MIBs, and install them.
+
+2016-12-16  Havard Eidnes <he@nordu.net>
+
+	* zino/bgp.tcl:
+	Summary: Simplify check for do_bgp -- catch / return is not a
+	good combination.
+
+2016-12-02  Havard Eidnes <he@nordu.net>
+
+	* TODO: More TODO: BGP monitoring improvements & l2vpn monitoring.
+
+2016-11-24  Havard Eidnes <he@nordu.net>
+
+	* traffic/cgi/plot-all.pl:
+	Carefully avoid echoing back any given string until it's been
+	verified to be syntactically benign.  Echoing back random arguments
+	is a recipe for creating cross-site scripting (XSS) vulnerabilities.
+
+2016-11-17  Havard Eidnes <he@nordu.net>
+
+	* emt/emt.tcl: Fix syntax problem...
+
+	* emt/emt.tcl: Trigger messages also when the number of alarms
+	for an alarm event increases.
+
+2016-11-10  Havard Eidnes <he@nordu.net>
+
+	* zino/bgp.tcl: Fix the syntax problem properly...
+
+	* common/config.tcl:
+	Introduce the "do_bgp" attribute, defaulting it to "yes".
+	Slight change to a comment.
+
+	* zino/bgp.tcl:
+	If the newly introduced do_bgp attribute value is different than
+	"yes", skip doing the BGP table, so that we can avoid the bug in JunOS
+	15.1F6 when querying a logical system instance that causes the table
+	to loop back on itself, otherwise causing an infinite query loop.
+	This is with the old IPv4-only BGP MIB.
+	
+2016-11-08  Havard Eidnes <he@nordu.net>
+
+	* traffic/db/update-dbs.pl:
+	Replace slashes (/) with hyphens (-) in what looks like logical
+	port names, so as to alllow the use of the logical port names as
+	file names or file name components.
+
+2016-09-30  Havard Eidnes <he@nordu.net>
+
+	* vwatch/pretty-ios.pl: Also recognize Arista EOS.
+
+2016-09-06  Havard Eidnes <he@nordu.net>
+
+	* zino/events.tcl:
+	Provide some more robustness in fixupEventPortState in case
+	portState($ix) isn't set.
+
+2016-07-12  Havard Eidnes <he@nordu.net>
+
+	* zino/log.tcl: Put log output channels in non-blocking mode to prevent
+	DoS vector by clients not consuming what they're given.
+
+2016-07-06  Havard Eidnes <he@nordu.net>
+
+	* traffic/common/new-read-hr-log.pl:
+	Protect against division by zero by skipping samples
+	where time doesn't advance.
+
+2016-07-05  Havard Eidnes <he@nordu.net>
+
+	* Makefile: Adjust version.
+
+	* ritz/ui.tcl: Adjust end of year range for copyright.
+
+	* zino/events.tcl:
+	Add a new fixupEventPortState, so that "ignored" events can get the
+	correct OpState / portstate set, based on the actual state of the
+	corresponding interface.
+
+	* zino/pm.tcl:
+	When creating "ignored" events, use the recorded interface
+	state (if any) instead of blindly setting it to "up".
+
+	* ritz/sort.tcl: Fix typo causing regexp matches to fail(!)
+
+2016-07-01  Havard Eidnes <he@nordu.net>
+
+	* ritz/summary.tcl:
+	Add inverse-lookup of the BGP neighbor in the summary.
+
+2016-03-02  Havard Eidnes <he@nordu.net>
+
+	* traffic/cgi/load-map.pl:
+	Remove a couple more chars to enable https abs references.
+
+	* traffic/cgi/load-map.pl:
+	Support https maprefs by removing one char...
+
+2016-02-18  Havard Eidnes <he@nordu.net>
+
+	* zino/server.tcl:
+	Log a bit more about the handling of notify channels.
+
+2016-02-08  Havard Eidnes <he@nordu.net>
+
+	* mibs/Makefile: Also install Juniper's BGP mib.
+
+	* zino/load-mibs.tcl: Also load Juniper's BGP mib.
+
+	* mibs/mib-jnx-bgpmib2.txt: Add Juniper's BGP mib.
+
+	* traffic/common/reverse.pl: Add an our() declaration.
+
+2016-01-20  Havard Eidnes <he@nordu.net>
+
+	* traffic/cgi/plot-all.pl:
+	We're scaling the plots now, so no kbit/s, just (scaled) bit/s.
+
+	* traffic/cgi/plot-all.pl:
+	By naming convention, provide links between -l3 interfaces and
+	physical interfaces dependent on whether the MIB variable which is the
+	basis for the data is collected on the l3 interface or the physical
+	interface.
+
+	I.e. link ip6perc to the -l3 suffixed interface (if it exists) and
+	anything to do with errors on an -l3-named interface back to the
+	physical interface if it exists.
+
+2016-01-14  Havard Eidnes <he@nordu.net>
+
+	* traffic/report/tail-stats.pl:
+	Split up the arguments to RRDs::create, to accomodate the
+	newer versions of rrdtool which appear not to like it if an
+	option argument starts with a space...
+
+	* mibs/IANAifType.tc: Add IANAifType.tc.
+
+2016-01-13  Havard Eidnes <he@nordu.net>
+
+	* zinomon/zino-monitor.pl:
+	Provide more details as to in which step we failed.
+
+	* zino/load-mibs.tcl:
+	Load more MIBs (MPLS, Juniper-MPLS, diff-serv), to get better
+	decode of SNMP trap messages in those MIBs.
+
+	* zino/flaps.tcl: Count the number of flaps.
+
+	* traffic/report/mk-customer-index.pl:
+	Remark that iso8859-1 input is assumed.
+
+	* traffic/common/new-read-raw-log.pl:
+	Add a newline to warning; re-indent to keep within 80col.
+
+	* mibs/Makefile, mibs/mib-jnx-mpls.txt, mibs/mib-rfc3289.txt, mibs/mib-rfc3811.txt, mibs/mib-rfc3812.txt:
+	Add diff-serv and a couple MPLS mibs, primarily so we get better
+	decoding of trap messages.
+
+2015-12-20  Havard Eidnes <he@nordu.net>
+
+	* zino/status.tcl: Add NORDUnet PIM RP addresses to be ignored.
+
+2015-09-28  Havard Eidnes <he@nordu.net>
+
+	* traffic/common/read-5m-sum.pl:
+	Only elminate error message in absence of -V, not the control flow.
+
+2015-09-24  Havard Eidnes <he@nordu.net>
+
+	* traffic/report/customer-ts.pl:
+	Add some more debugging output under the -V option to track down
+	the instances where min_sample ~always ends up at 1.
+
+	* traffic/common/read-5m-sum.pl:
+	In the case there is no data for a "line", skip processing, so that
+	we don't end up setting min_sample to 0, and trying to inject data
+	for all the 5-minute intervals of the day.
+
+	If we're starting from sample 0, set $sample_time{-1} so that we
+	can compute a delta_T for the first sample, and not skip the check
+	against interface speed for the first sample.  Should fix incremental
+	re-processing when interface counters misbehave, as we've seen recently.
+
+	Add some debugging output visible under -v or -V.
+
+2015-09-20  Havard Eidnes <he@nordu.net>
+
+	* traffic/common/read-5m-sum.pl, traffic/report/customer-ts.pl:
+	Adjust verbosity level -- put some printouts under -V, and improve
+	the -v printouts in the customer-ts.pl script.
+
+2015-09-11  Havard Eidnes <he@nordu.net>
+
+	* traffic/report/customer-ts.pl:
+	Correct error message, don't print undefined variable...
+
+2015-09-10  Havard Eidnes <he@nordu.net>
+
+	* traffic/report/customer-ts.pl:
+	It's the save_ifspeed hash which needs saving & restore, not the
+	nonexistent ifspeed hash, ref. the code in read-5m-sum.pl.
+
+2015-07-02  Havard Eidnes <he@nordu.net>
+
+	* zino/events.tcl: Also log admin state changes.
+
+2015-07-01  Havard Eidnes <he@nordu.net>
+
+	* zino/events.tcl:
+	Also emit history additions to the debug log + any log clients.
+
+2015-03-30  Havard Eidnes <he@nordu.net>
+
+	* traffic/report/mk-top10.pl: Protect against division by zero.
+
+2015-01-30  Havard Eidnes <he@nordu.net>
+
+	* traffic/cgi/plot-all.pl:
+	Don't omit pointer to "own" plot being shown, to further
+	get the references in the same position every time.
+
+	* traffic/cgi/plot-all.pl:
+	Sort the keys for the other plots, so that the order remains the same
+	between different invocations.
+
+	* traffic/cgi/load-map.pl:
+	If we have a colour, use that when drawing the
+	dashed lines as well.
+
+	* traffic/cgi/load-map.pl: Adapt code to conform to "use strict".
+
+	Recognize and implement dashed lines, to be used for
+	"planned but not yet in operation" circuits.
+
+	Draw polylines with line segments, to avoid the previous
+	hack of using polygons and retracing the path, so that
+	dashed patterns don't sometimes create solid lines...
+
+2014-10-28  Havard Eidnes <he@nordu.net>
+
+	* traffic/cgi/load-map.pl: Recognize https:// links as well.
+
+2014-07-08  Havard Eidnes <he@nordu.net>
+
+	* traffic/cgi/load-map.pl: Include reverse.pl.
+
+	* traffic/common/Makefile: Installr reverse.pl.
+
+	* traffic/common/reverse.pl:
+	Put rev_name in a file of its own for possible re-use elsewhere.
+
+2014-06-21  Havard Eidnes <he@nordu.net>
+
+	* traffic/report/ip6-plot-data.pl:
+	Change so that this one actually reports the number of octets per
+	sample.  If we miss the octet counters from the IP MIB, we wing it
+	with what we've got from the IPv6 MIB.
+
+	* traffic/report/report-day.pl:
+	Fix reporting so that we report average data rate in kbit/s over the
+	day instead of just the total number of IPv6 octets...
+
+	* traffic/report/ip6-plot-perc.pl: Update comment.
+
+	* traffic/report/ip6-plot-perc.pl:
+	Renamed script from ip6-plot-data.pl.
+
+	* traffic/report/report-day.pl: Fix syntax and declaration errors.
+
+2014-06-20  Havard Eidnes <he@nordu.net>
+
+	* traffic/plot/plot-raw.pl, traffic/plot/plot-hr.pl:
+	Prefer stats from the IP MIB for IPv6 traffic if available.
+
+	* tpoller/tpoller.tcl:
+	Support collection of IPv6 packet and octet counts from the IP MIB.
+	This should give coverage for IPv6 stats for ASR9k users, among
+	others.
+
+	* traffic/report/ip6-day-perc.pl, traffic/report/ip6-plot-data.pl:
+	Prefer data from the IP MIB if available.
+
+	* traffic/report/report-day.pl:
+	Support and prioritize data from the IP MIB for the IPv6
+	packet and traffic statistics.  This should give better
+	IPv6 statistics coverage as the Cisco ASR9k boxes apparently
+	presents these stats via the IP MIB.
+
+	* traffic/common/new-read-raw-log.pl, traffic/common/new-read-hr-log.pl:
+	Support multi-valued instances, such as those from ipIfStatsTable.
+
+	* mibs/IF-MIB.my, mibs/INET-ADDRESS-MIB.my, mibs/IP-MIB.my, mibs/Makefile:
+	Add IF-MIB and IP-MIB, update INET-ADDRESS-MIB.
+	Install them.
+
+2014-05-26  Havard Eidnes <he@nordu.net>
+
+	* vwatch/uptimes.pl:
+	Fix warning with newer perl, defined(%hash) is no longer kosher.
+
+2014-04-28  Havard Eidnes <he@nordu.net>
+
+	* zino/pm.tcl:
+	Let the "details" command know about the interface regexp match type,
+	and form the command correspondingly.  Also, use the newer "attr" proc.
+
+	* zino/pm.tcl: Fix up the "matching" procedure again.
+
+	* zino/pm.tcl:
+	Fix up the remaining use of matching_ports to now use 3 args.
+
+	* zino/pm.tcl: Fix syntactic typo.
+
+	* zino/pm.tcl, zino/server.tcl:
+	Add support for the "match against interface name on a given device"
+	type of PM events.
+
+2014-04-25  Havard Eidnes <he@nordu.net>
+
+	* ritz/Makefile: Install the correct "cli" script...
+
+	* ritz/Makefile:
+	Add build instructions for the new "cli" interface to the zino server.
+
+	* ritz/cli.tcl: Also exit if gets get negative return.
+	Be verbose about closing server connection,
+	and do an explicit exit to get out of scotty.
+
+	* ritz/cli.tcl:
+	Be a bit more verbose when connecting and authenticating.
+	Handle continuation lines from the server.
+
+	* ritz/cli.tcl: TCL, not perl...
+
+	* ritz/cli.tcl: CLI-based client for the zino server.
+
+	* zino/pm.tcl: Note that the "save" proc isn't implemented yet.
+	Add some code to periodically check whether there has
+	been created any new events which warrant entering interfaces
+	or devices into existing PM events, such as might happen with
+	dynamically created interfaces.
+	Protect some parts of the periodic job from being aborted by
+	an errant internal data structure (defensive programming for now).
+
+2014-04-22  Havard Eidnes <he@nordu.net>
+
+	* traffic/report/mk-customer-index.pl:
+	Make this work with "use strict;".
+	Only output references to 98% and avg plots if the
+	zino-conf.pl file defines $do_98p and $do_avg respectively.
+
+	* traffic/jobs/zino-config.pl:
+	Allow this to be sourced by a "use strict" user.
+
+	* traffic/report/mk-customer-index.pl:
+	Provide translation for &aacute; and &aelig; as well.
+
+	* check-subst.pl: Fix two silly bugs:
+	1) Index a hash (found by "use strict")
+	2) Use the right hash for storing the Makefile.inc.dist variables
+
+	* zino/events.tcl:
+	In closeEvent, which is called by the scavenging process, don't unset
+	EventId($ix) because a new event may have been created in-between the
+	UI close (which does a preCloseEvent) and the actual scavenging.
+
+2014-04-20  Havard Eidnes <he@nordu.net>
+
+	* traffic/common/plot.pl:
+	Fix syntax for newer gnuplot -- offset needs new "offset" keyword.
+
+2014-04-10  Havard Eidnes <he@nordu.net>
+
+	* traffic/db/update-dbs.pl: Fix typo.
+
+	* traffic/db/update-dbs.pl:
+	Apply an adapted patch from Ville Mattila at CSC.fi.
+	Trying to iterate up to the largest interface-index isn't
+	exactly clever, especially with devices which have a sparse
+	interface-index space (e.g. some Cisco Nexus products).
+
+	* zino/tacping.pl: Set a 5-second timeout for the request.
+
+2014-03-20  Havard Eidnes <he@nordu.net>
+
+	* ChangeLog: Note changes since the previous release.
+
+	* Makefile: Bump VERSION to 0.9.9.8.
+
 2014-03-20  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Bump VERSION to 0.9.9.8.
@@ -259,7 +690,7 @@
 	* traffic/common/Makefile:
 	Ensure that plot.pl is also updated/installed.
 
-2012-11-10  Havard Eidnes  <he@uninett.no>
+2012-11-10  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog, Makefile: Mark this as 0.9.9.7.
 
@@ -275,13 +706,13 @@
 	The net effect is a speed-up of the incremental reading and processing
 	of the data; not always reading from the start of the file(!)
 
-2012-11-02  Havard Eidnes  <he@uninett.no>
+2012-11-02  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/tbl-report.pl:
 	Widen the fields for traffic in kbit/s, so that data rates
 	over 10Gbit/s don't skew the table.
 
-2012-10-24  Havard Eidnes  <he@uninett.no>
+2012-10-24  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/plot.pl:
 	Insert the "offset" keyword in "set xlabel", now required by at
@@ -290,11 +721,11 @@
 	* INSTALL: Coalesce the two p5-TimeDate entries.
 	Add tgif.
 
-2012-10-22  Havard Eidnes  <he@uninett.no>
+2012-10-22  Havard Eidnes <he@uninett.no>
 
 	* check-subst.pl: Convert to 'use Getopt::Std;'.
 
-2012-10-21  Havard Eidnes  <he@uninett.no>
+2012-10-21  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/tbl-report.pl:
 	Support the computed IPv6 traffic and percentage IPv6 traffic
@@ -319,11 +750,11 @@
 	and apply normal "swap direction" rules to the rest of the
 	logical port name.
 
-2012-10-18  Havard Eidnes  <he@uninett.no>
+2012-10-18  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/tbl-report.pl: With 100G, you need 9 spaces...
 
-2012-09-25  Havard Eidnes  <he@uninett.no>
+2012-09-25  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/Makefile:
 	Add the two simple ip6 scripts.  These are just interim hacks...
@@ -347,7 +778,7 @@
 
 	* traffic/report/rh-test.pl: Fix comment.
 
-2012-09-21  Havard Eidnes  <he@uninett.no>
+2012-09-21  Havard Eidnes <he@uninett.no>
 
 	* tpoller/tpoller.tcl: Add counting of IPv6 packets.
 
@@ -374,11 +805,11 @@
 
 	* traffic/common/date.pl: Move from timelocal.pl to Time::Local.
 
-2012-09-18  Havard Eidnes  <he@uninett.no>
+2012-09-18  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/update-dbs.pl: Convert away from perl4ish getopts.pl.
 
-2012-09-13  Havard Eidnes  <he@uninett.no>
+2012-09-13  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/Makefile:
 	Also install bdb-dump.pl and bdb-load.pl, to allow for an alternative
@@ -493,7 +924,7 @@
 	Check Octet-derived data rates and ignore samples with values
 	larger than that reported by ifSpeed, if ifSpeed is not zero.
 
-2012-01-25  Havard Eidnes  <he@uninett.no>
+2012-01-25  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Mark this as version 0.9.9.4.
 
@@ -514,7 +945,7 @@
 	Handle empty address and description tables by just returning.
 	Might be caused by restricted SNMP access.
 
-2012-01-22  Havard Eidnes  <he@uninett.no>
+2012-01-22  Havard Eidnes <he@uninett.no>
 
 	* mibs/Makefile: Install the new Zino-related MIB files.
 
@@ -538,21 +969,21 @@
 
 	* zino/server.tcl: Consume any data arriving on the notify sockets.
 
-2012-01-19  Havard Eidnes  <he@uninett.no>
+2012-01-19  Havard Eidnes <he@uninett.no>
 
 	* mibs/UNINETT-SMI.my, mibs/UNINETT-ZINO-MIB.my, zino/agent.tcl,
 	zino/zino-main.tcl:
 	Implement a small SNMP agent listening on  port 8000, responding
 	with how many seconds the current zino instance has been running.
 
-2012-01-18  Havard Eidnes  <he@uninett.no>
+2012-01-18  Havard Eidnes <he@uninett.no>
 
 	* ritz/ui.tcl:
 	Fix a bug which caused old state related to a connection and the
 	events collected via it to not be cleaned up when the connection is
 	closed.
 
-2012-01-17  Havard Eidnes  <he@uninett.no>
+2012-01-17  Havard Eidnes <he@uninett.no>
 
 	* ritz/debian/control: bugfix
 
@@ -562,11 +993,11 @@
 
 	* Makefile: Bump version number.
 
-2012-01-17  Havard Eidnes  <he@uninett.no>
+2012-01-17  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Bump version number.
 
-2012-01-16  Havard Eidnes  <he@uninett.no>
+2012-01-16  Havard Eidnes <he@uninett.no>
 
 	* ritz/net.tcl, ritz/ui.tcl, zino/server.tcl:
 	Implement new style notify connection setup, where only the server
@@ -581,11 +1012,11 @@
 
 	This should make it possible to use ritz from behind a NAT device.
 
-2011-12-12  Havard Eidnes  <he@uninett.no>
+2011-12-12  Havard Eidnes <he@uninett.no>
 
 	* vwatch/pretty-ios.pl: Add minimal handling of IOS-XR.
 
-2011-11-03  Havard Eidnes  <he@uninett.no>
+2011-11-03  Havard Eidnes <he@uninett.no>
 
 	* zino/test-traps.tcl:
 	Remove remnants of "/store", use NetBSD's /usr/pkg/bin instead.
@@ -598,7 +1029,7 @@
 	an incomplete list of interface descriptions when queried for
 	via locIfDescr.
 
-2011-11-02  Havard Eidnes  <he@uninett.no>
+2011-11-02  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl:
 	Avoid race by having the two methods of getting the interface
@@ -607,25 +1038,25 @@
 	the ancient locIfDescr MIB variables, and therefore ended up
 	with empty interface descriptions.
 
-2011-10-14  Havard Eidnes  <he@uninett.no>
+2011-10-14  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/bdb-dump.pl:
 	Fix the tie syntax so that this actually works.
 
-2011-10-07  Havard Eidnes  <he@uninett.no>
+2011-10-07  Havard Eidnes <he@uninett.no>
 
 	* ritz/ui.tcl: Add alarm type case types to sort on.
 
-2011-09-16  Havard Eidnes  <he@uninett.no>
+2011-09-16  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl: Typo correction.
 
-2011-09-07  Havard Eidnes  <he@uninett.no>
+2011-09-07  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl: Make some patterns which actually work.
 	Remove some 10.0.0.*, 127.* and 128.* explicitly ignored addresses.
 
-2011-08-12  Havard Eidnes  <he@uninett.no>
+2011-08-12  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/mk-top10.pl, traffic/cgi/top10.pl:
 	Change how we compute placement of the rectangles which refer to
@@ -633,11 +1064,11 @@
 	last entry", not "number of entries".  Also correct the left edge of
 	the plot (I wonder if the larger numbers affect this...)
 
-2011-08-08  Havard Eidnes  <he@uninett.no>
+2011-08-08  Havard Eidnes <he@uninett.no>
 
 	* vwatch/Makefile: Fix so that "make clean" works.
 
-2011-06-22  Havard Eidnes  <he@uninett.no>
+2011-06-22  Havard Eidnes <he@uninett.no>
 
 	* vwatch/cur-vers.pl:
 	Replace now-deprecated defined(%hash) by testing one of the elements
@@ -661,7 +1092,7 @@
 
 	* Makefile.inc.dist: Add DESCFILE setting.
 
-2011-05-25  Havard Eidnes  <he@uninett.no>
+2011-05-25  Havard Eidnes <he@uninett.no>
 
 	* INSTALL: Add p5-BerkeleyDB as a requirement.
 
@@ -684,18 +1115,18 @@
 	and subsequently "../bin/bdb-load ftn.bdb ftn", which will create the
 	ftn.bdb database, and correspondingly for the ntf database.
 
-2011-04-05  Havard Eidnes  <he@uninett.no>
+2011-04-05  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Ignore two more directives, apparently emitted by tgif 4.2.2.
 
-2011-04-03  Havard Eidnes  <he@uninett.no>
+2011-04-03  Havard Eidnes <he@uninett.no>
 
 	* vwatch/vw-daily.pl:
 	Adapt to "use strict;", prepare for perl 5.12 which doesn't by default
 	split into @_...
 
-2011-04-01  Havard Eidnes  <he@uninett.no>
+2011-04-01  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/top10.pl, traffic/common/new-read-hr-log.pl,
 	traffic/common/new-read-raw-log.pl, traffic/jobs/check-deltas.pl,
@@ -706,36 +1137,36 @@
 	Prepare for perl 5.12, by explicitly putting the result of split()
 	into @_.
 
-2011-02-15  Havard Eidnes  <he@uninett.no>
+2011-02-15  Havard Eidnes <he@uninett.no>
 
 	* vwatch/cur-vers.pl:
 	Remove a possible trailing newline (seen from D-Link switches).
 
-2011-01-31  Havard Eidnes  <he@uninett.no>
+2011-01-31  Havard Eidnes <he@uninett.no>
 
 	* vwatch/pretty-ios.pl: Also recognize Cisco CatOS.
 
-2010-12-08  Havard Eidnes  <he@uninett.no>
+2010-12-08  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-5m-sum.pl:
 	Short-circuit if we didn't actually collect any new data for a given
 	variable.  This appears to be triggered when logical ports are moved
 	around...
 
-2010-11-01  Havard Eidnes  <he@uninett.no>
+2010-11-01  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/date.pl:
 	Allow for up to 2h DST change when moving between days around
 	a DST shift.
 
-2010-10-25  Havard Eidnes  <he@uninett.no>
+2010-10-25  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/warn-dups.pl:
 	Make -t argument optional, default to installed topdir.
 	Make the output easier to handle: print device name and interface name
 	instead of just the raw key made up of device name and ifIndex.
 
-2010-10-08  Havard Eidnes  <he@uninett.no>
+2010-10-08  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Add more changes to be included in 0.9.9.1.
 
@@ -743,7 +1174,7 @@
 	Reinstate installation of read-5m-sum.pl, which was mistakenly
 	removed.
 
-2010-10-07  Havard Eidnes  <he@uninett.no>
+2010-10-07  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Add changes for 0.9.9.1.
 
@@ -751,13 +1182,13 @@
 
 	* tpoller/Makefile: Fix syntax error in the list of source files.
 
-2010-10-06  Havard Eidnes  <he@uninett.no>
+2010-10-06  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/Makefile:
 	Reinstate installation of read-5m-sum.pl, which was mistakenly
 	removed.
 
-2010-09-29  Havard Eidnes  <he@uninett.no>
+2010-09-29  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Add changes leading up to 0.9.9.
 
@@ -773,7 +1204,7 @@
 	* INSTALL: List the packages required to use this package.
 	Provide other minimal installation information.
 
-2010-09-24  Havard Eidnes  <he@uninett.no>
+2010-09-24  Havard Eidnes <he@uninett.no>
 
 	* tpoller/tpoller.tcl:
 	Change to a new raw data format where we log time stamps as seconds
@@ -906,13 +1337,13 @@
 	* traffic/cgi/r-all.pl:
 	Emit a warning if description file can't be opened.
 
-2010-09-23  Havard Eidnes  <he@uninett.no>
+2010-09-23  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-5m-sum.pl:
 	Disable DST compensation when reading new-style raw data logs,
 	since the new code's use of %lasttime is different than the old.
 
-2010-09-22  Havard Eidnes  <he@uninett.no>
+2010-09-22  Havard Eidnes <he@uninett.no>
 
 	* zino/trap.tcl: Ignore BGP traps from Juniper boxes as well.
 
@@ -924,20 +1355,20 @@
 	Don't put a list around $args in ProcessRow, this should prevent
 	list braces accumulating.
 
-2010-09-20  Havard Eidnes  <he@uninett.no>
+2010-09-20  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-raw-log.pl:
 	We need to trigger doing the new stats data format
 	when we see a line starting with a digit.  This is
 	needed for e.g. incremental data file processing.
 
-2010-09-17  Havard Eidnes  <he@uninett.no>
+2010-09-17  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/date.pl:
 	Correctly compute the number of days in a year, accounting for leap
 	days.
 
-2010-09-01  Havard Eidnes  <he@uninett.no>
+2010-09-01  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/convert-data.pl:
 	Uh, always mark converted data as being Version 1.
@@ -945,35 +1376,35 @@
 	* traffic/report/tail-stats.pl:
 	Print a newline, and use $! instad of $?.
 
-2010-08-20  Havard Eidnes  <he@uninett.no>
+2010-08-20  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/compress-data.pl: Only try to compress files...
 
-2010-08-19  Havard Eidnes  <he@uninett.no>
+2010-08-19  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/convert-data.pl:
 	Skip empty lines instead of potentially falling into doing strptime()
 	on an empty day of month...  Also skip already converted lines.
 
-2010-08-17  Havard Eidnes  <he@uninett.no>
+2010-08-17  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Add support for handling layer-2 VPN "circuits" in reversing the
 	logical port name, by keeping -l2vpn-whatever and pivoting on any
 	remaining hypen preceding this part.
 
-2010-08-13  Havard Eidnes  <he@uninett.no>
+2010-08-13  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/convert-data.pl:
 	Add ability to properly handle gzip archive files.
 	If original was gzip'ed, the new one will be too.
 
-2010-08-06  Havard Eidnes  <he@uninett.no>
+2010-08-06  Havard Eidnes <he@uninett.no>
 
 	* ritz/notify.tcl:
 	Remove some global declarations which are not needed.
 
-2010-07-28  Havard Eidnes  <he@uninett.no>
+2010-07-28  Havard Eidnes <he@uninett.no>
 
 	* tpoller/Makefile, tpoller/tpoller.tcl,
 	  traffic/common/Makefile, traffic/common/new-read-hr-log.pl,
@@ -1012,7 +1443,7 @@
 	file names.  This introduces the new copy-to and move-to helper
 	scripts (target dirname given as first argument).
 
-2010-07-27  Havard Eidnes  <he@uninett.no>
+2010-07-27  Havard Eidnes <he@uninett.no>
 
 	* zinomon/Zino.pm, zinomon/zino-monitor.pl:
 	Make the lack of active events / "case-IDs" a non-fatal error as far
@@ -1022,31 +1453,31 @@
 	Add a time-out of 30 seconds around the main checking loop, to protect
 	against stuck connections.
 
-2010-07-15  Havard Eidnes  <he@uninett.no>
+2010-07-15  Havard Eidnes <he@uninett.no>
 
 	* vwatch/cur-vers.pl: Recognize JunOS service versions as well.
 
-2010-06-28  Havard Eidnes  <he@uninett.no>
+2010-06-28  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Make it possible to only process a subset of logical ports
 	via the -n option, also for "today".
 
-2010-05-26  Havard Eidnes  <he@uninett.no>
+2010-05-26  Havard Eidnes <he@uninett.no>
 
 	* tpoller/tpoller.tcl:
 	Rewrite to use only asynchronous callbacks, so that if a significant
 	portion of the devices are unreachable, the poll frequency for those
 	which remain should not be adversely affected.
 
-2010-05-20  Havard Eidnes  <he@uninett.no>
+2010-05-20  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Make it possible to provide an absolute pointer, so that the date+type
 	doesn't get tacked on, by rewriting an "absolute http pointer" of the
 	form "abs-http://" to just "http://".
 
-2010-04-22  Havard Eidnes  <he@uninett.no>
+2010-04-22  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Bump version to 0.9.8.2.
 
@@ -1095,7 +1526,7 @@
 	* TODO:
 	Add one more TODO item: traffic poller should do all-async requests.
 
-2010-04-22  Havard Eidnes  <he@uninett.no>
+2010-04-22  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Bump version to 0.9.8.2.
 
@@ -1122,11 +1553,11 @@
 	* TODO:
 	Add one more TODO item: traffic poller should do all-async requests.
 
-2010-04-20  Havard Eidnes  <he@uninett.no>
+2010-04-20  Havard Eidnes <he@uninett.no>
 
 	* ritz/ui.tcl: Add the bfd and bgp event types to the menu.
 
-2010-01-26  Havard Eidnes  <he@uninett.no>
+2010-01-26  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
 	Allow a "Reboot" line to be the first one in a data file, so that
@@ -1146,7 +1577,7 @@
 	Don't mess with the global $date used by the functions reading the
 	raw data log. (I really want to reimplement that stuff...)
 
-2009-12-10  Havard Eidnes  <he@uninett.no>
+2009-12-10  Havard Eidnes <he@uninett.no>
 
 	* zino/server.tcl: Correct a typo.
 
@@ -1175,7 +1606,7 @@
 	Add the possibility to register parameter-less callbacks to be invoked
 	right after the saved state has been restored.
 
-2009-12-08  Havard Eidnes  <he@uninett.no>
+2009-12-08  Havard Eidnes <he@uninett.no>
 
 	* zino/server.tcl: Correct the sense of the test for from_t.
 
@@ -1204,11 +1635,11 @@
 	Ensure that we clear out the "new descriptions" array before
 	fetching the values.  Also get rid of a now-redundant declaration.
 
-2009-12-03  Havard Eidnes  <he@uninett.no>
+2009-12-03  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Bump to version 0.9.8.1.
 
-2009-11-30  Havard Eidnes  <he@uninett.no>
+2009-11-30  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl:
 	Convert getAddrList to use bulkWalk instead of "snmp walk", which
@@ -1250,7 +1681,7 @@
 	with the given number of repetitions, with optional end-of-varlist
 	and error handlers.
 
-2009-11-29  Havard Eidnes  <he@uninett.no>
+2009-11-29  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl:
 	Also return from the collection of the stacking table if we hit an
@@ -1259,7 +1690,7 @@
 	* zino/status.tcl:
 	Return from the collection of description fields if we hit an error.
 
-2009-11-25  Havard Eidnes  <he@uninett.no>
+2009-11-25  Havard Eidnes <he@uninett.no>
 
 	* zino/events.tcl: Also clean up isJuniper state for a router.
 	Call cleanup functions for BGP and interface layering when
@@ -1279,7 +1710,7 @@
 	* zino/bgp.tcl:
 	Add a function to clean up BGP-related state for a given router.
 
-2009-11-20  Havard Eidnes  <he@uninett.no>
+2009-11-20  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl:
 	Ensure that the newly separately collected interface description
@@ -1300,7 +1731,7 @@
 	format of $h remains the same as it was before, i.e.  with a leading
 	zero for the hours 0-9.
 
-2009-11-18  Havard Eidnes  <he@uninett.no>
+2009-11-18  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-5m-sum.pl:
 	Turn on the extra-verbose debug output, but only enable it under
@@ -1316,7 +1747,7 @@
 	we handle log files which start at e.g. 00:00:00, and have no samples
 	in hour 23 logged before that.
 
-2009-11-11  Havard Eidnes  <he@uninett.no>
+2009-11-11  Havard Eidnes <he@uninett.no>
 
 	* vwatch/Makefile:
 	Indicate that none of the programs have manual pages.
@@ -1345,7 +1776,7 @@
 
 	Re-do how doResponse is working, to simplify code at the calling site.
 
-2009-11-03  Havard Eidnes  <he@uninett.no>
+2009-11-03  Havard Eidnes <he@uninett.no>
 
 	* traffic/plot/plot-day.pl:
 	Don't start painting X tick marks for a time where we don't have any
@@ -1355,17 +1786,17 @@
 	Apply minimal fixes to deal with switching to and from daylight
 	savings time.
 
-2009-10-28  Havard Eidnes  <he@uninett.no>
+2009-10-28  Havard Eidnes <he@uninett.no>
 
 	* zino/bgp.tcl: Drop the logging of "known state" for BGP sessions.
 
-2009-10-26  Havard Eidnes  <he@uninett.no>
+2009-10-26  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-5m-sum.pl: Save and restore %dstcomp.
 	Remove code for switching to the next day -- that's now done
 	in read-raw-log instead.
 
-2009-10-25  Havard Eidnes  <he@uninett.no>
+2009-10-25  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-raw-log.pl:
 	Add yet another kludge to deal with DST handling:
@@ -1390,7 +1821,7 @@
 	samples for the following hour, and masking the effect of the "real"
 	DST compensation code.
 
-2009-10-23  Havard Eidnes  <he@uninett.no>
+2009-10-23  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/r-all.pl:
 	If we got an error during RRD-graphing, print it together with
@@ -1422,7 +1853,7 @@
 	ought to devise a way to have the general image size be out-voted by
 	the number of exceptions for the given type of plot...
 
-2009-10-21  Havard Eidnes  <he@uninett.no>
+2009-10-21  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Bump to version 0.9.8.
 
@@ -1431,7 +1862,7 @@
 	so that the renderer in the browser doesn't have to stretch
 	the images (which typically makes for lousy quality).
 
-2009-10-13  Havard Eidnes  <he@uninett.no>
+2009-10-13  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/get-perc.pl:
 	Now that find_file() is where it belongs in this context (perc.pl),
@@ -1458,7 +1889,7 @@
 	Introduce "use DateTime", implement dsp_to_dt()
 	to convert the start of a datespec period to a DateTime.
 
-2009-10-08  Havard Eidnes  <he@uninett.no>
+2009-10-08  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/perc-5m.pl: Require the files we actually need.
 	Adapt to "use strict;" rules.
@@ -1497,13 +1928,13 @@
 	There's no sense in having two nearly-identical copies
 	in the get-perc and get-5m-perc scripts.
 
-2009-10-07  Havard Eidnes  <he@uninett.no>
+2009-10-07  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Fix remaining 'no strict "vars"' problems.
 	Implement tweakable retention time via -t, default as before at 3600.
 
-2009-10-06  Havard Eidnes  <he@uninett.no>
+2009-10-06  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/r-all.pl:
 	Correct the test for whether to update the shared-memory image-size
@@ -1512,7 +1943,7 @@
 	will update the stored image size also if only the height differs
 	(which is typically what happens).
 
-2009-10-05  Havard Eidnes  <he@uninett.no>
+2009-10-05  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/update-dbs.pl:
 	Adapt to "use strict;" rules, declare all globals with our().
@@ -1521,7 +1952,7 @@
 	Implement new option -D <router> for specific debugging of what's
 	related to the given router (could be expanded).
 
-2009-09-27  Havard Eidnes  <he@uninett.no>
+2009-09-27  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-raw-log.pl:
 	Ensure that we always define the local $instance{$v} after checking
@@ -1529,7 +1960,7 @@
 	stored one.  This fixes a bug with producing "load-now.txt" from the
 	tail-stats script, which ended up as all-0(!) otherwise.
 
-2009-09-25  Havard Eidnes  <he@uninett.no>
+2009-09-25  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/find-err-dev.pl: More documentation synchronization.
 
@@ -1561,20 +1992,20 @@
 	Add a script and corresponding wrapper to report statistical
 	deviations in the error statistics report.
 
-2009-09-01  Havard Eidnes  <he@uninett.no>
+2009-09-01  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/Makefile:
 	Only warn of remaining substitutions if there are more than two
 	normal characters in a row following the % sign, to allow the
 	date +%Y%m%d construct in daily to pass.
 
-2009-08-25  Havard Eidnes  <he@uninett.no>
+2009-08-25  Havard Eidnes <he@uninett.no>
 
 	* traffic/plot/plot-week.pl:
 	Adapt to the changed expected week datespec format, so that week-based
 	plots work again.
 
-2009-08-21  Havard Eidnes  <he@uninett.no>
+2009-08-21  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
 	Instead of assuming that counters revert to 0 on agent re-
@@ -1582,14 +2013,14 @@
 	SMIv2 spec which says that counters do not have initial values.  This
 	means we have to throw away a sample on agent re-initialization.
 
-2009-08-15  Havard Eidnes  <he@uninett.no>
+2009-08-15  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/daily.sh:
 	Set up to save any RRD data in data/cust-rrd on the first of each
 	month, after making sure that all the data from the preceding day
 	has been processed and stored into the RRD databases.
 
-2009-08-03  Havard Eidnes  <he@uninett.no>
+2009-08-03  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/Makefile: Add warn-dups.pl.
 
@@ -1597,7 +2028,7 @@
 	Add a simple script suitable to detect duplicate logical port names.
 	Can be run from cron periodically; reports on stderr if dups are found.
 
-2009-07-28  Havard Eidnes  <he@uninett.no>
+2009-07-28  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/tbl-report.pl:
 	Declare the %in hash with our() (an ever so slight modernization of
@@ -1608,19 +2039,19 @@
 	references to e.g. plots which don't take a datespec-type as argument
 	work as could be expected.
 
-2009-06-17  Havard Eidnes  <he@uninett.no>
+2009-06-17  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/tbl-report.pl:
 	Widen the "speed" field so that 10G links also line up with
 	lower-speed links.
 
-2009-05-15  Havard Eidnes  <he@uninett.no>
+2009-05-15  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/date.pl:
 	Actually expect the canonical "week" datespec format in
 	make_datespec(), i.e. "2008--52", not "2008-52".
 
-2009-05-12  Havard Eidnes  <he@uninett.no>
+2009-05-12  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/Makefile, traffic/report/cust-load-now.pl:
 	Add the cust-load-now script, used by the mk-top10 script.
@@ -1637,7 +2068,7 @@
 	should get rid of the long e-mail sent by cron, triggered by rrdtool
 	trying to re-update the stats for all of yesterday.
 
-2009-05-11  Havard Eidnes  <he@uninett.no>
+2009-05-11  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/tbl-report.pl:
 	Let the "previous" and "next" link computation and defaults
@@ -1649,7 +2080,7 @@
 	happens to fall in the last few minutes before the counter wraparound.
 	Code adapted from the modification to the traffic poller.
 
-2009-04-15  Havard Eidnes  <he@uninett.no>
+2009-04-15  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/top10.pl:
 	Remove traces of "peak plot", which can't be done sensibly
@@ -1659,7 +2090,7 @@
 	Shuffle some code around to simplify error handling (output
 	document header before making the plots).
 
-2009-04-02  Havard Eidnes  <he@uninett.no>
+2009-04-02  Havard Eidnes <he@uninett.no>
 
 	* tpoller/tpoller.tcl:
 	Fiddle a bit with the "expectedUptime" procedure:
@@ -1677,21 +2108,21 @@
 
 	* vwatch/Makefile: Add the uptimes script.
 
-2009-03-31  Havard Eidnes  <he@uninett.no>
+2009-03-31  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Ensure that we undef variables used to keep track of how
 	long we had read -- we might be processing more than one
 	file, as directed by the -n option.
 
-2009-03-18  Havard Eidnes  <he@uninett.no>
+2009-03-18  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/Makefile: Add the top10.pl script.
 
 	* traffic/cgi/top10.pl:
 	Uhm, use the correct field numbers in the daily report.
 
-2009-03-14  Havard Eidnes  <he@uninett.no>
+2009-03-14  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Add a small script to check that no new variables have
 	appeared in Makefile.inc.dist, since they need to be
@@ -1703,7 +2134,7 @@
 	and put into subst.  This might happen if a new variable
 	is added to Makefile.inc.dist.
 
-2009-03-13  Havard Eidnes  <he@uninett.no>
+2009-03-13  Havard Eidnes <he@uninett.no>
 
 	* traffic/html/zoom-cur-top10.fig, traffic/html/zoom-cur-top10.png:
 	Update to also show the pointers to the per-customer plots.
@@ -1751,7 +2182,7 @@
 	   %CUSTLIST% with all customers marked with the "cust" attribute
 	 o Needs to run the "make rrd plots per customer" script
 
-2009-03-09  Havard Eidnes  <he@uninett.no>
+2009-03-09  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
 	Add some code to handle the changing of an the instance of a
@@ -1760,13 +2191,13 @@
 	computing a delta between the two instances, and instead uses
 	the value for the new instance as a new baseline.
 
-2009-02-23  Havard Eidnes  <he@uninett.no>
+2009-02-23  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Update for 0.9.7.
 
 	* Makefile: Bump to 0.9.7.
 
-2009-02-04  Havard Eidnes  <he@uninett.no>
+2009-02-04  Havard Eidnes <he@uninett.no>
 
 	* tpoller/tpoller.tcl:
 	Make an attempt at handling sysUpTime.0 counter wraparound
@@ -1774,20 +2205,20 @@
 	larger than 2^31-1, don't count it as a reboot event and instead
 	indicate "uptime is as expected".
 
-2009-01-31  Havard Eidnes  <he@uninett.no>
+2009-01-31  Havard Eidnes <he@uninett.no>
 
 	* zino/events.tcl:
 	Uhm, the "add missing closed events" function should not touch
 	events which are not closed(!)
 
-2009-01-27  Havard Eidnes  <he@uninett.no>
+2009-01-27  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/customer-ts.pl:
 	Also save and restore %lastfilebase between invocations,
 	so that read-5m-sum can correctly handle a move of a
 	logical port name to a different interface.
 
-2009-01-26  Havard Eidnes  <he@uninett.no>
+2009-01-26  Havard Eidnes <he@uninett.no>
 
 	* zino/events.tcl:
 	It appears that sometimes zino manages to set some events to "closed"
@@ -1795,7 +2226,7 @@
 	scavenged events.  Add a job run each hour which checks all events
 	and adds any missing closed events to the list.
 
-2009-01-22  Havard Eidnes  <he@uninett.no>
+2009-01-22  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	In the case where no data arrived since the last time, don't skip
@@ -1816,12 +2247,12 @@
 	displaying yesterday's report.
 	Correct XHTML document compliance.
 
-2008-12-01  Havard Eidnes  <he@uninett.no>
+2008-12-01  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Increase verbosity when given the -v option.
 
-2008-11-27  Havard Eidnes  <he@uninett.no>
+2008-11-27  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Correct typo in printf list in error message (use the right variable).
@@ -1836,24 +2267,24 @@
 	Permit the specificaiton of more than one logical name via the -n
 	option, by supporting a comma-separated list of names.
 
-2008-11-17  Havard Eidnes  <he@uninett.no>
+2008-11-17  Havard Eidnes <he@uninett.no>
 
 	* zino/log.tcl:
 	Close the channels where we could no longer log information.
 	This was responsible for an FD leak in zino.
 
-2008-11-13  Havard Eidnes  <he@uninett.no>
+2008-11-13  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Reduce expiry time to 5 minutes when looking at "today".
 
-2008-11-11  Havard Eidnes  <he@uninett.no>
+2008-11-11  Havard Eidnes <he@uninett.no>
 
 	* traffic/plot/plot-raw.pl:
 	In plot_eerrs, use the correct SNMP variable names to compute
 	the sum of OK + errored packets.
 
-2008-10-22  Havard Eidnes  <he@uninett.no>
+2008-10-22  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Record the changes for 0.9.6.
 
@@ -1877,13 +2308,13 @@
 	Use this to appropriately indicate severity of yellow chassis alarms
 	as seen on Juniper boxes.
 
-2008-10-02  Havard Eidnes  <he@uninett.no>
+2008-10-02  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl:
 	Put a catch around the sourcing of the config file, to catch and
 	report any errors which might occur.
 
-2008-09-26  Havard Eidnes  <he@uninett.no>
+2008-09-26  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-raw-log.pl:
 	Instead of looking at the previous instance of a given variable (which
@@ -1893,22 +2324,22 @@
 
 	* traffic/cgi/ex-png.pl: Allow HTMLPFX to be empty.
 
-2008-09-15  Havard Eidnes  <he@uninett.no>
+2008-09-15  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/customer-ts.pl: Use substitution for perl interpreter.
 
-2008-09-10  Havard Eidnes  <he@uninett.no>
+2008-09-10  Havard Eidnes <he@uninett.no>
 
 	* vwatch/cur-vers.pl: Add sort handling for JunOS routers.
 
-2008-08-14  Havard Eidnes  <he@uninett.no>
+2008-08-14  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Import a fix from another part of the code: enable proper octet
 	counter detection when doing "today's" stats as well.
 	Also, if there's no data, skip it.
 
-2008-07-25  Havard Eidnes  <he@uninett.no>
+2008-07-25  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/r-all.pl:
 	Convert to using font specification compatible with the move
@@ -1916,7 +2347,7 @@
 	Also, add a font specification for the small plots.
 	Untested...
 
-2008-07-21  Havard Eidnes  <he@uninett.no>
+2008-07-21  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/date.pl:
 	Now that we're a bit more picky about $tm values,
@@ -1928,13 +2359,13 @@
 	Don't use "1 minute after midnight", use instead "exactly midnight"
 	when returning the base $tm for the day.
 
-2008-06-25  Havard Eidnes  <he@uninett.no>
+2008-06-25  Havard Eidnes <he@uninett.no>
 
 	* vwatch/vw-daily.pl:
 	Change subject of the mail to be more similar to the other messages
 	sent on a nightly basis by zino.
 
-2008-06-11  Havard Eidnes  <he@uninett.no>
+2008-06-11  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Write report to an $opt_r.new file, rename to $opt_r after report is
@@ -1947,7 +2378,7 @@
 	variable used in zino-config.pl, which if left un-substituted
 	will cause the daily jobs to fail due to perl parse errors.
 
-2008-06-09  Havard Eidnes  <he@uninett.no>
+2008-06-09  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Replace use of "time" with $^T (script start time).
@@ -2001,7 +2432,7 @@
 	based on a description file (e.g. as used by customer-ts), and
 	a template file.
 
-2008-06-06  Havard Eidnes  <he@uninett.no>
+2008-06-06  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/r-all.pl:
 	Actually... Go back to emitting direct pointers to the images.  It
@@ -2011,7 +2442,7 @@
 	apache deal with that itself -- this reduces the traffic from the web
 	server further.
 
-2008-06-05  Havard Eidnes  <he@uninett.no>
+2008-06-05  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/r-all.pl:
 	It turns out that we can't use my() to share variables between the
@@ -2027,18 +2458,18 @@
 
 	* traffic/cgi/r-all.pl: Re-do how we label the graphs.
 
-2008-04-23  Havard Eidnes  <he@uninett.no>
+2008-04-23  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/date.pl:
 	Replace "time" with "$^T", so as to not skew results based
 	on how long time the script has been running.
 
-2008-04-18  Havard Eidnes  <he@uninett.no>
+2008-04-18  Havard Eidnes <he@uninett.no>
 
 	* traffic/plot/plot-raw.pl, traffic/plot/plot-hr.pl:
 	Use the correct time_t for 00:00.
 
-2008-04-17  Havard Eidnes  <he@uninett.no>
+2008-04-17  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/customer-ts.pl:
 	Add a feature to collect all the ports from a "category", expressed
@@ -2082,7 +2513,7 @@
 
 	* traffic/cgi/r-all.pl: Improve title of page showing one plot.
 
-2008-04-14  Havard Eidnes  <he@uninett.no>
+2008-04-14  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/r-all.pl:
 	Make it possible to use our own modules, take advantage of this to
@@ -2107,7 +2538,7 @@
 
 	* traffic/common/conn.pm: Convert conn-common.pl into a module.
 
-2008-04-07  Havard Eidnes  <he@uninett.no>
+2008-04-07  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	I *think* there should be no need to disable
@@ -2136,7 +2567,7 @@
 
 	* traffic/jobs/Makefile: Add the onlyone.sh script, which uses shlock.
 
-2008-03-31  Havard Eidnes  <he@uninett.no>
+2008-03-31  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-raw-log.pl:
 	Discard samples older than $lasttime{$v}.
@@ -2150,7 +2581,7 @@
 	Fixes mis-computation of DST offset when there's a log entry from
 	yesterday in the data file.
 
-2008-03-17  Havard Eidnes  <he@uninett.no>
+2008-03-17  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-raw-log.pl:
 	Add a cheesy workaround for "25 hour days" (as happens when we
@@ -2173,7 +2604,7 @@
 	with a few samples from "yesterday", without seeing a sample from
 	today, even though we look at today's log.
 
-2008-03-12  Havard Eidnes  <he@uninett.no>
+2008-03-12  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/r-all.pl: Y scale is now in bits/s.
 	Use GPRINT, not PRINT to print into graph...
@@ -2231,7 +2662,7 @@
 	day.  Should fix incremental log processing when looking at today's
 	data and the hour is 23.
 
-2008-03-11  Havard Eidnes  <he@uninett.no>
+2008-03-11  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/r-all.pl:
 	Allow a little more room for the values (when we pass 1k, we want the
@@ -2247,13 +2678,13 @@
 	from the start instead.  However, avoid inspecting samples with a time
 	we've already inspected.
 
-2008-03-09  Havard Eidnes  <he@uninett.no>
+2008-03-09  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/r-all.pl:
 	Correct the time comparison for "is it new enough".
 	Add some more parameter checking / error reporting.
 
-2008-03-08  Havard Eidnes  <he@uninett.no>
+2008-03-08  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-5m-sum.pl:
 	If we ended up reading the entire day anyway (no longer seekable
@@ -2279,7 +2710,7 @@
 	* Makefile.inc.dist: Fix WEBSRVR to point to NORDUnet.
 	Introduce ISPNAME and RRDDIR, former is tweakable.
 
-2008-03-07  Havard Eidnes  <he@uninett.no>
+2008-03-07  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/config.pl: Replaced by zino-config.pl.
 
@@ -2306,7 +2737,7 @@
 
 	* traffic/jobs/zino-config.pl: Renamed from config.pl.
 
-2008-03-06  Havard Eidnes  <he@uninett.no>
+2008-03-06  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-5m-sum.pl: Declare $date as a global as well.
 	Ensure that we only restore previous state in the two
@@ -2314,7 +2745,7 @@
 	at log rollover close to midnight, or when repeatedly
 	looking at data for "today".
 
-2008-03-05  Havard Eidnes  <he@uninett.no>
+2008-03-05  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/conn-common.pl:
 	Fix a comment to accurately describe the globals this puts
@@ -2367,7 +2798,7 @@
 	Export $min_sample as the sample to start from (required for
 	repeated reading of today's log data).
 
-2008-03-04  Havard Eidnes  <he@uninett.no>
+2008-03-04  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/customer-ts.pl:
 	Die if a new save-file could not be created.
@@ -2407,7 +2838,7 @@
 	* traffic/common/read-5m-sum.pl:
 	Restore and save position for each file in the global %position array.
 
-2008-03-03  Havard Eidnes  <he@uninett.no>
+2008-03-03  Havard Eidnes <he@uninett.no>
 
 	* zinomon/Zino.pm:
 	Do some more checking of OK result from login, avoid warning
@@ -2415,12 +2846,12 @@
 
 	* traffic/common/conn-common.pl: Initial version imported.
 
-2008-03-01  Havard Eidnes  <he@uninett.no>
+2008-03-01  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/date.pl: Remove $timezone -- it's apparently not used.
 	Correct days_in_month() to account for leap years.
 
-2008-02-27  Havard Eidnes  <he@uninett.no>
+2008-02-27  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Correct the new save/restore parts to fix syntax errors
@@ -2431,7 +2862,7 @@
 	Save some more values between each run, so that the processing doesn't
 	skip any samples.
 
-2008-02-20  Havard Eidnes  <he@uninett.no>
+2008-02-20  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-5m-sum.pl: Declare global variables using our().
 
@@ -2466,7 +2897,7 @@
 	This means that one day per year will appear to have 23 hours, while
 	another will appear to have 25.
 
-2008-02-04  Havard Eidnes  <he@uninett.no>
+2008-02-04  Havard Eidnes <he@uninett.no>
 
 	* zino/Makefile: Add the version.tcl file.
 
@@ -2477,12 +2908,12 @@
 	We need a bgpAdminUp procedure, which notes when the admin state goes
 	from "stop" to "start".  Call it in the appropriate place.
 
-2008-01-31  Havard Eidnes  <he@uninett.no>
+2008-01-31  Havard Eidnes <he@uninett.no>
 
 	* ritz/ui.tcl:
 	Allow the user to provide default settings of the View() array.
 
-2008-01-30  Havard Eidnes  <he@uninett.no>
+2008-01-30  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Final changes for 0.9.5.
 
@@ -2490,11 +2921,11 @@
 
 	* ritz/debian/changelog: New upstream version
 
-2008-01-20  Havard Eidnes  <he@uninett.no>
+2008-01-20  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Some more changes for 0.9.5.
 
-2008-01-18  Havard Eidnes  <he@uninett.no>
+2008-01-18  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Update for version 0.9.5.
 
@@ -2555,7 +2986,7 @@
 
 	* ritz/ui.tcl: Update copyright year.
 
-2008-01-17  Havard Eidnes  <he@uninett.no>
+2008-01-17  Havard Eidnes <he@uninett.no>
 
 	* zinomon/zinomon.sh:
 	Hm, correctly collect exit status from the perl script.
@@ -2568,13 +2999,13 @@
 	question marks!?!  Therefore, delete []'s from the data from
 	zino-monitor.pl before sending onwards to the SMS gateway.
 
-2008-01-07  Havard Eidnes  <he@uninett.no>
+2008-01-07  Havard Eidnes <he@uninett.no>
 
 	* conf-diff/checkin-configs.sh:
 	Ensure tftp file remains group- and owner-writable (yes, this
 	hardcodes the file permission setting).
 
-2007-12-11  Havard Eidnes  <he@uninett.no>
+2007-12-11  Havard Eidnes <he@uninett.no>
 
 	* zino/flaps.tcl:
 	Improve resiliency; set un-recorded port state to "unknown".
@@ -2583,7 +3014,7 @@
 	Ensure that we detect "up" state for events we've previously
 	created events for.
 
-2007-12-05  Havard Eidnes  <he@uninett.no>
+2007-12-05  Havard Eidnes <he@uninett.no>
 
 	* conf-diff/checkin-configs.sh:
 	Add stderr redirection to the find commands.
@@ -2594,13 +3025,13 @@
 	Re-order the code so that we have a better chance of actually
 	avoiding doing diffs of "hot" files.
 
-2007-11-27  Havard Eidnes  <he@uninett.no>
+2007-11-27  Havard Eidnes <he@uninett.no>
 
 	* zinomon/zinomon.sh: Get rid of the useless cat processes.
 	Use the correct name for the ritz config variable for potentially
 	multiple phone numbers.
 
-2007-11-26  Havard Eidnes  <he@uninett.no>
+2007-11-26  Havard Eidnes <he@uninett.no>
 
 	* zinomon/zinomon.sh: Add missing pipe symbol.
 
@@ -2646,7 +3077,7 @@
 	Add a monitor of zino itself, version 0.02, to be run from cron.
 	Wrapper script to check exit status and send SMS will be added.
 
-2007-11-26  Havard Eidnes  <he@uninett.no>
+2007-11-26  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Update for the bump to 0.9.4.
 
@@ -2677,13 +3108,13 @@
 	Add a monitor of zino itself, version 0.02, to be run from cron.
 	Wrapper script to check exit status and send SMS will be added.
 
-2007-11-22  Havard Eidnes  <he@uninett.no>
+2007-11-22  Havard Eidnes <he@uninett.no>
 
 	* ritz/summary.tcl:
 	Fix the BGP summary strings to show admin-down instead of operational
 	state when it's admin-down which is the cause.
 
-2007-11-21  Havard Eidnes  <he@uninett.no>
+2007-11-21  Havard Eidnes <he@uninett.no>
 
 	* ritz/summary.tcl: Use admin-state of event, not of the peering.
 
@@ -2699,7 +3130,7 @@
 	Only flag events if the state differs from what it was last time, or
 	if we didn't know the prior state.
 
-2007-11-20  Havard Eidnes  <he@uninett.no>
+2007-11-20  Havard Eidnes <he@uninett.no>
 
 	* zino/bgp.tcl:
 	If the events already exist and the event being logged hasn't changed
@@ -2716,11 +3147,11 @@
 	Add some debugging output, and one commented-out debug output for each
 	row checked.
 
-2007-11-19  Havard Eidnes  <he@uninett.no>
+2007-11-19  Havard Eidnes <he@uninett.no>
 
 	* zino/bgp.tcl: Log some more warnings if we return early.
 
-2007-11-14  Havard Eidnes  <he@uninett.no>
+2007-11-14  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	There's apparently no need to prefix refresh timer with + and suffix
@@ -2757,27 +3188,27 @@
 	as a data source, to allow reporting of current traffic
 	load.  Default filename to $TOP/reports/load-now.txt.
 
-2007-11-13  Havard Eidnes  <he@uninett.no>
+2007-11-13  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Improve comment for format of "load now" file.
 	Ignore failure to unlink the $opt_r file.
 
-2007-11-07  Havard Eidnes  <he@uninett.no>
+2007-11-07  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/get-5m-perc.pl:
 	Print percentage value exactly as given.
 
-2007-09-25  Havard Eidnes  <he@uninett.no>
+2007-09-25  Havard Eidnes <he@uninett.no>
 
 	* vwatch/pretty-ios.pl:
 	Add some pretty-printing for HP ProCurve switches.
 
-2007-09-23  Havard Eidnes  <he@uninett.no>
+2007-09-23  Havard Eidnes <he@uninett.no>
 
 	* conf-diff/checkin-configs.sh: Also skip over any zero-sized files.
 
-2007-09-17  Havard Eidnes  <he@uninett.no>
+2007-09-17  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/get-5m-perc.pl:
 	Add a -v(erbose) option: print out all discarded measurement
@@ -2796,7 +3227,7 @@
 	an SNMP callback.  These don't really work reliably because
 	they end up as globals and are then subject to a race condition.
 
-2007-09-14  Havard Eidnes  <he@uninett.no>
+2007-09-14  Havard Eidnes <he@uninett.no>
 
 	* mibs/Makefile: Add the recently added MIBs.
 
@@ -2819,12 +3250,12 @@
 
 	Leave some debug logging in for now.
 
-2007-09-12  Havard Eidnes  <he@uninett.no>
+2007-09-12  Havard Eidnes <he@uninett.no>
 
 	* TODO: Add items for "detect removed BGP peers" and "detect duplicate
 	logical port names in your network".
 
-2007-09-06  Havard Eidnes  <he@uninett.no>
+2007-09-06  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl: Comment out some debug logging.
 
@@ -2858,7 +3289,7 @@
 	will end up as global variables(!), and this can mess things up
 	royally if the variable values are used to direct the polling.
 
-2007-09-05  Havard Eidnes  <he@uninett.no>
+2007-09-05  Havard Eidnes <he@uninett.no>
 
 	* zino/trap.tcl: Log a warning if ignoring a trap.
 
@@ -2882,11 +3313,11 @@
 	of devices are unreachable, and prevent the zino process
 	from becoming unresponsive as a consequence.
 
-2007-09-03  Havard Eidnes  <he@uninett.no>
+2007-09-03  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl: Ignore errors in unsetting responseCheckInProgress.
 
-2007-08-30  Havard Eidnes  <he@uninett.no>
+2007-08-30  Havard Eidnes <he@uninett.no>
 
 	* zino/Makefile, zino/bgp.tcl, zino/status.tcl:
 	Add checking of certain events related to external BGP:
@@ -2909,7 +3340,7 @@
 
 	* ritz/debian/changelog, ritz/debian/rules: Ny debian-pakking
 
-2007-08-29  Havard Eidnes  <he@uninett.no>
+2007-08-29  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: ...and the final update for 0.9.3.
 
@@ -2947,7 +3378,7 @@
 	* mibs/BGP4-MIB.my:
 	Update the BGP4 MIB to the version published as RFC 4273.
 
-2007-08-29  Havard Eidnes  <he@uninett.no>
+2007-08-29  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Update for bump to 0.9.3.
 
@@ -2968,7 +3399,7 @@
 
 	* mibs/BGP4-MIB.my: Update the BGP4 MIB to that found in RFC 4273.
 
-2007-08-19  Havard Eidnes  <he@uninett.no>
+2007-08-19  Havard Eidnes <he@uninett.no>
 
 	* conf-diff/checkin-configs.sh:
 	In the inner loop, skip over "hot files" (files being written),
@@ -2977,7 +3408,7 @@
 	Also add a comment explaining the presence of the handling of cisco
 	configs with tftpds which don't truncate their output.
 
-2007-07-16  Havard Eidnes  <he@uninett.no>
+2007-07-16  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-5m-sum.pl:
 	Add support to reverse the in/out byte and packet counters by
@@ -2989,7 +3420,7 @@
 	"Hotfix" to ensure emt doesn't crash.  The new variable
 	emt_alarm_phones was being used without having been initialized.
 
-2007-04-11  Havard Eidnes  <he@uninett.no>
+2007-04-11  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Ensure that we always emit an alt= attribute with an <area>.
@@ -2998,25 +3429,25 @@
 	* traffic/cgi/plot-all.pl:
 	Ensure all shape attribute values are quoted.
 
-2007-04-04  Havard Eidnes  <he@uninett.no>
+2007-04-04  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl: Ugh, fix syntax error -- this is not sh...
 
-2007-03-22  Havard Eidnes  <he@uninett.no>
+2007-03-22  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl:
 	Re-read config files before each run where alerts are being sent
 	out.  This allows one to change configuration in-flight, e.g. to
 	re-direct alarms to a different destination.
 
-2007-03-21  Havard Eidnes  <he@uninett.no>
+2007-03-21  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl:
 	Add support to send short alarm messages to more than one
 	phone number using the "sms phoneno" subject convention
 	which our SMS gateway uses.
 
-2007-03-19  Havard Eidnes  <he@uninett.no>
+2007-03-19  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/update-dbs.pl:
 	Fix a problem where a $1 was being inadvertently overwritten;
@@ -3025,11 +3456,11 @@
 	Make some if-bodies multi-line, to allow breakpoints to be set while
 	debugging the above problem.
 
-2007-03-14  Havard Eidnes  <he@uninett.no>
+2007-03-14  Havard Eidnes <he@uninett.no>
 
 	* TODO: Add two more wishlist items.
 
-2007-02-28  Havard Eidnes  <he@uninett.no>
+2007-02-28  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/list-ports.pl, traffic/cgi/tbl-report.pl,
 	  traffic/html/tbl-report.html, traffic/html/intf-load.html, 
@@ -3055,18 +3486,18 @@
 	 - the paragraph at the end must be closed with </p>
 	 - use the id attribute (too) in the <map> element
 
-2007-02-27  Havard Eidnes  <he@uninett.no>
+2007-02-27  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl: Hum, add missing square brackets.
 
-2007-02-15  Havard Eidnes  <he@uninett.no>
+2007-02-15  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Reverse the order in which the image map elements are emitted,
 	so that the that when two lines overlap, the drawing layering
 	matches up with the image-map layering.
 
-2007-02-09  Havard Eidnes  <he@uninett.no>
+2007-02-09  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Updated ChangeLog for new version bump.
 
@@ -3093,17 +3524,17 @@
 	ritz/debian/rules:
 	New upstream version
 
-2007-01-30  Havard Eidnes  <he@uninett.no>
+2007-01-30  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl: Handle polylines with more than 8
 	vertexes.
 
-2007-01-29  Havard Eidnes  <he@uninett.no>
+2007-01-29  Havard Eidnes <he@uninett.no>
 
 	* ritz/attrs.tcl, common/attrs.tcl:
 	Make "lowerLayerDown" be synonymous with "down".
 
-2007-01-28  Havard Eidnes  <he@uninett.no>
+2007-01-28  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl: Even though we report more than 3 events, don't
 	skip the history log -- there could be manually added info there
@@ -3116,14 +3547,14 @@
 
 	* emt/test-emt.tcl: Change tclsh path.
 
-2007-01-19  Havard Eidnes  <he@uninett.no>
+2007-01-19  Havard Eidnes <he@uninett.no>
 
 	* ritz/ui.tcl:
 	Try to add some robustness for a problem which appears to have
 	its root in zino itself, where some events can be created without
 	the "type" attribute(!)
 
-2007-01-18  Havard Eidnes  <he@uninett.no>
+2007-01-18  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl:
 	Add some robustness to cater for a problem which probably
@@ -3132,7 +3563,7 @@
 	Catch the resulting exception, and just ignore that event
 	for now, and let the rest be checked & reported.
 
-2006-11-20  Havard Eidnes  <he@uninett.no>
+2006-11-20  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Some more folding of long lines.
 
@@ -3142,26 +3573,26 @@
 
 	* Makefile: Bump version number to 0.9.1.
 
-2006-11-20  Havard Eidnes  <he@uninett.no>
+2006-11-20  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Bump version number to 0.9.1.
 
-2006-11-16  Havard Eidnes  <he@uninett.no>
+2006-11-16  Havard Eidnes <he@uninett.no>
 
 	* conf-diff/checkin-configs.sh:
 	If there is no change, don't output a heading.
 
-2006-10-24  Havard Eidnes  <he@uninett.no>
+2006-10-24  Havard Eidnes <he@uninett.no>
 
 	* vwatch/cur-vers.pl, vwatch/pretty-ios.pl:
 	Add handling of JunOS version strings.
 
-2006-10-11  Havard Eidnes  <he@uninett.no>
+2006-10-11  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Ignore one more attribute output by newer versions of tgif.
 
-2006-10-09  Havard Eidnes  <he@uninett.no>
+2006-10-09  Havard Eidnes <he@uninett.no>
 
 	* ritz/Makefile, Makefile.inc.dist:
 	Instead of using tixwish, use wish instead and require Tix instead.
@@ -3175,13 +3606,13 @@
 	  ritz/debian/rules:
 	Debinaizing ritz
 
-2006-05-26  Havard Eidnes  <he@uninett.no>
+2006-05-26  Havard Eidnes <he@uninett.no>
 
 	* vwatch/uptimes.pl:
 	Add a script which in addition to current versions also displays
 	uptimes.
 
-2006-05-17  Havard Eidnes  <he@uninett.no>
+2006-05-17  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/update-close.pl: Ensure we can reach common library files.
 	Shorten debug output so more likely to fit in 80 coloumns.
@@ -3195,7 +3626,7 @@
 	Add script to update the close date of entries after introduction
 	of the "close entries" code in update-dbs.pl.
 
-2006-05-12  Havard Eidnes  <he@uninett.no>
+2006-05-12  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/update-dbs.pl:
 	Add code to detect and close entries which can no longer be found
@@ -3207,7 +3638,7 @@
 	Also reduce the output level under -d -- now we don't emit a line for
 	each port/file checked.
 
-2006-02-17  Havard Eidnes  <he@uninett.no>
+2006-02-17  Havard Eidnes <he@uninett.no>
 
 	* tpoller/tpoller.tcl: Remove debugging code.
 
@@ -3226,12 +3657,12 @@
 	trying to check descr against e.g. ignorepat and fall over because
 	it's not defined.  Instead, exit early from logVars.
 
-2006-01-24  Havard Eidnes  <he@uninett.no>
+2006-01-24  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/tbl-report.pl, traffic/report/report-day.pl:
 	Expand error reports to use 3 decimals instead of 2.
 
-2006-01-02  Havard Eidnes  <he@uninett.no>
+2006-01-02  Havard Eidnes <he@uninett.no>
 
 	* vwatch/Makefile: Add the uptimes script.
 
@@ -3242,11 +3673,11 @@
 
 	* vwatch/vw-daily.pl: Also create uptime subdirectory.
 
-2005-12-08  Havard Eidnes  <he@uninett.no>
+2005-12-08  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: update for version 0.9.
 
-2005-10-14  Havard Eidnes  <he@uninett.no>
+2005-10-14  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/re-report-day.pl: Require utils.pl for floor_int().
 	Change "local" to "my", as that's quite sufficient.
@@ -3258,40 +3689,40 @@
 	* traffic/cgi/tbl-report.pl:
 	Widen coloumns in traffic report, so that values for 1-9.99Gbit/s fits.
 
-2005-09-15  Havard Eidnes  <he@uninett.no>
+2005-09-15  Havard Eidnes <he@uninett.no>
 
 	* vwatch/vwatch.tcl: Ignore errors unsetting uptime in destroyDev.
 
-2005-09-14  Havard Eidnes  <he@uninett.no>
+2005-09-14  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl: Ignore errors when removing "delayed check" stuff.
 
-2005-09-05  Havard Eidnes  <he@uninett.no>
+2005-09-05  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl: Add missing string concatenation op.
 
 	* traffic/cgi/load-map.pl:
 	Add support for reversing xx.yy-<n> patterns.
 
-2005-08-24  Havard Eidnes  <he@uninett.no>
+2005-08-24  Havard Eidnes <he@uninett.no>
 
 	* vwatch/Makefile: vwatch is also dependent on the included sources.
 
-2005-08-04  Havard Eidnes  <he@uninett.no>
+2005-08-04  Havard Eidnes <he@uninett.no>
 
 	* vwatch/vw-day-report.pl: Shorten even more (get rid of "boots" text).
 
-2005-07-29  Havard Eidnes  <he@uninett.no>
+2005-07-29  Havard Eidnes <he@uninett.no>
 
 	* vwatch/vw-day-report.pl:
 	Make shorter: restarts -> boots, to better fit within 80 coloumns.
 
-2005-07-03  Havard Eidnes  <he@uninett.no>
+2005-07-03  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl:
 	Fix typo, need :: and not : between package and function name.
 
-2005-04-12  Havard Eidnes  <he@uninett.no>
+2005-04-12  Havard Eidnes <he@uninett.no>
 
 	* README: Add dependency on TclX.
 
@@ -3299,31 +3730,31 @@
 	Add dependency on tclX, and use fcntl to turn on socket keepalives
 	for client connections.
 
-2005-03-03  Havard Eidnes  <he@uninett.no>
+2005-03-03  Havard Eidnes <he@uninett.no>
 
 	* tpoller/tpoller.tcl, zino/flaps.tcl, zino/read-cf.tcl, zino/status.tcl, common/config.tcl:
 	Implement "watchpat" configuration option.
 
-2005-01-12  Havard Eidnes  <he@uninett.no>
+2005-01-12  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/update-dbs.pl:
 	Set timeout on SNMPNETSTAT invocation to 30 seconds, up from the
 	default of 5.  This to work around Cisco ONS 15454 devices and their
 	broken SNMP agents which sometimes take eons to reply.
 
-2004-12-09  Havard Eidnes  <he@uninett.no>
+2004-12-09  Havard Eidnes <he@uninett.no>
 
 	* traffic/plot/plot-raw.pl, traffic/plot/plot-hr.pl,
 	  traffic/plot/plot-5m.pl:
 	Don't print question marks to plot files -- confuses gnuplot.
 
-2004-12-03  Havard Eidnes  <he@uninett.no>
+2004-12-03  Havard Eidnes <he@uninett.no>
 
 	* traffic/plot/plot-raw.pl:
 	Correct loop variable used in plot_eerrs.  We now again get Cisco-
 	specific "ethernet errors" type plots.
 
-2004-11-26  Havard Eidnes  <he@uninett.no>
+2004-11-26  Havard Eidnes <he@uninett.no>
 
 	* traffic/plot/plot-5m.pl, traffic/plot/plot-hr.pl,
 	  traffic/plot/plot-raw.pl:
@@ -3335,29 +3766,29 @@
 
 	* zino/status.tcl: Fjernet unødig loggmelding
 
-2004-11-02  Havard Eidnes  <he@uninett.no>
+2004-11-02  Havard Eidnes <he@uninett.no>
 
 	* Makefile, ChangeLog: Mark what we have now as version 0.8.
 
-2004-08-25  Havard Eidnes  <he@uninett.no>
+2004-08-25  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/plot.pl:
 	Remove the "color" from the png device init string.
 	Newer gnuplot doesn't like it.
 
-2004-08-23  Havard Eidnes  <he@uninett.no>
+2004-08-23  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Before deviding by stddev, ensure that stddev is > 1e-100, not just
 	different from 0, to avoid getting NaN as a result, leading to a panic
 	in perl (observed stddev was 9.9e-324).
 
-2004-07-21  Havard Eidnes  <he@uninett.no>
+2004-07-21  Havard Eidnes <he@uninett.no>
 
 	* conf-diff/checkin-configs.sh:
 	Use symbolic signal names, and add handling of HUP and TERM.
 
-2004-06-09  Havard Eidnes  <he@uninett.no>
+2004-06-09  Havard Eidnes <he@uninett.no>
 
 	* traffic/site/Makefile.inc.dist:
 	Move install / beforeinstall targets to Makefile.
@@ -3365,7 +3796,7 @@
 	* traffic/site/Makefile:
 	Only install changed files or files not present in target dir.
 
-2004-03-19  Havard Eidnes  <he@uninett.no>
+2004-03-19  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
 	If there is a quiet period before the Reboot line is logged,
@@ -3373,35 +3804,35 @@
 	past.  Instead, compare to the actual timestamp of the Reboot
 	log message.
 
-2004-03-11  Havard Eidnes  <he@uninett.no>
+2004-03-11  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Update for version 0.7.
 
 	* Makefile: Mark what we have now as version 0.7.
 
-2004-03-11  Havard Eidnes  <he@uninett.no>
+2004-03-11  Havard Eidnes <he@uninett.no>
 
 	* Makefile, ChangeLog: Mark what we have now as version 0.8.
 
-2004-08-25  Havard Eidnes  <he@uninett.no>
+2004-08-25  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/plot.pl:
 	Remove the "color" from the png device init string.
 	Newer gnuplot doesn't like it.
 
-2004-08-23  Havard Eidnes  <he@uninett.no>
+2004-08-23  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Before dividing by stddev, ensure that stddev is > 1e-100, not just
 	different from 0, to avoid getting NaN as a result, leading to a panic
 	in perl (observed stddev was 9.9e-324).
 
-2004-07-21  Havard Eidnes  <he@uninett.no>
+2004-07-21  Havard Eidnes <he@uninett.no>
 
 	* conf-diff/checkin-configs.sh:
 	Use symbolic signal names, and add handling of HUP and TERM.
 
-2004-06-09  Havard Eidnes  <he@uninett.no>
+2004-06-09  Havard Eidnes <he@uninett.no>
 
 	* traffic/site/Makefile.inc.dist:
 	Move install / beforeinstall targets to Makefile.
@@ -3409,7 +3840,7 @@
 	* traffic/site/Makefile:
 	Only install changed files or files not present in target dir.
 
-2004-03-19  Havard Eidnes  <he@uninett.no>
+2004-03-19  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
 	If there is a quiet period before the Reboot line is logged,
@@ -3417,11 +3848,11 @@
 	past.  Instead, compare to the actual timestamp of the Reboot
 	log message.
 
-2004-03-11  Havard Eidnes  <he@uninett.no>
+2004-03-11  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Mark what we have now as version 0.7.
 
-2004-02-26  Havard Eidnes  <he@uninett.no>
+2004-02-26  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Actually make writing of report file optional.
@@ -3446,7 +3877,7 @@
 	Make it necessary to specify header mail from address when sending
 	mail.  Add usage() and use of same.
 
-2004-02-01  Havard Eidnes  <he@uninett.no>
+2004-02-01  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Let -i ignore unnamed ports also in the stat deviation calculation.
@@ -3456,20 +3887,20 @@
 	Collect up statistics deviation report for all files before sending
 	mail (if that's what we're asked to do).
 
-2004-01-27  Havard Eidnes  <he@uninett.no>
+2004-01-27  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl: Add three new options:
 	 -r <outfile>	put report about "latest load" in this file
 	 -i		suppress/ignore logical ports with no name in report
 	 -m <mailto>	address to send stats deviation report to
 
-2004-01-14  Havard Eidnes  <he@uninett.no>
+2004-01-14  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Drop attempt at using year in time string -- it's going
 	to be too wide anyway.
 
-2004-01-13  Havard Eidnes  <he@uninett.no>
+2004-01-13  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Add a comment describing the options.
@@ -3483,11 +3914,11 @@
 	* traffic/common/read-raw-log.pl:
 	Only set $date in the inner loop after hour 00 has been seen.
 
-2003-12-26  Havard Eidnes  <he@uninett.no>
+2003-12-26  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl: Rename a few functions.
 
-2003-12-09  Havard Eidnes  <he@uninett.no>
+2003-12-09  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl:
 	Complete the former -- remove comments which removed
@@ -3499,7 +3930,7 @@
 	Added a new option for sending brief alarm messages to another
 	channel, e.g. via SMS.	
 
-2003-11-06  Havard Eidnes  <he@uninett.no>
+2003-11-06  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/tail-stats.pl:
 	Add a comment to the output format.
@@ -3507,7 +3938,7 @@
 	* traffic/report/tail-stats.pl:
 	Version which works and could replace the "lastnu" script.
 
-2003-11-04  Havard Eidnes  <he@uninett.no>
+2003-11-04  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/report-day.pl: cat_and_base() moved out.
 
@@ -3519,7 +3950,7 @@
 	* traffic/report/tail-stats.pl:
 	The start of a "tail-stats" script.
 
-2003-10-08  Havard Eidnes  <he@uninett.no>
+2003-10-08  Havard Eidnes <he@uninett.no>
 
 	* zino/trap.tcl: Comment out the trap debugging again.
 
@@ -3531,12 +3962,12 @@
 	Compensate for missing ifDescr in Juniper trap messages, instead
 	derive from ifIndex and existing portToIfDescr table.
 
-2003-07-28  Havard Eidnes  <he@uninett.no>
+2003-07-28  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Add ignore of new "dont_reencode" one-line TGIF directive.
 
-2003-07-11  Havard Eidnes  <he@uninett.no>
+2003-07-11  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/update-dbs.pl:
 	Yet another RE correction (+ instead of *).
@@ -3544,16 +3975,16 @@
 	* traffic/db/update-dbs.pl:
 	Correct typo -- missing / terminating RE.
 
-2003-07-10  Havard Eidnes  <he@uninett.no>
+2003-07-10  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/update-dbs.pl:
 	Tolerate, but warn against trailing whitespace.
 
-2003-05-26  Havard Eidnes  <he@uninett.no>
+2003-05-26  Havard Eidnes <he@uninett.no>
 
 	* TODO: One more item: count input drops?
 
-2003-05-21  Havard Eidnes  <he@uninett.no>
+2003-05-21  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-raw-log.pl:
 	Fix comment to point out use for $base{$v}.
@@ -3561,7 +3992,7 @@
 	* traffic/common/read-hr-log.pl, traffic/common/read-raw-log.pl:
 	Do 32-bit counter wraparound also for non-octet counters.
 
-2003-04-28  Havard Eidnes  <he@uninett.no>
+2003-04-28  Havard Eidnes <he@uninett.no>
 
 	* vwatch/pretty-ios.pl:
 	Refine version string matching pattern, so as to only match on a
@@ -3574,11 +4005,11 @@
 
 	* TODO: Legg til innslag om DoS-deteksjon.
 
-2002-12-06  Havard Eidnes  <he@uninett.no>
+2002-12-06  Havard Eidnes <he@uninett.no>
 
 	* mibs/Makefile: Allow clean (does nothing here yet).
 
-2002-10-30  Havard Eidnes  <he@uninett.no>
+2002-10-30  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Minor tweak, remove hostname portion.
 
@@ -3586,42 +4017,42 @@
 
 	* Makefile: Minor version bump to 0.6.1.
 
-2002-10-30  Havard Eidnes  <he@uninett.no>
+2002-10-30  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Update for marking this as 0.6.1.
 
 	* Makefile: Minor version bump to 0.6.1.
 
-2002-10-23  Havard Eidnes  <he@uninett.no>
+2002-10-23  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Anchor the matches when reversing the line name, so the entire
 	name gets included in the "reverse" version (!).
 
-2002-10-23  Havard Eidnes  <he@uninett.no>
+2002-10-23  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Anchor the matches when reversing the line name, so the entire
 	name gets included in the "reverse" version (!).
 
-2002-10-22  Havard Eidnes  <he@uninett.no>
+2002-10-22  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Try the "simple swap" before taking numerals into account.
 
-2002-09-13  Havard Eidnes  <he@uninett.no>
+2002-09-13  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Fix a fencepost error which occurred when a two-segment line
 	was exactly divided in half.
 
-2002-08-22  Havard Eidnes  <he@uninett.no>
+2002-08-22  Havard Eidnes <he@uninett.no>
 
 	* TODO:
 	Should zero out old values in mappng tables right before inserting
 	new.
 
-2002-08-21  Havard Eidnes  <he@uninett.no>
+2002-08-21  Havard Eidnes <he@uninett.no>
 
 	* ChangeLog: Update for marking this as 0.6.
 
@@ -3630,7 +4061,7 @@
 	* ChangeLog: Computed ChangeLog based on CVS log messages with emacs'
 	M-x vc-update-change-log.
 
-2002-08-21  Havard Eidnes  <he@uninett.no>
+2002-08-21  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Bump to version 0.6.
 
@@ -3638,7 +4069,7 @@
 	Computed ChangeLog based on CVS log messages with emacs'
 	M-x vc-update-change-log.
 
-2002-08-12  Havard Eidnes  <he@uninett.no>
+2002-08-12  Havard Eidnes <he@uninett.no>
 
 	* traffic/plot/Makefile:
 	Install plot-5m.pl too.
@@ -3650,7 +4081,7 @@
 	* traffic/common/Makefile:
 	Install read-5m-sum.pl too.
 
-2002-08-06  Havard Eidnes  <he@uninett.no>
+2002-08-06  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/report-day.pl:
 	Squeeze out some more precision by dropping a leading zero
@@ -3662,12 +4093,12 @@
 	* traffic/cgi/load-map.pl:
 	Add support for user-specified limits in load scale.
 
-2002-08-05  Havard Eidnes  <he@uninett.no>
+2002-08-05  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/date.pl:
 	Let make_datespec() also support the "yyyy-mm--dd" notation.
 
-2002-07-19  Havard Eidnes  <he@uninett.no>
+2002-07-19  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-5m-sum.pl:
 	Fix the previous in a better way, now that we've actually
@@ -3677,23 +4108,23 @@
 	Protect against division by zero, as can happen when
 	you have a completely empty circuit (I think).
 
-2002-07-15  Havard Eidnes  <he@uninett.no>
+2002-07-15  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/utils.pl:
 	Try a little harder to look for high-counters.
 
-2002-07-12  Havard Eidnes  <he@uninett.no>
+2002-07-12  Havard Eidnes <he@uninett.no>
 
 	* common/persist.tcl:
 	Also handle brackets, so as to avoid interpretation on re-sourcing.
 
-2002-04-26  Havard Eidnes  <he@uninett.no>
+2002-04-26  Havard Eidnes <he@uninett.no>
 
 	* TODO:
 	One more thing to do: knob to reduce alarms/e-mails, but otherwise
 	collect status.
 
-2002-04-19  Havard Eidnes  <he@uninett.no>
+2002-04-19  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Add a hack to ignore data for a logical port if there has already
@@ -3705,12 +4136,12 @@
 	* traffic/cgi/load-map.pl:
 	Handle names with more than one hyphen; reverse only two first parts.
 
-2002-04-07  Havard Eidnes  <he@uninett.no>
+2002-04-07  Havard Eidnes <he@uninett.no>
 
 	* TODO:
 	Add comment on how temperature could be monitored.
 
-2002-03-15  Havard Eidnes  <he@uninett.no>
+2002-03-15  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Mark this as 0.5.1.
 
@@ -3719,12 +4150,12 @@
 	recording, so that interfaces with a speed of more than 2**32 can be
 	supported properly.
 
-2002-03-09  Havard Eidnes  <he@uninett.no>
+2002-03-09  Havard Eidnes <he@uninett.no>
 
 	* vwatch/vw-day-report.pl:
 	Use the correct variable when reporting current software version.
 
-2002-03-01  Havard Eidnes  <he@uninett.no>
+2002-03-01  Havard Eidnes <he@uninett.no>
 
 	* Makefile:
 	Let's mark this as 0.5 and let it out the door.
@@ -3739,7 +4170,7 @@
 	Change this so that it reports if there's more than one
 	upgrade/downgrade per day.
 
-2002-02-28  Havard Eidnes  <he@uninett.no>
+2002-02-28  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-5m-sum.pl:
 	Zero a hash before starting, possibly from previous go-around.
@@ -3753,7 +4184,7 @@
 	Add script to compute percentiles based on 5-minute averages,
 	possibly for more than one port.
 
-2002-02-26  Havard Eidnes  <he@uninett.no>
+2002-02-26  Havard Eidnes <he@uninett.no>
 
 	* traffic/plot/plot-5m.pl:
 	Script to produce a 5-minute average plot for one or more ports.
@@ -3781,7 +4212,7 @@
 	Allow + in file names (used for sum of lines).
 	Output HTML header before error message.
 
-2002-02-16  Havard Eidnes  <he@uninett.no>
+2002-02-16  Havard Eidnes <he@uninett.no>
 
 	* ritz/Makefile:
 	Remove now-incorrect -e on sed command.
@@ -3798,12 +4229,12 @@
 	* common/polljob.tcl:
 	Handle the "handle does not exist" case properly instead of falling over.
 
-2002-01-14  Havard Eidnes  <he@uninett.no>
+2002-01-14  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/daily.pl:
 	Remove any leftover gzipped files from the previous month.
 
-2001-12-14  Havard Eidnes  <he@uninett.no>
+2001-12-14  Havard Eidnes <he@uninett.no>
 
 	* TODO: One more todo item.
 
@@ -3821,12 +4252,12 @@
 	Wed Sep 19 08:29:21 2001 ifHCInOctets.9 1.63199387464e+13
 	Wed Sep 19 08:30:21 2001 ifHCInOctets.9 1.63202332168e+13
 
-2001-12-13  Havard Eidnes  <he@uninett.no>
+2001-12-13  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/daily.pl:
 	Gzip the files in the backup directory to save space.
 
-2001-12-10  Havard Eidnes  <he@uninett.no>
+2001-12-10  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-hr-log.pl:
 	Ignore reboot entries more than 15 minutes into the future.
@@ -3835,12 +4266,12 @@
 	Also ignore reboot log lines which are too far into the future relative
 	to the last seen timestamp (15 minutes given here as the limit).
 
-2001-12-08  Havard Eidnes  <he@uninett.no>
+2001-12-08  Havard Eidnes <he@uninett.no>
 
 	* mibs/Makefile:
 	Make sure MIBDIR is created as a directory before installing mibs.
 
-2001-12-04  Havard Eidnes  <he@uninett.no>
+2001-12-04  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/dst-shift.pl:
 	Script to compensate for DST shift in the autumn.
@@ -3851,7 +4282,7 @@
 	* traffic/jobs/Makefile:
 	Add dst-shift.pl.
 
-2001-11-12  Havard Eidnes  <he@uninett.no>
+2001-11-12  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/plot-all.pl:
 	Add more output in error case.
@@ -3863,7 +4294,7 @@
 	Stopgap solution to increase robustness of flapAger code, so that the
 	job is not terminated.
 
-2001-11-02  Havard Eidnes  <he@uninett.no>
+2001-11-02  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/plot-all.pl:
 	Don't round down origin of data when the period is "epoch".
@@ -3889,12 +4320,12 @@
 	* traffic/common/read-hr-log.pl:
 	Move around setting of lasttime and last_day.
 
-2001-10-25  Havard Eidnes  <he@uninett.no>
+2001-10-25  Havard Eidnes <he@uninett.no>
 
 	* vwatch/cur-vers.pl:
 	Do more intelligent sorting of Cisco software versions.
 
-2001-09-25  Havard Eidnes  <he@uninett.no>
+2001-09-25  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/Makefile:
 	Add get-perc.pl.
@@ -3903,13 +4334,13 @@
 	Simple script to compute percentiles of traffic in kbit/s in/out
 	for a given port and a given time period.
 
-2001-09-02  Havard Eidnes  <he@uninett.no>
+2001-09-02  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/report-month.pl:
 	Add dimentioning load (average of top three samples) to the
 	monthly report.
 
-2001-05-14  Havard Eidnes  <he@uninett.no>
+2001-05-14  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Prefer pivoting on a '.' when trying to reverse a logical port name.
@@ -3921,7 +4352,7 @@
 	Deal correctly with polygons with more than 8 vertices.
 	In those cases the vertices are spread across multiple lines by tgif.
 
-2001-05-05  Havard Eidnes  <he@uninett.no>
+2001-05-05  Havard Eidnes <he@uninett.no>
 
 	* traffic/site/ndn-map.obj:
 	Map as of May 5th 2001.
@@ -3929,12 +4360,12 @@
 	* traffic/site/ndn-map.obj:
 	Map as of Apr 27 2001.
 
-2001-05-04  Havard Eidnes  <he@uninett.no>
+2001-05-04  Havard Eidnes <he@uninett.no>
 
 	* TODO:
 	One more item: environment monitoring.
 
-2001-03-30  Havard Eidnes  <he@uninett.no>
+2001-03-30  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Implement absolute and relative map references, via the attribute name
@@ -3944,13 +4375,13 @@
 	accessible on the same server.  If you want to, you can also
 	optionally add an "alt" to the reference, via the "mapalt" attribute.
 
-2001-03-22  Havard Eidnes  <he@uninett.no>
+2001-03-22  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Add a local warn() function, and use it in preference to err()
 	in a couple of places where the error may not be fatal.
 
-2001-03-16  Havard Eidnes  <he@uninett.no>
+2001-03-16  Havard Eidnes <he@uninett.no>
 
 	* tpoller/Makefile: Add "clean" target.
 
@@ -3984,13 +4415,13 @@
 	* traffic/plot/plot-raw.pl, traffic/plot/plot-hr.pl, traffic/report/report-day.pl:
 	Support and prefer 64-bit octet counters.
 
-2001-03-15  Havard Eidnes  <he@uninett.no>
+2001-03-15  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/report-month.pl:
 	Correct the ordering of "speed" and "iftype" in the "possible heading"
 	for the kbit/s report.
 
-2001-03-06  Havard Eidnes  <he@uninett.no>
+2001-03-06  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-hr-log.pl:
 	Avoid division by zero.
@@ -4002,7 +4433,7 @@
 	Add support for computing 90th percentile load in/out,
 	and medians of 90th percentiles for week and month reports.
 
-2001-02-26  Havard Eidnes  <he@uninett.no>
+2001-02-26  Havard Eidnes <he@uninett.no>
 
 	* traffic/site/ndn-map.obj:
 	Adorn with "last update" text.
@@ -4036,24 +4467,24 @@
 
 	No reference to "submaps" yet, though (easy to add).
 
-2001-02-18  Havard Eidnes  <he@uninett.no>
+2001-02-18  Havard Eidnes <he@uninett.no>
 
 	* traffic/site/ndn-map.fig:
 	New map -- SRP-ring interface of sw-gw was not marked.
 
-2001-01-30  Havard Eidnes  <he@uninett.no>
+2001-01-30  Havard Eidnes <he@uninett.no>
 
 	* traffic/site/ndn-map.fig:
 	New NORDUnet map.
 
 	* traffic/site/ndn-map.fig: New map.
 
-2001-01-25  Havard Eidnes  <he@uninett.no>
+2001-01-25  Havard Eidnes <he@uninett.no>
 
 	* common/auth.tcl:
 	Make use of %SHA% instead of sha to get proper auth.
 
-2001-01-22  Havard Eidnes  <he@uninett.no>
+2001-01-22  Havard Eidnes <he@uninett.no>
 
 	* zino/Makefile, zino/auth.tcl, Makefile.inc.dist:
 	Make the which program to use to compute SHA-1 be configurable.
@@ -4061,7 +4492,7 @@
 	and it's the latter which is compatible with the locally maintained
 	`sha' program.
 
-2001-01-19  Havard Eidnes  <he@uninett.no>
+2001-01-19  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/plot-all.pl:
 	Generalize to also handle weekly plots which can get data from
@@ -4116,7 +4547,7 @@
 	Expand datespecs up until and including today.
 	This way we can "zoom in" to today's raw plot from the hr plot.
 
-2001-01-17  Havard Eidnes  <he@uninett.no>
+2001-01-17  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/date.pl:
 	Make sure we print hh:mm with %02d.
@@ -4148,7 +4579,7 @@
 	so that document refreshes automatically (raw plot: 5 min, hr plot:
 	30 min).
 
-2001-01-10  Havard Eidnes  <he@uninett.no>
+2001-01-10  Havard Eidnes <he@uninett.no>
 
 	* TODO: A couple of minor items.
 
@@ -4157,7 +4588,7 @@
 
 	* TODO: Add a couple of more ideas.
 
-2000-12-08  Havard Eidnes  <he@uninett.no>
+2000-12-08  Havard Eidnes <he@uninett.no>
 
 	* ritz/sort.tcl:
 	Umm, correct serious bugs in the previous.
@@ -4166,7 +4597,7 @@
 	Provide some more resilience against zino fuckups.
 	(Typeless events.)
 
-2000-11-27  Havard Eidnes  <he@uninett.no>
+2000-11-27  Havard Eidnes <he@uninett.no>
 
 	* zino/flaps.tcl:
 	Also fill in eventid and event type (eventId may be lying that
@@ -4177,7 +4608,7 @@
 	Do a kludge: also init to do persistent attrs
 	for "existing" events.
 
-2000-11-08  Havard Eidnes  <he@uninett.no>
+2000-11-08  Havard Eidnes <he@uninett.no>
 
 	* ritz/main.tcl:
 	Be more permissive -- allow clear-text passwords (tacacs)
@@ -4187,13 +4618,13 @@
 	Tolerate non-initialized Server, Port, User and Secret
 	global varaibles (as might happen with nonexistent .ritz.tcl).
 
-2000-11-06  Havard Eidnes  <he@uninett.no>
+2000-11-06  Havard Eidnes <he@uninett.no>
 
 	* tpoller/tpoller.tcl:
 	Forget the right variables -- use the correct loop variable.
 	Add some commented-out debug info.
 
-2000-10-24  Havard Eidnes  <he@uninett.no>
+2000-10-24  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/daily.sh:
 	Insert -v (verbose output) and -n (no ping-check) options to
@@ -4207,7 +4638,7 @@
 	* traffic/db/update-dbs.pl:
 	Oops, missing argument to printf format.
 
-2000-10-23  Havard Eidnes  <he@uninett.no>
+2000-10-23  Havard Eidnes <he@uninett.no>
 
 	* traffic/db/update-dbs.pl:
 	Fix a syntax error.
@@ -4224,7 +4655,7 @@
 	Explain a bit better why we do the substitute song & dance
 	on the data we retreive from the net.
 
-2000-10-14  Havard Eidnes  <he@uninett.no>
+2000-10-14  Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/load-map.pl:
 	Properly handle polylines with polygon primitive by drawing the points
@@ -4233,7 +4664,7 @@
 	* traffic/site/ndn-map.fig:
 	Update to current reality.
 
-2000-10-09  Havard Eidnes  <he@uninett.no>
+2000-10-09  Havard Eidnes <he@uninett.no>
 
 	* traffic/jobs/fixup-data.pl:
 	Do a thorough rework of this; hopefully crushing a few bugs
@@ -4242,11 +4673,11 @@
 	* traffic/cgi/tbl-report.pl:
 	Correct sorting by "Output discards".
 
-2000-10-06  Havard Eidnes  <he@uninett.no>
+2000-10-06  Havard Eidnes <he@uninett.no>
 
 	* TODO: Counter64 support item added.
 
-2000-10-05  Havard Eidnes  <he@uninett.no>
+2000-10-05  Havard Eidnes <he@uninett.no>
 
 	* tpoller/tpoller.tcl:
 	Correct rather blatant variable name error.
@@ -4279,7 +4710,7 @@
 	vwatch/vw-month-rst.pl, vwatch/vw-month-upgr.pl:
 	Add required push(@INC, ...) statements.
 
-2000-10-04  Havard Eidnes  <he@uninett.no>
+2000-10-04  Havard Eidnes <he@uninett.no>
 
 	* Makefile:
 	Add a target to detect changes in distributed variable settings.
@@ -4315,7 +4746,7 @@
 	* vwatch/Makefile: Add start-vwatch.
 	Use SUBST instead of literals.
 
-2000-10-03  Havard Eidnes  <he@uninett.no>
+2000-10-03  Havard Eidnes <he@uninett.no>
 
 	* traffic/report/Makefile:
 	Adapt to new location.
@@ -4431,7 +4862,7 @@
 	* conf-diff/post-diff.sh:
 	Uh, use . instead of source, and use century conversion.
 
-2000-10-02  Havard Eidnes  <he@uninett.no>
+2000-10-02  Havard Eidnes <he@uninett.no>
 
 	* Makefile: Add conf-diff, bump minor.
 
@@ -4509,7 +4940,7 @@
 	Add scripts for mailing out config changes saved in /tftpboot,
 	typically used for Cisco routers and switches.
 
-2000-09-07  Havard Eidnes  <he@uninett.no>
+2000-09-07  Havard Eidnes <he@uninett.no>
 
 	* sha/Makefile:
 	Install executable 555, not 755.
@@ -4623,14 +5054,14 @@
 	Correct handling of default community.
 	Chomp some input lines.
 
-2000-07-20  Havard Eidnes  <he@uninett.no>
+2000-07-20  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl:
 	Add some debugging of emt_lastlogline.
 	Fix a longstanding bug in emt_open: it's important that the
 	while-condition not just be evaluated *once*!
 
-2000-07-19  Havard Eidnes  <he@uninett.no>
+2000-07-19  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl:
 	Substitute a pollSingleIf which actually works...
@@ -4644,7 +5075,7 @@
 	* zino/routers.cf.sample:
 	Set defaults explicitly (config file format changed).
 
-2000-07-17  Havard Eidnes  <he@uninett.no>
+2000-07-17  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/read-raw-log.pl:
 	Now that we preserve %base between invocations, we will get a sample
@@ -4696,7 +5127,7 @@
 	* emt/Makefile:
 	Clean up some, adapt for VD installation using pkgsrc.
 
-2000-07-15  Havard Eidnes  <he@uninett.no>
+2000-07-15  Havard Eidnes <he@uninett.no>
 
 	* common/persist.tcl:
 	Comment out debugging code.
@@ -4732,7 +5163,7 @@
 	* zino/events.tcl:
 	Also unset EventId on closeEvent.
 
-2000-07-14  Havard Eidnes  <he@uninett.no>
+2000-07-14  Havard Eidnes <he@uninett.no>
 
 	* ritz/Makefile:
 	Use tixwish and remove some cruft.
@@ -4781,7 +5212,7 @@
 	* traffic/jobs/daily.sh:
 	Adapt to new required options to the update-dbs script.
 
-2000-07-05  Havard Eidnes  <he@uninett.no>
+2000-07-05  Havard Eidnes <he@uninett.no>
 
 	* traffic/common/Makefile, traffic/common/date.pl,
 	traffic/common/newtimelocal.pl, traffic/common/plot.pl,
@@ -4891,7 +5322,7 @@
 	traffic/report/sel-report.pl:
 	New file.
 
-2000-06-27  Havard Eidnes  <he@uninett.no>
+2000-06-27  Havard Eidnes <he@uninett.no>
 
 	* TODO: Add a few more.
 
@@ -4946,7 +5377,7 @@
 	* common/config.tcl: Add confExists.
 	Set up default config file handler.
 
-2000-03-15  Havard Eidnes  <he@uninett.no>
+2000-03-15  Havard Eidnes <he@uninett.no>
 
 	* common/polljob.tcl:
 	Correct implementation of "handle" function.
@@ -4956,7 +5387,7 @@
 	* zino/Makefile:
 	First attempt at a minimal makefile for zino.
 
-2000-03-14  Havard Eidnes  <he@uninett.no>
+2000-03-14  Havard Eidnes <he@uninett.no>
 
 	* common/conffile.tcl:
 	Newline-terminate file.
@@ -4967,7 +5398,7 @@
 	a new case may be created by zino (really a bug there, but we'll
 	let it slide for now).
 
-1999-11-02  Havard Eidnes  <he@uninett.no>
+1999-11-02  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl:
 	Go to new ::persist routine name.
@@ -4976,7 +5407,7 @@
 	* common/attrs.tcl:
 	Make "adminDown" also be reported as a "down" event.
 
-1999-09-14  Havard Eidnes  <he@uninett.no>
+1999-09-14  Havard Eidnes <he@uninett.no>
 
 	* common/conffile.tcl:
 	Slight change to warning message for previous.
@@ -4985,7 +5416,7 @@
 	Warn about multiple occurrances of configuration for
 	the same device name.
 
-1999-09-13  Havard Eidnes  <he@uninett.no>
+1999-09-13  Havard Eidnes <he@uninett.no>
 
 	* tpoller/tpoller.tcl:
 	Wrap sparseTableWalk with catch, and augment the error message if it
@@ -5001,13 +5432,13 @@
 	and check for it at the toplevel; omit printing errorInfo
 	output in those cases (most usual reason: no response from agent).
 
-1999-09-12  Havard Eidnes  <he@uninett.no>
+1999-09-12  Havard Eidnes <he@uninett.no>
 
 	* tpoller/tpoller.tcl:
 	Fix a syntax error (missing bracket).
 	Make some errors "non-fatal", i.e. just log and don't error.
 
-1999-09-11  Havard Eidnes  <he@uninett.no>
+1999-09-11  Havard Eidnes <he@uninett.no>
 
 	* tpoller/tpoller.tcl:
 	Import ::config::conf to access ignore-patterns.
@@ -5041,13 +5472,13 @@
 	* tpoller/tpoller.tcl:
 	Initial revision of reimplemented traffic statistics poller.
 
-1999-09-09  Havard Eidnes  <he@uninett.no>
+1999-09-09  Havard Eidnes <he@uninett.no>
 
 	* common/polljob.tcl:
 	Provide default values for the initDev / pollDev / destroyDev
 	upcall procedure variables.
 
-1999-09-07  Havard Eidnes  <he@uninett.no>
+1999-09-07  Havard Eidnes <he@uninett.no>
 
 	* common/justSNMP.tcl:
 	Hm, well, it turns out that the synchronous version built on top
@@ -5065,7 +5496,7 @@
 	local variables in the callback handler, call down a level to have the
 	callback scripts evaluated.
 
-1999-09-06  Havard Eidnes  <he@uninett.no>
+1999-09-06  Havard Eidnes <he@uninett.no>
 
 	* test/test-sw.tcl:
 	Sparse-walk file changed name.
@@ -5112,13 +5543,13 @@
 	Add error handler upcall.
 	Add optional "end of table" script parameter.
 
-1999-09-05  Havard Eidnes  <he@uninett.no>
+1999-09-05  Havard Eidnes <he@uninett.no>
 
 	* vwatch/vwatch.tcl:
 	Return "unexpected uptime" initially when $lastpoll($sh) isn't set.
 	Substitute the CRs in device description fields before saving.
 
-1999-09-04  Havard Eidnes  <he@uninett.no>
+1999-09-04  Havard Eidnes <he@uninett.no>
 
 	* vwatch/vwatch.tcl:
 	Separate out inclusion of other files and
@@ -5133,7 +5564,7 @@
 	* vwatch/vwatch.tcl:
 	Adapt to change in polljob, no longer exports 'cx' procedure.
 
-1999-08-31  Havard Eidnes  <he@uninett.no>
+1999-08-31  Havard Eidnes <he@uninett.no>
 
 	* test/test-sw.tcl:
 	Asynchronous sparse-walk implementation.
@@ -5171,18 +5602,18 @@
 	* test/test-poll.tcl:
 	Test the polljob module, that the right jobs are started etc.
 
-1999-08-29  Havard Eidnes  <he@uninett.no>
+1999-08-29  Havard Eidnes <he@uninett.no>
 
 	* vwatch/vwatch-old.tcl, vwatch/vwatch.tcl:
 	Checkpoint.
 
-1999-08-25  Havard Eidnes  <he@uninett.no>
+1999-08-25  Havard Eidnes <he@uninett.no>
 
 	* common/polljob.tcl:
 	Don't make a "restart" action trigger upcalls to ::deleteDev
 	and then ::initDev; instead let it pass without any upcall.
 
-1999-08-24  Havard Eidnes  <he@uninett.no>
+1999-08-24  Havard Eidnes <he@uninett.no>
 
 	* common/polljob.tcl:
 	A typo correction and a minor bugfix.
@@ -5196,7 +5627,7 @@
 	* test/routers.cf, test/test-conf.tcl:
 	Test harness for config reading/handling.
 
-1999-08-20  Havard Eidnes  <he@uninett.no>
+1999-08-20  Havard Eidnes <he@uninett.no>
 
 	* vwatch/config.pl, vwatch/cur-vers.pl, vwatch/daily.pl,
 	vwatch/daily.sh, vwatch/month-rst.pl, vwatch/month-upgr.pl,
@@ -5204,7 +5635,7 @@
 	vwatch/unctime.pl, vwatch/vwatch.cf, vwatch/vwatch.tcl:
 	Add baseline "version watch" sources.
 
-1999-08-18  Havard Eidnes  <he@uninett.no>
+1999-08-18  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl:
 	Adjust to name change in ::persist.
@@ -5212,7 +5643,7 @@
 	* common/notify.tcl:
 	Protect initial "unset acceptchan".
 
-1999-08-11  Havard Eidnes  <he@uninett.no>
+1999-08-11  Havard Eidnes <he@uninett.no>
 
 	* common/config.tcl:
 	Simplify changedDev.
@@ -5255,7 +5686,7 @@
 	* common/persist.tcl:
 	Rename "dump" to "checkpoint" in various procs.
 
-1999-05-11  Havard Eidnes  <he@uninett.no>
+1999-05-11  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl:
 	Only do cleanup if really required.
@@ -5263,7 +5694,7 @@
 	* zino/status.tcl:
 	Protect an unset, the variable may not exist.
 
-1999-05-07  Havard Eidnes  <he@uninett.no>
+1999-05-07  Havard Eidnes <he@uninett.no>
 
 	* zino/auth.tcl:
 	Actually make this work as intended...
@@ -5273,7 +5704,7 @@
 	even though they're not in the local user database,
 	but only exist in the tacacs database.
 
-1999-04-29  Havard Eidnes  <he@uninett.no>
+1999-04-29  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl:
 	Oops, need access to $r.
@@ -5288,7 +5719,7 @@
 	alarm generation.
 	This code badly needs to be redone.
 
-1999-04-07  Havard Eidnes  <he@uninett.no>
+1999-04-07  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl:
 	Use new function to get "cleaned" log lines.
@@ -5296,7 +5727,7 @@
 	* common/cp.tcl:
 	getLog now returns a list, getLogLines ++ new functions.
 
-1999-03-24  Havard Eidnes  <he@uninett.no>
+1999-03-24  Havard Eidnes <he@uninett.no>
 
 	* emt/TODO: TODO list for emt.
 
@@ -5304,11 +5735,11 @@
 	 o typo in variable name
 	 o use of list instead of string
 
-1999-03-09  Havard Eidnes  <he@uninett.no>
+1999-03-09  Havard Eidnes <he@uninett.no>
 
 	* common/sort.tcl: Typo correction.
 
-1999-02-28  Havard Eidnes  <he@uninett.no>
+1999-02-28  Havard Eidnes <he@uninett.no>
 
 	* zino/status.tcl:
 	Instead of giving up (and possibly leaving event in a half-cooked
@@ -5330,7 +5761,7 @@
 	Reshuffle "stop*Deleted*" contents, so that restartPolLChangedRouters
 	can have a chance at working.
 
-1999-02-27  Havard Eidnes  <he@uninett.no>
+1999-02-27  Havard Eidnes <he@uninett.no>
 
 	* zino/read-cf.tcl:
 	Even more debugging output.
@@ -5370,7 +5801,7 @@
 	* emt/emt.tcl:
 	Don't call emt_newhist unless notification received.
 
-1999-02-26  Havard Eidnes  <he@uninett.no>
+1999-02-26  Havard Eidnes <he@uninett.no>
 
 	* ritz/Makefile:
 	Add rule to make ../version.tcl if missing or outdated.
@@ -5410,7 +5841,7 @@
 	Refine emt_should_report, set state variables at appropriate times etc.
 	Reshuffle subject/one-line reports.
 
-1999-02-25  Havard Eidnes  <he@uninett.no>
+1999-02-25  Havard Eidnes <he@uninett.no>
 
 	* emt/emt.tcl:
 	Adapt to procedure name changes.
@@ -5489,7 +5920,7 @@
 	* emt/emt.tcl:
 	First cut that is testable.
 
-1999-02-22  Havard Eidnes  <he@uninett.no>
+1999-02-22  Havard Eidnes <he@uninett.no>
 
 	* emt/Makefile, emt/emt.tcl:
 	Initial commit of e-mail trigger.  Far from done.
@@ -5497,7 +5928,7 @@
 	* common/notify.tcl, common/auth.tcl, common/net.tcl:
 	More generalized routines, using namespace packaging.
 
-1999-02-19  Havard Eidnes  <he@uninett.no>
+1999-02-19  Havard Eidnes <he@uninett.no>
 
 	* ritz/Makefile, ritz/test-client.tcl, Makefile:
 	Create version.tcl, and use in ritz.
@@ -5512,7 +5943,7 @@
 	* zino/events.tcl:
 	Can't compare a not-yet-committed attribute value.
 
-1999-02-18  Havard Eidnes  <he@uninett.no>
+1999-02-18  Havard Eidnes <he@uninett.no>
 
 	* zino/events.tcl:
 	Uhm, do setEventAttr calls before actually setting things in
@@ -5560,12 +5991,12 @@
 	* zino/persist.tcl:
 	Stop saving nonexistent variables.
 
-1999-02-16  Havard Eidnes  <he@uninett.no>
+1999-02-16  Havard Eidnes <he@uninett.no>
 
 	* scotty.diff:
 	Add non-blocking patch to scotty diff.
 
-1999-02-15  Havard Eidnes  <he@uninett.no>
+1999-02-15  Havard Eidnes <he@uninett.no>
 
 	* mibs/CISCO-CDP-MIB.my, mibs/CISCO-CONFIG-MAN-MIB.my,
 	mibs/CISCO-TC.my:
