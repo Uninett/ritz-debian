@@ -189,6 +189,24 @@ proc doTrap { a type args } {
 #	    log [format "%s: bgp loss with %s, state %s" $router \
 #		    $instance(bgpPeerState) $bgpPeerState ]
 #	}
+	ospfIfConfigError {
+	    # Log all the local variables internalized above matching ospf*
+	    log [format "%s: trap %s" $router $snmpTrapOID]
+	    set vl ""
+	    foreach v [info locals] {
+		if [regexp "^ospf" $v] {
+		    lappend vl $v
+		}
+	    }
+	    foreach v $vl {
+		log [format "%s: trap-var %s: %s" $router $v [set $v]]
+	    }
+	}
+	BGP4-V2-MIB-JUNIPER!jnxBgpM2BackwardTransition {
+	    # Ignore, we're already doing delayed BGP polling
+	    # has to do something...
+	    set s glorp
+	}
 	default {
 	    log [format "%s: unknown trap: %s (%s)" \
 		    $router $snmpTrapOID \
