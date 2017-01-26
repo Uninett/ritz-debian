@@ -1013,7 +1013,7 @@ proc uiPollSelected { } {
 
 proc possiblePortStates { } {
 
-    return "down adminDown flapping up"
+    return "down adminDown flapping up notPresent"
 }
 
 proc possibleMatchTypes { } {
