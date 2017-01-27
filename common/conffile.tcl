@@ -118,7 +118,13 @@ namespace eval ::conffile {
 	global errorInfo
 
 	set first 0
-	file stat $name st
+	if { [catch {file stat $name st}] } {
+	    puts stderr \
+		[format \
+		     "Config file %s nonexistent?  Retrying on next round" \
+		     $name]
+	    return;		# Try again later.
+	}
 	if { ! [info exists lastMod] } {
 	    set lastMod $st(mtime)
 	    set first 1
