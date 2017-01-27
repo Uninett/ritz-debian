@@ -339,8 +339,8 @@ proc recordBGPpeer { sh sty uptime vbl } {
 	set $var $val
 	if { $sty == "c" } {
 	    if { $var eq "cbgpPeer2LocalAddr" } {
-		log [format "Router %s getting RemoteAddr from %s" \
-			 $r [mib name $oid]]
+#		log [format "Router %s getting RemoteAddr from %s" \
+#			 $r [mib name $oid]]
 		set cbgpPeer2RemoteAddr [cExtractAddr [mib name $oid]]
 	    }
 	}
@@ -487,8 +487,8 @@ proc checkBGP { sh } {
     }
 
     if [info exists BgpStyle($sh)] {
-	log [format "Router %s Bgp MIB style '%s'" \
-		 [name $sh] $BgpStyle($sh)]
+#	log [format "Router %s Bgp MIB style '%s'" \
+#		 [name $sh] $BgpStyle($sh)]
 	$sh getnext "$localAsVar($BgpStyle($sh)) sysUpTime" {
 	    # Judiciously avoid using "local" variables;
 	    # the callback is executed in the global context!
@@ -525,11 +525,11 @@ proc checkBGP { sh } {
     # BgpStyle is unknown, probe for it
     foreach var $localAsVars {
 	if { [info exists BgpStyle($sh)] } {
-	    log [format "Router %s aborting probing, BgpStyle known, is '%s'" \
-		     [name $sh] $BgpStyle($sh)]
+#	    log [format "Router %s aborting probing, BgpStyle known, is '%s'" \
+#		     [name $sh] $BgpStyle($sh)]
 	    return
 	}
-	log [format "Router %s probing via %s" [name $sh] $var]
+#	log [format "Router %s probing via %s" [name $sh] $var]
 	$sh getnext "$var sysUpTime" {
 	    # Judiciously avoid using "local" variables;
 	    # the callback is executed in the global context!
@@ -542,14 +542,14 @@ proc checkBGP { sh } {
 
 	    if { ! [info exists BgpStyle([lindex [split [mib name [lindex [lindex "%V" 0] 0]] "."] 0])] } {
 		# Not one of the localAsVars prefixes...
-		log [format "Router %s get-next not AsVar" [name %S]]
-		log [format "Router %s get-next gave %s" [name %S] \
-			 [mib name [lindex [lindex "%V" 0] 0]]]
+#		log [format "Router %s get-next not AsVar" [name %S]]
+#		log [format "Router %s get-next gave %s" [name %S] \
+#			 [mib name [lindex [lindex "%V" 0] 0]]]
 		# Wrong BGP style probed?
 		return
 	    }
 	    if { [lindex [lindex "%V" 0] 2] == 0 } {
-		log [format "Router %s not a BGP speaker?" [name %S]]
+#		log [format "Router %s not a BGP speaker?" [name %S]]
 		# Not a BGP speaker?
 		return
 	    }
@@ -558,8 +558,8 @@ proc checkBGP { sh } {
 	    set BgpStyle(%S) $BgpStyle([lindex [split [mib name [lindex [lindex "%V" 0] 0]] "."] 0])
 	    #	puts [format "localAS(%s) %s" %S $localAS(%S)]
 
-	    log [format "Router %s set to BGP style '%s'" \
-		     [name %S] $BgpStyle(%S)]
+#	    log [format "Router %s set to BGP style '%s'" \
+#		     [name %S] $BgpStyle(%S)]
 
 	    checkBGPpeers %S $BgpStyle(%S) [expr [mib scan \
 		    [lindex [lindex "%V" 1] 0] \
