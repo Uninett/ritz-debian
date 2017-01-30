@@ -27,7 +27,7 @@
 CONFIG: {
     package timelocal;
     
-    local($[) = 0;
+#    local($[) = 0;
     @epoch = localtime(0);
     $tzmin = $epoch[2] * 60 + $epoch[1];	# minutes east of GMT
     if ($tzmin > 0) {
@@ -46,7 +46,7 @@ CONFIG: {
 sub timegm {
     package timelocal;
 
-    local($[) = 0;
+#    local($[) = 0;
     $ym = pack(C2, @_[5,4]);
     $cheat = $cheat{$ym} || &cheat;
     return -1 if $cheat<0;
@@ -56,7 +56,7 @@ sub timegm {
 sub timelocal {
     package timelocal;
 
-    local($[) = 0;
+#    local($[) = 0;
     $time = &main::timegm + $tzmin*$MIN;
     return -1 if $cheat<0;
     @test = localtime($time);
