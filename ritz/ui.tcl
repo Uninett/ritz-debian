@@ -30,6 +30,7 @@ proc initUi { } {
 
     set uiLabelFilter(selected)		"Selected"
     set uiLabelFilter(type)		"Case type"
+    set uiLabelFilter(nottype)		"Case type *not*"
     set uiLabelFilter(portstate)	"Port state"
     set uiLabelFilter(bgpstate)		"BGP state"
     set uiLabelFilter(reachability)	"Reachability"
@@ -1079,7 +1080,7 @@ proc uiSetFilter { } {
 
     uiSimpleToplevelSetup $w $title
 
-    foreach item {selected type bgpstate portstate reachability \
+    foreach item {selected type nottype bgpstate portstate reachability \
 	    state downtime router port descr} {
 	tixLabelFrame $w.$item -label $uiLabelFilter($item)
 
@@ -1093,6 +1094,9 @@ proc uiSetFilter { } {
 
 	switch -exact $item {
 	    type {
+		uiMkSimpleMenu $f $item {alarm bfd bgp portstate reachability}
+	    }
+	    nottype {
 		uiMkSimpleMenu $f $item {alarm bfd bgp portstate reachability}
 	    }
 	    bgpstate {

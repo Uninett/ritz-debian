@@ -532,6 +532,14 @@ proc filterPass { id } {
 			return 0;
 		    }
 		}
+	    } elseif { $attr == "nottype" } {
+		if { [catch { set val [Attr $id "type"] }] } {
+		    return 0;	# no type, no match
+		}
+		if { [expr {$FilterVal(nottype)} != {$val}] } {
+		    return 1;
+		}
+		return 0;
 	    } elseif { [catch { set val [Attr $id $attr] } msg] } {
 		return 0;		# attribute does not exist, so no match
 	    }

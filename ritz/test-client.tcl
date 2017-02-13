@@ -1,4 +1,4 @@
-#!/store/bin/wish
+#!/usr/pkg/bin/wish
 #
 # $Id$
 #
