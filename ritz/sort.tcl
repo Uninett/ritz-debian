@@ -511,35 +511,32 @@ proc filterPass { id } {
 		set os [Attr $id "bgpOS"]
 		if { $FilterVal($attr) == "established" } {
 		    if { $os == "established" } {
-			return 1;
+			set match 1
 		    } else {
-			return 0;
+			return 0
 		    }
 		} elseif { $FilterVal($attr) == "down" } {
 		    if { $as == "start" || $as == "running" } {
 			if { $os != "established" } {
-			    return 1;
+			    set match 1
 			} else {
-			    return 0;
+			    return 0
 			}
 		    } else {
 			return 0; # admin-down isn't oper-down
 		    }
 		} elseif { $FilterVal($attr) == "admin-down" } {
 		    if { $as == "stop" || $as == "halted" } {
-			return 1;
+			set match 1
 		    } else {
-			return 0;
+			return 0
 		    }
 		}
 	    } elseif { $attr == "nottype" } {
 		if { [catch { set val [Attr $id "type"] }] } {
 		    return 0;	# no type, no match
 		}
-		if { [expr {$FilterVal(nottype)} != {$val}] } {
-		    return 1;
-		}
-		return 0;
+		set match [expr {$FilterVal(nottype)} != {$val}]
 	    } elseif { [catch { set val [Attr $id $attr] } msg] } {
 		return 0;		# attribute does not exist, so no match
 	    }
@@ -558,7 +555,7 @@ proc filterPass { id } {
 			set match [expr $val >= $FilterVal($attr)]
 		    }
 		}
-	    } else {
+	    } elseif { $attr != "nottype" && $attr != "bgpstate" } {
 		set match [expr {$FilterVal($attr)} == {$val}]
 	    }
 	}
