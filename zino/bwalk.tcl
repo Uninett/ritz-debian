@@ -14,18 +14,20 @@ proc processBulk { sh vbl err start_oids reps action args } {
 	set fvbl {};		# filtered variable binding list
 	set n 0
 	set numvar [llength $start_oids]
-	foreach vb $vbl {
-	    set match 0
-	    set oid [lindex $vb 0]
-	    set soid [lindex $start_oids [expr $n % $numvar]]
-	    if [oidPfxMatch $soid $oid] {
-		set himatch($soid) $oid
-		lappend fvbl $vb
-		set match 1
-	    }
-	    set n [expr $n + 1]
-	    if { ! $match } {
-		set eov 1;	# end of matching variables
+	foreach vl $vbl {
+	    foreach vb $vl {
+	        set match 0
+	        set oid [lindex $vb 0]
+	        set soid [lindex $start_oids [expr $n % $numvar]]
+	        if [oidPfxMatch $soid $oid] {
+		    set himatch($soid) $oid
+		    lappend fvbl $vb
+		    set match 1
+	        }
+	        set n [expr $n + 1]
+	        if { ! $match } {
+		    set eov 1;	# end of matching variables
+	        }
 	    }
 	}
 
@@ -46,7 +48,7 @@ proc processBulk { sh vbl err start_oids reps action args } {
 		lappend newvars $himatch($v)
 	    }
 	    $sh getbulk 0 $reps $newvars \
-		[concat processBulk "%S" {"%V"} "%E" \
+		[concat processBulk "%S" {{"%V"}} "%E" \
 		     [list $start_oids] $reps $action $args]
 	} else {
 	    set eov_handler [lindex $args 0]
@@ -71,7 +73,7 @@ proc bulkWalk { sh vars reps action args } {
     }
 
     $sh getbulk 0 $reps $oidl \
-	[concat processBulk "%S" {"%V"} "%E" \
+	[concat processBulk "%S" {{"%V"}} "%E" \
 	     [list $oidl] $reps $action $args]
     return
 }
