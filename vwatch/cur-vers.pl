@@ -89,6 +89,23 @@ sub dissect_junos_version {
     my($v) = @_;
     my(%v);
 
+    if ($v =~ /(\d+)\.(\d+)X(\d+)-D(\d+)\.(\d+)/o) {
+	$v{"major"} = $1;
+	$v{"minor"} = $2;
+	$v{"rev"} = $3;
+	$v{"mrev"} = $4 . "." . $5;
+	return %v;
+    }
+
+    if ($v =~ /(\d+)\.(\d+)R(\d+)-S(\d+)\.(\d+)/o) {
+	$v{"major"} = $1;
+	$v{"minor"} = $2;
+	$v{"rev"} = $3;
+	# Make larger than any other minor-rev, only used for comparison
+	$v{"mrev"} = ($4 + 100) . "." . $5;
+	return %v;
+    }
+
     if ($v =~ /(\d+)\.(\d+)[RS](\d+)\.(\d+)/o) {
 	$v{"major"} = $1;
 	$v{"minor"} = $2;
