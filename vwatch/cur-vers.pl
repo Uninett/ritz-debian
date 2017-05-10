@@ -92,6 +92,7 @@ sub dissect_junos_version {
     if ($v =~ /(\d+)\.(\d+)X(\d+)-D(\d+)\.(\d+)/o) {
 	$v{"major"} = $1;
 	$v{"minor"} = $2;
+	$v{"rtype"} = "X";
 	$v{"rev"} = $3;
 	$v{"mrev"} = $4 . "." . $5;
 	return %v;
@@ -100,17 +101,19 @@ sub dissect_junos_version {
     if ($v =~ /(\d+)\.(\d+)R(\d+)-S(\d+)\.(\d+)/o) {
 	$v{"major"} = $1;
 	$v{"minor"} = $2;
+	$v{"rtype"} = "RS";
 	$v{"rev"} = $3;
 	# Make larger than any other minor-rev, only used for comparison
 	$v{"mrev"} = ($4 + 100) . "." . $5;
 	return %v;
     }
 
-    if ($v =~ /(\d+)\.(\d+)[RS](\d+)\.(\d+)/o) {
+    if ($v =~ /(\d+)\.(\d+)([FRS])(\d+)\.(\d+)/o) {
 	$v{"major"} = $1;
 	$v{"minor"} = $2;
-	$v{"rev"} = $3;
-	$v{"mrev"} = $4;
+	$v{"rtype"} = $3;
+	$v{"rev"} = $4;
+	$v{"mrev"} = $5;
 	return %v;
     }
     return undef;
@@ -132,10 +135,14 @@ sub cmp_versions {
 	}
 	if ($a{"major"} == $b{"major"}) {
 	    if ($a{"minor"} == $b{"minor"}) {
-		if ($a{"rev"} == $b{"rev"}) {
-		    return $a{"mrev"} <=> $b{"mrev"};
+		if ($a{"rtype"} == $b{"rtype"}) {
+		    if ($a{"rev"} == $b{"rev"}) {
+			return $a{"mrev"} <=> $b{"mrev"};
+		    } else {
+			return $a{"rev"} <=> $b{"rev"};
+		    }
 		} else {
-		    return $a{"rev"} <=> $b{"rev"};
+		    return $a{"rtype"} <=> $b{"rtype"};
 		}
 	    } else {
 		return $a{"minor"} <=> $b{"minor"};
