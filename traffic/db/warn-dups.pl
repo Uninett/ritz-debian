@@ -116,7 +116,7 @@ sub get_line_names {
 	    }
 	    return undef;
 	}
-	if (/^(\d+)\s+(\S+)\s+\S+ "(.*)"$/) {
+	if (/^(\d+)\s+(\S+)\s+\S+\s+"(.*)"$/) {
 	    my($ix) = $1;
 	    @a = split(/,[ _]/,$3);
 	    my($ifname) = $2;
@@ -138,7 +138,7 @@ sub get_line_names {
 		$max_ix{$dev} = $ix;
 	    }
 	    # Report about bad character(s)
-	    if ($n =~ /([;])/) {
+	    if ($n =~ /([;"])/) {
 		printf(STDERR "Illegal character in: \"%s\": \"%s\"\n", $n, $1);
 		printf(STDERR "  On %s, interface %s\n", $dev{$k}, $ifname{$k});
 		$es = 1;
