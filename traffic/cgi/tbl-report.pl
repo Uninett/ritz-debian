@@ -939,30 +939,16 @@ sub report {
 	      "ether-errs"	=> "ee-sort",
 	      );
 
-our %valid_sortby = (
-    "Average in" => 1,
-    "Average out" => 1,
-    "Busy day in" => 1,
-    "Busy day out" => 1,
-    "Busy hour in" => 1,
-    "Busy hour out" => 1,
-    "CRC errors" => 1,
-    "Collisions" => 1,
-    "Framing errors" => 1,
-    "Giants" => 1,
-    "IPv6 input" => 1,
-    "IPv6 input percent" => 1,
-    "IPv6 output" => 1,
-    "IPv6 output percent" => 1,
-    "Ignored packets" => 1,
-    "Input errors" => 1,
-    "Name" => 1,
-    "Output discards" => 1,
-    "Output errors" => 1,
-    "Peak sample in" => 1,
-    "Peak sample out" => 1,
-    "Runts" => 1,
-    );
+our %valid_sortby;
+
+# Init based on contents of %sortargs hash
+foreach my $t (keys %sortargs) {
+    foreach my $dt (keys %{ $sortargs{$t} }) {
+	foreach my $sa (keys %{ %{ $sortargs{$t} }{$dt}}) {
+	    $valid_sortby{$sa} = 1;
+	}
+    }
+}
 
 
 sub check_and_report {
