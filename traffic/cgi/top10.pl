@@ -66,7 +66,7 @@ sub find_report_file {
 	return(sprintf("%REPDIR%" . "/monthly/%d/%02d/traffic.kbit",
 		       $y+1900, $mon+1));
     } else {
-	&err("Unsupported date-spec type: $dsp_t");
+	&err("Unsupported date-spec type");
     }
 }
 
@@ -80,7 +80,7 @@ sub get_data {
     our(%ports);
     our(%fields);
     
-    open(IN, $f) || &err("Could not open $f: $!");
+    open(IN, $f) || &err("Could not open file for given date: $!");
     while(<IN>) {
 	chomp;
 	@_ = split;
@@ -218,7 +218,7 @@ my $force = $q->param("force");	# caching, for the future, force regen
 
 print $q->header();
 print $q->start_html(
-    -title => "Top 10 customers $dsp",
+    -title => sprintf("Top 10 customers %s", &pretty_datespec($dsp)),
     );
 
 our(%avg_in, %avg_out);
