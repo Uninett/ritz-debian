@@ -161,6 +161,15 @@ our($rrddir) = "%RRDDIR%";
 our($pngdir) = "%IMGDIR%";
 
 
+sub rrd_data_exists {
+    my($name) = @_;
+
+    if (-f $rrddir . "/" . $name . ".rrd") {
+	return 1;
+    }
+    return undef;
+}
+
 sub small_png_file {
     my($name, $type) = @_;
     our($pngdir);
@@ -354,7 +363,7 @@ sub make_small_plot {
     my $png = &small_png_file($name, $type);
 
     if (!-f $rrd) {
-	&err(sprintf("Cannot find data for '%s'", $name));
+	&err("Cannot find data for given name");
     }
 
     my @fonts = (
@@ -375,7 +384,7 @@ sub make_big_plot {
     my $png = &big_png_file($name, $type);
 
     if (!-f $rrd) {
-	&err(sprintf("Cannot find data for '%s'", $name));
+	&err("Cannot find data for given name");
     }
 
     my @fonts = (
@@ -420,9 +429,7 @@ sub ensure_img_exists {
 	    ($png, $x, $y) = &make_small_plot($name, $type);
 	}
 	if (!defined($png)) {
-	    &err(sprintf("Error making plot for %s / %s: %s",
-			 $name, $type, $y));
-	    return undef;
+	    &err("Error making plot for given parameters");
 	}
 	if (!defined($img_size{$type,$size,"x"})) {
 	    $img_size{$type,$size,"x"} = $x;
@@ -666,13 +673,16 @@ if ($qt eq "img") {
     $img = $q->param("img");
     $type = $q->param("type");
     if (!defined($refresh{$type})) {
-	&err(sprintf("Unrecognized type: %s", $type));
+	&err("Unrecognized type");
     }
     &send_img($r, $q, $img, $type);
 } elsif ($qt eq "all") {
     $name = $q->param("name");
     if (!defined($name)) {
 	&err("No name given");
+    }
+    if (!rrd_data_exists($name)) {
+	&err("No data for given name");
     }
     $text = &start_doc($q, "day",
 			  sprintf("%s traffic with %s",
@@ -688,11 +698,14 @@ if ($qt eq "img") {
     if (!defined($name)) {
 	&err("No name given");
     }
+    if (!rrd_data_exists($name)) {
+	&err("No data for given name");
+    }
     if (!defined($type)) {
 	&err("No type given");
     }
     if (!defined($refresh{$type})) {
-	&err(sprintf("Plot type '%s' unrecognized", $type));
+	&err("Plot type unrecognized");
     }
     $text = &start_doc($q, $type,
 		       sprintf("%s traffic with %s",
