@@ -939,11 +939,36 @@ sub report {
 	      "ether-errs"	=> "ee-sort",
 	      );
 
+our %valid_sortby = (
+    "Average in" => 1,
+    "Average out" => 1,
+    "Busy day in" => 1,
+    "Busy day out" => 1,
+    "Busy hour in" => 1,
+    "Busy hour out" => 1,
+    "CRC errors" => 1,
+    "Collisions" => 1,
+    "Framing errors" => 1,
+    "Giants" => 1,
+    "IPv6 input" => 1,
+    "IPv6 input percent" => 1,
+    "IPv6 output" => 1,
+    "IPv6 output percent" => 1,
+    "Ignored packets" => 1,
+    "Input errors" => 1,
+    "Name" => 1,
+    "Output discards" => 1,
+    "Output errors" => 1,
+    "Peak sample in" => 1,
+    "Peak sample out" => 1,
+    "Runts" => 1,
+    );
+
 
 sub check_and_report {
     my($dsp, $dsp_t);
-    my($tm, $nd, $dn, $find, $reporter, $sortfield);
-    our(%in, %rd_finder);
+    my($tm, $nd, $dn, $find, $reporter, $sortby);
+    our(%in, %rd_finder, %valid_sortby);
 
     if (!defined($rd_finder{$in{"dsp-type"}})) {
 	&err("Illegal datespec type");
@@ -973,14 +998,18 @@ sub check_and_report {
 	return undef;
     }
 
-    $sortfield = $in{$sortfield{$type}};
-
-    if (!defined($sortfield)) {
+    $sortby = $in{$sortfield{$type}};
+    if (!defined($sortby)) {
 	&err("Do not know how to sort $type reports");
 	return undef;
     }
 
-    &report($dsp, $dsp_t, $type, $sortfield, $dn);
+    if (!defined($valid_sortby{$sortby})) {
+	&err("Invalid sort-by value");
+	return undef;
+    }
+
+    &report($dsp, $dsp_t, $type, $sortby, $dn);
 }
 
 
