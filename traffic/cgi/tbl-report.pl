@@ -973,6 +973,10 @@ sub check_and_report {
     }
 
     $type = $in{"type"};
+    if (!defined($sortfield{$type})) {
+	&err("No support for that type of report");
+	return undef;
+    }
 
     if (! defined($find = $rd_finder{$dsp_t})) {
 	&err("Sorry, no support for $dsp_t / $type reports");
@@ -990,9 +994,11 @@ sub check_and_report {
 	return undef;
     }
 
-    if (!defined($valid_sortby{$sortby})) {
-	&err("Invalid sort-by value");
-	return undef;
+    foreach my $sorttype (values %sortfield) {
+	if (!defined($valid_sortby{$in{$sorttype}})) {
+	    &err("Invalid sort-by value for $sorttype");
+	    return undef;
+	}
     }
 
     &report($dsp, $dsp_t, $type, $sortby, $dn);
