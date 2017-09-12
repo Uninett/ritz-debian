@@ -994,6 +994,11 @@ sub check_and_report {
 	return undef;
     }
 
+    if (!defined($ift_filter_name{$in{"filter"}})) {
+	&err("Illegal interface type filtering value");
+	return undef;
+    }
+
     foreach my $sorttype (values %sortfield) {
 	if (!defined($valid_sortby{$in{$sorttype}})) {
 	    &err("Invalid sort-by value for $sorttype");
