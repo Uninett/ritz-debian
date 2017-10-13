@@ -160,7 +160,7 @@ sub get_line_names {
 }
 
 sub usage {
-    die "usage: $0 [-v] -t topdir\n";
+    die "usage: $0 [-v] [-t topdir]\n";
 }
 
 #
