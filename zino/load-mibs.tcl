@@ -52,3 +52,20 @@ mib load ../mibs/mib-rfc3289.txt
 mib load ../mibs/mib-rfc3811.txt
 mib load ../mibs/mib-rfc3812.txt
 mib load ../mibs/mib-jnx-mpls.txt
+
+mib load ../mibs/mib-lldp.txt
+mib load ../mibs/mib-jnx-license.txt
+mib load ../mibs/mib-jnx-dom.txt
+mib load ../mibs/mib-jnx-chassis.txt
+mib load ../mibs/mib-jnx-cfgmgmt.txt
+mib load ../mibs/mib-jnx-ldp.txt
+mib load ../mibs/mib-jnx-vpn.txt
+
+mib load ../mibs/CISCO-ENTITY-FRU-CONTROL-MIB.my
+mib load ../mibs/CISCO-SYSLOG-MIB.my
+mib load ../mibs/CISCO-IF-EXTENSION-MIB.my
+mib load ../mibs/VRRP-MIB.my
+
+mib load ../mibs/IPV6-MIB.my
+mib load ../mibs/mib-rfc4444.txt
+
