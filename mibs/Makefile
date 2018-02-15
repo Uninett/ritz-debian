@@ -19,7 +19,13 @@ FILES=	BGP4-MIB.my CISCO-CDP-MIB.my CISCO-CONFIG-MAN-MIB.my \
 	mib-jnx-chassis-alarm.txt mib-jnx-smi.txt \
 	mib-jnx-bfd-exp-mod.txt mib-jnx-exp.txt \
 	mib-jnx-bgpmib2.txt \
-	mib-ospf2mib.txt mib-ospf2trap.txt
+	mib-ospf2mib.txt mib-ospf2trap.txt \
+	mib-lldp.txt mib-jnx-license.txt mib-jnx-dom.txt \
+	mib-jnx-chassis.txt mib-jnx-cfgmgmt.txt mib-jnx-ldp.txt \
+	mib-jnx-vpn.txt \
+	CISCO-ENTITY-FRU-CONTROL-MIB.my CISCO-SYSLOG-MIB.my \
+	CISCO-IF-EXTENSION-MIB.my \
+	IPV6-MIB.my mib-rfc4444.txt
 
 MIBDIR=	${TOPDIR}/mibs
 
