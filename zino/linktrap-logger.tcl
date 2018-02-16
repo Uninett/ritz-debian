@@ -281,8 +281,6 @@ proc doTrap { a type args } {
 
     switch $snmpTrapOID {
 
-	# These are the ones we're mostly concerned about
-	# and which we log for:
 	IF-MIB!linkDown {
 	    if { ! [info exists ifDescr] } {
 		set ifdescr [ifDescr $a $ifIndex]
@@ -329,10 +327,6 @@ proc doTrap { a type args } {
 	    }
 	    log $s
 	}
-
-
-	# might be interesting, log a bit of information on stdout
-	# (but not for log forwarding):
 
 	CISCO-IF-EXTENSION-MIB!cieLinkDown {
 	    log [format "%s: cisco LinkDown (os %s as %s) for %s on %s" $a \
