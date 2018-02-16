@@ -211,8 +211,6 @@ proc doInform { a type args } {
 
 proc doTrap { a type args } {
     global LastTrap
-    global BgpTraps TotalBgpTraps
-    global AuthFail TotalAuthFails
     global TotalTraps
 
     set LastTrap [clock seconds]; # note that we received one, for "keepalive"
@@ -547,8 +545,8 @@ proc TrapWatchdog { } {
     # if that's the case the re-open action isn't working.
 
     if { [expr $now - $LastTrap] < [expr 5 * 60] } {
-#	log [format "TrapWatchdog: traps OK; %d total" \
-#		 $TotalTraps]
+	log [format "TrapWatchdog: traps OK; %d total" \
+		 $TotalTraps]
 	set TotalTraps 0
 	set Restarting 0
 	return
