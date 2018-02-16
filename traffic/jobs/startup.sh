@@ -9,5 +9,6 @@ cd %TOPDIR%/bin
 ./start-zino
 ./start-emt
 ./start-vwatch
+./start-ltl
 
 exit 0
