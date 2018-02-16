@@ -16,7 +16,7 @@ FILES= 	../common/util.tcl \
 	../version.tcl \
 	zino-main.tcl
 
-PROGS=	zino start-zino tacping
+PROGS=	zino start-zino tacping linktrap-logger wrap-ltl start-ltl
 
 all: ${PROGS} zino.cf
 
@@ -27,6 +27,24 @@ zino: ${FILES} Makefile
 	sed -f ../subst < zino > zino.new
 	mv zino.new zino
 	chmod +x zino
+
+linktrap-logger: load-mibs.tcl linktrap-logger.tcl
+	rm -f linktrap-logger
+	echo "#! "${SCOTTY} > linktrap-logger
+	cat load-mibs.tcl linktrap-logger.tcl >> linktrap-logger
+	sed -f ../subst < linktrap-logger > linktrap-logger.new
+	mv linktrap-logger.new linktrap-logger
+	chmod +x linktrap-logger
+
+wrap-ltl: wrap-ltl.sh
+	rm -f wrap-ltl
+	sed -f ../subst < wrap-ltl.sh > wrap-ltl
+	chmod +x wrap-ltl
+
+start-ltl: start-ltl.sh
+	rm -f start-ltl
+	sed -f ../subst < start-ltl.sh > start-ltl
+	chmod +x start-ltl
 
 zino.cf: zino.cf.tmpl ../subst
 	rm -f zino.cf
@@ -45,8 +63,10 @@ install: ${PROGS} zino.cf
 		echo mkdir -p ${ZINODIR}; \
 		mkdir -p ${ZINODIR}; \
 	fi
-	install -c -m 555 zino ${BINDIR}
-	install -c -m 555 start-zino ${BINDIR}
+	@for f in ${PROGS}; do \
+		echo install -c -m 555 $$f ${BINDIR}; \
+		install -c -m 555 $$f ${BINDIR}; \
+	done
 	install -c -m 444 zino.cf ${ZINODIR}
 	@if [ ! -f ${ZINODIR}/eventid ]; then \
 		echo "echo 0 > ${ZINODIR}/eventid"; \
@@ -58,7 +78,6 @@ install: ${PROGS} zino.cf
 			install -c -m 600 /dev/null ${ZINODIR}/$$f; \
 		fi; \
 	done
-	install -c -m 555 tacping ${BINDIR}
 
 
 clean:
