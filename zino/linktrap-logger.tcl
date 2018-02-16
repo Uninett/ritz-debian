@@ -1,7 +1,6 @@
-#! /usr/pkg/bin/scotty
-
+#
 # $Id$
-
+#
 
 proc log { msg } {
 
