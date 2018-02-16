@@ -1,3 +1,158 @@
+2018-02-16  Havard Eidnes <he@uninett.no>
+
+	* zino/Makefile: Add the link trap logger.
+
+	* traffic/jobs/startup.sh:
+	Move start of link trap logger to before zino, so that straps
+	ends up as a child of the link trap logger.
+
+	* traffic/jobs/startup.sh: Add startup of link trap listener.
+
+	* zino/start-ltl.sh: Start up link trap logger wrapper.
+
+	* zino/wrap-ltl.sh: Wrap the link trap logger.
+
+	* zino/wrap-linktrap-logger.sh:
+	Script to wrap the linktrap-logger script.
+
+	* zino/linktrap-logger.tcl: Adapt to being part of zino.
+	Log linkUp/linkDown trap messages in json format to a separate
+	file, suitable for forwarding to logstash / elasticsearch.
+	
+2018-02-15  Havard Eidnes <he@uninett.no>
+
+	* zino/load-mibs.tcl: Add VRRP-MIB.my.
+
+	* mibs/Makefile: Add VRRP-MIB.
+
+	* mibs/CISCO-ENTITY-FRU-CONTROL-MIB.my,
+	mibs/CISCO-IF-EXTENSION-MIB.my, mibs/CISCO-SYSLOG-MIB.my,
+	mibs/mib-jnx-cfgmgmt.txt, mibs/mib-jnx-chassis.txt,
+	mibs/mib-jnx-dom.txt, mibs/mib-jnx-ldp.txt,
+	mibs/mib-jnx-license.txt, mibs/mib-jnx-smi.txt,
+	mibs/mib-jnx-vpn.txt, mibs/mib-lldp.txt, mibs/mib-rfc4444.txt:
+	Add more MIBs, install a newer Juniper SMI file.
+
+	* mibs/Makefile: Add installation of more MIBs.
+
+2017-10-16  Havard Eidnes <he@uninett.no>
+
+	* zino/zino.cf.tmpl: Default to not allow read-only access.
+
+2017-10-13  Havard Eidnes <he@uninett.no>
+
+	* traffic/db/warn-dups.pl:
+	Fix usage string, topdir is optional and defaults to configured value.
+
+2017-09-12  Havard Eidnes <he@uninett.no>
+
+	* traffic/cgi/tbl-report.pl:
+	Check $in{"filter"} for any out-of-spec value to avoid XSS.
+
+2017-09-07  Havard Eidnes <he@uninett.no>
+
+	* traffic/cgi/tbl-report.pl:
+	Validate the type of report before echoing it back, to avoid XSS issue.
+	Also validate all the sort values, since they're all copied into the
+	URLs for references and therefore echoed back to the user; again an XSS
+	issue.
+
+2017-09-06  Havard Eidnes <he@uninett.no>
+
+	* traffic/cgi/top10.pl:
+	Ensure we don't echo back user-supplied data, to avoid XSS issues.
+
+	* traffic/cgi/r-all.pl:
+	Don't echo back malformed or unexpected argument values supplied by
+	the user.  Such values can be abused in an XSS (cross-site scripting)
+	attack.
+
+	* traffic/cgi/tbl-report.pl:
+	Instead of a replicate of the other table, instead
+	compute %valid_sortby based on the %sortargs hash.
+
+	* traffic/cgi/tbl-report.pl:
+	Limit the "sort-by" values to the set we recognize, so that
+	we avoid cross-site scripting issues.
+
+2017-06-16  Havard Eidnes <he@uninett.no>
+
+	* traffic/db/warn-dups.pl:
+	Adjust matching pattern to also include zero-speed interfaces.
+	Also look for double-quotes inside description lines.
+
+2017-05-10  Havard Eidnes <he@uninett.no>
+
+	* vwatch/cur-vers.pl:
+	Also output "release type" for JunOS software versions,
+	and sort on them after minor-version.
+
+2017-04-16  Havard Eidnes <he@uninett.no>
+
+	* vwatch/cur-vers.pl: Recognize more JunOS variants.
+	X branch for switches.
+	Service releases for newer releases.
+
+2017-04-05  Havard Eidnes <he@uninett.no>
+
+	* zino/bwalk.tcl:
+	Add a layer of list-quoting around the variable bind list,
+	so as to avoid interpretation of tcl meta-characters such as [ and "
+	during invocation of the SNMP callback(!)
+
+2017-02-14  Havard Eidnes <he@uninett.no>
+
+	* ritz/sort.tcl:
+	Summary: Properly implement "and" between the selected criteria,
+	also for the new synthesized "bgpstate" and "nottype" selectors.
+
+2017-02-13  Havard Eidnes <he@uninett.no>
+
+	* Makefile.inc.dist:
+	Don't have two DESCFILE settings, put it in its proper place.
+
+	* ritz/sort.tcl, ritz/test-client.tcl, ritz/ui.tcl:
+	Make it possible to filter on an event type *not* being matched,
+	in addition to the existing ability to filter on a single type
+	being matched.
+
+2017-01-30  Havard Eidnes <he@uninett.no>
+
+	* traffic/common/Makefile, traffic/common/newtimelocal.pl,
+	  traffic/common/timelocal.pl:
+	Remove timelocal.pl and newtimelocal.pl, we're now using
+	Time::Local instead.
+
+	* traffic/common/timelocal.pl:
+	Don't do local($[) = 0;, as that's now deprecated.
+
+2017-01-27  Havard Eidnes <he@uninett.no>
+
+	* zino/bgp.tcl:
+	Add a "debug: " prefix to the commented-out debug messages.
+
+	* zino/bgp.tcl: Comment out debugging statements related to
+	BGP processing.
+
+	* common/conffile.tcl: Make robust against missing config file.
+	Someone might inadvertently omit "-u" on "ci -u polldevs.cf".
+
+2017-01-26  Havard Eidnes <he@uninett.no>
+
+	* zino/trap.tcl: For ospfIfConfigError, decode the SNMP trap by logging
+	the already internalized ospf* variables.
+	Quietly ignore the BGP backward transition juniper traps.
+
+	* ritz/ui.tcl: Add notPresent as a possible value for port state.
+
+	* ChangeLog: Updated Change Log with new commit messages since
+	the previous update.
+
+	* ritz/ui.tcl: Adjust end-year of copyright.
+
+	* Makefile: Bump to version 1.0,
+	Enough with this 0.9.9* mumbo...
+
 2017-01-26  Havard Eidnes <he@nordu.net>
 
 	* Makefile: Bump to version 1.0,
