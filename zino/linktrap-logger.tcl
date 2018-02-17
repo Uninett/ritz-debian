@@ -526,7 +526,7 @@ proc TrapWatchdog { } {
     global LastTrap
     global twjob
     global TotalTraps
-    global Retarting
+    global Restarting
 
     set now [clock seconds]
 
