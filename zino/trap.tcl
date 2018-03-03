@@ -6,19 +6,95 @@
 # linkUp/Down traps trigger an interface state poll.
 #
 
-proc initTrap { } {
-    global s
 
-    set s [snmp session]
-    catch { $s bind {} trap { doTrap %A %T %V } }
-    sleep 5
-    $s bind {} trap { doTrap %A %T %V }
+
+proc initTrap { } {
+
+    setupTrapListeners
+}
+
+proc setupTrapListeners { } {
+    global v1TrapHandle v2TrapHandle
+
+    if [info exists v1TrapHandle] {
+        log "destroying v1TrapHandle"
+        if { [catch { $v1TrapHandle destroy } errmsg] } {
+            log [format "v1TrapHandle destroy returned %s" $errmsg]
+        }
+    }
+    if [info exists v2TrapHandle] {
+        log "destroying v2TrapHandle"
+        if { [catch { $v2TrapHandle destroy } errmsg] } {
+            log [format "v2TrapHandle destroy returned %s" $errmsg]
+        }
+    }
+
+    set v1TrapHandle [snmp session]
+    $v1TrapHandle bind {} trap { doTrap %A %T %V }
+    $v1TrapHandle bind {} inform { doInform %A %T %V }
+    
+    set v2TrapHandle [snmp session -version SNMPv2c]
+    $v2TrapHandle bind {} inform { doInform %A %T %V }
+    $v2TrapHandle bind {} trap { doTrap %A %T %V }
+}
+
+proc TrapWatchdog { } {
+    global TotalTraps
+    global LastTrap
+    global Restarting
+    global twjob
+    
+    set now [clock seconds]
+
+    $twjob configure -iterations 1000; # keep us running indefinately
+
+        # If no trap received for 5 minutes, destroy & reconnect
+    # ...unless we try and fail three times in a row; clearly
+    # if that's the case the re-open action isn't working.
+
+    if { [expr $now - $LastTrap] < [expr 5 * 60] } {
+        log [format "TrapWatchdog: traps OK; %d total" \
+                 $TotalTraps]
+        set TotalTraps 0
+        set Restarting 0
+        return
+    }
+
+    if { $Restarting > 3 } {
+        log "TrapWatchdog: already restarting, to no effect, not retrying!"
+    }
+
+    log "TrapWatchdog: No SNMP traps received for > 5 minutes, re-enabling"
+    set Restarting [expr $Restarting + 1]
+
+    setupTrapListeners
+}
+
+set TotalTraps 0
+set Restarting 0
+set LastTrap [clock seconds];	# initialize
+
+# Let the trap watchdog run every minute
+set twjob [job create \
+               -command TrapWatchdog \
+               -interval [expr 1000 * 60] \
+               -iterations 1000]
+
+
+proc doInform { a type args } {
+
+    doTrap $a $type $args
 }
 
 proc doTrap { a type args } {
     global AddrToRouter
     global RestartTime
     global portToIfDescr
+    global TotalTraps
+    global LastTrap
+
+    set TotalTraps [expr $TotalTraps + 1]
+    set LastTrap [clock seconds]
 
     if { ! [info exists AddrToRouter($a)] } {
 	puts [format "ignored trap from %s" $a]
