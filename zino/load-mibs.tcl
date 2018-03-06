@@ -36,6 +36,8 @@ mib load ../mibs/PIM-MIB.my
 mib load ../mibs/CISCO-ENVMON-MIB.my
 mib load ../mibs/BRIDGE-MIB.my
 mib load ../mibs/ENTITY-MIB.my
+mib load ../mibs/ENTITY-STATE-TC-MIB.my
+mib load ../mibs/ENTITY-STATE-MIB.my
 mib load ../mibs/mib.traps
 mib load ../mibs/cisco-10-mib.my
 mib load ../mibs/mib-jnx-smi.txt
