@@ -554,6 +554,21 @@ proc pollIfs { sh } {
     sparseWalk $sh $vl x [list eval recordIntf $sh {$x}]
 }
 
+# Given a handle and sysUpTime.0 response var-bind,
+# calculate and save the real-time boot time for the box
+
+proc recordBootTime { sh vb } {
+    global BootTime
+
+    set uptime [mib scan [lindex $vb 0] [lindex $vb 2]]
+    set now [clock seconds]
+    set boot_time [expr $now - $uptime / 100]
+
+    set r [name $sh]
+
+    set BootTime($r) $boot_time
+}
+
 # Return uptime in 100'ths of a second, or 0 if unknown
 
 proc getUptime { sh } {
@@ -572,6 +587,7 @@ proc getUptime { sh } {
 
 	set save_uptime(%S) [mib scan [lindex [lindex "%V" 0] 0] \
 				 [lindex [lindex "%V" 0] 2]]
+	recordBootTime %S [lindex "%V" 0]
     }
 
     $sh wait
@@ -620,6 +636,7 @@ proc checkResponse { sh } {
 		noResponse "%S"
 	    }
 	} else {
+	    recordBootTime %S [lindex "%V" 0]
 	    Response "%S"
 	}
     }
@@ -639,6 +656,7 @@ proc delayedCheckResponse { sh } {
 		noResponse %S
 	    }
 	} else {
+	    recordBootTime %S [lindex "%V" 0]
 	    Response %S
 	    cleanupDelayedResponse %S
 	}
@@ -696,6 +714,7 @@ proc delayedNoResponse { sh } {
 		}
 	    }
 	} else {
+	    recordBootTime %S [lindex "%V" 0]
 	    log [format "checking: cancelling check of %s" $r]
 	    cleanupDelayedResponse %S
 	}
@@ -868,6 +887,7 @@ proc pollRouter { r } {
 	    }
 	    return
 	}
+	recordBootTime %S [lindex "%V" 0]
 	pollRest %S "%V"
     }
 }
