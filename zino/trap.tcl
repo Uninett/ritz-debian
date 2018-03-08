@@ -11,6 +11,7 @@
 proc initTrap { } {
 
     setupTrapListeners
+    ::persist::add ::BootTime
 }
 
 proc setupTrapListeners { } {
@@ -53,7 +54,7 @@ proc TrapWatchdog { } {
     # if that's the case the re-open action isn't working.
 
     if { [expr $now - $LastTrap] < [expr 5 * 60] } {
-        log [format "TrapWatchdog: traps OK; %d total" \
+        log [format "debug: TrapWatchdog: traps OK; %d total" \
                  $TotalTraps]
         set TotalTraps 0
         set Restarting 0
@@ -86,26 +87,67 @@ proc doInform { a type args } {
     doTrap $a $type $args
 }
 
+proc hexToIP4 { v } {
+    set l [split $v ":"]
+    set v [format "%d.%d.%d.%d" \
+	       0x[lindex $l 0] \
+	       0x[lindex $l 1] \
+	       0x[lindex $l 2] \
+	       0x[lindex $l 3]]
+    return $v
+}
+
+proc hexToIP6 { v } {
+    set l [split $v ":"]
+    set s ""
+    set init 1
+    while {[llength $l] != 0} {
+	set a [lindex $l 0]
+	set b [lindex $l 1]
+	set l [lrange $l 2 end]
+	if {!$init} {
+	    set s [format "%s:" $s]
+	} else {
+	    set init 0
+	}
+	set s [format "%s%s%s" $s $a $b]
+    }
+    regsub -all "0000" $s "0" s
+    regsub -all ":0+(\[^0:\]+)" $s ":\\1" s
+
+    set s [string tolower $s]
+
+    foreach sub ":0:0:0:0:0:0:0 :0:0:0:0:0:0 :0:0:0:0:0 :0:0:0:0 :0:0:0 :0:0" {
+	if {[regsub $sub $s ":" s] != 0} {
+	    return $s
+	}
+    }
+
+    return $s
+}
+
 proc doTrap { a type args } {
     global AddrToRouter
     global RestartTime
     global portToIfDescr
+    global bgpPeerOperState
     global TotalTraps
     global LastTrap
+    global BootTime
 
     set TotalTraps [expr $TotalTraps + 1]
     set LastTrap [clock seconds]
 
     if { ! [info exists AddrToRouter($a)] } {
-	puts [format "ignored trap from %s" $a]
+	puts [format "ignored trap from %s (not a box we monitor?)" $a]
 	return
     }
-#    if [catch { set sh [handle $AddrToRouter($a)] }] {
-#	puts [format "ignored trap from %s (startup?)" $a]
-#	return
-#    }
-#    set r [name $sh]
-    set r $AddrToRouter($a)
+    if [catch { set sh [handle $AddrToRouter($a)] }] {
+	puts [format "ignored trap from %s (startup?)" $a]
+	return
+    }
+    set r [name $sh]
+#    set r $AddrToRouter($a)
 
 #    puts [format "%s: trap-type %s" $r $type]
 
@@ -146,12 +188,22 @@ proc doTrap { a type args } {
 
     if { [info exists sysUpTime] } {
 	set uptime [mib scan sysUpTime.0 $sysUpTime]
+	if [info exists BootTime($r)] {
+	    set trap_time [expr $BootTime($r) + $uptime / 100]
+	    set now $LastTrap
+	    set tdiff [expr $now - $trap_time]
+	    if { [expr abs($tdiff)] > 1 } {
+		log [format "debug: %s trap time-diff %s" $r $tdiff]
+	    }
+	}
     } else {
 	puts [format "sysUpTime not part of trap"]
 	return
     }
 
     set router $r
+    # Hmm, inaccurate for queued trap messages which are transmitted
+    # a bit later.  Would be better to use BootTime($r)
     set RestartTime($router) [expr [clock seconds] - ($uptime / 100)]
 
     switch $snmpTrapOID {
@@ -202,6 +254,10 @@ proc doTrap { a type args } {
 	    # has to do something...
 	    set s glorp
 	}
+	BGP4-MIB!bgpBackwardTransition {
+	    # has to do something...
+	    set s glorp
+	}
 	BGP4-MIB!bgpBackwardTransNotification {
 	    # has to do something...
 	    set s glorp
@@ -229,6 +285,90 @@ proc doTrap { a type args } {
 		    $ccmHistoryEventConfigSource \
 		    $ccmHistoryEventConfigDestination]
 	}
+	CISCO-PIM-MIB!ciscoPimInvalidRegister {
+	    set s [format "%s PIM-invalid-register:" [name $sh]]
+	    if { ! [info exists cpimLastErrorOriginType] } {
+		break
+	    }
+	    if { $cpimLastErrorOriginType != "ipv4" } {
+		break
+	    }
+	    set o [hexToIP4 $cpimLastErrorOrigin]
+	    set g [hexToIP4 $cpimLastErrorGroup]
+	    set rp [hexToIP4 $cpimLastErrorRP]
+
+	    set s [format "%s from %s group %s RP %s" $s $o $g $rp]
+
+#	    foreach vb $args {
+#		set oid [lindex $vb 0]
+#		set val [lindex $vb 2]
+#		set name [mib name $oid]
+#		set s [format "%s\n  %s = %s" $s $name $val]
+#	    }
+	    log $s
+	}
+
+	CISCO-PIM-MIB!ciscoPimInvalidJoinPrune {
+	    set s [format "%s PIM-invalid-join-prune:" [name $sh]]
+	    if { ! [info exists cpimLastErrorOriginType] } {
+		return
+	    }
+	    if { $cpimLastErrorOriginType != "ipv4" } {
+		return		
+	    }
+	    set o [hexToIP4 $cpimLastErrorOrigin]
+	    set g [hexToIP4 $cpimLastErrorGroup]
+	    set rp [hexToIP4 $cpimLastErrorRP]
+
+	    set s [format "%s from %s group %s RP %s" $s $o $g $rp]
+	    log $s
+	}
+
+	BGP4-V2-MIB-JUNIPER!jnxBgpM2BackwardTransition {
+	    set s [format "%s Lost BGP peer:" [name $sh]]
+
+	    if { ! [info exists jnxBgpM2PeerLocalAddrType] } {
+		return
+	    }
+	    if { $jnxBgpM2PeerLocalAddrType != "ipv4" } {
+		set peer [hexToIP6 $jnxBgpM2PeerRemoteAddr]
+	    } else {
+		set peer [hexToIP4 $jnxBgpM2PeerRemoteAddr]
+	    }
+	    set state $jnxBgpM2PeerState
+	    set ix [format "%s,%s" [name $sh] $peer]
+
+	    if [info exists bgpPeerOperState($ix)] {
+		set prev_state $bgpPeerOperState($ix)
+	    } else {
+		set prev_state "unknown"
+	    }
+
+	    if { $state != "established" && \
+		 $prev_state == "established" } {
+		set s [format "%s %s state %s" $s $peer $state]
+		log $s
+	    }
+	    set bgpPeerOperState($ix) $state
+	}
+
+	BGP4-V2-MIB-JUNIPER!jnxBgpM2Established {
+	    set s [format "%s BGP peer up:" [name $sh]]
+
+	    if { ! [info exists jnxBgpM2PeerRemoteAddrType]} {
+		return
+	    }
+	    if { $jnxBgpM2PeerRemoteAddrType != "ipv4" } {
+		set peer [hexToIP6 $jnxBgpM2PeerRemoteAddr]
+	    } else {
+		set peer [hexToIP4 $jnxBgpM2PeerRemoteAddr]
+	    }
+	    set state $jnxBgpM2PeerState
+
+	    set s [format "%s %s state %s" $s $peer $state]
+	    log $s
+	}
+
 	CISCOTRAP-MIB!tcpConnectionClose {
 #	    if { ! [info exists instance(loctcpConnElapsed)] } {
 #		log [format "%s: no loctcpConnElapsed!" $router]
@@ -289,10 +429,10 @@ proc doTrap { a type args } {
 		    [mib name $snmpTrapOID]]
 	}
     }
-#    if [eventIxExists $router "reachability"] {
-#	# We got a trap from the box -- check if it's now reachable
-#	checkResponse $sh
-#    }
+    if [eventIxExists $router "reachability"] {
+	# We got a trap from the box -- check if it's now reachable
+	checkResponse $sh
+    }
 }
 
 proc os_to_as { os } {
