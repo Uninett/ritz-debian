@@ -27,7 +27,7 @@ proc newServerConn { chan host port } {
 
     fileevent $chan readable [list readServerCmd $chan]
 
-#    log [format "New server connection fd %s from %s / %s" $chan $host $port]
+    log [format "New server connection fd %s from %s / %s" $chan $host $port]
 }
 
 proc readServerCmd { chan } {
@@ -60,7 +60,7 @@ proc closeClient { chan msg } {
 	log [format "Closed notify channel %s" $s]
     }
     catch { close $chan }
-#    log [format "Closed fd %s" $chan]
+    log [format "Closed fd %s" $chan]
 }
 
 proc ClientResponse { chan msg } {
