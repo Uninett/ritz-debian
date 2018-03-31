@@ -68,7 +68,9 @@ sub pretty_procurve {
     my($desc) = @_;
 
     if ($desc =~ /ProCurve ([^ ]+) [^ ]+ ([^ ]+), revision ([^ ]+), ROM ([^ ]+) .*/) {
-	$desc = "ProCurve $1 $2 $3 ROM $4";
+	$desc = "HP-ProCurve $1 $2 $3 ROM $4";
+    } elsif ($desc =~ /^HP ([^ ]+) ([^ ]+) Switch, revision ([^ ,]+), ROM ([^ ]+).*/) {
+	$desc = "HP-ProCurve $1 $2 $3 ROM $4";
     }
     return $desc;
 }
