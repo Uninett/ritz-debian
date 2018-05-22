@@ -294,6 +294,9 @@ proc uiOpenServer { } {
 proc uiCloseServer { } {
 
     closeServer
+    catch {
+	uiClearSelection
+    }
     
     # tweak normal/disable for menu entries
     global FileItem
