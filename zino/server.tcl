@@ -546,7 +546,7 @@ proc doPMlog { chan l } {
     set l [::pm::log $id]
     ClientResponse $chan "300 log follows, terminated with '.'"
     foreach e $l {
-	ClintResponse $chan $e
+	ClientResponse $chan $e
     }
     ClientResponse $chan "."
 }
