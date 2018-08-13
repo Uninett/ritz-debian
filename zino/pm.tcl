@@ -366,6 +366,12 @@ namespace eval ::pm {
 	    if [info exists isCisco($match_expr)] {
 		lappend devs $match_expr
 	    }
+	} elseif { $match_type == "regexp" } {
+	    foreach dev [array names isCisco] {
+		if [regexp $match_expr $dev] {
+		    lappend devs $dev
+		}
+	    }
 	}
 	return $devs
     }
