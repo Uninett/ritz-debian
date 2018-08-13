@@ -79,6 +79,8 @@ proc uiInitToplevel { } {
     set FileItem(open) [.mbar.file.menu index end]
     .mbar.file.menu add command -label "Close" -command uiCloseServer
     set FileItem(close) [.mbar.file.menu index end]
+    .mbar.file.menu add command -label "Reopen" -command uiReopenServer
+    set FileItem(reopen) [.mbar.file.menu index end]
     
     global _Server
     if [array exists _Server] {
@@ -267,6 +269,7 @@ proc uiOpenServer { } {
     # tweak normal/disable for menu entries
     global FileItem
     .mbar.file.menu entryconfigure $FileItem(close) -state normal
+    .mbar.file.menu entryconfigure $FileItem(reopen) -state normal
     .mbar.file.menu entryconfigure $FileItem(open) -state disabled
 
     # Authenticate user if we know the details
@@ -301,10 +304,14 @@ proc uiCloseServer { } {
     # tweak normal/disable for menu entries
     global FileItem
     .mbar.file.menu entryconfigure $FileItem(close) -state disabled
+    .mbar.file.menu entryconfigure $FileItem(reopen) -state disabled
     .mbar.file.menu entryconfigure $FileItem(open) -state normal
 
     # "forget" all attributes
     AttrForgetAll
+
+    # Clear any selection
+    uiClearSelection
 
     foreach v "allCases filteredCases sortedCases" {
 	global $v
@@ -316,6 +323,12 @@ proc uiCloseServer { } {
     }
 
     uiDisplaySummary $sortedCases
+}
+
+proc uiReopenServer { } {
+
+    uiCloseServer
+    uiOpenServer
 }
 
 proc uiSetServer { } {
