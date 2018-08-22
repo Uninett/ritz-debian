@@ -31,6 +31,7 @@ proc initEvent { saveFile saveDir } {
 	initEventAttrs $e
     }
     fixupEventIdToIx
+    fixupEventId
     fixupEventState
     fixupEventPortState
 }
@@ -725,6 +726,7 @@ proc fixupEventIdToIx { } {
 proc fixupEventId { } {
     global EventId
     global EventCloseTimes
+    global EventIdToIx
 
     foreach v [info globals] {
 	if [regexp "EventAttrs_.*" $v] {
@@ -775,6 +777,35 @@ proc fixupEventId { } {
 			set EventId($ix) $saveId
 			puts [format "Orphaned event %s closed" $id]
 		    }
+		}
+	    }
+	}
+    }
+    foreach ix [array names EventId] {
+	set id $EventId($ix)
+	set vn [format "EventAttrs_%d" $id]
+	global $vn
+	if { ! [array exists $vn] } {
+	    puts [format \
+		      "Removing index for nonexistent event: %d / %s" $id $ix]
+	    catch { unset EventId($ix) }
+	} else {
+	    if [info exists EventIdToIx($id)] {
+		set eix $EventIdToIx($id)
+		if { $eix ne $ix } {
+		    puts [format \
+			      "Removing EventId %d ix %s, wrong ix vs %s" \
+			      $id $ix $eix]
+		    catch { unset EventId($ix) }
+		}
+	    }
+	    if { [info exists [set vn](type)] } {
+		set et [set [set vn](type)]
+		if { ! [regexp ".*,$et\$" $ix] } {
+		    puts [format \
+			      "Removing EventId %d ix %s, wrong type vs %s" \
+			      $id $ix $et]
+		    catch { unset EventId($ix) }
 		}
 	    }
 	}
