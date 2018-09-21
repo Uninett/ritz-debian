@@ -124,9 +124,10 @@ namespace eval ::pm {
 		set r [lindex $l 0]
 		set ifix [lindex $l 1]
 
-		lappend rv [list $id portstate $r $ifix \
-				$portToIfDescr($ix) \
-				[format "(%s)" [description $ix]]]
+		catch { lappend rv [list $id portstate $r $ifix \
+					$portToIfDescr($ix) \
+					[format "(%s)" [description $ix]]]
+		}
 	    }
 	} elseif { $type == "device" } {
 	    foreach dev [matching_devices $match_type $match_expr] {
@@ -299,7 +300,7 @@ namespace eval ::pm {
 
     proc check_pm_event { eid } {
 
-	log [format "PM: checking event %d" $eid]
+	log [format "debug: PM: checking event %d" $eid]
 
 	set t [getEventAttr $eid "type"]
 	set s [getEventAttr $eid "state"]
@@ -385,7 +386,7 @@ namespace eval ::pm {
 	# interfaces and devices (if events don't already exist), and
 	# set them to "ignored" state.
 
-	log [format "PM: starting PM for event %d" $id]
+	log [format "debug: PM: starting PM for event %d" $id]
 
 	set name [attrs $id]
 	global $name
@@ -484,7 +485,7 @@ namespace eval ::pm {
     proc end_pm { id } {
 	global ::pm::pm_events
 
-	log [format "PM: ending PM id %d" $id]
+	log [format "debug: PM: ending PM id %d" $id]
 
 	# when a PM period ends, take the affected interfaces out of
 	# "ignored" state and back into (?) "open" or "closed"(?)
@@ -548,7 +549,7 @@ namespace eval ::pm {
 	set lasttime $now
 
 	foreach id [old_pms $now] {
-	    log [format "PM: cleaning out old PM id %d" $id]
+	    log [format "debug: PM: cleaning out old PM id %d" $id]
 	    ::pm::close $id "timer expiry for old PMs" "zino"
 	}
 
