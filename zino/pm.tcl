@@ -65,6 +65,11 @@ namespace eval ::pm {
 	lappend [set name](log) $text
     }
 
+    proc getlog { id } {
+
+	return [attr $id log]
+    }
+
     proc ids { } {
 	global ::pm::events
 
@@ -74,11 +79,6 @@ namespace eval ::pm {
     proc cancel { id user } {
 
 	::pm::close $id "PM cancelled" user
-    }
-
-    proc log { id } {
-
-	return [attr $id log]
     }
 
     proc details { id } {
@@ -299,6 +299,8 @@ namespace eval ::pm {
 
     proc check_pm_event { eid } {
 
+	log [format "PM: checking event %d" $eid]
+
 	set t [getEventAttr $eid "type"]
 	set s [getEventAttr $eid "state"]
 
@@ -383,6 +385,8 @@ namespace eval ::pm {
 	# interfaces and devices (if events don't already exist), and
 	# set them to "ignored" state.
 
+	log [format "PM: starting PM for event %d" $id]
+
 	set name [attrs $id]
 	global $name
 
@@ -422,7 +426,7 @@ namespace eval ::pm {
 		    "priority" [::config::conf $r priority] \
 		    "descr" [description $ix]
 
-		eventLog $eid [log $id]
+		eventLog $eid [getlog $id]
 		# get special handling of embyonic -> open transition first
 		eventCommit $eid
 
@@ -465,7 +469,7 @@ namespace eval ::pm {
 		    }
 
 		    eventLog $eid $l
-		    eventLog $eid [log $id]
+		    eventLog $eid [getlog $id]
 		    eventCommit $eid
 
 		    setEventAttr $eid "state" "ignored"
@@ -479,6 +483,8 @@ namespace eval ::pm {
 
     proc end_pm { id } {
 	global ::pm::pm_events
+
+	log [format "PM: ending PM id %d" $id]
 
 	# when a PM period ends, take the affected interfaces out of
 	# "ignored" state and back into (?) "open" or "closed"(?)
@@ -515,33 +521,34 @@ namespace eval ::pm {
 
 	set now [clock seconds]
 
-	if [catch {
-	    foreach id [starting_pms $lasttime $now] {
+	foreach id [starting_pms $lasttime $now] {
+	    if [catch {
 		start_pm $id
+	    } err] {
+		log $err
 	    }
-	} err] {
-	    log $err
 	}
 
-	if [catch {
-	    foreach eid [eventIds] {
+	foreach eid [eventIds] {
+	    if [catch {
 		check_pm_event $eid
+	    } err] {
+		log $err
 	    }
-	} err] {
-	    log $err
 	}
 
-	if [catch {
-	    foreach id [ending_pms $lasttime $now] {
+	foreach id [ending_pms $lasttime $now] {
+	    if [catch {
 		end_pm $id
+	    } err] {
+		log $err
 	    }
-	} err] {
-	    log $err
 	}
 
 	set lasttime $now
 
 	foreach id [old_pms $now] {
+	    log [format "PM: cleaning out old PM id %d" $id]
 	    ::pm::close $id "timer expiry for old PMs" "zino"
 	}
 
