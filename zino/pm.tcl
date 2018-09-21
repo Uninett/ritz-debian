@@ -255,8 +255,12 @@ namespace eval ::pm {
 		log [format "debug: PM: regexp matching error: %s" $err]
 	    }
 	} elseif { $match_type == "str" } {
-	    if [string match $match_expr $portToLocIfDescr($ix)] {
-		return 1
+	    if [catch {
+		if [string match $match_expr $portToLocIfDescr($ix)] {
+		    return 1
+		}
+	    } err] {
+		log [format "debug: PM: string match error: %s" $err]
 	    }
 	}
 	return 0
