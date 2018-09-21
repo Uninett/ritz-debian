@@ -412,7 +412,7 @@ namespace eval ::pm {
 		set ifix [lindex $l 1]
 
 		if [ catch {
-		    set updown ::portState($r,$ifix)
+		    set updown $::portState($r,$ifix)
 		}] {
 		    set updown "up"; # default...
 		}
