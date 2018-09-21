@@ -247,8 +247,12 @@ namespace eval ::pm {
 	set match_expr [attr $pmid "match_expr"]
 
 	if { $match_type == "regexp" } {
-	    if [regexp $match_expr $portToLocIfDescr($ix)] {
-		return 1
+	    if [catch {
+		if [regexp $match_expr $portToLocIfDescr($ix)] {
+		    return 1
+		}
+	    } err] {
+		log [format "debug: PM: regexp matching error: %s" $err]
 	    }
 	} elseif { $match_type == "str" } {
 	    if [string match $match_expr $portToLocIfDescr($ix)] {
@@ -328,8 +332,12 @@ namespace eval ::pm {
 	set ixes {}
 	if { $match_type == "regexp" } {
 	    foreach ix [array names portToLocIfDescr] {
-		if [regexp $match_expr $portToLocIfDescr($ix)] {
-		    lappend ixes $ix
+		if [catch {
+		    if [regexp $match_expr $portToLocIfDescr($ix)] {
+			lappend ixes $ix
+		    }
+		} err] {
+		    log [format "debug: PM: regexp matching error: %s" $err]
 		}
 	    }
 	} elseif { $match_type == "str" } {
@@ -348,8 +356,12 @@ namespace eval ::pm {
 		    continue;
 		}
 		# and match the interface name
-		if [regexp $match_expr $intf] {
-		    lappend ixes $ix
+		if [catch {
+		    if [regexp $match_expr $intf] {
+			lappend ixes $ix
+		    }
+		} err] {
+		    log [format "debug: PM: regexp matching error: %s" $err]
 		}
 	    }
 	}
@@ -371,8 +383,12 @@ namespace eval ::pm {
 	    }
 	} elseif { $match_type == "regexp" } {
 	    foreach dev [array names isCisco] {
-		if [regexp $match_expr $dev] {
-		    lappend devs $dev
+		if [catch {
+		    if [regexp $match_expr $dev] {
+			lappend devs $dev
+		    }
+		} err] {
+		    log [format "debug: PM: regexp matching error: %s" $err]
 		}
 	    }
 	}
