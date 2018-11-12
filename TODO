@@ -1,5 +1,7 @@
 $Id$		-*- Text -*-
 
+ o BFD IPv6 addresses presented with wrong syntax (should use 16 bit groups)
+
  o Add monitoring of l2vpn.
 
  o Extend BGP monitoring to also do IPv6, possibly using enterprise
