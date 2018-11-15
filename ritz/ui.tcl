@@ -136,6 +136,9 @@ proc uiInitToplevel { } {
     .mbar.edit.menu.filtered add command \
 	    -label "Clear flap" \
 	    -command uiClearFlapFiltered
+    .mbar.edit.menu.filtered add command \
+	    -label "Select" \
+	    -command uiSelectFiltered
 
     menubutton .mbar.view -text View -underline 0 -menu .mbar.view.menu
 
@@ -1026,6 +1029,19 @@ proc uiPollSelected { } {
 	return
     }
     uiPollMultiple [array names Selected]
+}
+
+proc uiSelectFiltered { } {
+    global filteredCases
+    global Selected
+
+    if [filterIsEmpty] {
+	error "No filter set!"
+    }
+    foreach id $filteredCases {
+	set Selected($id) 1
+	.text tag configure tag$id -foreground blue
+    }
 }
 
 proc possiblePortStates { } {
