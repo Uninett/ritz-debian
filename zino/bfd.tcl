@@ -51,7 +51,39 @@ proc formatAddr { type addr } {
 		    [expr [format "0x%s" [lindex $ol 2]]] \
 		    [expr [format "0x%s" [lindex $ol 3]]]]
     } elseif { $type == "ipv6" } {
-	return $addr
+	set al [split $addr ":"]
+	set as [format "%s%s:%s%s:%s%s:%s%s:%s%s:%s%s:%s%s:%s%s" \
+		    [lindex $al 0] \
+		    [lindex $al 1] \
+		    [lindex $al 2] \
+		    [lindex $al 3] \
+		    [lindex $al 4] \
+		    [lindex $al 5] \
+		    [lindex $al 6] \
+		    [lindex $al 7] \
+		    [lindex $al 8] \
+		    [lindex $al 9] \
+		    [lindex $al 10] \
+		    [lindex $al 11] \
+		    [lindex $al 12] \
+		    [lindex $al 13] \
+		    [lindex $al 14] \
+		    [lindex $al 15]]
+	# Replace all 0000 with just 0
+	regsub -all "0000" $as "0" as
+	# Strip all leading 0s followed by non-zero and non-colon
+	regsub -all ":0+(\[^0:\]+)" $as ":\\1" as
+	# To lower-case
+	set as [string tolower $as]
+	# Replace longest string of 0's with just ::
+        foreach sub \
+                ":0:0:0:0:0:0:0 :0:0:0:0:0:0 :0:0:0:0:0 :0:0:0:0 :0:0:0 :0:0" \
+                {
+            if {[regsub $sub $as ":" as] != 0} {
+                return $as
+            }
+        }
+	return $as
     } else {
 	return [format "unknown(bad type (%s))" $type]
     }
