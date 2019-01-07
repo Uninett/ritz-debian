@@ -131,12 +131,12 @@ proc fixupAddr { v } {
 		":0:0:0:0:0:0:0 :0:0:0:0:0:0 :0:0:0:0:0 :0:0:0:0 :0:0:0 :0:0" \
 		{
 	    if {[regsub $sub $s ":" s] != 0} {
+		# if it now ends in a : (for 0 address on subnet), tack on a :
+		if [regexp ":\$" $s] {
+		    set s [format "%s:" $s]
+		}
 		return $s
 	    }
-	}
-	# if it now ends in a : (for 0 address on subnet), tack on a :
-	if [regexp ":\$" $s] {
-	    set s [format "%s:" $s]
 	}
 	return $s
     }
