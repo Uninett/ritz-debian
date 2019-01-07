@@ -119,6 +119,9 @@ proc hexToIP6 { v } {
 
     foreach sub ":0:0:0:0:0:0:0 :0:0:0:0:0:0 :0:0:0:0:0 :0:0:0:0 :0:0:0 :0:0" {
 	if {[regsub $sub $s ":" s] != 0} {
+	    if [regexp ":\$" $s] {
+		set s [format "%s:" $s]
+	    }
 	    return $s
 	}
     }
