@@ -48,13 +48,13 @@ proc decodeAddr { at a } {
                 ":0:0:0:0:0:0:0 :0:0:0:0:0:0 :0:0:0:0:0 :0:0:0:0 :0:0:0 :0:0" \
                 {
             if {[regsub $sub $as ":" as] != 0} {
+		# if it ends in : now, tack on an extra : (address zero)
+		if [regexp ":\$" $as] {
+		    set as [format "%s:" $as]
+		}
                 return $as
             }
         }
-	# if it ends in : now, tack on an extra :
-	if [regexp ":\$" $as] {
-	    set as [format "%s:" $as]
-	}
 	return $as
 
     } elseif { $at == "ipv4" } {
