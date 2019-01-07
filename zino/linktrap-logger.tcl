@@ -51,6 +51,10 @@ proc decodeAddr { at a } {
                 return $as
             }
         }
+	# if it ends in : now, tack on an extra :
+	if [regexp ":\$" $as] {
+	    set as [format "%s:" $as]
+	}
 	return $as
 
     } elseif { $at == "ipv4" } {
@@ -186,9 +190,10 @@ proc logLinkTrans { type a ix descr alias } {
     # Create log entry in json format
     set s "{"
     set s [format "%s\"timestamp\":%s" $s [expr [clock milliseconds] / 1000.0]]
-    set s [format "%s,\"trap_source\":%s" $s $a]
+    set s [format "%s,\"trap_source\":\"%s\"" $s $a]
     set s [format "%s,\"name\":\"%s\"" $s [nameFor ipv4 $a]]
     set s [format "%s,\"trap_type\":\"%s\"" $s $type]
+    set s [format "%s,\"event_type\":\"snmp_trap\"" $s]
     set s [format "%s,\"ifIndex\":%s" $s $ix]
     set s [format "%s,\"ifDescr\":\"%s\"" $s $descr]
     set s [format "%s,\"ifAlias\":\"%s\"" $s $alias]
