@@ -156,6 +156,27 @@ sub main::data_origin {
     return $c[0];
 }
 
+sub main::data_end {
+    my($port) = @_;
+
+    my($entry, @a, @b, @c);
+    our($ntf_open, %ntf_db, $NTF_DB);
+
+    if (!$ntf_open) {
+	open_db($NTF_DB, \%ntf_db);
+	$ntf_open = 1;
+    }
+
+    if (!defined($entry = $ntf_db{$port})) {
+	return undef;
+    }
+    @a = split(/:/, $entry);	# "value date-date:value date-date..."
+    @b = split(/ /, $a[$#a]);	# "value date-date" or "value date-"
+    @c = split(/-/, $b[1]);	# get the date(s)
+    return $c[1];		# may be undef
+}
+
+# All valid ports on a given date
 sub main::all_port_names {
     my($date) = @_;
     my($k, $val, @l);
@@ -169,6 +190,21 @@ sub main::all_port_names {
 	if (&find_entry($val, $date)) {
 	    push(@l, $k);
 	}
+    }
+    return @l;
+}
+
+# All ports over all time
+sub main::all_port_names_all {
+    my ($k, $val, @l);
+    our($ntf_open, %ntf_db, $NTF_DB);
+
+    if (!$ntf_open) {
+	open_db($NTF_DB, \%ntf_db);
+	$ntf_open = 1;
+    }
+    while(($k, $val) = each %ntf_db) {
+	push(@l, $k);
     }
     return @l;
 }
