@@ -23,5 +23,6 @@ if [ "$d" = "01" -a -d $data/cust-rrd ]; then
 	dstr=`date +%Y%m%d`
 	savedir=$data/cust-rrd-$dstr
 	mkdir $savedir
-	cp $data/cust-rrd/* $savedir
+	pax -rwH $data/cust-rrd $savedir 2>&1 | \
+		egrep -v 'was modified during copy' >&2
 fi
