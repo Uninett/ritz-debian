@@ -411,7 +411,7 @@ proc report_single_bfd { id } {
 proc report_single { id } {
 
     set type [::attr::get $id "type"]
-    if [catch {
+    if { [catch {
 	switch -exact $type {
 	    portstate {
 		return [report_single_port $id]
@@ -430,7 +430,7 @@ proc report_single { id } {
 		return 0
 	    }
 	}
-    } err ] {
+    } err ] } {
 	puts stderr "report_single caught exception: $err"
     }
 }
