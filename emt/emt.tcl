@@ -214,8 +214,10 @@ proc report_multi { ids } {
 	}
     } else {
 	foreach id $ids {
-	    set hist [emt_hist $id]
-	    lappend id_hist($hist) $id
+	    catch {
+		set hist [emt_hist $id]
+		lappend id_hist($hist) $id
+	    }
 	}
 	foreach hist [array names id_hist] {
 	    foreach id $id_hist($hist) {
@@ -329,8 +331,12 @@ proc report_single_port { id } {
     catch {
 	set rs [format "%s      reason: %s\n" $rs [::attr::get $id "reason"]]
     }
-    set rs [format "%slast log entry:\n%s\n" $rs [emt_lastlogline $id]]
-    set rs [format "%srecent event history:\n%s\n" $rs [emt_hist $id]]
+    catch {
+	set rs [format "%slast log entry:\n%s\n" $rs [emt_lastlogline $id]]
+    }
+    catch {
+	set rs [format "%srecent event history:\n%s\n" $rs [emt_hist $id]]
+    }
 #    set rs [format "%s\n" $rs]
 
     return $rs
@@ -344,7 +350,9 @@ proc report_single_reach { id } {
     set rs [format "%s  case-state: %s\n" $rs [::attr::get $id "state"]]
     set rs [format "%s        down: %s\n" $rs [pdt [::attr::downtime $id]]]
     set rs [format "%slast log entry:\n%s\n" $rs [emt_lastlogline $id]]
-    set rs [format "%srecent event history:\n%s\n" $rs [emt_hist $id]]
+    catch {
+	set rs [format "%srecent event history:\n%s\n" $rs [emt_hist $id]]
+    }
 #    set rs [format "%s\n" $rs]
 
     return $rs
@@ -363,7 +371,9 @@ proc report_single_alarm { id } {
     set rs [format "%s alarm-count: %s\n" $rs $ac]
     set rs [format "%s   lastevent: %s\n" $rs $ll]
     set rs [format "%s  case-state: %s\n" $rs $as]
-    set rs [format "%s recent event history:\n%s\n" $rs [emt_hist $id]]
+    catch {
+	set rs [format "%s recent event history:\n%s\n" $rs [emt_hist $id]]
+    }
 
     return $rs  
 }
@@ -390,7 +400,9 @@ proc report_single_bfd { id } {
 	set rs [format "%s       bfdIx: %s\n" $rs [::attr::get $id "bfdIx"]]
     }
     set rs [format "%s       state: %s\n" $rs $as]
-    set rs [format "%s recent event history:\n%s\n" $rs [emt_hist $id]]
+    catch {
+	set rs [format "%s recent event history:\n%s\n" $rs [emt_hist $id]]
+    }
 
     return $rs
 }
@@ -399,23 +411,27 @@ proc report_single_bfd { id } {
 proc report_single { id } {
 
     set type [::attr::get $id "type"]
-    switch -exact $type {
-	portstate {
-	    return [report_single_port $id]
+    if [catch {
+	switch -exact $type {
+	    portstate {
+		return [report_single_port $id]
+	    }
+	    reachability {
+		return [report_single_reach $id]
+	    }
+	    alarm {
+		return [report_single_alarm $id]
+	    }
+	    bfd {
+		return [report_single_bfd $id]
+	    }
+	    default {
+		puts stderr "Unknown type: $type for id $id"
+		return 0
+	    }
 	}
-	reachability {
-	    return [report_single_reach $id]
-	}
-	alarm {
-	    return [report_single_alarm $id]
-	}
-	bfd {
-	    return [report_single_bfd $id]
-	}
-	default {
-	    puts stderr "Unknown type: $type for id $id"
-	    return 0
-	}
+    } err ] {
+	puts stderr "report_single caught exception: $err"
     }
 }
 
