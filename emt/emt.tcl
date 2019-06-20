@@ -411,27 +411,23 @@ proc report_single_bfd { id } {
 proc report_single { id } {
 
     set type [::attr::get $id "type"]
-    if { [catch {
-	switch -exact $type {
-	    portstate {
-		return [report_single_port $id]
-	    }
-	    reachability {
-		return [report_single_reach $id]
-	    }
-	    alarm {
-		return [report_single_alarm $id]
-	    }
-	    bfd {
-		return [report_single_bfd $id]
-	    }
-	    default {
-		puts stderr "Unknown type: $type for id $id"
-		return 0
-	    }
+    switch -exact $type {
+	portstate {
+	    return [report_single_port $id]
 	}
-    } err ] } {
-	puts stderr "report_single caught exception: $err"
+	reachability {
+	    return [report_single_reach $id]
+	}
+	alarm {
+	    return [report_single_alarm $id]
+	}
+	bfd {
+	    return [report_single_bfd $id]
+	}
+	default {
+	    puts stderr "Unknown type: $type for id $id"
+	    return 0
+	}
     }
 }
 
