@@ -49,6 +49,9 @@ sub rev_name {
     if (defined($in_load{$rn})) {
 	return $rn;
     }
+    if (defined($in_load{$name . $suf})) {
+	return $name . $suf . "/i";
+    }
     return "$name" . "/i";
 }
 
