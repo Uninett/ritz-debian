@@ -547,9 +547,7 @@ proc emt_alarm { ids } {
 	if { $p >= $prilimit } {
 	    if { $type == "portstate" } {
 		set s [::attr::effectivePortState $id]
-# FIXME		if { $s == "down" } {
-		    append body [single_subject $id] "\n"
-# FIXME		}
+		append body [single_subject $id] "\n"
 	    } else {
 		append body [single_subject $id] "\n"
 	    }
