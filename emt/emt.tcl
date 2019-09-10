@@ -20,6 +20,7 @@ proc emt_config {} {
     global emt_alarm_to
     global emt_alarm_subject
     global emt_alarm_phones
+    global emt_descr_filter
 
     foreach f "~/.ritz.tcl ~/.emt.tcl" {
 	if { [file exists $f] } {
@@ -555,12 +556,16 @@ proc emt_alarm { ids } {
 			continue
 		    }
 		    if [regexp $emt_descr_filter $d] {
+			log [format \
+				 "Descr '%s' matches '%s', including" \
+				 $d $emt_descr_filter ]
 			append body [single_subject $id] "\n"
 		    } else {
 			log [format \
 			     "Descr does not match for id %d, ignored" $id]
 		    }
 		} else {
+		    log [format "No emt_descr_filter, including"]
 		    append body [single_subject $id] "\n"
 		}
 	    } else {
