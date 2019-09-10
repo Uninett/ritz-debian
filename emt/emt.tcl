@@ -547,7 +547,18 @@ proc emt_alarm { ids } {
 	if { $p >= $prilimit } {
 	    if { $type == "portstate" } {
 		set s [::attr::effectivePortState $id]
-		append body [single_subject $id] "\n"
+		global emt_descr_filter
+		if { [info exists emt_descr_filter] } {
+		    if [catch { set d [::attr::get $id "descr"] }] {
+			# no description or unset, ignore
+			continue
+		    }
+		    if [regexp $emt_descr_filter $d] {
+			append body [single_subject $id] "\n"
+		    }
+		} else {
+		    append body [single_subject $id] "\n"
+		}
 	    } else {
 		append body [single_subject $id] "\n"
 	    }
