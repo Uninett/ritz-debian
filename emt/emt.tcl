@@ -551,10 +551,14 @@ proc emt_alarm { ids } {
 		if { [info exists emt_descr_filter] } {
 		    if [catch { set d [::attr::get $id "descr"] }] {
 			# no description or unset, ignore
+			log [format "No descr for %d, ignoring" $id]
 			continue
 		    }
 		    if [regexp $emt_descr_filter $d] {
 			append body [single_subject $id] "\n"
+		    } else {
+			log [format \
+			     "Descr does not match for id %d, ignored" $id]
 		    }
 		} else {
 		    append body [single_subject $id] "\n"
