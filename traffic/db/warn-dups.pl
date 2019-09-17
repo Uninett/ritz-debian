@@ -118,8 +118,20 @@ sub get_line_names {
 	}
 	if (/^(\d+)\s+(\S+)\s+\S+\s+"(.*)"$/) {
 	    my($ix) = $1;
-	    @a = split(/,[ _]/,$3);
+	    my($descr) = $3;
 	    my($ifname) = $2;
+
+	    # Report bad character(s) detrimental to tcl... (don't ask)
+	    if ($descr =~ /([;"])/) {
+		printf(STDERR
+		       "Device %s, interface %s, " .
+		       "illegal character in descr: %s\n",
+		       $dev, $ifname, $1);
+		printf(STDERR " descr: %s\n", $descr);
+		$es = 1;
+	    }
+
+	    @a = split(/,[ _]/,$3);
 	    if ($#a < 1) { next; }
 	    # Trim leading and trailing spaces,
 	    my $n = $a[1];
@@ -137,10 +149,14 @@ sub get_line_names {
 	    if ($ix > $max_ix{$dev}) {
 		$max_ix{$dev} = $ix;
 	    }
-	    # Report about bad character(s)
-	    if ($n =~ /([;"])/) {
-		printf(STDERR "Illegal character in: \"%s\": \"%s\"\n", $n, $1);
-		printf(STDERR "  On %s, interface %s\n", $dev{$k}, $ifname{$k});
+
+	    # Flag probable field misalignment, tags used by NORDUnet
+	    # should go in the third field, not the second...
+	    if ($n =~ /INT:/ || $n =~ /EXT:/) {
+		printf(STDERR
+		       "Device %s, interface %s, picking up (INT|EXT) tag\n",
+		       $dev, $ifname);
+		printf(STDERR " descr: %s\n", $descr);
 		$es = 1;
 	    }
 	    if (defined($seen_at{$n})) {
