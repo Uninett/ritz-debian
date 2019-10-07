@@ -258,7 +258,7 @@ sub compute_basic_values {
 		my($br) = $val * 1000.0;
 		if ($br > $ifspeed * 1.05) { # Allow 5% overshoot
 		    printf(STDERR
-			   "ERROR: Bitrate above ifSpeed for %s:\n" .
+			   "ERROR: Bitrate exceeds ifSpeed for %s:\n" .
 			   " %s vs\n" .
 			   " %s\n" .
 			   "at time %s, var %s, sample ignored\n",
