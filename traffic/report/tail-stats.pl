@@ -237,8 +237,10 @@ sub compute_basic_values {
 
 	    my($v) = 0;
 	    my($ov) = 0;
+	    my($vn);
 	    foreach my $var (@vars) {
 		$v += $count{$var,$i};
+		$vn = $var;
 		if ($var =~ /Octets/o) {
 		    $ov = 1;
 		}
@@ -256,9 +258,11 @@ sub compute_basic_values {
 		my($br) = $val * 1000.0;
 		if ($br > $ifspeed * 1.05) { # Allow 5% overshoot
 		    printf(STDERR
-			   "ERROR: Bitrate above ifSpeed for %s: %s vs %s" .
-			   " at time %s, sample ignored\n",
-			   $b, $br, $ifspeed, $sample_secs{$i});
+			   "ERROR: Bitrate above ifSpeed for %s:\n" .
+			   " %s vs\n" .
+			   " %s\n" .
+			   "at time %s, var %s, sample ignored\n",
+			   $b, $br, $ifspeed, $sample_secs{$i}, $vn);
 		    $val = 0;
 		}
 	    }
