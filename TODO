@@ -1,5 +1,10 @@
 $Id$		-*- Text -*-
 
+ o Ignore-bgp feature, via config file.  Specify IP address(es)?
+
+ o Predict what a prospective PM would match, and return the list
+   much in he same way as "PM matching" would do.
+
  o NORDUnet/SUNET only wants sms alarms for events related to
    ports which match "service IDs", e.g. (NU-S\d+|SU-S\d+).
 
