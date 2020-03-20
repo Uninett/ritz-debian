@@ -68,10 +68,21 @@ namespace eval ::persist {
 
     proc dumpGlobals { f } {
 	variable persistVar
+	variable nses
 
 	foreach var [lsort [array names persistVar]] {
+	    # First check whether namespace exists
+	    # currently only copes with single-level name spaces
+	    set nsq [namespace qualifiers $var]
+	    if { $nsq != "" } {
+		if { ! [info exists nses($nsq)] } {
+		    puts $f [format "namespace eval %s {}" $nsq]
+		    set nses($nsq) 1
+		}
+	    }
 	    dumpGlobalVar $f $var
 	}
+	unset nses
     }
 
     proc dumpAll { } {
