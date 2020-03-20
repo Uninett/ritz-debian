@@ -356,12 +356,20 @@ proc preCloseEvent { id } {
     global EventCloseTimes
     global PreClosedEventId
 
+    if {! [info exists EventIdToIx($id)]} {
+	return
+    }
     set ix $EventIdToIx($id)
 
     set PreClosedEventId($ix) $id
 
     # a new event may now be created for this port
-    catch { unset EventId($ix) }
+    # (unless it hasn't already been created...)
+    if [info exists EventId($ix)] {
+	if { $id == $EventId($ix) } {
+	    catch { unset EventId($ix) }
+	}
+    }
 
     set EventCloseTimes($id) [clock seconds]
 }
@@ -441,12 +449,14 @@ proc closeEvent { id } {
 
     set EventState($id) "closed"
 
-    set ix $EventIdToIx($id)
     set Attrs EventAttrs_$id
     global $Attrs
 
     ::persist::remove $Attrs
-    catch { unset PreClosedEventId($ix) }
+    if [info exists EventIdToIx($id)] {
+	set ix $EventIdToIx($id)
+	catch { unset PreClosedEventId($ix) }
+    }
     catch { unset EventState($id) }
     catch { unset EventIdToIx($id) }
     unset $Attrs
@@ -843,4 +853,3 @@ proc cleanupDBvars { r } {
     cleanupBGPvars $r
     cleanupLayering $r
 }
-
