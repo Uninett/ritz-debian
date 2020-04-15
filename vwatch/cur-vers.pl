@@ -108,6 +108,16 @@ sub dissect_junos_version {
 	return %v;
     }
 
+    if ($v =~ /(\d+)\.(\d+)R(\d+)-S(\d+)/o) {
+	$v{"major"} = $1;
+	$v{"minor"} = $2;
+	$v{"rtype"} = "RS";
+	$v{"rev"} = $3;
+	# Make larger than any other minor-rev, only used for comparison
+	$v{"mrev"} = ($4 + 100);
+	return %v;
+    }
+
     if ($v =~ /(\d+)\.(\d+)([FRS])(\d+)\.(\d+)/o) {
 	$v{"major"} = $1;
 	$v{"minor"} = $2;
