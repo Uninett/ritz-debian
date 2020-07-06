@@ -469,7 +469,8 @@ sub start_doc {
     my($q, $type, $title) = @_;
     our(%refresh);
     
-    my $text = $q->header(-type => "text/html; charset=iso-8859-1",
+    my $text = $q->header(-type => "text/html",
+			  -charset => "utf-8",
 			  -expires => sprintf("+%ds", $refresh{$type}),
 			  -refresh => $refresh{$type},
 	);
