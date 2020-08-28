@@ -8,7 +8,7 @@ $Id$		-*- Text -*-
  o NORDUnet/SUNET only wants sms alarms for events related to
    ports which match "service IDs", e.g. (NU-S\d+|SU-S\d+).
 
- o Add monitoring of l2vpn.
+ o Add monitoring of l2vpn / l2circuits.
 
  o Extend BGP monitoring to also do IPv6, possibly using enterprise
    MIB variants (Juniper).
