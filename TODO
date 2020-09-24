@@ -1,5 +1,7 @@
 $Id$		-*- Text -*-
 
+ o Implement "Case admin state *not*"
+
  o Ignore-bgp feature, via config file.  Specify IP address(es)?
 
  o Predict what a prospective PM would match, and return the list
