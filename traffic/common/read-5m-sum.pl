@@ -123,11 +123,18 @@ sub read_5m_sum {
     $save_date = $date;
 
     foreach $line (@lines) {
+	my($plus_minus) = 1;
+
 	if ($line =~ /([^:]*):r/) {
 	    $line = $1;
 	    $reverse = 1;
 	} else {
 	    $reverse = 0;
+	}
+
+	if ($line =~ /^-(.*)/) {
+	    $line = $1;
+	    $plus_minus = -1;	# subtract this from the total...
 	}
 
 	if (! defined($base = &name_to_file($line, $d))) {
@@ -425,7 +432,7 @@ sub read_5m_sum {
 		}
 		# First any partial sample from previous files
 		if ($leftover{$line,$v} != 0) {
-		    $mycount{$mv,$tick} += $leftover{$line,$v};
+		    $mycount{$mv,$tick} += $leftover{$line,$v} * $plus_minus;
 		    $leftover{$line,$v} = 0;
 		}
 		# Then include remainder of last sample in this tick
@@ -435,7 +442,8 @@ sub read_5m_sum {
 		    if ($tt > $sample_time{$v,$sno}) {
 			$f1 = ($sample_time{$v,$sno} - $ltt) /
 			    ($sample_time{$v,$sno} - $lasttime{$v});
-			$mycount{$mv,$tick} += $count{$v,$sno} * $f1;
+			$mycount{$mv,$tick} +=
+			    $count{$v,$sno} * $f1 * $plus_minus;
 		    }
 		}
 		# If no sample for this var, skip ahead
@@ -447,7 +455,7 @@ sub read_5m_sum {
 		    $lasttime{$v} = $sample_time{$v,$sno};
 		    $sno++;
 		    if ($sample_time{$v,$sno} < $tt) {
-			$mycount{$mv,$tick} += $count{$v,$sno};
+			$mycount{$mv,$tick} += $count{$v,$sno} * $plus_minus;
 		    }
 		}
 		if (defined($sample_time{$v,$sno}) && defined($lasttime{$v}) &&
@@ -456,7 +464,8 @@ sub read_5m_sum {
 		    # ...and add any remaining partial sample in this tick
 		    $f1 = ($tt - &max($ltt, $lasttime{$v})) /
 			($sample_time{$v,$sno} - $lasttime{$v});
-		    $mycount{$mv,$tick} += $count{$v,$sno} * $f1;
+		    $mycount{$mv,$tick} +=
+			$count{$v,$sno} * $f1 * $plus_minus;
 		}
 	    }
 	    $ltt = $lasttick * 5.0/60;
