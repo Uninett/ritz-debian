@@ -360,16 +360,16 @@ sub day_errs_header {
 	my $r1 = &make_ref("%-25s", "Interface",    "e-sort", "Name");
 	my $r2 = &make_ref("%22s", "inerr hrs >x%", "e-sort", "Error+hours");
 	printf("%-25s%22s    %24s %11s\n", $r1, $r2,
-	       "----------------- in % ----------------",
+	       "--------------------- in % ----------------------",
 	       "-- out ----");
-	printf("%-25s  %3s %3s %3s %4s %4s   %7s %7s %7s %7s %7s %5s %5s\n",
+	printf("%-25s  %3s %3s %3s %4s %4s   %9s %9s %9s %9s %9s %5s %5s\n",
 	       "",
 	       "1.0", "0.1", ".01", "1e-3", "1e-4",
-	       &make_ref("%7s", "Errs", "e-sort", "Input+errors"),
-	       &make_ref("%7s", "CRC" , "e-sort", "CRC+errors"),
-	       &make_ref("%7s", "Frm" , "e-sort", "Framing+errors"),
-	       &make_ref("%7s", "Abrt", "e-sort", "Abort+errors"),
-	       &make_ref("%7s", "Ign" , "e-sort", "Ignored+packets"),
+	       &make_ref("%9s", "Errs", "e-sort", "Input+errors"),
+	       &make_ref("%9s", "CRC" , "e-sort", "CRC+errors"),
+	       &make_ref("%9s", "Frm" , "e-sort", "Framing+errors"),
+	       &make_ref("%9s", "Abrt", "e-sort", "Abort+errors"),
+	       &make_ref("%9s", "Ign" , "e-sort", "Ignored+packets"),
 	       &make_ref("%5s", "Reset","e-sort", "Interface+resets"),
 	       &make_ref("%5s", "Disc%","e-sort", "Peak+out+discards")
 	    );

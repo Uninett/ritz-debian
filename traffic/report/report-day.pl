@@ -496,7 +496,7 @@ sub report_error_percs {
 	} else {
 	    $val = 0;
 	}
-	printf ($out " %7s", &nice_sprint_perc($val, 7));
+	printf ($out " %9s", &nice_sprint_perc($val, 9));
     }
     printf($out "  %5d", $total{$n,"locIfResets"});
     $tot_out = $total{$n,"outpkts"};
