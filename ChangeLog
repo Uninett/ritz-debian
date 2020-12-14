@@ -1,3 +1,274 @@
+2020-12-03 Havard Eidnes <he@uninett.no>
+
+	* traffic/cgi/tbl-report.pl, traffic/report/report-day.pl:
+	Use two more digits of precision when displaying the error percentages.
+
+2020-11-16 Havard Eidnes <he@uninett.no>
+
+	* traffic/common/read-5m-sum.pl:
+	Make it possible to subtract the values from a given logical port
+	from a total by prefixing that port name with '-'.
+
+2020-09-24 Havard Eidnes <he@uninett.no>
+
+	* TODO: New TODO.
+
+2020-08-28 Havard Eidnes <he@uninett.no>
+
+	* TODO: Expand the description of l2vpn monitoring.
+
+2020-07-06 Havard Eidnes <he@uninett.no>
+
+	* traffic/cgi/r-all.pl:
+	Change charset to utf-8, as our input is utf-8 at the moment.
+
+2020-04-15 Havard Eidnes <he@uninett.no>
+
+	* vwatch/cur-vers.pl: Handle new-format service-release numbering.
+
+2020-03-20 Havard Eidnes <he@uninett.no>
+
+	* zino/events.tcl:
+	Provide some more robustness against internal inconsistencies.
+	This relates primarily to missing EventIdToIx entries...
+
+	* common/persist.tcl: Handle persistent vars in other name spaces;
+	output a declaration of the enclosing namespace.
+	Only handles a single namespace level for the moment.
+
+2020-01-24 Havard Eidnes <he@uninett.no>
+
+	* TODO: More to do.
+
+2019-10-07 Havard Eidnes <he@uninett.no>
+
+	* traffic/report/tail-stats.pl: Wording correction.
+
+	* traffic/report/tail-stats.pl:
+	Split report over multiple lines, so it's easier to compare
+	the number of digits at a glance.
+
+2019-09-17 Havard Eidnes <he@uninett.no>
+
+	* traffic/db/warn-dups.pl:
+	Move the check which was intended for the entire description field
+	ahead of the piece of code which picks the description field apart
+	to find the "logical port name".
+	Also add a check for the INT: / EXT: tags NORDUnet use.
+
+2019-09-10 Havard Eidnes <he@uninett.no>
+
+	* emt/emt.tcl:
+	Add emt_descr_filter as an "implicit global" in ~/.emt.tcl
+	by declaring it as a global in the function which sources the file.
+
+	* emt/emt.tcl: Summary: Instrument the latter with a bit of logging.
+
+	* emt/emt.tcl:
+	Summary: New feature: if emt_descr_filter is set, must match descr
+	to alarm.
+
+	This naturally only applies to alarms related to "port state", i.e.
+	interfaces, and an interface must have a description and it must match
+	in order for an alarm to be flagged.
+
+2019-09-09 Havard Eidnes <he@uninett.no>
+
+	* emt/emt.tcl: Summary: Remove a couple of FIXME comments.
+
+2019-08-26 Havard Eidnes <he@uninett.no>
+
+	* TODO: A wish from SUNET/NORDUnet.
+
+2019-06-26 Havard Eidnes <he@uninett.no>
+
+	* traffic/common/reverse.pl:
+	Prefer name with suffix for /i usage, if it exists.
+
+2019-06-20 Havard Eidnes <he@uninett.no>
+
+	* emt/emt.tcl: Remove catch in report_single.
+	It ate most if not all reports, for some reason...
+
+	* emt/emt.tcl: Add some braces.
+
+	* emt/emt.tcl: Don't bomb if emt_hist fails.
+	Catch & report exception in report_single.
+
+2019-05-02 Havard Eidnes <he@uninett.no>
+
+	* traffic/jobs/daily.sh:
+	Avoid overflowing the argument list, use pax to copy files, and
+	suppresss any "file modified during copy" error messages.
+
+2019-02-21 Havard Eidnes <he@uninett.no>
+
+	* traffic/db/db-lookup.pl:
+	Add all_port_names_all() and data_end() procedures.
+
+2019-01-07 Havard Eidnes <he@uninett.no>
+
+	* zino/linktrap-logger.tcl: Move zero-address fix to the right spot.
+
+	* zino/bgp.tcl:
+	Move handling of zero IPv6 address after fixup/compression.
+
+	* zino/bgp.tcl: Deal correctly with address zero on an IPv6 subnet.
+
+	* zino/linktrap-logger.tcl:
+	Deal correctly with IPv6 address zero on subnet.
+	Fix up trap_source formatting, add event_type.
+
+	* zino/trap.tcl: Deal properly with address 0 on a IPv6 subnet.
+
+2018-12-14 Havard Eidnes <he@uninett.no>
+
+	* TODO: Formatting of BFD IPv6 addrs fixed.
+
+	* zino/bfd.tcl: Summary: Make an effort to properly format IPv6 addrs.
+
+2018-11-15 Havard Eidnes <he@uninett.no>
+
+	* ritz/ui.tcl: Summary: Add an Edit->Filtered->Select operation.
+
+2018-11-12 Havard Eidnes <he@uninett.no>
+
+	* TODO: More to do...
+
+2018-09-21 Havard Eidnes <he@uninett.no>
+
+	* zino/pm.tcl: Also protect lookups in portToLocIfDescr.
+
+	* zino/pm.tcl: Protect use of regexp with user-supplied pattern.
+
+	* zino/pm.tcl: Protect variable extraction...
+	Add "debug" to debug log messages.
+
+	* zino/pm.tcl: Add missing $...
+
+	* zino/pm.tcl:
+	Rename log to getlog, so as to not to mask the global "log", used for
+	debugging.
+	Add some debugging.
+	Put catch around inner action, not around entire outer loops
+	in the periodic job.
+
+2018-08-22 Havard Eidnes <he@uninett.no>
+
+	* zino/events.tcl:
+	Call fixupEventId on startup, and add more consistency checks to it.
+
+2018-08-14 Havard Eidnes <he@uninett.no>
+
+	* zino/server.tcl:
+	Add debug: in front of open/close normal messages for easy filtering.
+
+2018-08-13 Havard Eidnes <he@uninett.no>
+
+	* mibs/Makefile: Add ENTITY-STATE-* mibs.
+
+	* ritz/ui.tcl: Add a "Reopen" entry to the File menu.
+	On close, clear any selection.
+
+	* zino/server.tcl: Fix typo in proc name.
+	Uncertain why this doesn't show up as an error in the log...
+
+	* zino/pm.tcl: Summary: Implement regexp matching for devices
+
+2018-05-22 Havard Eidnes <he@uninett.no>
+
+	* ritz/ui.tcl:
+	Summary: Clear the selection on "close server connection"
+
+2018-03-31  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/pretty-ios.pl: Handle newer used-to-be-ProCurve HP switches.
+
+2018-03-30  Havard Eidnes  <he@uninett.no>
+
+	* vwatch/pretty-ios.pl:
+	Also handle 17.4's way of displaying the hardware platform,
+	at least on MX-204 boxes.
+
+2018-03-08  Havard Eidnes  <he@uninett.no>
+
+	* zino/server.tcl:
+	Re-enable logging of client connections coming and going.
+
+	* zino/status.tcl:
+	Add recordBootTime, and use it when we get a response to
+	requests for sysUpTime.0.
+
+	* zino/trap.tcl:
+	Save BootTime global variable, recorded when we get sysUpTime.0.
+	Add a couple of hexToIP4 and hexToIP6 routines to decode addresses.
+	Ignore BGP4-MIB!bgpBackwardTransition trap.
+	Handle CISCO-PIM-MIB!ciscoPimInvalidRegister,
+	CISCO-PIM-MIB!ciscoPimInvalidJoinPrune,
+	BGP4-V2-MIB-JUNIPER!jnxBgpM2BackwardTransition,
+	BGP4-V2-MIB-JUNIPER!jnxBgpM2Established traps.
+
+	If there is a "reachability" event for a box and we receive a
+	trap from one of its addresses, re-check for reachability.
+
+2018-03-06  Havard Eidnes  <he@uninett.no>
+
+	* mibs/ENTITY-STATE-MIB.my: Add new MIB.
+
+	* mibs/ENTITY-STATE-TC-MIB.my: Add MIB file.
+
+	* zino/load-mibs.tcl: Load ENTITY-STATE TC and MIB.
+
+2018-03-03  Havard Eidnes  <he@uninett.no>
+
+	* zino/trap.tcl:
+	It looks like scotty will sometimes abandon the straps connection, and
+	there doesn't seem to be an easy fix to scotty for this.  Implement a
+	workaround by detecting a lack of reception of trap messages and
+	re-binding the trap connections if we don't see any traps for 5
+	minutes.
+
+2018-03-01  Havard Eidnes  <he@uninett.no>
+
+	* mibs/VRRP-MIB.my: Add this MIB too.
+
+2018-02-17  Havard Eidnes  <he@uninett.no>
+
+	* zino/linktrap-logger.tcl: Fix typo.
+
+2018-02-16  Havard Eidnes  <he@uninett.no>
+
+	* zino/linktrap-logger.tcl:
+	Remove misplaced comments, we can't have them there...
+
+	* zino/linktrap-logger.tcl:
+	Be a bit more verbose, log how many traps we've received
+	for each minute (via the trap watchdog).
+	Remove some non-longer-used variables.
+
+	* zino/linktrap-logger.tcl: This isn't a script on its own anymore.
+
+	* ChangeLog: Update list of changes based on CVS contents.
+
+	* zino/Makefile: Add the link trap logger.
+
+	* traffic/jobs/startup.sh:
+	Move start of link trap logger to before zino, so that straps
+	ends up as a child of the link trap logger.
+
+	* traffic/jobs/startup.sh: Add startup of link trap listener.
+
+	* zino/start-ltl.sh: Start up link trap logger wrapper.
+
+	* zino/wrap-linktrap-logger.sh: Renamed to shorter name.
+
+	* zino/wrap-ltl.sh: Wrap the link trap logger.
+
+	* zino/wrap-linktrap-logger.sh:
+	Script to wrap the linktrap-logger script.
+
+	* zino/linktrap-logger.tcl: Adapt to being part of zino.
+
 2018-02-16  Havard Eidnes <he@uninett.no>
 
 	* zino/Makefile: Add the link trap logger.
@@ -18,7 +289,7 @@
 	* zino/linktrap-logger.tcl: Adapt to being part of zino.
 	Log linkUp/linkDown trap messages in json format to a separate
 	file, suitable for forwarding to logstash / elasticsearch.
-	
+
 2018-02-15  Havard Eidnes <he@uninett.no>
 
 	* zino/load-mibs.tcl: Add VRRP-MIB.my.
