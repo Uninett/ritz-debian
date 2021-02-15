@@ -524,7 +524,9 @@ proc emt_report { ids } {
 	set subject [single_subject $ids]
     }
 
-    emt_mail $emt_to $subject $body
+    if { $body != "" } {
+	emt_mail $emt_to $subject $body
+    }
 	
     foreach id $ids {
 	set nagged($id) 1
