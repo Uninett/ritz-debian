@@ -21,6 +21,9 @@ proc emt_config {} {
     global emt_alarm_subject
     global emt_alarm_phones
     global emt_descr_filter
+    global emt_skip_bfd
+
+    set emt_skip_bfd 0;			# default is don't skip
 
     foreach f "~/.ritz.tcl ~/.emt.tcl" {
 	if { [file exists $f] } {
@@ -281,6 +284,7 @@ proc report_compact_bfd { id } {
 
 
 proc report_compact { id } {
+    global emt_skip_bfd
 
     set type [::attr::get $id "type"]
     switch -exact $type {
@@ -294,7 +298,9 @@ proc report_compact { id } {
 	    return [report_compact_alarm $id]
 	}
 	bfd {
-	    return [report_compact_bfd $id]
+	    if { ! $emt_skip_bfd } {
+		return [report_compact_bfd $id]
+	    }
 	}
 	default {
 	    puts stderr "Unknown type: $type for id $id"
@@ -410,6 +416,7 @@ proc report_single_bfd { id } {
 
 
 proc report_single { id } {
+    global emt_skip_bfd
 
     set type [::attr::get $id "type"]
     switch -exact $type {
@@ -423,7 +430,9 @@ proc report_single { id } {
 	    return [report_single_alarm $id]
 	}
 	bfd {
-	    return [report_single_bfd $id]
+	    if { ! $emt_skip_bfd } {
+		return [report_single_bfd $id]
+	    }
 	}
 	default {
 	    puts stderr "Unknown type: $type for id $id"
