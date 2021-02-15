@@ -300,6 +300,8 @@ proc report_compact { id } {
 	bfd {
 	    if { ! $emt_skip_bfd } {
 		return [report_compact_bfd $id]
+	    } else {
+		return ""
 	    }
 	}
 	default {
@@ -432,6 +434,8 @@ proc report_single { id } {
 	bfd {
 	    if { ! $emt_skip_bfd } {
 		return [report_single_bfd $id]
+	    } else {
+		return ""
 	    }
 	}
 	default {
