@@ -524,7 +524,8 @@ proc emt_report { ids } {
 	set subject [single_subject $ids]
     }
 
-    if { $body != "" } {
+    # Anything but newlines?
+    if { [regexp "^\n*$" $body] != 1 } {
 	emt_mail $emt_to $subject $body
     }
 	
@@ -590,7 +591,8 @@ proc emt_alarm { ids } {
 	    log [format "Nope, %s not important enough, priority threshold : %s" $id $prilimit]
 	}
     }
-    if { $body != "" } {
+    # anything but newlines here?
+    if { [regexp "^\n*$" $body] != 1 } {
 	log [format "Calling alarm function..."]
 	emt_send_alarm $body
     } 
