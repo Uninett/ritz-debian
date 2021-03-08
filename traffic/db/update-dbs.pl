@@ -53,6 +53,7 @@ use strict;
 use BerkeleyDB;
 use Getopt::Std;
 
+our ($DBGF);
 
 sub open_db {
     my($db, $rh) = @_;
@@ -148,8 +149,12 @@ sub alive {
 
     if (defined($opt_n)) { return 1; }
     # XXX Name of command should go in a config file
-    open(IN, "%PING% -s 56 -c 5 -i 2 $address 2>&1 |");
+    my $cmd = "%PING% -s 56 -c 5 -i 2 $address 2>&1 |";
+    open(IN, $cmd);
+    &debug($cmd);
     while(<IN>) {
+	chomp;
+	&debug($_);
 	if (! /packet loss/) { next; }
 	if (/100% packet loss/) {
 	    printf(STDERR "No ping response from %s\n", $device{$address});
@@ -169,10 +174,14 @@ sub get_addrs {
 	return undef;
     }
     # XXX Name of command should go in a config file
-    open(IN, "%SNMPNETSTAT% -inh -t 30 -y $community{$dev} $polladdr 2>&1|");
+    my $cmd = "%SNMPNETSTAT% -inh -t 30 -y $community{$dev} $polladdr 2>&1|";
+    open(IN, $cmd);
+    &debug($cmd);
     while(<IN>) {
-	if (/noResponse/) {
-	    printf(STDERR "noResponse from %s\n", $dev);
+	chomp;
+	&debug($_);
+	if (/noResponse/ || /Could not retrieve/) {
+	    printf(STDERR "error from %s: $_\n", $dev);
 	    close(IN);
 	    $dead{$polladdr} = 1;
 	    return undef;
@@ -198,8 +207,12 @@ sub get_line_names {
 	$dead{$polladdr} = 1;
 	return undef;
     }
-    open(IN, "%SNMPNETSTAT% -idnh -t 30 -y $community{$dev} $polladdr 2>&1|");
+    my $cmd = "%SNMPNETSTAT% -idnh -t 30 -y $community{$dev} $polladdr 2>&1|";
+    open(IN, $cmd);
+    &debug($cmd);
     while(<IN>) {
+	chomp;
+	&debug($_);
 	if (/noResponse/) {
 	    printf(STDERR "noResponse from %s\n", $dev);
 	    close(IN);
@@ -479,9 +492,23 @@ sub usage {
     die "usage: $0 -t topdir\n";
 }
 
+sub debug {
+    my(@a) = @_;
+    my $fmt = shift(@a);
+    our($DBGF);
+
+    if (defined($DBGF)) {
+	printf($DBGF $fmt . "\n", @a);
+    }
+}
+
 #
 # Main
 #
+
+if (-f "/tmp/zino-update-debug.txt") {
+    open($DBGF, ">/tmp/zino-update-debug.txt");
+}
 
 our($opt_t, $opt_v, $opt_d, $opt_n);
 
@@ -507,3 +534,7 @@ close($fh);
 &update_dbs();
 reset;
 &close_dbs();
+
+if (defined($DBGF)) {
+    close($DBGF);
+}
