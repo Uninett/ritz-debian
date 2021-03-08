@@ -194,7 +194,11 @@ sub get_addrs {
 	    $ix_map{$dev}->{$_[0]} = 1;
 	}
     }
-    close(IN);
+    close(IN) || {
+	printf(STDERR "Exit status %d from %s\n", $?, $dev);
+	$dead{$polladdr} = 1;
+	return undef;
+    }
     return 1;
 }
 
@@ -241,7 +245,11 @@ sub get_line_names {
 	    }
 	}
     }
-    close(IN);
+    close(IN) || {
+	printf(STDERR "Exit status (%d) from %s\n", $?, $dev);
+	$dead{$polladdr} = 1;
+	return undef;
+    }
     return 1;
 }
 
