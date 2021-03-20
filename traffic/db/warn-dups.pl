@@ -120,7 +120,7 @@ sub get_line_names {
     our(%community, %port, %dev, %ifname);
     our($es, $opt_v);
 
-    my $cmd = sprintf("%s -idnh -t 30 -y %s -P $s $s 2>&1|",
+    my $cmd = sprintf("%s -idnh -t 30 -y %s -P %s %s 2>&1|",
 		      "%SNMPNETSTAT%",
 		      $community{$dev}, $port{$dev}, $polladdr);
     open(IN, $cmd);
