@@ -1,3 +1,56 @@
+2021-03-20 Håvard Eidnes <he@nordu.net>
+
+	* traffic/db/warn-dups.pl: Support and use the new "port" option.
+
+	* traffic/db/update-dbs.pl:
+	Support the "port" config option, and use it.
+	Default to 161.
+
+	* common/config.tcl, common/polljob.tcl:
+	Introduce the "port" config attribute, default it to 161, and use it.
+
+2021-03-12 Håvard Eidnes <he@nordu.net>
+
+	* traffic/db/update-dbs.pl: Summary: Fix syntax errors.
+
+2021-03-08 Håvard Eidnes <he@nordu.net>
+
+	* traffic/db/update-dbs.pl:
+	Summary: Detect and act on non-zero exit status from pipe.
+
+	* traffic/db/update-dbs.pl:
+	Summary: Add debug code, and add trigger for error handling.
+
+	This leaves output in /tmp/zino-update-debug.txt if it already exists.
+	Observed additional error condition:
+	Could not retrieve ifTable; reason sendto failed:
+	no buffer space available
+	Trigger same handling as noResponse when "Could not retrieve" is
+	seen in the output.
+	Apparently we don't try to collect exit status from the
+	justnetstat program (not clear how we could do that).
+
+2021-02-17 Håvard Eidnes <he@nordu.net>
+
+	* emt/emt.tcl:
+	Improve test for empty report, we may have empty lines
+	(i.e. only newlines).
+
+2021-02-15 Håvard Eidnes <he@nordu.net>
+
+	* emt/emt.tcl:
+	Don't send an empty report (e.g. if BFD alarms are suppressed).
+
+	* emt/emt.tcl: Return empty string if skipping BFD alarms/alerts.
+
+	* emt/emt.tcl:
+	Allow the user to "set emt_skip_bfd 1" in their startup file,
+	and suppress emitting BFD alarms based on that.
+
+2020-12-14 Håvard Eidnes <he@nordu.net>
+
+	* ChangeLog: Summary: Update with recomputed changes based on CVS log.
+
 2020-12-03 Havard Eidnes <he@uninett.no>
 
 	* traffic/cgi/tbl-report.pl, traffic/report/report-day.pl:
