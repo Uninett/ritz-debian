@@ -30,6 +30,7 @@ namespace eval ::config {
     set known_attrs(statistics) 1
     set known_attrs(hcounters) 1
     set known_attrs(do_bgp) 1
+    set known_attrs(port) 1
 
     # Initialize defaults.  These are tweakable via the config.
     set defaults(priority) 100
@@ -40,6 +41,7 @@ namespace eval ::config {
     set defaults(statistics) "yes"
     set defaults(hcounters) "no"
     set defaults(do_bgp) "yes"
+    set defaults(port) 161
 
 
     # Variable access procedure

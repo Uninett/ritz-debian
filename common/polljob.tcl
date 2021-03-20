@@ -72,6 +72,7 @@ namespace eval ::polljob {
 	set version   [snmpVersion $dev]
 	set timeout   [::config::conf $dev timeout]
 	set retries   [::config::conf $dev retries]
+	set port      [::config::conf $dev port]
 
 	if [catch {
 	    set s [snmp session \
@@ -80,6 +81,7 @@ namespace eval ::polljob {
 		       -version $version \
 		       -timeout $timeout \
 		       -retries $retries \
+		       -port $port \
 		    ]
 	} msg] {
 	    puts stderr "snmp session failed for device $dev: $msg"
