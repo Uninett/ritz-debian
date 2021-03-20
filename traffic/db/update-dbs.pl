@@ -91,8 +91,10 @@ sub close_dbs {
 
 sub read_config {
     my($f) = @_;
-    my($dev, $poll_seen, $def_community);
-    our(%community, %polladdr, %device);
+    my($dev, $poll_seen, $def_community, $def_port);
+    our(%community, %polladdr, %device, %port);
+
+    $def_port = 161;
 
     open(IN, $f) || die "Could not open $f: $!\n";
     while(<IN>) {
@@ -104,6 +106,10 @@ sub read_config {
 	}
 	if (/^default community:\s(\S+)$/) {
 	    $def_community = $1;
+	    next;
+	}
+	if (/^default port:\s(\S+)$/) {
+	    $def_port = $1;
 	    next;
 	}
 	if (/^default /) { next; }
@@ -121,12 +127,18 @@ sub read_config {
 	    if (/^community:\s+(\S+)$/) {
 		$community{$dev} = $1;
 	    }
+	    if (/^port:\s+(\S+)$/) {
+		$port{$dev} = $1;
+	    }
 	}
         if (!$poll_seen) {
 	    printf (STDERR "Poll address for $dev not found!\n");
 	}
 	if (!defined($community{$dev})) {
 	    $community{$dev} = $def_community;
+	}
+	if (!defined($port{$dev})) {
+	    $port{$dev} = $def_port;
 	}
     }
     close(IN);
@@ -167,16 +179,20 @@ sub alive {
 
 sub get_addrs {
     my($dev, $polladdr) = @_;
-    our(%dead, %address, %as, %ix_map, %community);
+    our(%dead, %address, %as, %ix_map, %community, %port);
 
     if ($dead{$polladdr} || ! &alive($polladdr)) {
 	$dead{$polladdr} = 1;
 	return undef;
     }
     # XXX Name of command should go in a config file
-    my $cmd = "%SNMPNETSTAT% -inh -t 30 -y $community{$dev} $polladdr 2>&1|";
+
+    my $cmd = sprintf("%s -inh -t 30 -y %s -P %s %s 2>&1|",
+		      "%SNMPNETSTAT%",
+		      $community{$dev}, $port{$dev}, $polladdr);
     open(IN, $cmd);
     &debug($cmd);
+
     while(<IN>) {
 	chomp;
 	&debug($_);
@@ -211,7 +227,10 @@ sub get_line_names {
 	$dead{$polladdr} = 1;
 	return undef;
     }
-    my $cmd = "%SNMPNETSTAT% -idnh -t 30 -y $community{$dev} $polladdr 2>&1|";
+
+    my $cmd = sprintf("%s -idnh -t 30 -y %s -P %s %s 2>&1|",
+		      "%SNMPNETSTAT%",
+		      $community{$dev}, $port{$dev}, $polladdr);
     open(IN, $cmd);
     &debug($cmd);
     while(<IN>) {
