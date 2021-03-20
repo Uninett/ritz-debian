@@ -46,8 +46,10 @@ use Getopt::Std;
 
 sub read_config {
     my($f) = @_;
-    my($dev, $poll_seen, $def_community);
-    our(%polladdr, %device, %community);
+    my($dev, $poll_seen, $def_community, $def_port);
+    our(%polladdr, %device, %community, %port);
+
+    $def_port = 161;
 
     open(IN, $f) || die "Could not open $f: $!\n";
     while(<IN>) {
@@ -59,6 +61,10 @@ sub read_config {
 	}
 	if (/^default community:\s(\S+)$/) {
 	    $def_community = $1;
+	    next;
+	}
+	if (/^default port:\s+(\S+)$/) {
+	    $def_port = $1;
 	    next;
 	}
 	if (/^default /) { next; }
@@ -76,12 +82,18 @@ sub read_config {
 	    if (/^community:\s+(\S+)$/) {
 		$community{$dev} = $1;
 	    }
+	    if (/^port:\s+(\S+)$/) {
+		$port{$dev} = $1;
+	    }
 	}
         if (!$poll_seen) {
 	    printf (STDERR "Poll address for $dev not found!\n");
 	}
 	if (!defined($community{$dev})) {
 	    $community{$dev} = $def_community;
+	}
+	if (!defined($port{$dev})) {
+	    $port{$dev} = $def_port;
 	}
     }
     close(IN);
@@ -104,10 +116,14 @@ sub read_manuals {
 sub get_line_names {
     my($dev, $polladdr) = @_;
     my(@a);
-    our(%line_name, %seen_name, %max_ix, %seen_at, %community, %dev, %ifname);
+    our(%line_name, %seen_name, %max_ix, %seen_at);
+    our(%community, %port, %dev, %ifname);
     our($es, $opt_v);
 
-    open(IN, "%SNMPNETSTAT% -idnh -t 30 -y $community{$dev} $polladdr 2>&1|");
+    my $cmd = sprintf("%s -idnh -t 30 -y %s -P $s $s 2>&1|",
+		      "%SNMPNETSTAT%",
+		      $community{$dev}, $port{$dev}, $polladdr);
+    open(IN, $cmd);
     while(<IN>) {
 	if (/noResponse/) {
 	    close(IN);
