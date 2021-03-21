@@ -221,7 +221,7 @@ sub get_addrs {
 sub get_line_names {
     my($dev, $polladdr) = @_;
     my(@a);
-    our(%dead, %line_name, %ix_map, %community);
+    our(%dead, %line_name, %ix_map, %community, %port);
 
     if ($dead{$polladdr} || ! &alive($polladdr)) {
 	$dead{$polladdr} = 1;
