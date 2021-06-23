@@ -81,6 +81,8 @@ proc recordAlarmHack { sh vbl } {
     set vb [lindex $vbl 1]
     set yellowAlarms [lindex $vb 2]
 
+    set r [name $sh]
+
     foreach c {yellow red} {
 	if { ! [info exists JNXalarms($r,$c)] } {
 	    set JNXalarms($r,$c) 0
