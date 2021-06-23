@@ -546,7 +546,7 @@ namespace eval ::pm {
 	    if [catch {
 		start_pm $id
 	    } err] {
-		log $err
+		log [format "start_pm: %s" $err]
 	    }
 	}
 
@@ -554,7 +554,7 @@ namespace eval ::pm {
 	    if [catch {
 		check_pm_event $eid
 	    } err] {
-		log $err
+		log [format "check_pm_event: %s" $err]
 	    }
 	}
 
@@ -562,7 +562,7 @@ namespace eval ::pm {
 	    if [catch {
 		end_pm $id
 	    } err] {
-		log $err
+		log [format "end_pm: %s" $err]
 	    }
 	}
 
