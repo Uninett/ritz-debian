@@ -61,6 +61,7 @@ mib load ../mibs/mib-jnx-dom.txt
 mib load ../mibs/mib-jnx-chassis.txt
 mib load ../mibs/mib-jnx-cfgmgmt.txt
 mib load ../mibs/mib-jnx-ldp.txt
+mib load ../mibs/mib-jnx-util.txt
 mib load ../mibs/mib-jnx-vpn.txt
 
 mib load ../mibs/CISCO-ENTITY-FRU-CONTROL-MIB.my
