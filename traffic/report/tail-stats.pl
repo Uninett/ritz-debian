@@ -652,7 +652,8 @@ sub create_rrd {
     }
     RRDs::create(@cmd);
     if (RRDs::error) {
-	printf(STDERR "RRDs::create failed: %s\n", RRDs::error);
+	printf(STDERR "RRDs::create %s\nfailed: %s\n",
+		join("\n", @cmd), RRDs::error);
 	return undef;
     }
     return 1;
@@ -817,6 +818,7 @@ sub report_tail_stats {
 	}
 	$name = $b;
     }
+    if ($#$ia >= 0 && $#$oa >= 0) {
     # Output:
     # name  last-kbps-in last-kbps-out avg-kbps-in avg-kbps-out ifspeed-in-kbps
     #
@@ -825,13 +827,14 @@ sub report_tail_stats {
     # avg-kbps-in     
     # avg-kbps-out      average over history we keep
     # ifspeed-in-kbps   interface speed in kbit/s
-    printf($rfile "%-30s %8d %8d %8d %8d %8d\n",
+        printf($rfile "%-30s %8d %8d %8d %8d %8d\n",
 	   $name,
 	   $ia->[$#$ia],
 	   $oa->[$#$oa],
 	   $ikbps, $okbps,
 	   $fd->{$b}->{"ifspeed"} / 1000,
 	   );
+    }
 }
 
 sub tail_process_file {
@@ -1091,7 +1094,7 @@ sub just_past_midnight {
 
 sub do_all_files_today {
     my($d);
-    our($opt_V);
+    our($opt_V, $opt_v);
 
     if (&just_past_midnight()) {
 	$d = &yesterday();
@@ -1112,6 +1115,9 @@ sub do_all_files_today {
     }
 
     foreach my $f (@files) {
+	if (defined($opt_v)) {
+	    printf("Processing %s\n", $f);
+	}
 	&tail_process_file(\*REP, $dir . "/" . $f, $d);
 	if (defined($opt_V)) {
 	    printf(".");
