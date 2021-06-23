@@ -58,6 +58,51 @@ proc recordJNXalarms { sh vbl } {
     }
 }
 
+proc recordAlarmHack { sh vbl } {
+    global JNXalarms
+    global lastPoll
+
+    set lastPoll($sh) [clock seconds]
+
+    # Here we assume a fixed order
+    set vb [lindex $vbl 0]
+    set redAlarms [lindex $vb 2]
+
+    set vb [lindex $vbl 1]
+    set yellowAlarms [lindex $vb 2]
+
+    foreach c {yellow red} {
+	if { ! [info exists JNXalarms($r,$c)] } {
+	    set JNXalarms($r,$c) 0
+	}
+    }
+    if { $yellowAlarms != $JNXalarms($r,yellow) } {
+	JNXalarm $r yellow $JNXalarms($r,yellow) $yellowAlarms
+	set JNXalarms($r,yellow) $yellowAlarms
+    }
+    if { $redAlarms != $JNXalarms($r,red) } {
+	JNXalarm $r "red" $JNXalarms($r,red) $redAlarms
+	set JNXalarms($r,red) $redAlarms
+    }
+}
+
+
+proc checkAlarmHack { sh } {
+    
+    # jnxUtilUintValue."RedAlarm"
+    set qvl "jnxUtilUintValue.82.101.100.65.108.97.114.109"
+    # jnxUtilUintValue."YellowAlarm"
+    set qvl "$qvl jnxUtilUintValue.89.101.108.108.111.119.65.108.97.114.109"
+
+    $sh get $qvl {
+	if { "%E" != "noError" } {
+	    return
+	}
+	recordAlarmHack %S "%V"
+    }
+}
+
+
 proc checkJNXalarm { sh } {
     global isJuniper
     
@@ -76,6 +121,9 @@ proc checkJNXalarm { sh } {
 #    log [format "debug: %s checking juniper alarms" $r]
     $sh get $qvl {
 	if { "%E" != "noError" } {
+	    if { "%E" == "noSuchObject" } {
+		checkAlarmHack %S
+	    }
 	    return
 	}
 	recordJNXalarms %S "%V"
