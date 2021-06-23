@@ -180,6 +180,7 @@ sub alive {
 sub get_addrs {
     my($dev, $polladdr) = @_;
     our(%dead, %address, %as, %ix_map, %community, %port);
+    my(@lines);
 
     if ($dead{$polladdr} || ! &alive($polladdr)) {
 	$dead{$polladdr} = 1;
@@ -196,6 +197,7 @@ sub get_addrs {
     while(<IN>) {
 	chomp;
 	&debug($_);
+	push(@lines, $_);
 	if (/noResponse/ || /Could not retrieve/) {
 	    printf(STDERR "error from %s: $_\n", $dev);
 	    close(IN);
@@ -212,6 +214,7 @@ sub get_addrs {
     }
     if (! close(IN)) {
 	printf(STDERR "Exit status %d from %s\n", $?, $dev);
+	printf(STDERR @lines);
 	$dead{$polladdr} = 1;
 	return undef;
     }
@@ -222,6 +225,7 @@ sub get_line_names {
     my($dev, $polladdr) = @_;
     my(@a);
     our(%dead, %line_name, %ix_map, %community, %port);
+    my(@lines);
 
     if ($dead{$polladdr} || ! &alive($polladdr)) {
 	$dead{$polladdr} = 1;
@@ -234,8 +238,9 @@ sub get_line_names {
     open(IN, $cmd);
     &debug($cmd);
     while(<IN>) {
-	chomp;
 	&debug($_);
+	push(@lines, $_);
+	chomp;
 	if (/noResponse/) {
 	    printf(STDERR "noResponse from %s\n", $dev);
 	    close(IN);
@@ -266,6 +271,7 @@ sub get_line_names {
     }
     if (!close(IN)) {
 	printf(STDERR "Exit status (%d) from %s\n", $?, $dev);
+	printf(STDERR @lines);
 	$dead{$polladdr} = 1;
 	return undef;
     }
