@@ -308,7 +308,7 @@ namespace eval ::pm {
 
     proc check_pm_event { eid } {
 
-	log [format "debug: PM: checking event %d" $eid]
+	# log [format "debug: PM: checking event %d" $eid]
 
 	set t [getEventAttr $eid "type"]
 	set s [getEventAttr $eid "state"]
