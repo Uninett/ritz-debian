@@ -34,14 +34,24 @@ proc recordJNXalarms { sh vbl } {
     global JNXalarms
     global lastPoll
 
+    set found 1
+
     set lastPoll($sh) [clock seconds]
     foreach vb $vbl {
 	set oid [lindex $vb 0]
 	set val [lindex $vb 2]
+	if { [lindex $vb 1] == "noSuchObject" } {
+	    set found 0
+	}
 	set var [lrange [split [mib name $oid] "."] 0 0]
 	set $var $val
     }
     set r [name $sh]
+
+    if { ! $found } {
+	checkAlarmHack $sh
+	return
+    }
 
     foreach c {yellow red} {
 	if { ! [info exists JNXalarms($r,$c)] } {
@@ -94,6 +104,8 @@ proc checkAlarmHack { sh } {
     # jnxUtilUintValue."YellowAlarm"
     set qvl "$qvl jnxUtilUintValue.89.101.108.108.111.119.65.108.97.114.109"
 
+    log [format "debug: %s checking juniper alarm hack" [name $sh]]
+
     $sh get $qvl {
 	if { "%E" != "noError" } {
 	    return
@@ -121,9 +133,6 @@ proc checkJNXalarm { sh } {
 #    log [format "debug: %s checking juniper alarms" $r]
     $sh get $qvl {
 	if { "%E" != "noError" } {
-	    if { "%E" == "noSuchObject" } {
-		checkAlarmHack %S
-	    }
 	    return
 	}
 	recordJNXalarms %S "%V"
