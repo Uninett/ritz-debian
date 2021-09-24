@@ -82,7 +82,6 @@ require 'utils.pl';
 sub plot_traffic_common {
     my($line, $fh, $dn, $d, $tm, $compute_val) = @_;
     my($i, $h, $val, $v, %then, $now, %add);
-    my($started) = 0;
     my(@vars);
     our($ifspeed);
 
@@ -100,12 +99,6 @@ sub plot_traffic_common {
 	    }
 	    next;
 	}
-	if (!$started) {
-	    if ($sample_time{$vars[0],$i} > 23) {
-		next;
-	    }
-	}
-	$started = 1;
 
 	my($in, $out);
 	undef $in;
