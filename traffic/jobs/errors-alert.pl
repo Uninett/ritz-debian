@@ -108,6 +108,7 @@ foreach my $n (keys %names) {
 }
 
 if ($anything_p) {
+    printf("%-30s          inerr hours >x\%\n");
     printf("%-30s  1.0  0.1 1e-2 1e-3 1e-4  24h-avg-inerrors\n");
 }
 
