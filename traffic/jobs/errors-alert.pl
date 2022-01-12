@@ -51,9 +51,10 @@ my($ht) = 6;
 
 use Getopt::Std;
 
-our($opt_h);
-&getopts("h:");
+our($opt_h, $opt_k);
+&getopts("h:k:");
 
+# Hour-treshold
 if (defined($opt_h)) {
     $ht = $opt_h;
 }
@@ -80,6 +81,20 @@ sub report_file {
 
 our(%stats);
 our(%names);
+our(%known);
+
+our($IN);
+
+# known errors file
+if ($opt_k) {
+    open($IN, $opt_k) || die "Could not open $opt_k: $!";
+    while(<$IN>) {
+	chomp;
+	$known{$_} = 1;
+    }
+}
+close($IN);
+
 
 my $rep = &report_file("errors.perc", $date);
 my $F;
@@ -100,6 +115,9 @@ close($F);
 
 my $anything_p = 0;
 foreach my $n (keys %names) {
+    if ($known{$n}) {
+	next;
+    }
     foreach my $e ("err0", "err1", "err2", "err3", "err4") {
 	if ($stats{$n,$e} > $ht) {
 	    $anything_p = 1;
@@ -124,6 +142,9 @@ foreach my $n (keys %names) {
 	}
     }
     if ($inc) {
+	if ($known{$n}) {
+	    next;
+	}
 	printf($S "%-30s ", $n);
 	foreach my $e ("err0", "err1", "err2", "err3", "err4") {
 	    printf($S "  %2d ", $stats{$n,$e});
