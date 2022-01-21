@@ -406,7 +406,9 @@ namespace eval ::pm {
 	# interfaces and devices (if events don't already exist), and
 	# set them to "ignored" state.
 
-	log [format "debug: PM: starting PM for event %d" $id]
+	set l [format "starting PM for event %d" $id]
+	log [format "debug: PM: %s" $l]
+	addlog $l
 
 	set name [attrs $id]
 	global $name
@@ -505,7 +507,9 @@ namespace eval ::pm {
     proc end_pm { id } {
 	global ::pm::pm_events
 
-	log [format "debug: PM: ending PM id %d" $id]
+	set l [format "ending PM id %d" $id]
+	log [format "debug: PM: %s" $l]
+	addlog $l
 
 	# when a PM period ends, take the affected interfaces out of
 	# "ignored" state and back into (?) "open" or "closed"(?)
