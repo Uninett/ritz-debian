@@ -66,7 +66,7 @@
 #               1.0 0.1 .01 Errs  CRC  Frm Abrt  Ign  Reset Disc% Disc% iftype
 #xxxxxxxxxxxxx   xx  xx  xx xxxx xxxx xxxx xxxx xxxx  xxxxx xxxxx xxxxx xxxxxx
 #
-# Additionally: inerr hrs >x% added at the end for 0.001 and 0.0001%
+# Additionally: inerr hrs >x% added at the end for 0.001, 0.0001 and 0.00001%
 #
 #
 # Possible heading for ether_errs:
@@ -181,6 +181,9 @@ sub get_file_data {
 	if (!defined($errhrs{$name,"0.0001"})) {
 	    $errhrs{$name,"0.0001"} = 0;
 	}
+	if (!defined($errhrs{$name,"0.00001"})) {
+	    $errhrs{$name,"0.00001"} = 0;
+	}
 	if ($inpkts > 0) {
 	    $errpct = $count{"ifInErrors",$h}*100.0/$inpkts;
 	    if ($errpct > 1.0) {
@@ -197,6 +200,9 @@ sub get_file_data {
 	    }
 	    if ($errpct > 0.0001) {
 		$errhrs{$name,"0.0001"}++;
+	    }
+	    if ($errpct > 0.00001) {
+		$errhrs{$name,"0.00001"}++;
 	    }
 	}
 	if (defined($count{"ifOutMulticastPkts",$h})) {
@@ -510,9 +516,10 @@ sub report_error_percs {
     printf($out " %6d", $iftype{$n});
 
     # Add extra error hours counters at the end, for compatibility
-    printf($out " %2d  %2d",
+    printf($out " %2d  %2d  %2d",
 	   $errhrs{$n,"0.001"},
-	   $errhrs{$n,"0.0001"});
+	   $errhrs{$n,"0.0001"},
+	   $errhrs{$n,"0.00001"});
 
     printf($out "\n");
 }

@@ -373,6 +373,24 @@ sub day_errs_header {
 	       &make_ref("%5s", "Reset","e-sort", "Interface+resets"),
 	       &make_ref("%5s", "Disc%","e-sort", "Peak+out+discards")
 	    );
+    } elsif ($nf == 16) {
+	my $r1 = &make_ref("%-25s", "Interface",    "e-sort", "Name");
+	my $r2 = &make_ref("%22s", "inerr hrs >x%", "e-sort", "Error+hours");
+	printf("%-25s%32s         %29s %11s\n", $r1, $r2,
+	       "--------------------- in % ----------------------",
+	       "-- out ----");
+	printf("%-25s  %3s %3s %3s %4s %4s %4s   %9s %9s %9s %9s %9s %5s %5s\n",
+	       "",
+	       "1.0", "0.1", ".01", "1e-3", "1e-4", "1e-5",
+	       &make_ref("%9s", "Errs", "e-sort", "Input+errors"),
+	       &make_ref("%9s", "CRC" , "e-sort", "CRC+errors"),
+	       &make_ref("%9s", "Frm" , "e-sort", "Framing+errors"),
+	       &make_ref("%9s", "Abrt", "e-sort", "Abort+errors"),
+	       &make_ref("%9s", "Ign" , "e-sort", "Ignored+packets"),
+	       &make_ref("%5s", "Reset","e-sort", "Interface+resets"),
+	       &make_ref("%5s", "Disc%","e-sort", "Peak+out+discards")
+	    );
+	
     } else {
 	printf("%-25s%13s %24s  %11s\n",
 	       &make_ref("%-25s", "Interface",    "e-sort", "Name"),
@@ -413,6 +431,25 @@ sub day_errs_line {
 	       sprintf("<a href=\"plot-all/%s,%s,raw,discards\">%5s</a>",
 		       $l[0], $dsp, $l[10]),
 	       $l[12]);
+    } elsif ($#l == 15) {
+	printf("%-25.25s  %3s %3s %3s %4s %4s %4s   %7s %7s %7s %7s %7s %5s %5s\n",
+	       $l[0], $l[1], $l[2], $l[3], $l[13], $l[14], $l[15],
+	       sprintf("<a href=\"plot-all/%s,%s,raw,errors\">%7s</a>",
+		       $l[0], $dsp, $l[4]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,errors\">%7s</a>",
+		       $l[0], $dsp, $l[5]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,errors\">%7s</a>",
+		       $l[0], $dsp, $l[6]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,errros\">%7s</a>",
+		       $l[0], $dsp, $l[7]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,discards\">%5s</a>",
+		       $l[0], $dsp, $l[8]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,resets\">%5s</a>",
+		       $l[0], $dsp, $l[9]),
+	       sprintf("<a href=\"plot-all/%s,%s,raw,discards\">%5s</a>",
+		       $l[0], $dsp, $l[10]),
+	       $l[12]);
+	
     } else {
 	printf("%-25.25s  %3s %3s %3s %5s %5s %5s %5s %5s  %5s %5s\n",
 	       $l[0], $l[1], $l[2], $l[3],

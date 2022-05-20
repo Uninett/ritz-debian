@@ -92,8 +92,8 @@ if ($opt_k) {
 	chomp;
 	$known{$_} = 1;
     }
+    close($IN);
 }
-close($IN);
 
 
 my $rep = &report_file("errors.perc", $date);
@@ -110,15 +110,18 @@ while(<$F>) {
     $stats{$n,"avg-err"} = $a[4];
     $stats{$n,"err3"} = $a[13];
     $stats{$n,"err4"} = $a[14];
+    if ($a[15]) {
+	$stats{$n,"err5"} = $a[15];
+    }
 }
 close($F);
 
 my $anything_p = 0;
 foreach my $n (keys %names) {
-    if ($known{$n}) {
-	next;
-    }
-    foreach my $e ("err0", "err1", "err2", "err3", "err4") {
+    foreach my $e ("err0", "err1", "err2", "err3", "err4", "err5") {
+	if ($known{$n}) {
+	    next;
+	}
 	if ($stats{$n,$e} > $ht) {
 	    $anything_p = 1;
 	}
@@ -126,17 +129,17 @@ foreach my $n (keys %names) {
 }
 
 if ($anything_p) {
-    printf("%-30s          inerr hours >x\%\n");
-    printf("%-30s  1.0  0.1 1e-2 1e-3 1e-4  24h-avg-inerrors\n");
+    printf("%-30s               inerr hours >x\%\n");
+    printf("%-30s  1.0  0.1 1e-2 1e-3 1e-4 1e-5  24h-avg-inerrors\n");
 }
 
 
 our($S);
-open($S, "| sort -n -r +1 +2 +3 +4") || die "Could not start sort";
+open($S, "| sort -n -r +1 +2 +3 +4 +5") || die "Could not start sort";
 
 foreach my $n (keys %names) {
     my $inc = 0;
-    foreach my $e ("err0", "err1", "err2", "err3", "err4") {
+    foreach my $e ("err0", "err1", "err2", "err3", "err4", "err5") {
 	if ($stats{$n,$e} > $ht) {
 	    $inc = 1;
 	}
@@ -146,7 +149,7 @@ foreach my $n (keys %names) {
 	    next;
 	}
 	printf($S "%-30s ", $n);
-	foreach my $e ("err0", "err1", "err2", "err3", "err4") {
+	foreach my $e ("err0", "err1", "err2", "err3", "err4", "err5") {
 	    printf($S "  %2d ", $stats{$n,$e});
 	}
 	printf($S " %s\n", $stats{$n,"avg-err"});
