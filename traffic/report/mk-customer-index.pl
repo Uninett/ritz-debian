@@ -1,9 +1,11 @@
-#! /usr/bin/perl
+#! %PERL%
 
 # $Id$
 
 # Make a combined index of "daily avg", "daily 98th percentile"
 # plus pointers to "current" statistics.
+
+use strict;
 
 push(@INC, "%LIBDIR%");
 use lib qw(%LIBDIR%);
@@ -130,6 +132,13 @@ sub htmlize {
     $s =~ s/\x{D6}/&Ouml;/g;
     $s =~ s/\x{D8}/&Oslash;/g;
     $s =~ s/\x{F8}/&oslash;/g;
+    $s =~ s/\x{D8}/&Oslash;/g;
+    $s =~ s/\x{E9}/&eacute;/g;
+    $s =~ s/\x{C9}/&Eacute;/g;
+    $s =~ s/\x{E1}/&aacute;/g;
+    $s =~ s/\x{C1}/&Aactuve;/g;
+    $s =~ s/\x{E6}/&aelig;/g;
+    $s =~ s/\x{C6}/&Aelig;/g;
 
     return $s;
 }
