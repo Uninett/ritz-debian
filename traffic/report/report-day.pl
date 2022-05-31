@@ -56,18 +56,18 @@
 #
 # Possible heading for traffic.kbit
 #
-#          Busy hour    Busy sample   24hr average  speed            90%    90% IPv6 traffic  IPv6 percent
+#          Busy hour    Busy sample   24hr average  speed            90%    90% IPv6 percent
 # Intf.  input output   input output   input output kbit/s iftype     in    out
-#xxxxxx xxxxxx xxxxxx  xxxxxx xxxxxx  xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx  xxx xxx
+#xxxxxx xxxxxx xxxxxx  xxxxxx xxxxxx  xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx  xxx xxx
 #
 # Possible heading for errors:
 #
-# Interface   inerr hrs >x% --------- in % ---------  -- out -----peak-
-#               1.0 0.1 .01 Errs  CRC  Frm Abrt  Ign  Reset Disc% Disc% iftype
-#xxxxxxxxxxxxx   xx  xx  xx xxxx xxxx xxxx xxxx xxxx  xxxxx xxxxx xxxxx xxxxxx
+# Interface   inerr hrs >x% --------- in % ---------  -- out -----peak-        inerr hrs >x%
+#               1.0 0.1 .01 Errs  CRC  Frm Abrt  Ign  Reset Disc% Disc% iftype  1e-3%  1e-4%  1e-5%
+#xxxxxxxxxxxxx   xx  xx  xx xxxx xxxx xxxx xxxx xxxx  xxxxx xxxxx xxxxx xxxxxx     xx     xx     xx
 #
-# Additionally: inerr hrs >x% added at the end for 0.001, 0.0001 and 0.00001%
-#
+# (the inerr hrs 1e-3%, 1e-4% and 1e-5% will be re-grouped in the web report, but are
+# added at the end for backward compatibility)
 #
 # Possible heading for ether_errs:
 #
