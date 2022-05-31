@@ -126,6 +126,7 @@ our(%plot_to_phy) = (
 			 "discards" => 1,
 			 "errors" => 1,
 			 "error-hrs" => 1,
+			 "ip6perc" => 1,
 		     },
 		     "week" => {
 			 "traffic" => 1,
