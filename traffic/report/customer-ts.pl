@@ -60,6 +60,8 @@ use Fcntl qw(:seek);
 use Date::Parse;
 use Date::Format;
 
+use RRDs;
+
 use strict;
 no strict "vars";
 
@@ -413,36 +415,39 @@ sub process_data {
 sub create_rrd {
     my($name) = @_;
     my($cmd);
+    my(@cmd);
     our($opt_V);
 
     # 4 years in the past as starting point
     my($s) = $^T - (4 * 365) * 24 * 3600;
 
-    $cmd = "rrdtool create %s.rrd ";
-    $cmd .= "--start %d ";
-    $cmd .= "-s 300 ";
-    $cmd .= "DS:In:GAUGE:600:0:U ";
-    $cmd .= "DS:Out:GAUGE:600:0:U ";
+    push(@cmd, sprintf("%s.rrd", $name));
+    push(@cmd, sprintf("--start=%d", $s));
+    push(@cmd, "--step=300");
+    push(@cmd, "DS:In:GAUGE:600:0:U");
+    push(@cmd, "DS:Out:GAUGE:600:0:U");
     # 72 hours of 5-minute intervals
-    $cmd .= "RRA:AVERAGE:0.5:1:864 ";
+    push(@cmd, "RRA:AVERAGE:0.5:1:864");
     # 21 days of 30-minute intervals
-    $cmd .= "RRA:AVERAGE:0.5:6:1008 ";
+    push(@cmd, "RRA:AVERAGE:0.5:6:1008");
     # 62 days of 2-hour intervals
-    $cmd .= "RRA:AVERAGE:0.5:24:744 ";
+    push(@cmd, "RRA:AVERAGE:0.5:24:744");
     # 1095 days (3 years) of 24-hour intervals
-    $cmd .= "RRA:AVERAGE:0.5:288:730 ";
+    push(@cmd, "RRA:AVERAGE:0.5:288:730");
 
     # And similar for the max values:
-    $cmd .= "RRA:MAX:0.5:1:864 ";
-    $cmd .= "RRA:MAX:0.5:6:1008 ";
-    $cmd .= "RRA:MAX:0.5:24:744 ";
-    $cmd .= "RRA:MAX:0.5:288:730 ";
+    push(@cmd, "RRA:MAX:0.5:1:864");
+    push(@cmd, "RRA:MAX:0.5:6:1008");
+    push(@cmd, "RRA:MAX:0.5:24:744");
+    push(@cmd, "RRA:MAX:0.5:288:730");
 
     if ($opt_V) {
-	printf(STDERR "$cmd\n", $name, $s);
+	printf(STDERR "RRDs::create %s\n", join("\n", @cmd));
     }
-    if (system(sprintf($cmd, $name, $s)) != 0) {
-	printf(STDERR "rrdtool create %s.rrd failed: %s", $name, $?);
+    RRDs::create(@cmd);
+    if (RRDs::error) {
+	printf(STDERR "RRDs::create %s.rrd failed: %s\n", $name,
+	       RRDs::error);
 	return undef;
     }
     return 1;
@@ -462,30 +467,62 @@ sub update_rrd {
     my($i);
     our($opt_N, $opt_V);
     my($name);
+    my(@args);
+    my($lastupdate, $n_skip, $n_done, $n_oos, $firstskip, $prev_t);
+
+    $n_skip = $n_done = $n_oos = $prev_t = 0;
 
     if (-f $c . ".lock") { return; }
     if (! -f $c . ".rrd" && !defined($opt_N)) {
 	&create_rrd($c) || return;
     }
+
+    push(@args, sprintf("%s.rrd", $c));
+    $lastupdate = RRDs::last($args[0]);
+
     my($eoa) = $#{ $d->{"sample_times"}->{"values"} };
     my($tap) = $d->{"sample_times"}->{"values"};
     my($iap) = $d->{"ikbps"}->{"values"};
     my($oap) = $d->{"okbps"}->{"values"};
     # report to RRD in bit/s
     for ($i = 0; $i <= $eoa; $i++) {
-	if (!defined($opt_N)) {
-	    printf(RRD "update %s.rrd %d:%f:%f\n",
-		   $c, $tap->[$i],
-		   $iap->[$i] * 1000.0,
-		   $oap->[$i] * 1000.0);
+	if ($tap->[$i] > $lastupdate) {
+	    if ($tap->[$i] > $prev_t) {
+		push(@args, sprintf("%d:%f:%f",
+				    $tap->[$i],
+				    $iap->[$i] * 1000.0,
+				    $oap->[$i] * 1000.0));
+		$prev_t = $tap->[$i];
+		$n_done++;
+	    } else {
+		$n_oos++;
+	    }
+	} else {
+	    if (!defined($firstskip)) {
+		$firstskip = $tap->[$i];
+	    }
+	    $n_skip++;
 	}
-	if ($opt_V) {
-	    printf(STDERR "RRD-update %s %f %f %s.rrd\n",
-		   &time_str($tap->[$i]),
-		   $iap->[$i] * 1000.0,
-		   $oap->[$i] * 1000.0,
-		   $c);
+    }
+    if ($n_done != 0 && !defined($opt_N)) {
+	RRDs::update(@args);
+	if (RRDs::error) {
+	    printf(STDERR "RRDs::update %s -- error: %s\n",
+		   join("\n", @args), RRDs::error);
 	}
+    }
+    if ($n_skip != 0) {
+	printf(STDERR "%s: RRDs skipped %d entries, did %d," .
+	       " first skipped = %d, lastupdate = %d\n",
+	       $c, $n_skip, $n_done, $firstskip, $lastupdate);
+    }
+    if ($n_oos != 0) {
+	printf(STDERR "%s: RRDs skipped %d entries out of sequence, did %d\n",
+	       $c, $n_oos, $n_done);
+    }
+    
+    if ($opt_V) {
+	printf(STDERR "RRDs::update %s\n", join("\n", @args));
     }
 }
 
@@ -531,7 +568,8 @@ sub do_all_lines {
 
     my($ls) = join("+", @lines);
     foreach my $day (0 .. $nd-1) {
-	my($tm) = $base_tm + 3600 * 24 * ($day);
+	# 7200 = 2h to compensate for effects of DST shifts...
+	my($tm) = $base_tm + 7200 + 3600 * 24 * ($day);
 	my($d) = &tm_to_date($tm + 12*3600);
 	$tm = &date_to_tm($d);
 
@@ -576,12 +614,65 @@ sub do_one_customer {
     &do_all_lines($dsp, $c, @{ $ports{$c} });
 }
 
+sub child_process_customers {
+    my($pid, $dsp, @customers) = @_;
+    our($opt_v);
+
+    my $nc = 0;
+    foreach my $c (@customers) {
+	if (defined($opt_v)) {
+	    printf(STDERR "Pid %s doing customer %s / %s\n",
+		   $pid, $c, $dsp);
+	}
+	&do_one_customer($dsp, $c);
+	$nc++;
+    }
+    if (defined($opt_v)) {
+	printf(STDERR "Pid %d exiting after processing %d customers\n",
+	       $pid, $nc);
+    }
+    exit(0);
+}
+
 sub do_all_customers {
     my($dsp) = @_;
     our(%fullname);
+    our($opt_j);
 
-    foreach $c (keys %fullname) {
-	&do_one_customer($dsp, $c);
+    if (defined($opt_j) && $opt_j > 1) {
+	my($inc, $p, $pid);
+
+	my @l = keys %fullname;
+
+	$inc = int(($#l + 1) / $opt_j);
+	if ($inc == 0) { $inc = 1; }
+	$p = 0;
+	while($p <= $#l) {
+	    my($m);
+
+	    $m = &min($p + $inc - 1, $#l);
+
+	    if (($pid = fork()) == 0) {
+		&child_process_customers($$, $dsp, @l[$p .. $m]);
+	    }
+	    if (defined($opt_v)) {
+		printf(STDERR
+		       "Forked pid %d for processing %d customers" .
+		       ", from %s to %s\n",
+		       $pid, $m - $p + 1, $p, $m);
+	    }
+	    $p += $inc;
+	}
+	# Wait for all the children to finish
+	while(($pid = wait()) != -1) {
+	    if (defined($opt_v)) {
+		printf(STDERR "Reaped pid %d\n", $pid);
+	    }
+	}
+    } else {
+	foreach $c (keys %fullname) {
+	    &do_one_customer($dsp, $c);
+	}
     }
 }
 
@@ -610,6 +701,7 @@ sub usage {
     printf(STDERR "-R rrddir     update RRD databases in this directory\n");
     printf(STDERR "-v            output debugging output\n");
     printf(STDERR "-V            output extra-verbose debugging output\n");
+    printf(STDERR "-j jobs       parallelize historical re-processing (-d)\n");
     printf(STDERR "-e expr       a type-expression to be used with -C\n");
     printf(STDERR "-C category   name the category implied by the -e option\n");
     exit(1);
@@ -619,7 +711,7 @@ sub usage {
 # Main
 #
 
-&getopts("C:c:d:e:hNn:R:vV");
+&getopts("C:c:d:e:hj:Nn:R:vV");
 
 if ($opt_h) { &usage(); }
 
@@ -638,8 +730,8 @@ if (defined($opt_R)) {
 	&usage();
     }
     chdir($opt_R);
-    open(RRD, "|rrdtool - 2>&1 | egrep -v '^OK'") ||
-	die "Could not open rrdtool";
+#    open(RRD, "|rrdtool - 2>&1 | egrep -v '^OK'") ||
+#	die "Could not open rrdtool";
 }
 
 # Make STDERR flush output immediately
@@ -668,6 +760,6 @@ if (defined($opt_d) && defined($opt_n)) {
 	&do_all_customers(&today_spec());
     }
 }
-if ($opt_R) {
-    close(RRD);
-}
+#if ($opt_R) {
+#    close(RRD);
+#}
