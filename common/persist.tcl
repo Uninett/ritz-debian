@@ -82,7 +82,8 @@ namespace eval ::persist {
 	    }
 	    dumpGlobalVar $f $var
 	}
-	unset nses
+	# may not exist
+	catch { unset nses }
     }
 
     proc dumpAll { } {
