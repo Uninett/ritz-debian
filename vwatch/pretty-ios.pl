@@ -59,7 +59,7 @@ sub pretty_junos_desc {
 	$desc = "JunOS $2 " . lc($1);
 } elsif ($desc =~
 	/Juniper Networks, Inc. ([^ ]+) .*kernel JUNOS ([^ ,]+)[, ].*/) {
-	$desc = "JunOS $2 $1";
+	$desc = "JunOS $2 " . lc($1);
     }
     return $desc;
 }
