@@ -47,6 +47,7 @@ push(@INC, "%LIBDIR%");
 $docbase = "%HTMLDIR%";
 
 use CGI;
+use Digest::SHA1 qw(sha1_base64);
 
 require 'date.pl';
 require 'search.pl';
@@ -228,6 +229,16 @@ our(%plot_to_phy) = (
 sub img_names {
     my($line, $dsp, $res, $plot) = @_;
     my($file);
+
+    # Workaround for over-long "$line" values (can be multiple concatenated
+    # logical port names, separated by "+")
+    if (length($line) > 100) {
+	my $digest = sha1_base64($line);
+	$digest =~ s/\//-/g;
+	my $l = substr($line, 0, 80);
+	$l .= "-" . $digest;
+	$line = $l;
+    }
 
     $file = sprintf("%s.%s.%s.%s.png", $res, $plot, $line, $dsp);
     return(
