@@ -44,6 +44,8 @@
 
 #package gnuplot;
 
+use Digest::SHA1 qw(sha1_base64);
+
 $plt_docbase = "%TOPDIR%/data/plot";
 
 %device_init_strings =
@@ -69,6 +71,16 @@ $plt_docbase = "%TOPDIR%/data/plot";
 sub plot_names {
     my($plot, $line, $date, $device) = @_;
     my($file1, $file2, $file3);
+
+    # Workaround for over-long "$line" values (can be multiple concatenated
+    # logical port names, separated by "+")
+    if (length($line) > 100) {
+	my $digest = sha1_base64($line);
+	$digest =~ s/\//-/g;
+	my $l = substr($line, 0, 80);
+	$l .= "-" . $digest;
+	$line = $l;
+    }
 
     $file1 = sprintf("%s.%s.%s.%s.plt", $plot, $line, $date, $device);
     $file2 = sprintf("%s.%s.%s.data", $plot, $line, $date);
