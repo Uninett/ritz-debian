@@ -88,8 +88,10 @@ proc pullCases { } {
 
     set ids [pullCaseIds]
     foreach id $ids {
-	getAttrs $id
-	set knownCase($id) 1
+	# if server is inconsistent, ignore error
+	if { ! [ catch { getAttrs $id } ] } {
+	    set knownCase($id) 1
+	}
     }
     return $ids
 }
