@@ -244,7 +244,9 @@ proc recordIntf { sh vbl } {
     set type [mib scan [lindex [lindex $vbl 1] 0] $type]; # undo TC coding
     set hs	[lindex [lindex $vbl 5] 2]
 
-    if { $hs != "" && $hs != 0 && $hs > 3000 } {
+    # Allow $hs == 0, which means
+    # "interface has no concept of speed".
+    if { $hs != "" && ($hs > 3000 || $speed == 0xffffffff) } {
 	set speed [expr $hs * 1000000.0]
     }
 
