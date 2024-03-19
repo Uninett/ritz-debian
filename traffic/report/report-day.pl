@@ -56,9 +56,9 @@
 #
 # Possible heading for traffic.kbit
 #
-#          Busy hour    Busy sample   24hr average  speed            90%    90% IPv6 percent
-# Intf.  input output   input output   input output kbit/s iftype     in    out
-#xxxxxx xxxxxx xxxxxx  xxxxxx xxxxxx  xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx  xxx xxx
+#          Busy hour    Busy sample   24hr average  speed          IPv6 percent   90%    90%
+# Intf.  input output   input output   input output kbit/s iftype     in    out    in    out
+#xxxxxx xxxxxx xxxxxx  xxxxxx xxxxxx  xxxxxx xxxxxx xxxxxx xxxxxx    xxx    xxx xxxxx xxxxxx  
 #
 # Possible heading for errors:
 #
