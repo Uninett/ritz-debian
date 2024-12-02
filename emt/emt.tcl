@@ -21,6 +21,8 @@ proc emt_config {} {
     global emt_alarm_subject
     global emt_alarm_phones
     global emt_descr_filter
+    global emt_descr_must_match
+    global emt_descr_exclude_pat
     global emt_skip_bfd
 
     set emt_skip_bfd 0;			# default is don't skip
@@ -535,14 +537,13 @@ proc emt_report { ids } {
     ::persist::add nagged
 }
 
-proc emt_alarm { ids } {
-    global nagged
-    
-    set sids [::sort::sortCases $ids]
+proc emt_time_filter { ids } {
+
     set clockhour [scan [clock format [clock seconds] -format "%H"] "%d"]
     set weekday   [scan [clock format [clock seconds] -format "%w"] "%d"]
     set prilimit 100
 
+    # FIXME yes, limits are hardcoded here...
     # FIXME check weekday as well
     if { $clockhour >= 7 && $clockhour < 16 } {
 	# FIXME remove this
@@ -555,47 +556,134 @@ proc emt_alarm { ids } {
 	# After work, but awake
 	set prilimit 99
     }
-    set body ""
 
-    foreach id $sids {
+    set nids ""
+    foreach id $ids {
 	set p [::attr::priority $id]
 	set type [::attr::get $id "type"]
 	log [format "Possible alarm for id: %s, type: %s, pri: %s ?" $id $type $p]
 	if { $p >= $prilimit } {
-	    if { $type == "portstate" } {
-		set s [::attr::effectivePortState $id]
-		global emt_descr_filter
-		if { [info exists emt_descr_filter] } {
-		    if [catch { set d [::attr::get $id "descr"] }] {
-			# no description or unset, ignore
-			log [format "No descr for %d, ignoring" $id]
-			continue
-		    }
-		    if [regexp $emt_descr_filter $d] {
-			log [format \
-				 "Descr '%s' matches '%s', including" \
-				 $d $emt_descr_filter ]
-			append body [single_subject $id] "\n"
-		    } else {
-			log [format \
-			     "Descr does not match for id %d, ignored" $id]
-		    }
-		} else {
-		    log [format "No emt_descr_filter, including"]
-		    append body [single_subject $id] "\n"
-		}
-	    } else {
-		append body [single_subject $id] "\n"
-	    }
+	    lappend nids $id
 	} else {
 	    log [format "Nope, %s not important enough, priority threshold : %s" $id $prilimit]
 	}
     }
-    # anything but newlines here?
-    if { [regexp "^\n*$" $body] != 1 } {
+    return $nids
+}
+
+# Filter the events to be reported via e-mail
+# This includes time & priority-based suppression
+# and inclusion / exclusion via patterns
+
+proc emt_filter { ids } {
+    global emt_descr_filter
+    global emt_descr_must_match
+    global emt_descr_exclude_pat
+    
+    set nids [emt_time_filter $ids]
+
+    # filtered IDs
+    set fids ""
+
+    foreach id $nids {
+	if [catch { set type [::attr::get $id "type"] }] {
+	    log [format "No type for %d, skipping" $id]
+	    continue
+	}
+	if [catch { set r [::attr::get $id "router"] }] {
+	    log [format "No router / device for %d, skipping" $id]
+	    continue
+	}
+
+	if [array exists emt_descr_must_match] {
+	    if [info exists emt_descr_must_match($r)] {
+		set must_match $emt_descr_must_match($r)
+	    }
+	} elseif [info exists emt_descr_must_match] {
+	    set must_match $emt_descr_must_match
+	} elseif [ info exists emt_descr_filter ] {
+	    set must_match $emt_descr_filter
+	}
+	
+	if [array exists emt_descr_exclude_pat] {
+	    if [info exists emt_descr_exclude_pat($r)] {
+		set exclude_match $emt_descr_exclude_pat($r)
+	    }
+	} elseif [ info exists emt_descr_exclude_pat ] {
+	    set exclude_match $emt_descr_exclude_pat
+	}
+
+	if { $type == "portstate" } {
+	    if [catch { set d [::attr::get $id "descr"] }] {
+		# no description or unset, ignore
+		log [format "No descr for %d, ignoring" $id]
+		continue
+	    }
+	    if [info exists must_match ] {
+		if [regexp $must_match $d] {
+		    if [info exists $exclude_match] {
+			if [regexp $exclude_match $d] {
+			    log [format "Descr '%s' matches '%s', excluding" \
+				     $d $exclude_match]
+			    continue
+			} else {
+			    lappend fids $id
+			    log [format \
+				     "Descr '%s' matches '%s', and not '%s', including" \
+				     $d $must_match $exclude_match]
+			}
+		    } else {
+			lappend fids $id
+			log [format \
+				 "Descr '%s' matches '%s' and no exclude pattern, including" \
+				 $d $must_match ]
+		    }
+		} else {
+		    log [format \
+			     "Descr '%s' does not match '%s', excluding" \
+			     $d $must_match]
+		    continue
+		}
+	    } else {
+		if [info exists exclude_match ] {
+		    if [regexp $exclude_match $d] {
+			log [format "Descr '%s' matches '%s', excluding" \
+				 $d $exclude_match]
+			continue
+		    } else {
+			lappend fids $id
+			log [format "Descr '%s' doesn't match exclude pattern '%s', including" \
+				 $d $exclude_match]
+		    }
+		} else {
+		    # No must-match or exclude pattern specified, so include:
+		    lappend fids $id
+		}
+	    }
+	} elseif { $type == "bfd" && $emt_skip_bfd } {
+	    # just skip
+	    continue
+	} else {
+	    # all other types, include
+	    lappend fids $id
+	}
+    }
+    return $fids
+}
+
+proc emt_alarm { ids } {
+    global nagged
+    
+    set sids [emt_filter [::sort::sortCases $ids]]
+
+    foreach id $sids {
+	append body [single_subject $id] "\n"
+    }
+
+    if { [llength $sids] != 0 } {
 	log [format "Calling alarm function..."]
 	emt_send_alarm $body
-    } 
+    }
 }
 
     
