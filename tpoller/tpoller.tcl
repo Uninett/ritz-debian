@@ -336,6 +336,9 @@ proc getVarList { sh } {
 
     if { [::config::conf $name "hcounters"] != "no" } {
 	lappend vl "ifHCInOctets" "ifHCOutOctets"
+	lappend vl "ifHCInUcastPkts" "ifHCOutUcastPkts"
+	lappend vl "ifHCInMulticastPkts" "ifHCOutMulticastPkts"
+	lappend vl "ifHCInBroadcastPkts" "ifHCOutBroadcastPkts"
     }
     lappend vl "ifInOctets" "ifOutOctets"
 
