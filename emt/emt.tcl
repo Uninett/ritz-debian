@@ -579,6 +579,7 @@ proc emt_filter { ids } {
     global emt_descr_filter
     global emt_descr_must_match
     global emt_descr_exclude_pat
+    global emt_skip_bfd
     
     set nids [emt_time_filter $ids]
 
