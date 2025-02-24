@@ -86,6 +86,7 @@ proc pollDev_3 { sh } {
 proc pollDev_4 { sh } {
 
     pollIntfs $sh
+    pollIPv6 $sh
 }
 
 proc errAddr { sh err } {
@@ -315,6 +316,33 @@ proc pollIntfs { sh } {
     }
 }
 
+proc pollIPv6 { sh } {
+
+    set vl [getIPv6VarList $sh]
+    asyncSparseTableWalk $sh x $vl {
+	logVars %S $x
+    } {
+	# no endscript
+#	puts [format "finished polling %s" [name %S]]
+    } {	
+	logerr [format "%s ipv6 poll FAILED: %s" [name %S] %E]
+    }
+}
+
+proc getIPv6VarList { sh } {
+    global cx
+
+    set vl ""
+
+    # for IPv6 stats on JunOS, from the IPV6-MIB:
+    lappend vl "ipv6IfStatsInReceives" "ipv6IfStatsOutForwDatagrams"
+    # for IPv6 stats on IOS-XR, from IP-MIB:
+    lappend vl "ipIfStatsInReceives.2" "ipIfStatsOutTransmits.2" \
+		"ipIfStatsHCInOctets.2" "ipIfStatsHCOutOctets.2"
+
+    return $vl
+}
+
 proc getVarList { sh } {
     global cx
 
@@ -326,13 +354,6 @@ proc getVarList { sh } {
 		"ifInMulticastPkts" "ifOutMulticastPkts" \
 		"ifInBroadcastPkts" "ifOutBroadcastPkts" \
 	       ]
-
-    # for IPv6 stats on JunOS, from the IPV6-MIB:
-    lappend vl "ipv6IfStatsInReceives" "ipv6IfStatsOutForwDatagrams"
-    # for IPv6 stats on IOS-XR, from IP-MIB:
-    lappend vl "ipIfStatsInReceives.2" "ipIfStatsOutTransmits.2" \
-		"ipIfStatsHCInOctets.2" "ipIfStatsHCOutOctets.2"
-
 
     if { [::config::conf $name "hcounters"] != "no" } {
 	lappend vl "ifHCInOctets" "ifHCOutOctets"
