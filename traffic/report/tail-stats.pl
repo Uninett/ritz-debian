@@ -207,6 +207,7 @@ sub compute_basic_values {
     our($max_sample, %count);
     our(%sample_secs);
     our($ifspeed, $opt_D);
+    our(%lasttime);
 
     my $n = &file_to_name($b, &today);
 
@@ -218,17 +219,6 @@ sub compute_basic_values {
 	    }
 	    next;
 	}
-	$delta_t = $sample_secs{$i} - $sample_secs{$i-1};
-
-	if (defined($opt_D) && $opt_D eq $n) {
-	    printf(STDERR "Delta for step %d is %d secs, (%d vs %d)\n",
-		   $i, $delta_t, $sample_secs{$i}, $sample_secs{$i-1});
-	}
-	if ($delta_t == 0) {
-	    printf(STDERR "Delta for step %d is zero! Name %s base %s\n",
-		   $i, $n, $b);
-	    next;
-	}
 
 	foreach my $k (keys %$d) {
 	    my($ap) = $d->{$k}->{"values"};
@@ -238,12 +228,31 @@ sub compute_basic_values {
 	    my($v) = 0;
 	    my($ov) = 0;
 	    my($vn);
+	    my $found = 0;
 	    foreach my $var (@vars) {
-		$v += $count{$var,$i};
-		$vn = $var;
-		if ($var =~ /Octets/o) {
-		    $ov = 1;
+		if ($count{$var,$i}) {
+
+		    # per-variable delta_t, really...
+		    $delta_t = $sample_secs{$i} - $lasttime{$var};
+		    $lasttime{$var} = $sample_secs{$i};
+
+		    $v += $count{$var,$i};
+		    $vn = $var;
+		    if ($var =~ /Octets/o) {
+			$ov = 1;
+		    }
+		    $found = 1;
 		}
+	    }
+	    if (!$found) {
+		# Could be no variables of this name for this time
+		# ... which is now the new normal
+		next;
+	    }
+	    if ($delta_t == 0) {
+		printf(STDERR "Delta for step %d is zero! Name %s base %s\n",
+		       $i, $n, $b);
+		next;
 	    }
 	    my($val) = $v * $mult / $delta_t;
 
@@ -779,7 +788,7 @@ sub save_position {
 }
 
 sub report_tail_stats {
-    my($rfile, $b, $ofile) = @_;
+    my($rfile, $drfile, $b, $ofile) = @_;
     our($fd, $opt_i, $opt_V);
     my($ikbps, $okbps, $n);
     my($sp) = $fd->{$b}->{"save_values"};
@@ -834,11 +843,19 @@ sub report_tail_stats {
 	   $ikbps, $okbps,
 	   $fd->{$b}->{"ifspeed"} / 1000,
 	   );
+	printf($drfile "%-30s %12.3f %12.3f %12.3f %12.3f %8d\n",
+	       $name,
+	       $ia->[$#$ia],
+	       $oa->[$#$oa],
+	       $ikbps,
+	       $okbps,
+	       $fd->{$b}->{"ifspeed"} / 1000,
+	    );
     }
 }
 
 sub tail_process_file {
-    my($rfile, $f, $d) = @_;
+    my($rfile, $drfile, $f, $d) = @_;
     my($b) = basename($f);
     my($cat, $base) = &cat_and_base($f);
     my($tm) = &date_to_tm($d);
@@ -887,7 +904,7 @@ sub tail_process_file {
 	}
     }
     if (defined($opt_r)) {
-	&report_tail_stats($rfile, $b, $opt_r);
+	&report_tail_stats($rfile, $drfile, $b, $opt_r);
     }
 }
 
@@ -1112,13 +1129,15 @@ sub do_all_files_today {
 	unlink($opt_r . ".new"); # ignore error
 	open(REP, ">" . $opt_r . ".new") ||
 	    die "Could not open $opt_r.new for write: $!";
+	unlink($opt_r . "-detail.new"); # ignore error
+	open(DREP, ">" . $opt_r . "-detail.new");
     }
 
     foreach my $f (@files) {
 	if (defined($opt_v)) {
 	    printf("Processing %s\n", $f);
 	}
-	&tail_process_file(\*REP, $dir . "/" . $f, $d);
+	&tail_process_file(\*REP, \*DREP, $dir . "/" . $f, $d);
 	if (defined($opt_V)) {
 	    printf(".");
 	}
@@ -1126,6 +1145,8 @@ sub do_all_files_today {
     if (defined($opt_r)) {
 	close(REP);
 	rename($opt_r . ".new", $opt_r); # atomic op on local file system
+	close(DREP);
+	rename($opt_r . "-detail.new", $opt_r . "-detail");
     }
     if ($stat_report != "" && defined($opt_m) && defined($opt_M)) {
 	&mail_report($opt_M, $opt_m, $stat_report);
