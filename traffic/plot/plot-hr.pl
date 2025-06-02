@@ -79,6 +79,22 @@ require 'plot.pl';
 require 'utils.pl';
 
 
+sub has_hc_pkts {
+    our(%count);
+    
+    return (defined($count{"ifHCInUcastPkts",0}));
+}
+
+sub has_multicast_pkts {
+    our(%count);
+
+    if (&has_hc_pkts()) {
+	return (defined($count{"ifHCInMulticastPkts","00"}));
+    } else {
+	return (defined($count{"ifInMulticastPkts","00"}));
+    }
+}
+
 sub plot_traffic {
     my($line, $fh, $dn, $d, $tm) = @_;
     my($i, $h, $val);
@@ -186,9 +202,16 @@ sub plot_discards {
 
 	printf($fh "%d ", $i + ($d*24)); # X-axis
 	
-	$base = ($count{"ifOutUcastPkts",$h} +
-		 $count{"ifOutNUcastPkts",$h});
-	$pkts = $base + $count{"ifOutDiscards",$h};
+	if (&has_hc_pkts()) {
+	    $base = ($count{"ifHCOutUcastPkts",$h} +
+		     $count{"ifHCOutMulticastPkts",$h} +
+		     $count{"ifHCOutBroadcastPkts",$h});
+	    $pkts = $base + $count{"ifOutDiscards",$h};
+	} else {
+	    $base = ($count{"ifOutUcastPkts",$h} +
+		     $count{"ifOutNUcastPkts",$h});
+	    $pkts = $base + $count{"ifOutDiscards",$h};
+	}
 	if ($pkts > 0) {
 	    &maxit($val = $count{"ifOutDiscards",$h} * 100.0 / $pkts);
 	} else {
@@ -245,9 +268,16 @@ sub plot_errors {
 
 	printf($fh "%d ", $i + ($d*24)); # X-axis
 	
-	$pkts = ($count{"ifInUcastPkts",$h} +
-		 $count{"ifInNUcastPkts",$h} +
-		 $count{"ifInErrors",$h});
+	if (&has_hc_pkts()) {
+	    $pkts = ($count{"ifHCInUcastPkts",$h} +
+		     $count{"ifHCInMulticastPkts",$h} +
+		     $count{"ifHCInBroadcastPkts",$h} +
+		     $count{"ifInErrors",$h});
+	} else {
+	    $pkts = ($count{"ifInUcastPkts",$h} +
+		     $count{"ifInNUcastPkts",$h} +
+		     $count{"ifInErrors",$h});
+	}
 	if ($pkts > 0) {
 	    &maxit($val = $count{"ifInErrors",$h} * 100.0 / $pkts);
 	} else {
@@ -320,50 +350,66 @@ sub plot_pps_common {
     }
 }
 
-sub has_multicast_pkts {
-    our(%count);
-
-    return (defined($count{"ifInMulticastPkts","00"}));
-}
-
 sub plot_pps {
     my($line, $fh, $dn, $d, $tm) = @_;
 
-    if (&has_multicast_pkts()) {
+    if (&has_hc_pkts()) {
 	&plot_pps_common($fh, $d, $tm,
-			 ["ifInUcastPkts",
-			  "ifInMulticastPkts",
-			  "ifInBroadcastPkts"],
-			 ["ifOutUcastPkts",
-			  "ifOutMulticastPkts",
-			  "ifOutBroadcastPkts"]);
+			 ["ifHCInUcastPkts",
+			  "ifHCInMulticastPkts",
+			  "ifHCInBroadcastPkts"],
+			 ["ifHCOutUcastPkts",
+			  "ifHCOutMulticastPkts",
+			  "ifHCOutBroadcastPkts"]);
     } else {
-	&plot_pps_common($fh, $d, $tm,
-			 ["ifInUcastPkts", "ifInNUcastPkts"],
-			 ["ifOutUcastPkts", "ifOutNUcastPkts"]);
+	if (&has_multicast_pkts()) {
+	    &plot_pps_common($fh, $d, $tm,
+			     ["ifInUcastPkts",
+			      "ifInMulticastPkts",
+			      "ifInBroadcastPkts"],
+			     ["ifOutUcastPkts",
+			      "ifOutMulticastPkts",
+			      "ifOutBroadcastPkts"]);
+	} else {
+	    &plot_pps_common($fh, $d, $tm,
+			     ["ifInUcastPkts", "ifInNUcastPkts"],
+			     ["ifOutUcastPkts", "ifOutNUcastPkts"]);
+	}
     }
 }
 
 sub plot_mpps {
     my($line, $fh, $dn, $d, $tm) = @_;
 
-    if (&has_multicast_pkts()) {
+    if (&has_hc_pkts()) {
 	&plot_pps_common($fh, $d, $tm,
-			 ["ifInMulticastPkts"],
-			 ["IfOutMulticastPkts"]);
+			 ["ifHCInMulticastPkts"],
+			 ["IfHCOutMulticastPkts"]);
     } else {
-	&plot_pps_common($fh, $d, $tm,
-			 ["ifInNUcastPkts"],
-			 ["ifOutNUcastPkts"]);
+	if (&has_multicast_pkts()) {
+	    &plot_pps_common($fh, $d, $tm,
+			     ["ifInMulticastPkts"],
+			     ["IfOutMulticastPkts"]);
+	} else {
+	    &plot_pps_common($fh, $d, $tm,
+			     ["ifInNUcastPkts"],
+			     ["ifOutNUcastPkts"]);
+	}
     }
 }
 
 sub plot_upps {
     my($line, $fh, $dn, $d, $tm) = @_;
 
-    &plot_pps_common($fh, $d, $tm,
-		     ["ifInUcastPkts"],
-		     ["ifOutUcastPkts"]);
+    if (&has_hc_pkts()) {
+	&plot_pps_common($fh, $d, $tm,
+			 ["ifHCInUcastPkts"],
+			 ["ifHCOutUcastPkts"]);
+    } else {
+	&plot_pps_common($fh, $d, $tm,
+			 ["ifInUcastPkts"],
+			 ["ifOutUcastPkts"]);
+    }
 }
 
 sub decorate_pps_common {
@@ -416,22 +462,33 @@ sub plot_ip6perc {
 
 	printf($fh "%d ", $i + ($d*24)); # X-axis
 	
-	if (&has_multicast_pkts()) {
+	if (&has_hc_pkts()) {
 	    $ipkts =
-		$count{"ifInUcastPkts",$h} +
-		$count{"ifInMulticastPkts",$h} +
-		$count{"ifInBroadcastPkts",$h};
+		$count{"ifHCInUcastPkts",$h} +
+		$count{"ifHCInMulticastPkts",$h} +
+		$count{"ifHCInBroadcastPkts",$h};
 	    $opkts =
-		$count{"ifOutUcastPkts",$h} +
-		$count{"ifOutMulticastPkts",$h} +
-		$count{"ifOutBroadcastPkts",$h};
+		$count{"ifHCOutUcastPkts",$h} +
+		$count{"ifHCOutMulticastPkts",$h} +
+		$count{"ifHCOutBroadcastPkts",$h};
 	} else {
-	    $ipkts =
-		$count{"ifInUcastPkts",$h} +
-		$count{"ifInNUcastPkts",$h};
-	    $opkts =
-		$count{"ifOutUcastPkts",$h} +
-		$count{"ifOutNUcastPkts",$h};
+	    if (&has_multicast_pkts()) {
+		$ipkts =
+		    $count{"ifInUcastPkts",$h} +
+		    $count{"ifInMulticastPkts",$h} +
+		    $count{"ifInBroadcastPkts",$h};
+		$opkts =
+		    $count{"ifOutUcastPkts",$h} +
+		    $count{"ifOutMulticastPkts",$h} +
+		    $count{"ifOutBroadcastPkts",$h};
+	    } else {
+		$ipkts =
+		    $count{"ifInUcastPkts",$h} +
+		    $count{"ifInNUcastPkts",$h};
+		$opkts =
+		    $count{"ifOutUcastPkts",$h} +
+		    $count{"ifOutNUcastPkts",$h};
+	    }
 	}
 	if (defined($count{"ipIfStatsInReceives",$h})) {
 	    $i6pkts = $count{"ipIfStatsInReceives",$h};

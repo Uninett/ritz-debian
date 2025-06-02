@@ -222,9 +222,16 @@ sub plot_discards {
     foreach $i (0 .. $max_sample) {
 	printf($fh "%f", $sample_time{$i} + ($d*24));
 
-	$pkts = ($count{"ifOutUcastPkts",$i} +
-		 $count{"ifOutNUcastPkts",$i} +
-		 $count{"ifOutDiscards",$i});
+	if (&has_hc_pkts()) {
+	    $pkts = ($count{"ifHCInUcastPkts",$i} +
+		     $count{"ifHCInMulticastPkts",$i} +
+		     $count{"ifHCInBroadcastPkts",$i} +
+		     $count{"ifOutDiscards",$i});
+	} else {
+	    $pkts = ($count{"ifInUcastPkts",$i} +
+		     $count{"ifInNUcastPkts",$i} +
+		     $count{"ifOutDiscards",$i});
+	}
 	if ($pkts > 0) {
 	    &maxit($val = $count{"ifOutDiscards",$i} * 100.0 / $pkts);
 	} else {
@@ -279,9 +286,16 @@ sub plot_errors {
 	$tprinted = 0;
 	printf($fh "%f", $sample_time{$i} + ($d * 24));
 
-	$pkts = ($count{"ifInUcastPkts",$i} +
-		 $count{"ifInNUcastPkts",$i} +
-		 $count{"ifInErrors",$i});
+	if (&has_hc_pkts()) {
+	    $pkts = ($count{"ifHCInUcastPkts",$i} +
+		     $count{"ifHCInMulticastPkts",$i} +
+		     $count{"ifHCInBroadcastPkts",$i} +
+		     $count{"ifInErrors",$i});
+	} else {
+	    $pkts = ($count{"ifInUcastPkts",$i} +
+		     $count{"ifInNUcastPkts",$i} +
+		     $count{"ifInErrors",$i});
+	}
 	if ($pkts > 0) {
 	    &maxit($val = $count{"ifInErrors",$i} * 100.0 / $pkts);
 	} else {
@@ -331,71 +345,158 @@ sub decorate_errors {
 sub plot_pps_common {
     my($fh, $d, $ivr, $ovr) = @_;
     my($i, $val, $inpkts, $outpkts, $inpps, $outpps, $dt);
+    my(%last_seen, $last_time);
     
     foreach $i (0 .. $max_sample) {
+	my $found = 0;
 	if ($i == 0) { next; }
-	printf($fh "%f", $sample_time{$i} + ($d * 24));
 	$outpkts = $inpkts = 0;
 	foreach my $v (@{$ivr}) {
-	    $inpkts += $count{$v,$i};
+	    if ($count{$v,$i}) {
+		$inpkts += $count{$v,$i};
+		$found = 1;
+	    }
 	}
 	foreach my $v (@{$ovr}) {
-	    $outpkts += $count{$v,$i};
+	    if ($count{$v,$i}) {
+		$outpkts += $count{$v,$i};
+		$found = 1;
+	    }
 	}
-	$dt = ($sample_time{$i} - $sample_time{$i-1}) * 3600;
+	# May not have these variables in this timeperiod
+	if (!$found) { next; }
+
+	# Try to bootstrap %last_seen
+	my $do_next = 0;
+	foreach my $v (@{$ivr}, @{$ovr}) {
+	    if (!defined($last_seen{$v})) {
+		if (defined($count{$v,$i-1})) {
+		    $last_seen{$v} = $i-1;
+		} elsif (defined($count{$v,$i-2})) {
+		    $last_seen{$v} = $i-2;
+		} else {
+		    # Hm, what to do here?
+		    # record & discard
+		    $last_seen{$v} = $i;
+		    $do_next = 1;
+		}
+	    }
+	}
+	# any one variable not seen?
+	if ($do_next) { next; }
+
+	# Set common $last_time
+	foreach my $v (@{$ivr}, @{$ovr}) {
+	    if ($last_seen{$v}) {
+		if ($sample_time{$last_seen{$v}} > $last_time) {
+		    $last_time = $sample_time{$last_seen{$v}};
+		}
+	    }
+	}
+
+	foreach my $v (@{$ivr}, @{$ovr}) {
+	    if (defined($count{$v,$i})) {
+		$last_seen{$v} = $i;
+	    }
+	}
+
+	$dt = ($sample_time{$i} - $last_time) * 3600;
 	$inpps = $inpkts / $dt;
 	$outpps= $outpkts / $dt;
 	&maxit($inpps);
 	&maxit($outpps);
-	printf($fh " %d %d", $inpps, $outpps);
+
+	printf($fh "%f", $sample_time{$i} + ($d * 24));
+	printf($fh " %d %d %d %f %f", $inpps, $outpps, $i, $dt, $last_time);
 	printf($fh "\n");
     }
+}
+
+sub has_hc_pkts {
+    our(%count);
+    
+    return (defined($count{"ifHCInUcastPkts",0}) ||
+	    defined($count{"ifHCInUcastPkts",1}));
 }
 
 sub has_multicast_pkts {
     our(%count);
 
-    return (defined($count{"ifInMulticastPkts",0}));
+    if (&has_hc_pkts()) {
+	return (defined($count{"ifHCInMulticastPkts",0}) ||
+		defined($count{"ifHCInMulticastPkts",1}));
+    } else {
+	return (defined($count{"ifInMulticastPkts",0}) ||
+		defined($count{"ifInMulticastPkts",1}));
+    }
 }
 
 sub plot_pps {
     my($line, $fh, $dn, $d, $tm) = @_;
 
-    if (&has_multicast_pkts()) {
+    if (&has_hc_pkts()) {
 	&plot_pps_common($fh, $d,
-			 ["ifInUcastPkts",
-			  "ifInMulticastPkts",
-			  "ifInBroadcastPkts"],
-			 ["ifOutUcastPkts",
-			  "ifOutMulticastPkts",
-			  "ifOutBroadcastPkts"]);
+			 ["ifHCInUcastPkts",
+			  "ifHCInMulticastPkts",
+			  "ifHCInBroadcastPkts"],
+			 ["ifHCOutUcastPkts",
+			  "ifHCOutMulticastPkts",
+			  "ifHCOutBroadcastPkts"]);
     } else {
-	&plot_pps_common($fh, $d,
-			 ["ifInUcastPkts", "ifInNUcastPkts"],
-			 ["ifOutUcastPkts", "ifOutNUcastPkts"]);
+	if (&has_multicast_pkts()) {
+	    &plot_pps_common($fh, $d,
+			     ["ifInUcastPkts",
+			      "ifInMulticastPkts",
+			      "ifInBroadcastPkts"],
+			     ["ifOutUcastPkts",
+			      "ifOutMulticastPkts",
+			      "ifOutBroadcastPkts"]);
+	} else {
+	    &plot_pps_common($fh, $d,
+			     ["ifInUcastPkts", "ifInNUcastPkts"],
+			     ["ifOutUcastPkts", "ifOutNUcastPkts"]);
+	}
     }
 }
 
 sub plot_mpps {
     my($line, $fh, $dn, $d, $tm) = @_;
 
-    if (&has_multicast_pkts()) {
-	&plot_pps_common($fh, $d,
-			 ["ifInMulticastPkts"],
-			 ["ifOutMulticastPkts"]);
+    if (&has_hc_pkts()) {
+	if (&has_multicast_pkts()) {
+	    &plot_pps_common($fh, $d,
+			     ["ifHCInMulticastPkts"],
+			     ["ifHCOutMulticastPkts"]);
+	} else {
+	    &plot_pps_common($fh, $d,
+			     ["ifHCInNUcastPkts"],
+			     ["ifHCOutNUcastPkts"]);
+	}
     } else {
-	&plot_pps_common($fh, $d,
-			 ["ifInNUcastPkts"],
-			 ["ifOutNUcastPkts"]);
+	if (&has_multicast_pkts()) {
+	    &plot_pps_common($fh, $d,
+			     ["ifInMulticastPkts"],
+			     ["ifOutMulticastPkts"]);
+	} else {
+	    &plot_pps_common($fh, $d,
+			     ["ifInNUcastPkts"],
+			     ["ifOutNUcastPkts"]);
+	}
     }
 }
 
 sub plot_upps {
     my($line, $fh, $dn, $d, $tm) = @_;
 
-    &plot_pps_common($fh, $d,
-		     ["ifInUcastPkts"],
-		     ["ifOutUcastPkts"]);
+    if (&has_hc_pkts()) {
+	&plot_pps_common($fh, $d,
+			 ["ifHCInUcastPkts"],
+			 ["ifHCOutUcastPkts"]);
+    } else {
+	&plot_pps_common($fh, $d,
+			 ["ifInUcastPkts"],
+			 ["ifOutUcastPkts"]);
+    }
 }
 
 sub decorate_pps_common {
@@ -445,22 +546,42 @@ sub plot_ip6perc {
     foreach $i (0 .. $max_sample) {
 	my($ipkts, $opkts, $i6pkts, $o6pkts);
 
-	if (&has_multicast_pkts()) {
-	    $ipkts =
-		$count{"ifInUcastPkts",$i} +
-		$count{"ifInMulticastPkts",$i} +
-		$count{"ifInBroadcastPkts",$i};
-	    $opkts =
-		$count{"ifOutUcastPkts",$i} +
-		$count{"ifOutMulticastPkts",$i} +
-		$count{"ifOutBroadcastPkts",$i};
+	if (&has_hc_pkts()) {
+	    if (&has_multicast_pkts()) {
+		$ipkts =
+		    $count{"ifHCInUcastPkts",$i} +
+		    $count{"ifHCInMulticastPkts",$i} +
+		    $count{"ifHCInBroadcastPkts",$i};
+		$opkts =
+		    $count{"ifHCOutUcastPkts",$i} +
+		    $count{"ifHCOutMulticastPkts",$i} +
+		    $count{"ifHCOutBroadcastPkts",$i};
+	    } else {
+		$ipkts =
+		    $count{"ifHCInUcastPkts",$i} +
+		    $count{"ifHCInNUcastPkts",$i};
+		$opkts =
+		    $count{"ifHCOutUcastPkts",$i} +
+		    $count{"ifHCOutNUcastPkts",$i};
+	    }
 	} else {
-	    $ipkts =
-		$count{"ifInUcastPkts",$i} +
-		$count{"ifInNUcastPkts",$i};
-	    $opkts =
-		$count{"ifOutUcastPkts",$i} +
-		$count{"ifOutNUcastPkts",$i};
+	    if (&has_multicast_pkts()) {
+		$ipkts =
+		    $count{"ifInUcastPkts",$i} +
+		    $count{"ifInMulticastPkts",$i} +
+		    $count{"ifInBroadcastPkts",$i};
+		$opkts =
+		    $count{"ifOutUcastPkts",$i} +
+		    $count{"ifOutMulticastPkts",$i} +
+		    $count{"ifOutBroadcastPkts",$i};
+	    } else {
+		$ipkts =
+		    $count{"ifInUcastPkts",$i} +
+		    $count{"ifInNUcastPkts",$i};
+		$opkts =
+		    $count{"ifOutUcastPkts",$i} +
+		    $count{"ifOutNUcastPkts",$i};
+	    }
 	}
 	$i6pkts = $count{"ipv6IfStatsInReceives",$i};
 	$o6pkts = $count{"ipv6IfStatsOutForwDatagrams",$i};
@@ -497,9 +618,6 @@ sub decorate_ip6perc {
     printf($fh "plot  \"$df\" using 1:2 title \"IPv6%% in\" with lines,");
     printf($fh "      \"$df\" using 1:3 title \"IPv6%% out\" with lines\n");
 }
-
-
-
 
 sub plot_resets {
     my($line, $fh, $dn, $d, $tm) = @_;
