@@ -30,6 +30,7 @@ sub pretty_ios_desc {
     if ($desc =~ /.*Cisco Catalyst Operating.*, Version (\d+.\d+\(\d+\)).*/) {
 	$desc = "Cisco CatOS $1";
     }
+    $desc =~ s/\n//g;		# remove newlines, ref. RouterOS
     return $desc;
 }
 
