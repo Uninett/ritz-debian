@@ -194,13 +194,20 @@ sub compute_basic_values {
     my($c, $d, $start, $end, $tm0) = @_;
     my($i);
     our(%count, %sample_secs);
-    our(%lasttime);
     our($opt_V);
     our($ifspeed);
 
     for ($i = $start; $i <= $end; $i++) {
 	if (!defined($sample_secs{$i-1})) {
 	    next;
+	}
+	$delta_t = $sample_secs{$i} - $sample_secs{$i-1};
+
+	if ($delta_t == 0) { next; }
+
+	if ($opt_V) {
+	    printf(STDERR "deltaT: %s", $delta_t);
+	    printf(STDERR " %s ", &secs_to_hms($sample_secs{$i} - $tm0));
 	}
 
 	foreach my $k (sort keys %$d) {
@@ -210,35 +217,12 @@ sub compute_basic_values {
 
 	    my($v) = 0;
 	    my($ov) = 0;
-	    my $found = 0;
 	    foreach my $var (@vars) {
-		if ($count{$var,$I}) {
-
-		    # per-variable delta_t, really...
-		    $delta_t = $sample_secs{$i} - $lasttime{$var};
-		    $lasttime{$var} = $sample_secs{$i};
-
-		    $v += $count{$var,$i};
-		    if ($var =~ /Octets/o) {
-			$ov = 1;
-		    }
-		    $found = 1;
+		$v += $count{$var,$i};
+		if ($var =~ /Octets/o) {
+		    $ov = 1;
 		}
 	    }
-	    # Could be no variables of this name for this time
-	    # ... which is now the new normal
-	    if (!$found) {
-		next;
-	    }
-	    if ($delta_t == 0) { 
-		next;
-	    }
-
-	    if ($opt_V) {
-		printf(STDERR "deltaT: %s", $delta_t);
-		printf(STDERR " %s ", &secs_to_hms($sample_secs{$i} - $tm0));
-	    }
-
 	    my($val) = $v * $mult / $delta_t;
 
 	    # If processing an octet counter, check that we're
