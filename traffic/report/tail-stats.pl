@@ -219,6 +219,17 @@ sub compute_basic_values {
 	    }
 	    next;
 	}
+	$delta_t = $sample_secs{$i} - $sample_secs{$i-1};
+	
+	if (defined($opt_D) && $opt_D eq $n) {
+	    printf(STDERR "Delta for step %d is %d secs, (%d vs %d)\n",
+		   $i, $delta_t, $sample_secs{$i}, $sample_secs{$i-1});
+	}
+	if ($delta_t == 0) {
+	    printf(STDERR "Delta for step %d is zero! Name %s base %s\n",
+		   $i, $n, $b);
+	    next;
+	}
 
 	foreach my $k (keys %$d) {
 	    my($ap) = $d->{$k}->{"values"};
@@ -228,31 +239,12 @@ sub compute_basic_values {
 	    my($v) = 0;
 	    my($ov) = 0;
 	    my($vn);
-	    my $found = 0;
 	    foreach my $var (@vars) {
-		if ($count{$var,$i}) {
-
-		    # per-variable delta_t, really...
-		    $delta_t = $sample_secs{$i} - $lasttime{$var};
-		    $lasttime{$var} = $sample_secs{$i};
-
-		    $v += $count{$var,$i};
-		    $vn = $var;
-		    if ($var =~ /Octets/o) {
-			$ov = 1;
-		    }
-		    $found = 1;
+		$v += $count{$var,$i};
+		$vn = $var;
+		if ($var =~ /Octets/o) {
+		    $ov = 1;
 		}
-	    }
-	    if (!$found) {
-		# Could be no variables of this name for this time
-		# ... which is now the new normal
-		next;
-	    }
-	    if ($delta_t == 0) {
-		printf(STDERR "Delta for step %d is zero! Name %s base %s\n",
-		       $i, $n, $b);
-		next;
 	    }
 	    my($val) = $v * $mult / $delta_t;
 
@@ -879,8 +871,12 @@ sub tail_process_file {
     }
 
     open(IN, $f) || return undef;
-    &position_file(\*IN, $b);
-    &read_log(\*IN, $tm);
+    &position_file(\*IN, $b); 
+    if (!&read_log(\*IN, $tm)) {
+	printf(STDERR "Error reading %s\n", $f);
+	close(IN);
+	return undef;
+    }
     &save_position(\*IN, $b);
     close(IN);
 
