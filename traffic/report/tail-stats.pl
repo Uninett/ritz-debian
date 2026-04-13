@@ -1,4 +1,4 @@
-#!%PERL%
+#! %PERL%
 #
 # $Id$
 #
@@ -69,7 +69,7 @@ sub restore_vars {
     my($b) = @_;
     my($p);
     our($fd);
-    our(%base, %lasttime, %sample_time, %dstcomp);
+    our(%base, %lasttime, %sample_time, %dstcomp, %last_seen);
     our($date, $ifspeed, $iftype, $ifdescr);
 
     if (!defined($fd->{$b})) {
@@ -84,14 +84,21 @@ sub restore_vars {
     }
 
     if (defined($p)) {
-	no strict 'refs';
+	# Do it "manually" to avoid having to use "no strict 'refs'":
 
-	# Set up to read tail of log
-	foreach my $a ("base", "lasttime", "dstcomp") {
-	    foreach my $v (keys %{ $p->{$a} }) {
-		$$a{$v} = $p->{$a}->{$v};
-	    }
+	foreach my $v (keys %{ $p->{"base"} }) {
+	    $base{$v} = $p->{"base"}->{$v};
 	}
+	foreach my $v (keys %{ $p->{"lasttime"} }) {
+	    $base{$v} = $p->{"lasttime"}->{$v};
+	}
+	foreach my $v (keys %{ $p->{"dstcomp"} }) {
+	    $base{$v} = $p->{"dstcomp"}->{$v};
+	}
+	foreach my $v (keys %{ $p->{"last_seen"} }) {
+	    $base{$v} = $p->{"last_seen"}->{$v};
+	}
+
 	$sample_time{-1} = $p->{"last_sample"};
 	$date = $p->{"date_string"};
 	$ifspeed = $p->{"ifspeed"};
@@ -106,14 +113,20 @@ sub save_vars {
     my($p) = $fd->{$b};
     our(%count, %base, %sample_time);
     our($date, $ifspeed, $iftype, $ifdescr, $max_sample);
-    our(%lasttime, %dstcomp);
+    our(%lasttime, %dstcomp, %last_seen);
     
-    no strict 'refs';
-
-    foreach my $a ("base", "lasttime", "dstcomp") {
-	foreach my $v (keys %$a) {
-	    $p->{$a}->{$v} = $$a{$v};
-	}
+    # Do it "manually" to avoid having to do "no strict 'refs'":
+    foreach my $v (keys %base) {
+	$p->{"base"}->{$v} = $base{$v};
+    }
+    foreach my $v (keys %lasttime) {
+	$p->{"lasttime"}->{$v} = $lasttime{$v};
+    }
+    foreach my $v (keys %dstcomp) {
+	$p->{"dstcomp"}->{$v} = $dstcomp{$v};
+    }
+    foreach my $v (keys %last_seen) {
+	$p->{"last_seen"}->{$v} = $last_seen{$v};
     }
 
     $p->{"date_string"} = $date;
@@ -133,6 +146,7 @@ sub save_vars {
     undef %base;
     undef %sample_time;
     undef %lasttime;
+    undef %last_seen;
     undef %dstcomp;
     undef $date;
     undef $ifspeed;
@@ -201,13 +215,42 @@ sub convert_times {
     }
 }
 
+# Probe for previous sample's seconds
+
+sub previous_sample_sec {
+    my($b, $v, $ix) = @_;
+    our(%count, %sample_secs, %lasttime);
+    our($fd, $p);
+
+    # A couple of special cases first...
+    if ($ix == 0 && defined($sample_secs{-1})) {
+	return $sample_secs{-1};
+    }
+    if ($ix == 1 && !defined($count{$v,0})) {
+	return $sample_secs{-1};
+    }
+
+    # This ought to catch the rest...
+    foreach my $i ($ix-1, $ix-2, $ix-3) {
+	if (defined($count{$v,$i})) {
+	    return $sample_secs{$i};
+	}
+    }
+    
+    # Complain if it doesn't...
+    printf(STDERR
+	   "Could not find previous second for %s / %s sec %s\n",
+	   $b, $v, $sample_secs{$ix});
+    return undef;
+}
+
 sub compute_basic_values {
     my($b, $d, $start, $end) = @_;
-    my($i, $delta_t);
+    my($i);
     our($max_sample, %count);
     our(%sample_secs);
     our($ifspeed, $opt_D);
-    our(%lasttime);
+    our(%last_seen);
 
     my $n = &file_to_name($b, &today);
 
@@ -219,33 +262,72 @@ sub compute_basic_values {
 	    }
 	    next;
 	}
-	$delta_t = $sample_secs{$i} - $sample_secs{$i-1};
 	
-	if (defined($opt_D) && $opt_D eq $n) {
-	    printf(STDERR "Delta for step %d is %d secs, (%d vs %d)\n",
-		   $i, $delta_t, $sample_secs{$i}, $sample_secs{$i-1});
-	}
-	if ($delta_t == 0) {
-	    printf(STDERR "Delta for step %d is zero! Name %s base %s\n",
-		   $i, $n, $b);
-	    next;
-	}
-
 	foreach my $k (keys %$d) {
 	    my($ap) = $d->{$k}->{"values"};
+	    my($tp) = $d->{$k}->{"times"};
 	    my(@vars) = @{ $d->{$k}->{"vars"} };
 	    my($mult) = $d->{$k}->{"mult"};
+	    my($delta_t);
 
 	    my($v) = 0;
 	    my($ov) = 0;
 	    my($vn);
+
+	    my($found) = 0;
+
 	    foreach my $var (@vars) {
-		$v += $count{$var,$i};
-		$vn = $var;
-		if ($var =~ /Octets/o) {
-		    $ov = 1;
+		if (defined($count{$var,$i})) {
+		    if (!defined($delta_t)) {
+			my $prev_s = &previous_sample_sec($b, $var, $i);
+
+			if (!defined($prev_s)) {
+			    next; # already complained bove...
+			}
+
+			$delta_t = $sample_secs{$i} - $prev_s;
+
+			if (defined($opt_D) && $opt_D eq $n) {
+			    printf(STDERR "Delta for step %d is %d secs " .
+				   ", (%d vs %d)\n",
+				   $i, $delta_t,
+				   $sample_secs{$i}, $prev_s);
+			}
+			if ($delta_t == 0) {
+			    printf(STDERR "Delta for step %d is zero! " . 
+				   "Name %s base %s\n",
+				   $i, $n, $b);
+			    next;
+			}
+		    }
+
+		    $v += $count{$var,$i};
+		    $vn = $var;
+		    if ($var =~ /Octets/o) {
+			$ov = 1;
+		    }
+		    $found = 1;
+		} else {
+		    next;
+		}
+		if (!defined($delta_t)) { 
+		    printf(STDERR "Delta_t not found for " .
+			   "%s step %d var %s\n",
+			   $b, $i, $var);
+		    next;
 		}
 	    }
+	    if (!$found) { next; }
+
+	    if (!defined($delta_t)) { 
+		if ($i != 0) {
+		    printf(STDERR "Delta_t not found for %s step " .
+			   "%d vartype %s\n",
+			   $b, $i, $k);
+		}
+		next;
+	    }
+
 	    my($val) = $v * $mult / $delta_t;
 
 	    if (defined($opt_D) && $opt_D eq $n) {
@@ -268,7 +350,8 @@ sub compute_basic_values {
 		}
 	    }
 
-	    push(@$ap, $val);
+	    push(@{$ap}, $val);
+	    push(@{$tp}, $sample_secs{$i});
 	}
     }
 }
@@ -341,7 +424,15 @@ sub accumulate_stats {
     }
     $asp = $stp->{$cv};
 
-    my $ap = $fp->{"save_values"}->{$cv};
+    my $ap;
+    if (ref $fp->{"save_values"}->{$cv} eq "HASH") {
+	$ap = $fp->{"save_values"}->{$cv}->{"values"};
+    } elsif (ref $fp->{"save_values"}->{$cv} eq "ARRAY") {
+	$ap = $fp->{"save_values"}->{$cv};
+    } else {
+	return;
+    }
+
     if (!defined($ap)) {
 	return;
     }
@@ -368,7 +459,7 @@ sub flag_deviations {
 	return;
     }
     my($vp) = $dp->{$cv}->{"values"};
-    my($tp) = $dp->{"sample_times"}->{"values"};
+    my($tp) = $dp->{$cv}->{"times"};
     my($dhp) = $fp->{"deviations"};
     if (!defined($dhp)) {
 	$fp->{"deviations"} = {};
@@ -480,8 +571,7 @@ sub process_values {
 sub save_data {
     my($b, $d) = @_;
     our($fd);
-    my($stp) = $d->{"sample_times"}->{"values"};
-    my($save_ap, $ap);
+    my($save_ap, $save_tp, $ap);
 
     my($sp) = $fd->{$b}->{"save_values"};
     if (!defined($sp)) {
@@ -490,18 +580,24 @@ sub save_data {
     }
 
     # save all computed values
-    while ($#$stp != -1) {
-	foreach my $k (keys %$d) {
-	    $save_ap = $sp->{$k};
-	    if (!defined($save_ap)) {
-		$sp->{$k} = [];
-		$save_ap = $sp->{$k};
+
+    foreach my $k (keys %$d) {
+	foreach my $attr (keys %{$d->{$k}}) {
+	    my $x = $sp->{$k};
+	    # convert from old data structure
+	    if (!defined($x) || ref $x eq "ARRAY") {
+		$x = {};	# hash instead, now need multiple arrays
 	    }
-	    $ap = $d->{$k}->{"values"};
-	    push(@$save_ap, $$ap[0]);
-	    shift(@$ap);
+	    $sp->{$k} = $x;
+
+	    $save_ap = $sp->{$k}->{"values"} = [];
+	    $save_tp = $sp->{$k}->{"times"} = [];
+
+	    push(@$save_ap, @{ $d->{$k}->{"values"}});
+	    push(@$save_tp, @{ $d->{$k}->{"times"}});
 	}
     }
+    return 1;
 }
 
 sub trim_data {
@@ -512,22 +608,27 @@ sub trim_data {
     if (!defined($sp)) { return; }
 
     # Trim out samples older than $time_threshold
-    my $stp = $sp->{"sample_times"};
-    while (defined($$stp[0]) && $$stp[0] < $time_threshold) {
-	foreach my $k (keys %$sp) {
-	    my($ap) = $sp->{$k};
-	    shift(@$ap);
+
+    foreach my $k (keys %$sp) {
+	if (ref $sp->{$k} eq "HASH") {
+	    my $vp = $sp->{$k}->{"values"};
+	    my $tp = $sp->{$k}->{"times"};
+	    while(defined($$tp[0]) && $$tp[0] < $time_threshold) {
+		shift(@$vp);
+		shift(@$tp);
+	    }
 	}
     }
+    return 1;
 }
 
 
 sub process_data {
     my($b, $start, $end, $tm) = @_;
     my($i);
-    my(@in_kbps, @out_kbps, @in_pps, @out_pps);
     my(@ibpp, @obpp, @times);
     my($iov, $oov);
+    my($ipkv, $opkv);
     our($fd);
     my($p) = $fd->{$b};
     our(%sample_secs, $opt_R, $debug);
@@ -540,6 +641,18 @@ sub process_data {
 	$iov = "ifInOctets";
 	$oov = "ifOutOctets";
     }
+    if (defined($p->{"base"}->{"ifHCInUcastPkts"})) {
+	$ipkv = [ "ifHCInUcastPkts",
+		  "ifHCInMulticastPkts",
+		  "ifHCInBroadcastPkts" ];
+	$opkv = [ "ifHCOutUcastPkts",
+		  "ifHCOutMulticastPkts",
+		  "ifHCOutBroadcastPkts" ];
+    } else {
+	$ipkv = [ "ifInNUcastPkts", "ifInUcastPkts" ];
+	$opkv = [ "ifOutNUcastPkts", "ifOutUcastPkts" ];
+    }
+    
 
     my $n = &file_to_name($b, &today);
     our($opt_D);
@@ -553,30 +666,32 @@ sub process_data {
 
     my($desc) = {
 	"ikbps" => {
-	    "values" => \@in_kbps,
+	    "values" => [],
 	    "vars" => [ $iov ],
 	    "mult" => 8.0 / 1000.0,
+	    "times" => [],
 	},
 	"okbps" => {
-	    "values" => \@out_kbps,
+	    "values" => [],
 	    "vars" => [ $oov ],
 	    "mult" => 8.0 / 1000.0,
+	    "times" => [],
 	},
 	"ipps" => {
-	    "values" => \@in_pps,
-	    "vars" => [ "ifInNUcastPkts", "ifInUcastPkts" ],
+	    "values" => [],
+	    "vars" => $ipkv,
 	    "mult" => 1,
+	    "times" => [],
 	},
 	"opps" => {
-	    "values" => \@out_pps,
-	    "vars" => [ "ifOutNUcastPkts", "ifOutUcastPkts" ],
+	    "values" => [],
+	    "vars" => $opkv,
 	    "mult" => 1,
+	    "times" => [],
 	},
     };
 
     &compute_basic_values($b, $desc, $start, $end);
-
-    $desc->{"sample_times"}->{"values"} = \@times;
 
     # This used only in-kbps, out-kbps and sample times
     # so do this now before we destroy the values in $desc
@@ -586,28 +701,34 @@ sub process_data {
 
     # bytes per packet derived from values computed above.
 
+    # assumes data for all variables on all times, no longer true
+    # therefore &max() use below.
     my($delta) = $end - $start;
     my($eoa) = $#{ $desc->{"ipps"}->{"values"} };
+    my($itp) = $desc->{"ipps"}->{"times"};
+    my($otp) = $desc->{"opps"}->{"times"};
+    my(@ita, @ota);
 
-    for ($i = $eoa - $delta; $i <= $eoa; $i++) {
+    for ($i = &max($eoa - $delta, 0); $i <= $eoa; $i++) {
 	my($ipps) = $desc->{"ipps"}->{"values"}[$i];
 	my($opps) = $desc->{"opps"}->{"values"}[$i];
-	if (!defined($ipps) || $ipps == 0) {
-	    push(@ibpp, 0);
-	} else {
-	    push(@ibpp, $desc->{"ikbps"}->{"values"}[$i] * 1000 / 8.0
-		 / $ipps);
+	my($ikbps) = $desc->{"ikbps"}->{"values"}[$i];
+	my($okbps) = $desc->{"okbps"}->{"values"}[$i];
+
+	if (defined($ipps) && $ipps != 0) {
+	    push(@ibpp, $ikbps * 1000 / 8.0 / $ipps);
+	    push(@ita, $$itp[$i]);
 	}
-	if (!defined($opps) || $opps == 0) {
-	    push(@obpp, 0);
-	} else {
-	    push(@obpp, $desc->{"okbps"}->{"values"}[$i] * 1000 / 8.0
-		 / $opps);
+	if (defined($opps) && $opps != 0) {
+	    push(@obpp, $okbps * 1000 / 8.0 / $opps);
+	    push(@ota, $$itp[$i]);
 	}
     }
     
     $desc->{"ibpp"}->{"values"} = \@ibpp;
     $desc->{"obpp"}->{"values"} = \@obpp;
+    $desc->{"ibpp"}->{"times"} = \@ita;
+    $desc->{"obpp"}->{"times"} = \@ota;
 
     &process_values($b, $desc, $tm);
     &save_data($b, $desc);
@@ -677,8 +798,8 @@ sub update_rrd {
 	&create_rrd($name) || return;
     }
 
-    my($eoa) = $#{ $d->{"sample_times"}->{"values"} };
-    my($tap) = $d->{"sample_times"}->{"values"};
+    my($eoa) = $#{ $d->{"okbps"}->{"times"} };
+    my($tap) = $d->{"okbps"}->{"times"};
     my($iap) = $d->{"ikbps"}->{"values"};
     my($oap) = $d->{"okbps"}->{"values"};
     my(@args);
@@ -692,9 +813,13 @@ sub update_rrd {
     for ($i = 0; $i <= $eoa; $i++) {
 	if ($tap->[$i] > $lastupdate) {
 	    if ($tap->[$i] > $prev_t) {
+		my $iv = $iap->[$i];
+		if (!$iv) {
+		    $iv = 0;	# handle "missing values" case
+		}
 		push(@args, sprintf("%d:%f:%f", 
 				    $tap->[$i],
-				    $iap->[$i] * 1000.0,
+				    $iv * 1000.0,
 				    $oap->[$i] * 1000.0));
 		$prev_t = $tap->[$i];
 		$n_done++;
@@ -783,14 +908,17 @@ sub report_tail_stats {
     my($rfile, $drfile, $b, $ofile) = @_;
     our($fd, $opt_i, $opt_V);
     my($ikbps, $okbps, $n);
+    my($likbps, $lokbps);
     my($sp) = $fd->{$b}->{"save_values"};
-    my $ia = $sp->{"ikbps"};
-    my $oa = $sp->{"okbps"};
+    my $ia = $sp->{"ikbps"}->{"values"};
+    my $oa = $sp->{"okbps"}->{"values"};
 
     $n = 0;
+    $likbps = 0;		# last input kbit/s
     foreach my $v (@{ $ia }) {
 	$n++;
 	$ikbps += $v;
+	$likbps = $v;
     }
     if ($n != 0) {
 	$ikbps /= $n;
@@ -799,9 +927,11 @@ sub report_tail_stats {
     }
 
     $n = 0;
+    $lokbps = 0;		# last output kbit/s
     foreach my $v (@{ $oa }) {
 	$n++;
 	$okbps += $v;
+	$lokbps = $v;
     }
     if ($n != 0) {
 	$okbps /= $n;
@@ -819,7 +949,7 @@ sub report_tail_stats {
 	}
 	$name = $b;
     }
-    if ($#$ia >= 0 && $#$oa >= 0) {
+
     # Output:
     # name  last-kbps-in last-kbps-out avg-kbps-in avg-kbps-out ifspeed-in-kbps
     #
@@ -828,22 +958,21 @@ sub report_tail_stats {
     # avg-kbps-in     
     # avg-kbps-out      average over history we keep
     # ifspeed-in-kbps   interface speed in kbit/s
-        printf($rfile "%-30s %8d %8d %8d %8d %8d\n",
+    printf($rfile "%-30s %8d %8d %8d %8d %8d\n",
 	   $name,
-	   $ia->[$#$ia],
-	   $oa->[$#$oa],
+	   $likbps,
+	   $lokbps,
 	   $ikbps, $okbps,
 	   $fd->{$b}->{"ifspeed"} / 1000,
-	   );
-	printf($drfile "%-30s %12.3f %12.3f %12.3f %12.3f %8d\n",
-	       $name,
-	       $ia->[$#$ia],
-	       $oa->[$#$oa],
-	       $ikbps,
-	       $okbps,
-	       $fd->{$b}->{"ifspeed"} / 1000,
-	    );
-    }
+	);
+    printf($drfile "%-30s %12.3f %12.3f %12.3f %12.3f %8d\n",
+	   $name,
+	   $likbps,
+	   $lokbps,
+	   $ikbps,
+	   $okbps,
+	   $fd->{$b}->{"ifspeed"} / 1000,
+	);
 }
 
 sub tail_process_file {
@@ -912,6 +1041,7 @@ sub do_one_file {
     my($i);
     our($max_sample, %sample_time, $fd, %base, $date, $opt_I);
     our(%lasttime, %firsttime, %dstcomp, $retention_time, $opt_v);
+    our(%last_seen);
 
     # For undef'ing after processing one file
     our(%count, $ifspeed, $iftype, $ifdescr);
@@ -983,6 +1113,7 @@ sub do_one_file {
     undef %base;
     undef %sample_time;
     undef %lasttime;
+    undef %last_seen;
     undef %firsttime;
     undef %dstcomp;
     undef $date;
@@ -1191,10 +1322,11 @@ sub usage {
 # Main
 #
 
-our($opt_h, $opt_m, $opt_M, $opt_t, $opt_u, $opt_l, $opt_p, $opt_r,
-    $opt_R, $opt_n, $opt_d, $opt_j, $opt_D);
+our($opt_D, $opt_d, $opt_h, $opt_I, $opt_i, $opt_j, $opt_l,
+    $opt_M, $opt_m, $opt_N, $opt_n, $opt_p, $opt_R, $opt_r,
+    $opt_t, $opt_u, $opt_v, $opt_V);
 
-&getopts("D:d:hij:Il:M:m:Nn:p:R:r:t:u:vV");
+&getopts("D:d:hIij:l:M:m:Nn:p:R:r:t:u:Vv");
 
 if (defined($opt_h)) {
     &usage();
