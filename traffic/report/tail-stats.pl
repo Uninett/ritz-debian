@@ -34,6 +34,9 @@
 push(@INC, "%LIBDIR%");
 push(@INC, "%CONFDIR%");
 
+#push(@INC, "/a/traffic/lib");
+#push(@INC, "/a/traffic/conf");
+
 use Getopt::Std;
 
 require "date.pl";
@@ -90,16 +93,18 @@ sub restore_vars {
 	    $base{$v} = $p->{"base"}->{$v};
 	}
 	foreach my $v (keys %{ $p->{"lasttime"} }) {
-	    $base{$v} = $p->{"lasttime"}->{$v};
+	    $lasttime{$v} = $p->{"lasttime"}->{$v};
 	}
 	foreach my $v (keys %{ $p->{"dstcomp"} }) {
-	    $base{$v} = $p->{"dstcomp"}->{$v};
+	    $dstcomp{$v} = $p->{"dstcomp"}->{$v};
 	}
 	foreach my $v (keys %{ $p->{"last_seen"} }) {
-	    $base{$v} = $p->{"last_seen"}->{$v};
+	    $last_seen{$v} = $p->{"last_seen"}->{$v};
 	}
 
+	# dubious for "process whole file" operation..., see below.
 	$sample_time{-1} = $p->{"last_sample"};
+
 	$date = $p->{"date_string"};
 	$ifspeed = $p->{"ifspeed"};
 	$iftype = $p->{"iftype"};
@@ -223,10 +228,14 @@ sub previous_sample_sec {
     our($fd, $p);
 
     # A couple of special cases first...
-    if ($ix == 0 && defined($sample_secs{-1})) {
+    if ($ix == 0 && defined($sample_secs{-1}) &&
+	$sample_secs{-1} < $sample_secs{0})
+    {
 	return $sample_secs{-1};
     }
-    if ($ix == 1 && !defined($count{$v,0})) {
+    if ($ix == 1 && !defined($count{$v,0}) &&
+	$sample_secs{-1} < $sample_secs{0})
+    {
 	return $sample_secs{-1};
     }
 
@@ -297,6 +306,12 @@ sub compute_basic_values {
 			    printf(STDERR "Delta for step %d is zero! " . 
 				   "Name %s base %s\n",
 				   $i, $n, $b);
+			    next;
+			}
+			if ($delta_t < 0) {
+			    printf(STDERR "Delta for step %d is negative! " .
+				   "(%f) Name %s base %s\n",
+				   $i, $delta_t, $n, $b);
 			    next;
 			}
 		    }
@@ -1077,6 +1092,7 @@ sub do_one_file {
 	}
 
 	&restore_vars($b);
+	undef($sample_time{-1}); # only for "tail-stats" mode
 
 	if (!open(DAYLOG, "$cat $f |")) {
 	    printf(STDERR "Could not open \"|%s %s\": %s\n", $cat, $f, $!);
