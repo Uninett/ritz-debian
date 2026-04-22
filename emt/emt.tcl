@@ -1,5 +1,5 @@
 #
-# $Id: emt.tcl,v 1.40 2019/06/19 22:21:54 he Exp $
+# $Id: emt.tcl,v 1.55 2026/04/22 10:18:38 he Exp $
 #
 
 #
@@ -23,9 +23,11 @@ proc emt_config {} {
     global emt_alarm_to
     global emt_alarm_subject
     global emt_alarm_phones
-    global emt_descr_filter
-    global emt_skip_bfd
     global zino_master
+    global emt_descr_filter
+    global emt_descr_must_match
+    global emt_descr_exclude_pat
+    global emt_skip_bfd
 
     set emt_skip_bfd 0;			# default is don't skip
 
@@ -333,7 +335,7 @@ proc report_compact_port { id } {
 }
 
 proc report_compact_reach { id } {
-    
+
     set r  [::attr::get $id "router"]
     set rs [::attr::get $id "reachability"]
     set as [::attr::get $id "state"]
@@ -374,27 +376,28 @@ proc report_compact { id } {
     global emt_skip_bfd
 
     set type [::attr::get $id "type"]
-    switch -exact $type {
-	portstate {
-	    return [report_compact_port $id]
-	}
-	reachability {
-	    return [report_compact_reach $id]
-	}
-	alarm {
-	    return [report_compact_alarm $id]
-	}
-	bfd {
-	    if { ! $emt_skip_bfd } {
-		return [report_compact_bfd $id]
-	    } else {
-		return ""
+    if { [catch {
+        switch -exact $type {
+	    portstate {
+	        return [report_compact_port $id]
 	    }
-	}
-	default {
-	    puts stderr "Unknown type: $type for id $id"
-	    return 0
-	}
+	    reachability {
+	        return [report_compact_reach $id]
+	    }
+	    alarm {
+	        return [report_compact_alarm $id]
+	    }
+	    bfd {
+	        if { ! $emt_skip_bfd } {
+		    return [report_compact_bfd $id]
+	        } else {
+		    return ""
+	        }
+	    }
+        }
+    } err ] } {
+        puts stderr "Unknown type: $type for id $id"
+        return 0
     }
 }
 
@@ -471,7 +474,7 @@ proc report_single_alarm { id } {
 	set rs [format "%s recent event history:\n%s\n" $rs [emt_hist $id]]
     }
 
-    return $rs  
+    return $rs
 }
 
 proc report_single_bfd { id } {
@@ -508,31 +511,27 @@ proc report_single { id } {
     global emt_skip_bfd
 
     set type [::attr::get $id "type"]
-    if { [catch {
-	switch -exact $type {
-	    portstate {
-		return [report_single_port $id]
-	    }
-	    reachability {
-		return [report_single_reach $id]
-	    }
-	    alarm {
-		return [report_single_alarm $id]
-	    }
-	    bfd {
-		if { ! $emt_skip_bfd } {
-		    return [report_single_bfd $id]
-		} else {
-		    return ""
-		}
-	    }
-	    default {
-		puts stderr "Unknown type: $type for id $id"
-		return 0
+    switch -exact $type {
+	portstate {
+	    return [report_single_port $id]
+	}
+	reachability {
+	    return [report_single_reach $id]
+	}
+	alarm {
+	    return [report_single_alarm $id]
+	}
+	bfd {
+	    if { ! $emt_skip_bfd } {
+		return [report_single_bfd $id]
+	    } else {
+		return ""
 	    }
 	}
-    } err ] } {
-	puts stderr "report_single caught exception: $err"
+	default {
+	    puts stderr "Unknown type: $type for id $id"
+	    return 0
+	}
     }
 }
 
@@ -616,31 +615,29 @@ proc emt_report { ids } {
 	set subject [single_subject $ids]
     }
 
-    # Anything but newlines?
-    if { [regexp "^\n*$" $body] != 1 {
-	# Only send out messages if we think we're alone or master
-	if { $is_master } {
+    # Only send out messages if we think we're alone or master
+    if { $is_master } {
+	# Anything but newlines?
+	if { [regexp "^\n*$" $body] != 1 } {
 	    emt_mail $emt_to $subject $body
-	} else {
-	    log [format "Not master, skiping reporting for %s" $ids]
 	}
+    } else {
+	log [format "Not master, skiping reporting for %s" $ids]
     }
-	
+
     foreach id $ids {
 	set nagged($id) 1
     }
     ::persist::add nagged
 }
 
-proc emt_alarm { ids } {
-    global nagged
-    global is_master
-    
-    set sids [::sort::sortCases $ids]
+proc emt_time_filter { ids } {
+
     set clockhour [scan [clock format [clock seconds] -format "%H"] "%d"]
     set weekday   [scan [clock format [clock seconds] -format "%w"] "%d"]
     set prilimit 100
 
+    # FIXME yes, limits are hardcoded here...
     # FIXME check weekday as well
     if { $clockhour >= 7 && $clockhour < 16 } {
 	# FIXME remove this
@@ -653,58 +650,137 @@ proc emt_alarm { ids } {
 	# After work, but awake
 	set prilimit 99
     }
-    set body ""
 
-    foreach id $sids {
+    set nids ""
+    foreach id $ids {
 	set p [::attr::priority $id]
 	set type [::attr::get $id "type"]
 	log [format "Possible alarm for id: %s, type: %s, pri: %s ?" $id $type $p]
 	if { $p >= $prilimit } {
-	    if { $type == "portstate" } {
-		set s [::attr::effectivePortState $id]
-		global emt_descr_filter
-		if { [info exists emt_descr_filter] } {
-		    if [catch { set d [::attr::get $id "descr"] }] {
-			# no description or unset, ignore
-			log [format "No descr for %d, ignoring" $id]
-			continue
-		    }
-		    if [regexp $emt_descr_filter $d] {
-			log [format \
-				 "Descr '%s' matches '%s', including" \
-				 $d $emt_descr_filter ]
-			append body [single_subject $id] "\n"
-		    } else {
-			log [format \
-				 "Descr does not match for id %d, ignored" $id]
-		    }
-		} else {
-		    log [format "No emt_descr_filter, including"]
-		}
-# FIXME		if { $s == "down" } {
-		append body [single_subject $id] "\n"
-# FIXME		}
-	    } else {
-		append body [single_subject $id] "\n"
-	    }
+	    lappend nids $id
 	} else {
 	    log [format "Nope, %s not important enough, priority threshold : %s" $id $prilimit]
 	}
     }
-    # Anything && anything but newlines here?
-    if { $body != "" && \
-	     [regexp "^\n*$" $body != 1] } {
-	# Only send out messages if we think we're alone or master
-	if { $is_master } {
-	    log [format "Calling alarm function..."]
-	    emt_send_alarm $body
-	} else {
-	    log [format "Not master, skipping sending alarm for %s" $sids]
-	}
-    } 
+    return $nids
 }
 
-    
+# Filter the events to be reported via e-mail
+# This includes time & priority-based suppression
+# and inclusion / exclusion via patterns
+
+proc emt_filter { ids } {
+    global emt_descr_filter
+    global emt_descr_must_match
+    global emt_descr_exclude_pat
+    global emt_skip_bfd
+
+    set nids [emt_time_filter $ids]
+
+    # filtered IDs
+    set fids ""
+
+    foreach id $nids {
+	if [catch { set type [::attr::get $id "type"] }] {
+	    log [format "No type for %d, skipping" $id]
+	    continue
+	}
+	if [catch { set r [::attr::get $id "router"] }] {
+	    log [format "No router / device for %d, skipping" $id]
+	    continue
+	}
+
+	if [array exists emt_descr_must_match] {
+	    if [info exists emt_descr_must_match($r)] {
+		set must_match $emt_descr_must_match($r)
+	    }
+	} elseif [info exists emt_descr_must_match] {
+	    set must_match $emt_descr_must_match
+	} elseif [ info exists emt_descr_filter ] {
+	    set must_match $emt_descr_filter
+	}
+
+	if [array exists emt_descr_exclude_pat] {
+	    if [info exists emt_descr_exclude_pat($r)] {
+		set exclude_match $emt_descr_exclude_pat($r)
+	    }
+	} elseif [ info exists emt_descr_exclude_pat ] {
+	    set exclude_match $emt_descr_exclude_pat
+	}
+
+	if { $type == "portstate" } {
+	    if [catch { set d [::attr::get $id "descr"] }] {
+		# no description or unset, ignore
+		log [format "No descr for %d, ignoring" $id]
+		continue
+	    }
+	    if [info exists must_match ] {
+		if [regexp $must_match $d] {
+		    if [info exists $exclude_match] {
+			if [regexp $exclude_match $d] {
+			    log [format "Descr '%s' matches '%s', excluding" \
+				     $d $exclude_match]
+			    continue
+			} else {
+			    lappend fids $id
+			    log [format \
+				     "Descr '%s' matches '%s', and not '%s', including" \
+				     $d $must_match $exclude_match]
+			}
+		    } else {
+			lappend fids $id
+			log [format \
+				 "Descr '%s' matches '%s' and no exclude pattern, including" \
+				 $d $must_match ]
+		    }
+		} else {
+		    log [format \
+			     "Descr '%s' does not match '%s', excluding" \
+			     $d $must_match]
+		    continue
+		}
+	    } else {
+		if [info exists exclude_match ] {
+		    if [regexp $exclude_match $d] {
+			log [format "Descr '%s' matches '%s', excluding" \
+				 $d $exclude_match]
+			continue
+		    } else {
+			lappend fids $id
+			log [format "Descr '%s' doesn't match exclude pattern '%s', including" \
+				 $d $exclude_match]
+		    }
+		} else {
+		    # No must-match or exclude pattern specified, so include:
+		    lappend fids $id
+		}
+	    }
+	} elseif { $type == "bfd" && $emt_skip_bfd } {
+	    # just skip
+	    continue
+	} else {
+	    # all other types, include
+	    lappend fids $id
+	}
+    }
+    return $fids
+}
+
+proc emt_alarm { ids } {
+    global nagged
+
+    set sids [emt_filter [::sort::sortCases $ids]]
+
+    foreach id $sids {
+	append body [single_subject $id] "\n"
+    }
+
+    if { [llength $sids] != 0 } {
+	log [format "Calling alarm function..."]
+	emt_send_alarm $body
+    }
+}
+
 proc emt_check_all {} {
     global state emt_alarm_to
 
@@ -739,7 +815,7 @@ proc emt_check_all {} {
 
 proc emt_init {} {
     global state
-    
+
     set ids [::cp::pullCases]
     foreach id $ids {
 	set sid($id) 1
@@ -761,7 +837,7 @@ proc emt_init {} {
 
 proc emt_newhist { id } {
     global history newhist hist_update
-    
+
     set ol 0
     catch { set ol [string length $history($id)] }
     emt_gethist $id
@@ -833,7 +909,7 @@ proc emt_open { server port user secret } {
 	catch { ::net::close }
 	::net::open $server $port
 	::auth::login $user $secret
-	::notify::open emt_notify
+	::notify::open emt_notify $server
     } msg ] } {
 	log [format "Error opening server %s port %s" $server $port]
 	log [format "Cause: %s" $msg]
