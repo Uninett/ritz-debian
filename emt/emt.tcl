@@ -816,7 +816,7 @@ proc emt_open { server port user secret } {
 	catch { ::net::close }
 	::net::open $server $port
 	::auth::login $user $secret
-	::notify::open emt_notify
+	::notify::open emt_notify $server
     } msg ] } {
 	log [format "Error opening server %s port %s" $server $port]
 	log [format "Cause: %s" $msg]
