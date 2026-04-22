@@ -10,6 +10,9 @@
 package require Tnm
 
 mib load rfc1213.mib
+# For keepalive checking towards master zino instance, if configured:
+mib load ../mibs/UNINETT-SMI.my
+mib load ../mibs/UNINETT-ZINO-MIB.my
 
 set emt_mail "%RAWSENDMAIL%"
 
@@ -20,6 +23,7 @@ proc emt_config {} {
     global emt_alarm_to
     global emt_alarm_subject
     global emt_alarm_phones
+    global zino_master
     global emt_descr_filter
     global emt_descr_must_match
     global emt_descr_exclude_pat
@@ -66,6 +70,7 @@ proc emt_main {} {
 
 proc emt_loop { server port user secret } {
     global emt_continue
+    global zino_master
 
     while { 1 } {
 	emt_open $server $port $user $secret
@@ -82,7 +87,80 @@ proc emt_loop { server port user secret } {
 		-interval [expr 5 * 60 * 1000] \
 		-command emt_keepalive]
 
+	if [info exists zino_master] {
+	    global is_master
+	    global master_ok master_fails
+
+	    # Start out assuming master is up, so we suppress
+	    # our own messages
+	    set is_master 0
+	    # Initialize...
+	    set master_ok 0
+	    set master_fails 0
+	    if [info exists master_pinger] {
+		catch { $master_pinger destroy }
+	    }
+	    set s [snmp session -version SNMPv2c \
+		       -community public \
+		       -address $zino_master \
+		       -timeout 3 \
+		       -retries 0 \
+		       -port 8000 \
+		      ]
+	    set master_pinger [job create \
+				   -interval [expr 5 * 1000] \
+				   -command [list emt_ping_master $s]]
+	    log [format "Master pinger for %s created" $zino_master]
+	} else {
+	    set is_master 1
+	}
+
 	vwait emt_continue
+    }
+}
+
+proc emt_ping_master { s } {
+    global is_master
+    global master_fails
+    global master_ok
+    global zino_master
+    global emt_to
+
+    $s get "zinoUpTime.0" {
+	if { "%E" == "noError" } {
+	    set master_fails 0
+	    set master_ok [expr $master_ok + 1]
+	} else {
+	    set master_ok 0
+	    set master_fails [expr $master_fails + 1]
+	}
+	# Use a hysteresis of 10 successive failures or OK's
+	# before flipping state
+	if { $master_fails == 0 && $master_ok > 10 && $is_master } {
+	    log [format "> 10 OK polls, no longer master EMT instance"]
+	    set b [format "More than 10 successive SNMP get successes\n"]
+	    set b [format "%sof zinoUpTime.0 towards %s\n" $b $zino_master]
+	    emt_mail $emt_to \
+		[format \
+		     "%s giving up master role as zino alarm/e-mail sender" \
+		     [exec hostname]] $b
+	    emt_send_alarm \
+		[format "%s giving up master role as zino alarm/e-mail sender, %s OK SNMP response" \
+		     [exec hostname] $zino_master]
+	    set is_master 0
+	}
+	if { $master_ok == 0 && $master_fails > 10 && ! $is_master } {
+	    log [format "> 10 failed polls, now entering EMT master state"]
+	    set b [format "More than 10 successive SNMP get fails\n"]
+	    set b [format "%sof zinoUpTime.0 towards %s\n" $b $zino_master]
+	    emt_mail $emt_to \
+		[format "%s taking master role as zino alarm/e-mail sender" \
+		     [exec hostname]] $b
+	    emt_send_alarm \
+		[format "%s now master alarm/e-mail sender, no SNMP response from %s" \
+		     [exec hostname] $zino_master]
+	    set is_master 1
+	}
     }
 }
 
@@ -108,6 +186,7 @@ proc emt_notify { what { id 0 } } {
 	    emt_forget $id
 	}
 	LostConn {
+	    log [format "Lost connection, resetting"]
 	    set emt_continue 1
 	}
     }
@@ -125,6 +204,14 @@ proc emt_delay_check { id } {
     ::cp::getAttrs $id
     if { ! [info exists state($id)] } {
 	set state($id) "unknown"
+    }
+    # Ensure we have one emt_check_all scheduled
+    foreach ai [after info] {
+	set l [after info $ai]
+	if { [lindex $l 0] == "emt_check_all" } {
+	    # Already have one scheduled, just return
+	    return
+	}
     }
     after [expr 300 * 1000] emt_check_all
 }
@@ -248,7 +335,7 @@ proc report_compact_port { id } {
 }
 
 proc report_compact_reach { id } {
-    
+ 
     set r  [::attr::get $id "router"]
     set rs [::attr::get $id "reachability"]
     set as [::attr::get $id "state"]
@@ -386,7 +473,7 @@ proc report_single_alarm { id } {
 	set rs [format "%s recent event history:\n%s\n" $rs [emt_hist $id]]
     }
 
-    return $rs  
+    return $rs
 }
 
 proc report_single_bfd { id } {
@@ -516,6 +603,7 @@ proc emt_send_alarm { body } {
 
 proc emt_report { ids } {
     global nagged emt_to
+    global is_master
 
     if { [llength $ids] > 1 } {
 	set sids [::sort::sortCases $ids]
@@ -526,11 +614,16 @@ proc emt_report { ids } {
 	set subject [single_subject $ids]
     }
 
-    # Anything but newlines?
-    if { [regexp "^\n*$" $body] != 1 } {
-	emt_mail $emt_to $subject $body
+    # Only send out messages if we think we're alone or master
+    if { $is_master } {
+	# Anything but newlines?
+	if { [regexp "^\n*$" $body] != 1 } {
+	    emt_mail $emt_to $subject $body
+	}
+    } else {
+	log [format "Not master, skiping reporting for %s" $ids]
     }
-	
+
     foreach id $ids {
 	set nagged($id) 1
     }
@@ -580,7 +673,7 @@ proc emt_filter { ids } {
     global emt_descr_must_match
     global emt_descr_exclude_pat
     global emt_skip_bfd
-    
+
     set nids [emt_time_filter $ids]
 
     # filtered IDs
@@ -674,7 +767,7 @@ proc emt_filter { ids } {
 
 proc emt_alarm { ids } {
     global nagged
-    
+
     set sids [emt_filter [::sort::sortCases $ids]]
 
     foreach id $sids {
@@ -687,7 +780,6 @@ proc emt_alarm { ids } {
     }
 }
 
-    
 proc emt_check_all {} {
     global state emt_alarm_to
 
@@ -722,7 +814,7 @@ proc emt_check_all {} {
 
 proc emt_init {} {
     global state
-    
+
     set ids [::cp::pullCases]
     foreach id $ids {
 	set sid($id) 1
@@ -744,7 +836,7 @@ proc emt_init {} {
 
 proc emt_newhist { id } {
     global history newhist hist_update
-    
+
     set ol 0
     catch { set ol [string length $history($id)] }
     emt_gethist $id
