@@ -335,7 +335,7 @@ proc report_compact_port { id } {
 }
 
 proc report_compact_reach { id } {
- 
+
     set r  [::attr::get $id "router"]
     set rs [::attr::get $id "reachability"]
     set as [::attr::get $id "state"]
@@ -698,7 +698,7 @@ proc emt_filter { ids } {
 	} elseif [ info exists emt_descr_filter ] {
 	    set must_match $emt_descr_filter
 	}
-	
+
 	if [array exists emt_descr_exclude_pat] {
 	    if [info exists emt_descr_exclude_pat($r)] {
 		set exclude_match $emt_descr_exclude_pat($r)
