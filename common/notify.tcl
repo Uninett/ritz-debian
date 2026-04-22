@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: notify.tcl,v 1.8 2026/04/22 08:55:54 he Exp $
 #
 
 catch { namespace delete ::notify }
@@ -15,8 +15,34 @@ namespace eval ::notify {
 
     # Open notify connection and set up handlers.
     # Precondition: server channel must already be open.
+    proc open { handleNotify server } {
+	variable h_notify
+	variable notifychan
+	
+	if [info exists h_notify] {
+	    error "notify connection already open"
+	}
+	set h_notify $handleNotify
 
-    proc open { handleNotify } {
+	if [catch {
+	    set ns [socket $server 8002]
+	}] {
+	    error "Could not open new server notify socket"
+	}
+	::net::gets -channel $ns nonce
+	::net::puts [format "ntie %s" $nonce]
+	::net::gets l
+	if {! [regexp "^200 " $l]} {
+	    error [format "error setting up notify channel: %s" $l]
+	}
+	
+	set notifychan $ns
+	fconfigure $ns -buffering line
+	fileevent $ns readable [list [namespace current]::handle $ns]
+    }
+
+    # no longer exported, replaced by above
+    proc old_open { handleNotify } {
 	variable h_notify
 	variable acceptchan
 
