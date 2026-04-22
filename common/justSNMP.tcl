@@ -159,6 +159,9 @@ namespace eval ::just {
 
 	foreach len $lenList oid $oidList vbl $upl {
 	    set v [lindex $vbl 0]
+            if {$len == ""} {
+                set len 0; # Workaround for when lenList is too short...
+            }
 	    if {[string compare $oid. [string range $v 0 $len]] == 0} {
 		lappend ixList [string range $v $len end]
 	    }
