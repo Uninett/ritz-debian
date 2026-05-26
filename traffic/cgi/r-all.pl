@@ -42,6 +42,7 @@ use IPC::Shareable ();
 use RRDs;
 use File::Basename;
 use Apache2::RequestIO ();
+use Encode qw(encode decode);
 
 use Zino::conn qw(read_desc %fullname);
 
@@ -526,7 +527,9 @@ EOF
     $text .= sprintf("        <h2>%s traffic with %s", $isp, $name);
     if (defined($fullname{$name})) {
 	$text .= " - ";
-	$text .= $fullname{$name};
+	my $pstr = decode('iso-8859-1', $fullname{$name}, Encode::FB_QUIET);
+	my $ustr = encode('utf-8', $pstr, Encode::FB_QUIET);
+	$text .= $ustr;
     }
     $text .= "</h2>";
     $text .= <<EOF
