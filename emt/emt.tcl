@@ -376,28 +376,23 @@ proc report_compact { id } {
     global emt_skip_bfd
 
     set type [::attr::get $id "type"]
-    if { [catch {
-        switch -exact $type {
-	    portstate {
-	        return [report_compact_port $id]
-	    }
-	    reachability {
-	        return [report_compact_reach $id]
-	    }
-	    alarm {
-	        return [report_compact_alarm $id]
-	    }
-	    bfd {
-	        if { ! $emt_skip_bfd } {
-		    return [report_compact_bfd $id]
-	        } else {
-		    return ""
-	        }
+    switch -exact $type {
+	portstate {
+	    return [report_compact_port $id]
+	}
+	reachability {
+	    return [report_compact_reach $id]
+	}
+	alarm {
+	    return [report_compact_alarm $id]
+	}
+	bfd {
+	    if { ! $emt_skip_bfd } {
+		return [report_compact_bfd $id]
+	    } else {
+		return ""
 	    }
         }
-    } err ] } {
-        puts stderr "Unknown type: $type for id $id"
-        return 0
     }
 }
 
