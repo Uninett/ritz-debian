@@ -716,7 +716,7 @@ proc emt_filter { ids } {
 	    }
 	    if [info exists must_match ] {
 		if [regexp $must_match $d] {
-		    if [info exists $exclude_match] {
+		    if [info exists exclude_match] {
 			if [regexp $exclude_match $d] {
 			    log [format "Descr '%s' matches '%s', excluding" \
 				     $d $exclude_match]
