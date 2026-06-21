@@ -71,6 +71,7 @@ proc emt_main {} {
 proc emt_loop { server port user secret } {
     global emt_continue
     global zino_master
+    global is_master
 
     while { 1 } {
 	emt_open $server $port $user $secret
@@ -88,7 +89,6 @@ proc emt_loop { server port user secret } {
 		-command emt_keepalive]
 
 	if [info exists zino_master] {
-	    global is_master
 	    global master_ok master_fails
 
 	    # Start out assuming master is up, so we suppress
