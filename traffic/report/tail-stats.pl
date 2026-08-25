@@ -1017,7 +1017,8 @@ sub tail_process_file {
     open(IN, $f) || return undef;
     &position_file(\*IN, $b); 
     if (!&read_log(\*IN, $tm)) {
-	printf(STDERR "Error reading %s\n", $f);
+# Actually not an error, just zero (new) samples
+#	printf(STDERR "Error reading %s\n", $f);
 	close(IN);
 	return undef;
     }
