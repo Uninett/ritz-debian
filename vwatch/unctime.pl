@@ -25,13 +25,13 @@ $month{'Oct'} = 9;
 $month{'Nov'} = 10;
 $month{'Dec'} = 11;
 
-sub main'unctime {
+sub main::unctime {
     my($date) = @_;
     my(@a, @b);
     
     @a = split(/ /, $date);
     @b = split(/:/, $a[3]);
-    return &main'timelocal($b[2], $b[1], $b[0],
+    return &main::timelocal($b[2], $b[1], $b[0],
 			   $a[2], $month{$a[1]}, $a[$#a]-1900);
 }
 
