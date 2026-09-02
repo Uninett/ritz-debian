@@ -30,6 +30,7 @@ sub pretty_ios_desc {
     if ($desc =~ /.*Cisco Catalyst Operating.*, Version (\d+.\d+\(\d+\)).*/) {
 	$desc = "Cisco CatOS $1";
     }
+    $desc =~ s/\n//g;		# remove newlines, ref. RouterOS
     return $desc;
 }
 
@@ -59,7 +60,7 @@ sub pretty_junos_desc {
 	$desc = "JunOS $2 " . lc($1);
 } elsif ($desc =~
 	/Juniper Networks, Inc. ([^ ]+) .*kernel JUNOS ([^ ,]+)[, ].*/) {
-	$desc = "JunOS $2 $1";
+	$desc = "JunOS $2 " . lc($1);
     }
     return $desc;
 }
