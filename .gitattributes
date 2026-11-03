@@ -1,0 +1,10 @@
+# GitHub's language bar otherwise reports this as a Tcl or C project, because
+# the packaging branch carries upstream's source in-tree. Mark everything as
+# vendored, then exempt debian/, so the repository reads as what it is.
+#
+# linguist-* attributes ONLY. Never add export-ignore here: gbp builds the
+# orig tarball with `git archive`, which honours export-ignore, so an entry
+# would silently drop files from the tarball and the first sign of trouble
+# would be a failing build.
+* linguist-vendored
+debian/** linguist-vendored=false
