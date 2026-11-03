@@ -14,32 +14,48 @@ network monitor. The packaging lives in [`debian/`](../debian) on the
 
 ## Installing
 
-Add the apt repository (recommended, resolves dependencies for you):
+There is no apt repository yet, so the packages are installed by hand. You need
+two files, both built for the same distribution:
 
-```sh
-curl -fsSL https://uninett.github.io/zino-apt/uninett-zino.asc \
-  | sudo gpg --dearmor -o /usr/share/keyrings/uninett-zino.gpg
-echo "deb [signed-by=/usr/share/keyrings/uninett-zino.gpg] \
-https://uninett.github.io/zino-apt $(. /etc/os-release && echo "$VERSION_CODENAME") main" \
-  | sudo tee /etc/apt/sources.list.d/uninett-zino.list
-sudo apt update && sudo apt install ritz
-```
+- `ritz_*_all.deb` from this repository's [Releases](../../releases)
+- `tcl-tnm_*_amd64.deb` from
+  [scotty-debian's Releases](https://github.com/Uninett/scotty-debian/releases)
 
-Or grab the `.deb`s from [Releases](../../releases) and install both at once,
-since `ritz` needs `tcl-tnm`:
+Download both, then install them in a **single** `apt` command. Installing
+`ritz` on its own fails, because `apt` has nowhere to resolve `tcl-tnm` from.
 
 ```sh
 sudo apt install ./tcl-tnm_*.deb ./ritz_*.deb
 ```
 
-Supported suites: Debian 13 (trixie) and Ubuntu 24.04 (noble), amd64.
+`apt` pulls in `tk`, `tix`, `xterm`, `telnet` and `traceroute` from your own
+archive. Each release page lists the exact filenames and their checksums.
+
+### Fetching them without a browser
+
+Set `SUITE` to `trixie` for Debian 13 or `noble` for Ubuntu 24.04. This asks
+the Releases API for whatever the current version is, so there is no version
+to keep up to date:
+
+```sh
+SUITE=trixie
+for repo in scotty-debian ritz-debian; do
+  curl -fsSL "https://api.github.com/repos/Uninett/$repo/releases/latest" \
+  | grep -o "https://[^\"]*\.${SUITE}1_[^\"]*\.deb" \
+  | grep -v dbgsym \
+  | xargs -r -n1 curl -fsSLOJ
+done
+sudo apt install ./tcl-tnm_*.deb ./ritz_*.deb
+```
+
+Only amd64 is built. The `-J` matters: it takes the filename from the server
+rather than from the URL, which would otherwise be percent-encoded.
 
 ## Related repositories
 
 | | |
 |---|---|
 | [scotty-debian](https://github.com/Uninett/scotty-debian) | builds `tcl-tnm`, which supplies the Tnm Tcl extension Ritz requires |
-| [zino-apt](https://github.com/Uninett/zino-apt) | the published apt repository |
 | [Uninett/zino](https://github.com/Uninett/zino) | Zino 2, the current implementation (unrelated to this packaging) |
 
 ## Building it yourself
