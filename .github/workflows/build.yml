@@ -1,0 +1,69 @@
+name: build
+
+on:
+  push:
+    branches: [debian/latest]
+    tags: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: debian:trixie
+            codename: trixie
+          - image: ubuntu:24.04
+            codename: noble
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gbp exports the orig tarball from the upstream tag, so the whole
+          # history and every tag must be present.
+          fetch-depth: 0
+
+      - name: Stamp the target suite onto the version
+        run: |
+          # Yields e.g. 3.1.4-1~trixie1, so one source can be published for
+          # several suites without version collisions, the way backports and
+          # PPAs do it. "~" sorts before the plain revision, which is correct
+          # for a suite rebuild of -1.
+          #
+          # The commit is throwaway and never pushed: gbp exports HEAD rather
+          # than the working tree, so an uncommitted dch would be ignored.
+          SUITE='${{ matrix.image }}' ./debian/dev.sh sh -c \
+            "dch --local '~${{ matrix.codename }}' \
+                 --distribution '${{ matrix.codename }}' \
+                 'Rebuild for ${{ matrix.codename }}.'"
+          git -c user.name=ci -c user.email=ci@localhost \
+              commit -q -am 'CI: stamp suite onto version'
+
+      - name: Build
+        env:
+          SUITE: ${{ matrix.image }}
+        run: ./debian/build.sh
+
+      - name: Report what was built
+        run: ls -l build/*/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-${{ matrix.codename }}
+          path: build/*/*.deb
+          if-no-files-found: error
+
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --verify-tag \
+             --title "$GITHUB_REF_NAME" --generate-notes || true
+          gh release upload "$GITHUB_REF_NAME" build/*/*.deb --clobber

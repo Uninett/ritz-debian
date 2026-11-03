@@ -1,0 +1,5 @@
+# .github/ is GitHub repository metadata: CI workflows and the rendered
+# README. It is neither upstream source nor part of the packaging that gets
+# distributed. Without this, dpkg-source sees it as an unrepresented change to
+# the upstream tree and refuses to build the source package.
+extend-diff-ignore = "(^|/)\.github/"
