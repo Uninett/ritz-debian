@@ -104,18 +104,27 @@ jobs:
             # exactly the mistake a single combined command would invite.
             # -dbgsym is left out; it is debug symbols, not something to
             # install by default.
+            first=yes
             while read -r tag; do
-              echo "# $tag"
+              # Blank line *between* blocks, never a trailing one inside the
+              # fence.
+              [ -n "$first" ] || echo
+              first=
+              case "$tag" in
+                debian-*) label="Debian ${tag#debian-}" ;;
+                ubuntu-*) label="Ubuntu ${tag#ubuntu-}" ;;
+                *)        label="$tag" ;;
+              esac
+              echo "# $label"
               printf 'sudo apt install'
               grep "/$tag/" debs.txt | grep -v -- '-dbgsym' | while read -r d; do
                 printf ' \\\n    ./%s' "$(basename "$d" | tr '~' '.')"
               done
               echo
-              echo
             done < suites.txt
             echo '```'
             echo
-            echo 'Install only the block matching your distribution. amd64 only.'
+            echo 'Install only the block matching your distribution.'
             echo
             echo '## Changes'
             echo

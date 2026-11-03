@@ -48,7 +48,8 @@ done
 sudo apt install ./tcl-tnm_*.deb ./ritz_*.deb
 ```
 
-Only amd64 is built. The `-J` matters: it takes the filename from the server
+amd64 only in practice: `ritz` is `Architecture: all`, but `tcl-tnm` is
+compiled and only amd64 is published. The `-J` matters: it takes the filename from the server
 rather than from the URL, which would otherwise be percent-encoded.
 
 ## Related repositories
