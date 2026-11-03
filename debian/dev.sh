@@ -20,7 +20,14 @@ cd "$(dirname "$0")/.."
 
 TNM_DEB_DIR="${TNM_DEB_DIR:-$PWD/../scotty-debian/build/$SUITE_TAG}"
 
-if [ -n "$NONINTERACTIVE" ]; then TTYARGS="--tty"; else TTYARGS="--tty --interactive"; fi
+# Only allocate a TTY when there actually is one. "docker run -it" dies on a
+# CI runner with "cannot attach stdin to a TTY-enabled container because
+# stdin is not a terminal", and a lone --tty just litters logs with \r.
+if [ -n "$NONINTERACTIVE" ] || [ ! -t 0 ]; then
+    TTYARGS=
+else
+    TTYARGS="--tty --interactive"
+fi
 if [ -n "$AS_ROOT" ]; then USERARGS=""; else USERARGS="--user $(id -u):$(id -g)"; fi
 if [ -d "$TNM_DEB_DIR" ]; then
     TNMARGS="--volume $TNM_DEB_DIR:/tnm:ro"

@@ -20,7 +20,7 @@ fi
 
 # gbp refuses to build from a tree with uncommitted changes unless told not to
 # care; during development we usually do not care.
-gbp buildpackage --git-ignore-new --git-export-dir="$OUT" \
+gbp buildpackage --git-ignore-new --git-ignore-branch --git-export-dir="$OUT" \
     --git-builder="debuild --no-lintian -i -I -us -uc"
 
 echo "=== lintian (informational) ==="
