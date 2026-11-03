@@ -1,4 +1,4 @@
-ritz (1.0+git20261102.7698542-1) UNRELEASED; urgency=medium
+ritz (1.0+git20261102.7698542-1) unstable; urgency=medium
 
   * Repackage for current Debian/Ubuntu. The historical scotty dependency is
     replaced by the separate tcl-tnm package (built from the scotty source).
@@ -8,4 +8,4 @@ ritz (1.0+git20261102.7698542-1) UNRELEASED; urgency=medium
   * Upstream has no releases, so the version is a snapshot of the Zino git
     tree. Upstream's own VERSION has read 1.0 since the 1990s.
 
- -- Morten Brekkevold <morten.brekkevold@sikt.no>  Tue, 03 Nov 2026 10:00:00 +0100
+ -- Morten Brekkevold <morten.brekkevold@sikt.no>  Tue, 03 Nov 2026 13:30:31 +0000
