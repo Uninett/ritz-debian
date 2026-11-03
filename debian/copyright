@@ -1,0 +1,103 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: zino
+Comment:
+ Ritz is the Tcl/Tk client of the Zino network monitoring suite, developed by
+ UNINETT, now part of Sikt. The source package is the whole Zino suite; only
+ the ritz/ subtree and a generated version.tcl are used to build the binary
+ package.
+ .
+ Most files in the tree carry no licence header at all. Sikt, as the copyright
+ holder, states that the suite is BSD licensed. The files that do carry a
+ header disagree with one another: 43 use the four-clause form and 9 use the
+ three-clause form. The split is chronological rather than deliberate. The
+ four-clause files date from 1996 to 1999 and the three-clause files from 2001
+ to 2010, which matches the industry-wide move away from the advertising
+ clause after Berkeley retired it in 1999. They are documented separately here
+ rather than flattened to a single licence, because relabelling a file is not
+ ours to do. Sikt intends to consolidate this in a later version.
+ .
+ Note that ritz/just/justSNMP.tcl carries the four-clause form and is
+ concatenated into the generated /usr/bin/ritz, so the advertising clause
+ currently applies to the ritz binary package.
+ .
+ Upstream has no public repository: it is maintained in a private git
+ repository at Sikt, converted from the original CVS history.
+
+Files: *
+Copyright: 1996-2026 UNINETT and NORDUnet
+License: BSD-4-clause
+
+Files:
+ traffic/cgi/r-all.pl
+ traffic/db/warn-dups.pl
+ traffic/jobs/dst-shift.pl
+ traffic/jobs/find-err-dev.pl
+ traffic/jobs/split-new-data.pl
+ traffic/report/customer-ts.pl
+ traffic/report/get-5m-perc.pl
+ traffic/report/get-perc.pl
+ traffic/report/tail-stats.pl
+Copyright: 2001-2010 UNINETT and NORDUnet
+License: BSD-3-clause
+
+Files: debian/*
+Copyright: 2026 Morten Brekkevold <morten.brekkevold@sikt.no>
+License: BSD-3-clause
+Comment:
+ The packaging is new work and is offered under the three-clause form. There
+ is no reason to attach an advertising clause to it.
+
+License: BSD-4-clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. All advertising materials mentioning features or use of this software
+    must display the following acknowledgement:
+      This product includes software developed by UNINETT.
+ 4. Neither the name of UNINETT nor the names
+    of its contributors may be used to endorse or promote
+    products derived from this software without specific prior
+    written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY UNINETT AND NORDUnet ``AS IS'' AND ANY
+ EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL UNINETT OR NORDUnet OR
+ THEIR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+License: BSD-3-clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. Neither the name of UNINETT or NORDUnet nor the names
+    of its contributors may be used to endorse or promote
+    products derived from this software without specific prior
+    written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY UNINETT AND NORDUnet ``AS IS'' AND ANY
+ EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL UNINETT OR NORDUnet OR
+ THEIR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

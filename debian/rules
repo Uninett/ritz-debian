@@ -1,0 +1,73 @@
+#!/usr/bin/make -f
+
+# Defines DEB_VERSION_UPSTREAM, e.g. 1.0+git20261102.7698542. It is what the
+# About box reports, so a user can name the exact build.
+include /usr/share/dpkg/pkg-info.mk
+
+# Everything we generate goes here. It must not be debian/ritz or debian/tmp,
+# which debhelper claims as staging directories, and it must not be the source
+# tree: the binary we build is called "ritz" and so is upstream's source
+# directory.
+GENDIR = debian/build
+
+# Tcl sources concatenated into the single-file wish script, in the order
+# ritz/Makefile uses (SRCS). version.tcl is generated below.
+SRCS = $(GENDIR)/version.tcl \
+       ritz/just/justSNMP.tcl ritz/just/prettySNMP.tcl ritz/just/mib2util.tcl \
+       ritz/attrs.tcl ritz/net.tcl ritz/notify.tcl ritz/sort.tcl \
+       ritz/summary.tcl ritz/ui.tcl ritz/utils.tcl ritz/main.tcl \
+       ritz/bgerror.tcl
+
+%:
+	dh $@
+
+# The source package is the whole Zino tree, so dh detects its top-level
+# Makefile and tries to drive it. That Makefile is BSD pmake and GNU make
+# cannot even parse it, and none of its targets are ones we want: the binary is
+# assembled below and installed through debian/install. Hence empty overrides.
+override_dh_auto_configure:
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+
+# Ship ritz's own changelog rather than the Zino suite's top-level one.
+override_dh_installchangelogs:
+	dh_installchangelogs ritz/ChangeLog
+
+# Upstream's top-level Makefile generates this from its VERSION variable and
+# does not track it; ritz/ui.tcl reads $Version for the About box.
+$(GENDIR)/version.tcl:
+	mkdir -p $(GENDIR)
+	echo 'set Version "$(DEB_VERSION_UPSTREAM)"' > $@
+
+# Assemble the `ritz` wish script the way ritz/Makefile does, then adapt it to
+# this environment:
+#   - point the shebang at Debian's wish;
+#   - this Tnm (FlightAware fork) namespaces its commands, so import them;
+#   - MIBs load by module name, not the historical lowercase filename;
+#   - the %SHA% helper (NetBSD sha1) becomes coreutils sha1sum.
+# Upstream performs the last of these through its own mk-subst.awk/Makefile.inc
+# mechanism, which we cannot reuse: it substitutes a bare command path, and
+# sha1sum's output needs an extra [lindex] to drop the trailing filename field.
+override_dh_auto_build: $(GENDIR)/version.tcl
+	{ \
+	  echo '#!/usr/bin/wish'; \
+	  echo '#'; \
+	  echo '# DO NOT EDIT, AUTOMATICALLY GENERATED!!'; \
+	  echo '#'; \
+	  echo 'option clear'; \
+	  echo 'package require Tix'; \
+	  echo ''; \
+	  for f in $(SRCS); do cat $$f; done; \
+	  echo 'main'; \
+	} > $(GENDIR)/ritz
+	sed -i \
+	  -e '/^package require Tnm/a namespace import -force ::Tnm::*' \
+	  -e 's/^mib load rfc1213\.mib/mib load RFC1213-MIB/' \
+	  -e 's|exec %SHA% <<$$s|lindex [exec sha1sum << $$s] 0|' \
+	  $(GENDIR)/ritz
+	chmod +x $(GENDIR)/ritz
+
+override_dh_auto_clean:
+	rm -rf $(GENDIR)

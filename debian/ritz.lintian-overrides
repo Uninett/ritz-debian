@@ -1,0 +1,3 @@
+# This package targets a private/custom Debian deployment, not the Debian
+# archive, so there is no ITP bug for an initial upload to close.
+ritz: initial-upload-closes-no-bugs

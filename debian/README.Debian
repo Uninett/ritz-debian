@@ -1,0 +1,54 @@
+ritz for Debian
+===============
+
+Upstream source
+---------------
+Ritz has no releases and no tarball of its own: it lives in the ritz/
+subdirectory of the Zino suite's git repository, which this packaging
+repository carries as its upstream branch. The orig tarball is therefore the
+whole Zino tree, and only the ritz/ subtree is used at build time.
+
+Because upstream never bumps its version (the top-level Makefile has said
+VERSION=1.0 since the 1990s), the package uses snapshot versions of the form
+1.0+gitYYYYMMDD.<short-sha>, taken from the upstream commit the orig tarball
+was exported from.
+
+How the binary is built
+-----------------------
+There is no real upstream build step: the `ritz` program is the Tcl sources
+concatenated into one wish script. Upstream's ritz/Makefile does this with
+pmake and a site-specific Makefile.inc describing a NORDUnet host, which is
+not usable here, so debian/rules reproduces the same recipe and applies four
+adaptations to the generated script:
+
+  * the shebang points at Debian's /usr/bin/wish;
+  * "namespace import ::Tnm::*" is injected, because this Tnm (the FlightAware
+    scotty fork) namespaces its commands, unlike the 1998-era Tnm ritz was
+    written against;
+  * "mib load rfc1213.mib" becomes "mib load RFC1213-MIB"; the modern Tnm
+    loads MIBs by module name, and RFC1213-MIB is already a core MIB;
+  * the %SHA% auth helper (NetBSD's sha1) is replaced by coreutils sha1sum.
+    Upstream substitutes %SHA% through its own mk-subst.awk mechanism, which
+    only knows how to insert a command path; sha1sum prints a trailing
+    filename field, so the call needs an extra [lindex] that the upstream
+    mechanism cannot express.
+
+version.tcl is generated too. Upstream's top-level Makefile writes it and does
+not track it in git, so debian/rules writes it from the changelog's upstream
+version. This means the About box names the exact snapshot the binary was
+built from.
+
+Because all of this touches only generated artifacts (removed again by
+dh_auto_clean), there are no quilt patches.
+
+Dependencies
+------------
+ritz needs tk (for wish), tix (widgets) and tcl-tnm (>= 3.1.3), the companion
+package built from the scotty source in the scotty-debian repository.
+
+The router menu shells out to the host: "telnet" opens `xterm -e telnet` and
+the traceroute entry pipes from `traceroute`. Those are Depends rather than
+Recommends, because the menu entries are not optional extras but part of what
+operators use ritz for.
+
+ -- Morten Brekkevold <morten.brekkevold@sikt.no>

@@ -1,0 +1,46 @@
+.TH RITZ 1 "2026-06-29" "ritz 1.0" "User Commands"
+.SH NAME
+ritz \- Remote Interface to Zino
+.SH SYNOPSIS
+.B ritz
+.SH DESCRIPTION
+.B ritz
+("Remote Interface to Zino") is a Tcl/Tk graphical client for the Zino
+network state monitor. It connects to a Zino server over the Zino line
+protocol and lets operators browse, filter and manage cases (network
+alarms): acknowledging them, setting state, adding history, and clearing
+flapping ports.
+.PP
+Symbolic OID and MIB handling is provided by the Tnm Tcl extension; the
+user interface is built with the Tix widget set.
+.SH CONFIGURATION
+On startup
+.B ritz
+sources
+.I ~/.smon.tcl
+and
+.I ~/.ritz.tcl
+if they exist. These are ordinary Tcl scripts. The scalar variables
+.BR Server ", " Port ", " User " and " Secret
+define the server connected to automatically at launch.
+.PP
+Several servers may be predefined with the parallel arrays
+.BR _Server() ", " _Port() ", " _User() " and " _Secret() ","
+keyed by a label of your choice. Each label then appears under
+.B "File \[->] Use settings"
+in the menu; selecting one and choosing
+.B "File \[->] Open"
+connects to that server.
+.SH FILES
+.TP
+.I ~/.ritz.tcl
+Per-user configuration (server definitions, authentication).
+.TP
+.I ~/.smon.tcl
+Optional additional configuration, sourced before
+.IR ~/.ritz.tcl .
+.SH SEE ALSO
+The Zino documentation.
+.SH AUTHOR
+Ritz was developed by UNINETT. This manual page was written for the
+Debian package by Morten Brekkevold <morten.brekkevold@sikt.no>.

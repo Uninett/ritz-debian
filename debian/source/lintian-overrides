@@ -1,0 +1,4 @@
+# Upstream is a private git repository that has never made a release. The orig
+# tarball is exported from this repository's upstream branch by gbp, so there
+# is nothing for uscan to watch.
+ritz source: debian-watch-file-is-missing

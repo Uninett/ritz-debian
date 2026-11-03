@@ -1,0 +1,27 @@
+Source: ritz
+Section: net
+Priority: optional
+Maintainer: Morten Brekkevold <morten.brekkevold@sikt.no>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+
+Package: ritz
+Architecture: all
+Depends:
+ ${misc:Depends},
+ tk,
+ tix,
+ tcl-tnm (>= 3.1.3),
+ xterm,
+ telnet | inetutils-telnet | telnet-ssl,
+ traceroute,
+Description: Remote Interface to Zino (Tcl/Tk client)
+ Ritz ("Remote Interface to Zino") is a Tcl/Tk GUI client for the Zino
+ network state monitor. It connects to a Zino server over the Zino line
+ protocol and lets operators browse and manage cases (network alarms).
+ .
+ Ritz uses the Tnm Tcl extension for symbolic OID/MIB translation and the
+ Tix widget set for its user interface. Its router menu shells out to xterm,
+ telnet and traceroute, so those are hard dependencies rather than
+ suggestions.
