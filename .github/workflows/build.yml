@@ -3,7 +3,9 @@ name: build
 on:
   push:
     branches: [debian/latest]
-    tags: ['**']
+    # Release tags only. Upstream's own tags (v3.1.4, zino-0-9-*) point at
+    # commits with no debian/ directory, so they must not trigger a build.
+    tags: ['debian/**']
   pull_request:
   workflow_dispatch:
 
@@ -23,7 +25,7 @@ jobs:
             codename: noble
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # gbp exports the orig tarball from the upstream tag, so the whole
           # history and every tag must be present.
@@ -53,7 +55,7 @@ jobs:
       - name: Report what was built
         run: ls -l build/*/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: packages-${{ matrix.codename }}
           path: build/*/*.deb
